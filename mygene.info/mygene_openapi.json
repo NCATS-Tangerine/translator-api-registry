@@ -1,0 +1,1276 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "version": "3.0.0.1",
+    "title": "MyGene.info API",
+    "contact": {
+      "url": "http://mygene.info",
+      "responsibleDeveloper": "Chunlei Wu",
+      "responsibleOrganization": "The Scripps Research Institute",
+      "email": "help@mygene.info"
+    },
+    "description": "Documentation of the MyGene.info Gene Query web services. Learn more about [MyGene.info](http://mygene.info/)"
+  },
+  "host": "mygene.info",
+  "basePath": "/v3",
+  "schemes": [
+    "http",
+    "https"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "tags": [
+    {
+      "name": "query",
+      "description": "Query for gene information"
+    },
+    {
+      "name": "gene",
+      "description": "Gene annotation information"
+    },
+    {
+      "name": "metadata",
+      "description": "Metadata about the data available from MyGene.info."
+    }
+  ],
+  "paths": {
+    "/query": {
+      "get": {
+        "tags": [
+          "query"
+        ],
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "description": "Query string. Examples \"CDK2\", \"NM_052827\", \"204639_at\". The detailed query syntax can be found at http://docs.mygene.info/en/latest/doc/query_service.html",
+            "required": true,
+            "type": "string",
+            "parameterType": "InputParameter",
+            "parameterValueType": [
+              "http://identifiers.org/hgnc.symbol",
+              "http://identifiers.org/refseq",
+              "http://identifiers.org/unigene",
+              "http://identifiers.org/uniprot",
+              "http://identifiers.org/pdb",
+              "http://identifiers.org/prosite",
+              "http://identifiers.org/pfam",
+              "http://identifiers.org/interpro",
+              "http://identifiers.org/hgnc",
+              "http://identifiers.org/mgi",
+              "http://identifiers.org/rgd",
+              "http://identifiers.org/flybase",
+              "http://identifiers.org/wormbase",
+              "http://identifiers.org/zfin",
+              "http://identifiers.org/tair.gene",
+              "http://identifiers.org/xenbase",
+              "http://identifiers.org/mirbase"
+            ]
+          },
+          {
+            "name": "fields",
+            "in": "query",
+            "description": "A comma-separated field to limit the fields returned from the matching gene hits. The supported field names can be found from any gene object (e.g. http://mygene.info/v2/gene/1017). Note that it supports dot notation as well, e.g., you can pass \"refseq.rna\". If \"fields=all\", all available fields will be returned. Default \"symbol,name,taxid,entrezgene,ensemblgene\".",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "species",
+            "in": "query",
+            "description": "can be used to limit the gene hits from given species. You can use \"common names\" for nine common species (human, mouse, rat, fruitfly, nematode, zebrafish, thale-cress, frog and pig). All other species, you can provide their taxonomy ids. Multiple species can be passed using comma as a separator. Passing \u201call\u201d will query against all available species. Default human,mouse,rat.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "description": "the maximum number of matching gene hits to return (with a cap of 1000 at the moment). Default 10.",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "description": "the number of matching gene hits to skip, starting from 0. Combining with \"size\" parameter, this can be useful for paging. Default 0.",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "description": "comma-separated fields to sort on. Prefix with \"-\" for descending order, otherwise in ascending order. Sort by matching scores in decending order.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "facets",
+            "in": "query",
+            "description": "a single field or comma-separated fields to return facets, for example, \u201cfacets=taxid\u201d, \u201cfacets=taxid,type_of_gene\u201d.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "species_facet_filter",
+            "in": "query",
+            "description": "relevant when faceting on species (i.e., \u201cfacets=taxid\u201d are passed). It\u2019s used to pass species filter without changing the scope of faceting, so that the returned facet counts won\u2019t change. Either species name or taxonomy id can be used, just like \u201cspecies\u201d parameter above.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "entrezonly",
+            "in": "query",
+            "description": "when passed as \u201ctrue\u201d or \u201c1\u201d, the query returns only the hits with valid Entrez gene ids. Default: false",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "ensemblonly",
+            "in": "query",
+            "description": "when passed as \u201ctrue\u201d or \u201c1\u201d, the query returns only the hits with valid Ensembl gene ids. Default: false.",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "callback",
+            "in": "query",
+            "description": "you can pass a \"callback\" parameter to make a JSONP call.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "dotfield",
+            "in": "query",
+            "description": "control the format of the returned fields when passed \"fields\" parameter contains dot notation, e.g. \"fields=refseq.rna\". If \"true\" or \"1\", the returned data object contains a single \"refseq.rna\" field, otherwise (\"false\" or \"0\"), a single \"refseq\" field with a sub-field of \"rna\". Default: true",
+            "type": "boolean"
+          },
+          {
+            "name": "filter",
+            "in": "query",
+            "description": "alias for \"fields\" parameter.",
+            "type": "string"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "alias for \"size\" parameter.",
+            "type": "integer"
+          },
+          {
+            "name": "skip",
+            "in": "query",
+            "description": "alias for \"from\" parameter.",
+            "type": "integer"
+          },
+          {
+            "name": "email",
+            "in": "query",
+            "description": "If you are regular users of our services, we encourage you to provide us an email, so that we can better track the usage or follow up with you.",
+            "type": "string"
+          }
+        ],
+        "operationId": "queryGene",
+        "description": "Make gene query and return matching gene list. Support JSONP and CORS as well.",
+        "responses": {
+          "200": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "max_score": {
+                  "type": "integer"
+                },
+                "total": {
+                  "type": "integer"
+                },
+                "hits": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "entrezgene": {
+                        "type": "integer"
+                      },
+                      "taxid": {
+                        "type": "integer"
+                      },
+                      "symbol": {
+                        "type": "string"
+                      },
+                      "_id": {
+                        "type": "integer"
+                      },
+                      "name": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                },
+                "took": {
+                  "type": "integer"
+                }
+              }
+            },
+            "description": "Successful response"
+          }
+        }
+      }
+    },
+    "/gene/{geneid}": {
+      "get": {
+        "tags": [
+          "gene"
+        ],
+        "parameters": [
+          {
+            "name": "geneid",
+            "in": "path",
+            "description": "Entrez or Ensembl gene id, e.g., 1017, ENSG00000170248. A retired Entrez Gene id works too if it is replaced by a new one, e.g., 245794",
+            "required": true,
+            "type": "string",
+            "parameterType": "InputParameter",
+            "parameterValueType": [
+              "http://identifiers.org/ncbigene",
+              "http://identifiers.org/ensembl"
+            ]
+          },
+          {
+            "name": "fields",
+            "in": "query",
+            "description": "a comma-separated fields to limit the fields returned from the matching gene hits. The supported field names can be found from any gene object (e.g. http://mygene.info/v2/gene/1017). Note that it supports dot notation as well, e.g., you can pass \"refseq.rna\". If \"fields=all\", all available fields will be returned. Default \"symbol,name,taxid,entrezgene,ensemblgene\".",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "callback",
+            "in": "query",
+            "description": "you can pass a \"callback\" parameter to make a JSONP call.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "filter",
+            "in": "query",
+            "description": "alias for \"fields\" parameter.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "dotfield",
+            "in": "query",
+            "description": "control the format of the returned fields when passed \"fields\" parameter contains dot notation, e.g. \"fields=refseq.rna\". If \"true\" or \"1\", the returned data object contains a single \"refseq.rna\" field, otherwise (\"false\" or \"0\"), a single \"refseq\" field with a sub-field of \"rna\". Default true.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "email",
+            "in": "query",
+            "description": "If you are regular users of our services, we encourage you to provide us an email, so that we can better track the usage or follow up with you.",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "operationId": "getAnnotation",
+        "description": "Retrieve gene annotation based on Entrez or Ensembl gene id, support\nJSONP and CORS as well.\n",
+        "responses": {
+          "200": {
+            "responseDataType": [
+              {
+                "elementPath": "ec",
+                "datatype": "http://identifiers.org/ec-code/"
+              },
+              {
+                "elementPath": "ensembl.gene",
+                "datatype": "http://identifiers.org/ensembl/"
+              },
+              {
+                "elementPath": "ensembl.translation.protein",
+                "datatype": "http://identifiers.org/ensembl/"
+              },
+              {
+                "elementPath": "ensembl.translation.rna",
+                "datatype": "http://identifiers.org/ensembl/"
+              },
+              {
+                "elementPath": "entrezgene",
+                "datatype": "http://identifiers.org/ncbigene/"
+              },
+              {
+                "elementPath": "generif.pubmed",
+                "datatype": "http://identifiers.org/pubmed/"
+              },
+              {
+                "elementPath": "go.bp.evidence",
+                "datatype": "http://identifiers.org/eco/"
+              },
+              {
+                "elementPath": "go.bp.id",
+                "datatype": "http://identifiers.org/go/"
+              },
+              {
+                "elementPath": "go.bp.pubmed",
+                "datatype": "http://identifiers.org/pubmed/"
+              },
+              {
+                "elementPath": "go.bp.term",
+                "datatype": "http://identifiers.org/go/"
+              },
+              {
+                "elementPath": "go.cc.evidence",
+                "datatype": "http://identifiers.org/eco/"
+              },
+              {
+                "elementPath": "go.cc.id",
+                "datatype": "http://identifiers.org/go/"
+              },
+              {
+                "elementPath": "go.cc.pubmed",
+                "datatype": "http://identifiers.org/pubmed/"
+              },
+              {
+                "elementPath": "go.cc.term",
+                "datatype": "http://identifiers.org/go/"
+              },
+              {
+                "elementPath": "go.mf.evidence",
+                "datatype": "http://identifiers.org/eco/"
+              },
+              {
+                "elementPath": "go.mf.id",
+                "datatype": "http://identifiers.org/go/"
+              },
+              {
+                "elementPath": "go.mf.pubmed",
+                "datatype": "http://identifiers.org/pubmed/"
+              },
+              {
+                "elementPath": "go.mf.qualifier",
+                "datatype": "http://identifiers.org/go/"
+              },
+              {
+                "elementPath": "go.mf.term",
+                "datatype": "http://identifiers.org/go/"
+              },
+              {
+                "elementPath": "hgnc",
+                "datatype": "http://identifiers.org/hgnc/"
+              },
+              {
+                "elementPath": "homologene.id",
+                "datatype": "http://identifiers.org/homologene/"
+              },
+              {
+                "elementPath": "interpro.desc",
+                "datatype": "http://identifiers.org/interpro/"
+              },
+              {
+                "elementPath": "interpro.id",
+                "datatype": "http://identifiers.org/interpro/"
+              },
+              {
+                "elementPath": "interpro.short_desc",
+                "datatype": "http://identifiers.org/interpro/"
+              },
+              {
+                "elementPath": "mim",
+                "datatype": "http://identifiers.org/omim/"
+              },
+              {
+                "elementPath": "pathway.biocarta.id",
+                "datatype": "http://identifiers.org/biocarta.pathway/"
+              },
+              {
+                "elementPath": "pathway.biocarta.name",
+                "datatype": "http://identifiers.org/biocarta.pathway/"
+              },
+              {
+                "elementPath": "pathway.kegg.id",
+                "datatype": "http://identifiers.org/kegg.pathway/"
+              },
+              {
+                "elementPath": "pathway.kegg.name",
+                "datatype": "http://identifiers.org/kegg.pathway/"
+              },
+              {
+                "elementPath": "pathway.pid.id",
+                "datatype": "http://identifiers.org/pid.pathway/"
+              },
+              {
+                "elementPath": "pathway.pid.name",
+                "datatype": "http://identifiers.org/pid.pathway/"
+              },
+              {
+                "elementPath": "pathway.reactome.id",
+                "datatype": "http://identifiers.org/reactome/"
+              },
+              {
+                "elementPath": "pathway.reactome.name",
+                "datatype": "http://identifiers.org/reactome/"
+              },
+              {
+                "elementPath": "pathway.wikipathways.id",
+                "datatype": "http://identifiers.org/wikipathways/"
+              },
+              {
+                "elementPath": "pathway.wikipathways.name",
+                "datatype": "http://identifiers.org/wikipathways/"
+              },
+              {
+                "elementPath": "pfam",
+                "datatype": "http://identifiers.org/pfam/"
+              },
+              {
+                "elementPath": "pharmgkb",
+                "datatype": "http://identifiers.org/pharmgkb.pathways/"
+              },
+              {
+                "elementPath": "prosite",
+                "datatype": "http://identifiers.org/prosite/"
+              },
+              {
+                "elementPath": "refseq.translation.protein",
+                "datatype": "http://identifiers.org/refseq/"
+              },
+              {
+                "elementPath": "refseq.translation.rna",
+                "datatype": "http://identifiers.org/refseq/"
+              },
+              {
+                "elementPath": "taxid",
+                "datatype": "http://identifiers.org/taxonomy/"
+              },
+              {
+                "elementPath": "uniprot.swiss-prot",
+                "datatype": "http://identifiers.org/uniprot/"
+              },
+              {
+                "elementPath": "wikipedia.url_stub",
+                "datatype": "http://identifiers.org/wikipedia.en/"
+              }
+            ],
+            "schema": {
+              "type": "object",
+              "properties": {
+                "wikipedia": {
+                  "type": "object",
+                  "properties": {
+                    "url_stub": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "homologene": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer"
+                    },
+                    "genes": {
+                      "type": "array",
+                      "items": {
+                        "type": "integer"
+                      }
+                    }
+                  }
+                },
+                "HPRD": {
+                  "type": "integer"
+                },
+                "symbol": {
+                  "type": "string"
+                },
+                "ensembl": {
+                  "type": "object",
+                  "properties": {
+                    "transcript": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "gene": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "reagent": {
+                  "type": "object",
+                  "properties": {
+                    "GNF_Qia_hs-genome_v1_siRNA": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "relationonship": {
+                            "type": "string"
+                          },
+                          "id": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    },
+                    "NIBRI_hs-Secretome_pDEST": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "relationship": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "GNF_hs-druggable_siRNA": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "relationonship": {
+                            "type": "string"
+                          },
+                          "id": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    },
+                    "GNF_hs-druggable_lenti-shRNA": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "relationonship": {
+                            "type": "string"
+                          },
+                          "id": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    },
+                    "GNF_mm+hs-MGC": {
+                      "type": "object",
+                      "properties": {
+                        "relationonship": {
+                          "type": "string"
+                        },
+                        "id": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "NOVART_hs-genome_siRNA": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "relationonship": {
+                            "type": "string"
+                          },
+                          "id": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    },
+                    "GNF_hs-Origene": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "relationonship": {
+                            "type": "string"
+                          },
+                          "id": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    },
+                    "Invitrogen_IVTHSSIPKv2": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "relationonship": {
+                            "type": "string"
+                          },
+                          "id": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    },
+                    "GNF_hs_LentiORF-HA-MYC": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "relationship": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "GNF_hs_LentiORF-Jred": {
+                      "type": "object",
+                      "properties": {
+                        "relationonship": {
+                          "type": "string"
+                        },
+                        "id": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "GNF_hs-druggable_plasmid-shRNA": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "relationonship": {
+                            "type": "string"
+                          },
+                          "id": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    },
+                    "GNF_hs-pkinase_IDT-siRNA": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "relationonship": {
+                            "type": "string"
+                          },
+                          "id": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    },
+                    "GNF_hs-ORFeome1_1_reads": {
+                      "type": "object",
+                      "properties": {
+                        "relationonship": {
+                          "type": "string"
+                        },
+                        "id": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                },
+                "genomic_pos_hg19": {
+                  "type": "object",
+                  "properties": {
+                    "end": {
+                      "type": "integer"
+                    },
+                    "start": {
+                      "type": "integer"
+                    },
+                    "chr": {
+                      "type": "integer"
+                    },
+                    "strand": {
+                      "type": "integer"
+                    }
+                  }
+                },
+                "prosite": {
+                  "type": "string"
+                },
+                "pir": {
+                  "type": "string"
+                },
+                "taxid": {
+                  "type": "integer"
+                },
+                "generif": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "pubmed": {
+                        "type": "string"
+                      },
+                      "text": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                },
+                "alias": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "accession": {
+                  "type": "object",
+                  "properties": {
+                    "genomic": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "rna": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "protein": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                },
+                "pfam": {
+                  "type": "string"
+                },
+                "ec": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "uniprot": {
+                  "type": "object",
+                  "properties": {
+                    "Swiss-Prot": {
+                      "type": "string"
+                    },
+                    "TrEMBL": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                },
+                "genomic_pos": {
+                  "type": "object",
+                  "properties": {
+                    "end": {
+                      "type": "integer"
+                    },
+                    "start": {
+                      "type": "integer"
+                    },
+                    "chr": {
+                      "type": "integer"
+                    },
+                    "strand": {
+                      "type": "integer"
+                    }
+                  }
+                },
+                "map_location": {
+                  "type": "string"
+                },
+                "pdb": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "reporter": {
+                  "type": "object",
+                  "properties": {
+                    "HG-U133_Plus_2": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "HuEx-1_0": {
+                      "type": "integer"
+                    },
+                    "HTA-2_0": {
+                      "type": "string"
+                    },
+                    "HuGene-2_1": {
+                      "type": "integer"
+                    },
+                    "HuGene-1_1": {
+                      "type": "integer"
+                    },
+                    "HG-U95Av2": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                },
+                "HGNC": {
+                  "type": "integer"
+                },
+                "entrezgene": {
+                  "type": "string"
+                },
+                "pathway": {
+                  "type": "object",
+                  "properties": {
+                    "kegg": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    },
+                    "biocarta": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    },
+                    "pid": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    },
+                    "netpath": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    },
+                    "wikipathways": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    },
+                    "reactome": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "MIM": {
+                  "type": "integer"
+                },
+                "summary": {
+                  "type": "string"
+                },
+                "_id": {
+                  "type": "string"
+                },
+                "exons": {
+                  "type": "object"
+                },
+                "Vega": {
+                  "type": "string"
+                },
+                "type_of_gene": {
+                  "type": "string"
+                },
+                "refseq": {
+                  "type": "object",
+                  "properties": {
+                    "genomic": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "rna": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "protein": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                },
+                "unigene": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "pharmgkb": {
+                  "type": "string"
+                },
+                "ipi": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "go": {
+                  "type": "object",
+                  "properties": {
+                    "CC": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "term": {
+                            "type": "string"
+                          },
+                          "evidence": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    },
+                    "BP": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "term": {
+                            "type": "string"
+                          },
+                          "evidence": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    },
+                    "MF": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "term": {
+                            "type": "string"
+                          },
+                          "evidence": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "interpro": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "short_desc": {
+                        "type": "string"
+                      },
+                      "description": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "description": "Successful response"
+          }
+        }
+      }
+    },
+    "/metadata": {
+      "get": {
+        "tags": [
+          "metadata"
+        ],
+        "parameters": [
+          {
+            "name": "callback",
+            "in": "query",
+            "description": "you can pass a \"callback\" parameter to make a JSONP call.",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "operationId": "getMetadata",
+        "description": "Get metadata about the data available from MyGene.info\n",
+        "responses": {
+          "200": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "available_fields": {
+                  "type": "string"
+                },
+                "taxonomy": {
+                  "type": "object",
+                  "properties": {
+                    "fruitfly": {
+                      "type": "integer"
+                    },
+                    "mouse": {
+                      "type": "integer"
+                    },
+                    "zebrafish": {
+                      "type": "integer"
+                    },
+                    "thale-cress\"": {
+                      "type": "integer"
+                    },
+                    "frog": {
+                      "type": "integer"
+                    },
+                    "rat": {
+                      "type": "integer"
+                    },
+                    "pig": {
+                      "type": "integer"
+                    },
+                    "human": {
+                      "type": "integer"
+                    },
+                    "nematode": {
+                      "type": "integer"
+                    }
+                  }
+                },
+                "timestamp": {
+                  "type": "string"
+                },
+                "source": {
+                  "type": "string"
+                },
+                "app_revision": {
+                  "type": "string"
+                },
+                "genome_assembly": {
+                  "type": "object",
+                  "properties": {
+                    "fruitfly": {
+                      "type": "string"
+                    },
+                    "mouse": {
+                      "type": "string"
+                    },
+                    "zebrafish": {
+                      "type": "string"
+                    },
+                    "frog": {
+                      "type": "string"
+                    },
+                    "rat": {
+                      "type": "string"
+                    },
+                    "pig": {
+                      "type": "string"
+                    },
+                    "human": {
+                      "type": "string"
+                    },
+                    "nematode": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "src_version": {
+                  "type": "object",
+                  "properties": {
+                    "uniprot": {
+                      "type": "integer"
+                    },
+                    "cpdb": {
+                      "type": "integer"
+                    },
+                    "entrez": {
+                      "type": "integer"
+                    },
+                    "netaffy": {
+                      "type": "string"
+                    },
+                    "refseq": {
+                      "type": "integer"
+                    },
+                    "pharmgkb": {
+                      "type": "integer"
+                    },
+                    "ucsc": {
+                      "type": "integer"
+                    },
+                    "ensembl": {
+                      "type": "integer"
+                    }
+                  }
+                },
+                "stats": {
+                  "type": "object",
+                  "properties": {
+                    "total_species": {
+                      "type": "integer"
+                    },
+                    "total_genes": {
+                      "type": "integer"
+                    },
+                    "total_ensembl_genes": {
+                      "type": "integer"
+                    },
+                    "total_entrez_genes": {
+                      "type": "integer"
+                    },
+                    "total_ensembl_only_genes": {
+                      "type": "integer"
+                    },
+                    "total_ensembl_genes_mapped_to_entrez": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            },
+            "description": "Successful response"
+          }
+        }
+      }
+    },
+    "/gene": {
+      "post": {
+        "tags": [
+          "gene"
+        ],
+        "parameters": [
+          {
+            "name": "ids",
+            "in": "query",
+            "description": "multiple geneids seperated by comma, e.g., \"ids=1017,1018\" or \"ids=695,ENSG00000123374\". Note that currently we only take the input ids up to 1000 maximum, the rest will be omitted.",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "fields",
+            "in": "query",
+            "description": "a comma-separated fields to limit the fields returned from the matching gene hits. The supported field names can be found from any gene object (e.g. http://mygene.info/v2/gene/1017). Note that it supports dot notation as well, e.g., you can pass \"refseq.rna\". If \"fields=all\", all available fields will be returned. Default \"symbol,name,taxid,entrezgene,ensemblgene\".",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "species",
+            "in": "query",
+            "description": "Optional, can be used to limit the gene hits from given species. You can use \"common names\" for nine common species (human, mouse, rat, fruitfly, nematode, zebrafish, thale-cress, frog and pig). All other species, you can provide their taxonomy ids. Multiple species can be passed using comma as a separator. Default all.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "dotfield",
+            "in": "query",
+            "description": "control the format of the returned fields when passed \"fields\" parameter contains dot notation, e.g. \"fields=refseq.rna\". If \"true\" or \"1\", the returned data object contains a single \"refseq.rna\" field, otherwise (\"false\" or \"0\"), a single \"refseq\" field with a sub-field of \"rna\". Default true.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "email",
+            "in": "query",
+            "description": "If you are regular users of our services, we encourage you to provide us an email, so that we can better track the usage or follow up with you.",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "operationId": "getGenes",
+        "description": "Make gene queries in batch for a list of Entrez or Ensembl gene ids.\n",
+        "responses": {
+          "200": {
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "entrezgene": {
+                    "type": "integer"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "query": {
+                    "type": "string"
+                  },
+                  "taxid": {
+                    "type": "integer"
+                  },
+                  "symbol": {
+                    "type": "string"
+                  },
+                  "_id": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "description": "Successful response"
+          }
+        }
+      }
+    }
+  }
+}
