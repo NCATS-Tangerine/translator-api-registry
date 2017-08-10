@@ -1,0 +1,104 @@
+openapi: '3.0'
+info:
+  version: 3.0.0.2
+  title: MyGene.info API
+  description: >-
+    Documentation of the MyGene.info Gene Query web services. Learn more about
+    [MyGene.info](http://mygene.info/)
+paths:
+  /query:
+    get:
+      tags:
+        - query
+      description: Makes gene query and returns matching gene list.
+      parameters:
+        - name: q
+          in: query
+          description: >-
+            Query string. Examples "CDK2", "NM_052827", "204639_at". The
+            detailed query syntax can be found at
+            http://docs.mygene.info/en/latest/doc/query_service.html
+          required: true
+          schema:
+            type: string
+          x-parameterType: InputParameter
+          x-valueType:
+            - 'http://identifiers.org/hgnc.symbol/'
+            - 'http://identifiers.org/refseq/'
+            - 'http://identifiers.org/unigene/'
+            - 'http://identifiers.org/uniprot/'
+            - 'http://identifiers.org/pdb/'
+      operationId: add operation id here
+      responses:
+        '200':
+          description: Successful response.
+          content:
+            application/json:
+              x-responseProfile: 'http://www.w3.org/ns/anno.jsonld'
+          x-responseValueType:
+            - path: ec
+              valueType: 'http://identifiers.org/ec-code/'
+            - path: ensembl.gene
+              valueType: 'http://identifiers.org/ensembl/'
+            - path: ensembl.translation.protein
+              valueType: 'http://identifiers.org/ensembl/'
+            - path: ensembl.translation.rna
+              valueType: 'http://identifiers.org/ensembl/'
+            - path: entrezgene
+              valueType: 'http://identifiers.org/ncbigene/'
+            - path: generif.pubmed
+              valueType: 'http://identifiers.org/pubmed/'
+  '/gene/{geneid}':
+    get:
+      tags:
+        - gene
+      parameters:
+        - name: geneid
+          in: path
+          description: >-
+            Entrez or Ensembl gene id, e.g., 1017, ENSG00000170248. A retired
+            Entrez Gene id works too if it is replaced by a new one, e.g.,
+            245794
+          required: true
+          x-parameterType: InputParameter
+          x-valueType:
+            - 'http://identifiers.org/ncbigene/'
+            - 'http://identifiers.org/ensembl/'
+      responses:
+        '200':
+          content:
+            application/json:
+              x-responseSchema:
+                properties:
+                  reporter:
+                    properties:
+                      HTA-2_0:
+                        type: string
+                      HG-U133_Plus_2:
+                        items:
+                          type: string
+                        type: array
+                      HuEx-1_0:
+                        type: integer
+                      HuGene-1_1:
+                        type: integer
+                      HuGene-2_1:
+                        type: integer
+                      HG-U95Av2:
+                        items:
+                          type: string
+                        type: array
+                    type: object
+          x-responseValueType:
+            - path: ec
+              valueType: 'http://identifiers.org/ec-code/'
+            - path: ensembl.gene
+              valueType: 'http://identifiers.org/ensembl/'
+            - path: ensembl.translation.protein
+              valueType: 'http://identifiers.org/ensembl/'
+            - path: ensembl.translation.rna
+              valueType: 'http://identifiers.org/ensembl/'
+            - path: entrezgene
+              valueType: 'http://identifiers.org/ncbigene/'
+            - path: generif.pubmed
+              valueType: 'http://identifiers.org/pubmed/'
