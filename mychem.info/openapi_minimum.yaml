@@ -1,0 +1,95 @@
+openapi: '3.0'
+info:
+  version: 1.0
+  title: MyChem.info API
+  description: >-
+    Documentation of the MyChem.info Chemical Query web services. Learn more about
+    [MyChem.info](http://mychem.info/)
+servers:
+  url: 'http://mychem.info/v1'
+paths:
+  /query:
+    get:
+      description: Makes chemical query and returns matching chemicals list.
+      parameters:
+        - name: q
+          in: query
+          description: >-
+            Query string. Examples "Fludara", "CHEMBI:63599", "DB01073". 
+          required: true
+          x-valueType:
+            - 'http://identifiers.org/drug.symbol'
+            - 'http://identifiers.org/uniprot/'
+            - 'http://identifiers.org/drugbank/'
+            - 'http://identifiers.org/dbsnp/'
+            - 'http://identifiers.org/pubmed/'
+            - 'http://identifiers.org/clinicaltrials/'
+            - 'http://identifiers.org/rxcui/'
+      responses:
+        '200':
+          content:
+            application/json:
+              x-responseProfile: 'http://www.w3.org/ns/anno.jsonld'
+          x-responseValueType:
+            - path: _id
+              valueType: 'http://identifiers.org/drug.symbol'
+            - path: cadd.gene.genename
+              valueType: 'http://identifiers.org/uniprot/'
+            - path: clinvar.rsid
+              valueType: 'http://identifiers.org/drugbank/'
+            - path: cadd.gene.gene_id
+              valueType: 'http://identifiers.org/dbsnp/'
+            - path: cadd.gene.feature_id
+              valueType: 'http://identifiers.org/pubmed/'
+            - path: cadd.gene.ccds_id
+              valueType: 'http://identifiers.org/clinicaltrials/'
+            - path: clinvar.uniprot
+              valueType: 'http://identifiers.org/rxcui/'
+  '/drug/{drugid}':
+    get:
+      parameters:
+        - name: drugid
+          in: path
+          description: >-
+            DrugBank ID, InCHIKey, CHEBI ID, CHEMBL ID
+          required: true
+          x-valueType:
+            - 'http://identifiers.org/drug.symbol'
+      responses:
+        '200':
+          content:
+            application/json:
+              x-responseSchema:
+                properties:
+                  reporter:
+                    properties:
+                      HTA-2_0:
+                        type: string
+                      HG-U133_Plus_2:
+                        items:
+                          type: string
+                        type: array
+                      HuEx-1_0:
+                        type: integer
+                      HuGene-1_1:
+                        type: integer
+                      HuGene-2_1:
+                        type: integer
+                      HG-U95Av2:
+                        items:
+                          type: string
+                        type: array
+                    type: object
+          x-responseValueType:
+            - path: cadd.gene.genename
+              valueType: 'http://identifiers.org/uniprot/'
+            - path: clinvar.rsid
+              valueType: 'http://identifiers.org/drugbank/'
+            - path: cadd.gene.gene_id
+              valueType: 'http://identifiers.org/dbsnp/'
+            - path: cadd.gene.feature_id
+              valueType: 'http://identifiers.org/pubmed/'
+            - path: cadd.gene.ccds_id
+              valueType: 'http://identifiers.org/clinicaltrials/'
+            - path: clinvar.uniprot
+              valueType: 'http://identifiers.org/rxcui/'
