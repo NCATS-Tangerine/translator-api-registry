@@ -1,16 +1,23 @@
 openapi: '3.0'
 info:
-  version: 1.0
+  version: '1.0'
   title: MyVariant.info API
   description: >-
     Documentation of the MyVariant.info Variant Query web services. Learn more about
     [MyVariant.info](http://myvariant.info/)
+  termsOfService: http://myvariant.info/terms/
+  contact:
+    name: Chunlei Wu
+    x-role: responsible developer
+    email: help@myvariant.info
+    x-id: 'http://orcid.org/0000-0002-2629-6124'  
 servers:
-  url: 'http://myvariant.info/v1'
+  - url: 'http://myvariant.info/v1'
+    description: 'Production server'
 paths:
   /query:
     get:
-      description: Makes gene query and returns matching variant list.
+      summary: 'Make variant query and return matching variant hits'
       parameters:
         - name: q
           in: query
@@ -35,7 +42,7 @@ paths:
             - 'http://identifiers.org/refseq/'
       responses:
         '200':
-          description: Successful response.
+          description: 'A query response object with "hits" property'
           x-responseValueType:
             - path: _id
               valueType: 'http://identifiers.org/hgvs/'
@@ -71,10 +78,9 @@ paths:
               valueType: 'http://identifiers.org/refseq/'
           x-JSONLDContext:
             https://github.com/NCATS-Tangerine/translator-api-registry/blob/master/myvariant.info/jsonld_context/myvariant_context.json
-  '/variant/{variantid}':
+  '/variant/{variantid}'
     get:
-      tags:
-        - variant
+      summary: 'For a given variant id, return the matching variant object'
       parameters:
         - name: variantid
           in: path
@@ -86,6 +92,7 @@ paths:
             - 'http://identifiers.org/dbsnp/'
       responses:
         '200':
+          description: 'A variant object'
           x-responseValueType:
             - path: cadd.gene.genename
               valueType: 'http://identifiers.org/hgnc.symbol/'
