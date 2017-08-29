@@ -1,16 +1,23 @@
 openapi: '3.0'
 info:
-  version: 1.0
+  version: '1.0'
   title: MyChem.info API
   description: >-
     Documentation of the MyChem.info Chemical Query web services. Learn more about
     [MyChem.info](http://mychem.info/)
+  termsOfService: http://mychem.info/terms/
+  contact:
+    name: Chunlei Wu
+    x-role: responsible developer
+    email: help@mychem.info
+    x-id: 'http://orcid.org/0000-0002-2629-6124' 
 servers:
-  url: 'http://mychem.info/v1'
+  - url: 'http://mychem.info/v1'
+    description: 'Production server'
 paths:
   /query:
     get:
-      description: Makes chemical query and returns matching chemicals list.
+      summary: 'Make chemical query and return matching chemical hits'
       parameters:
         - name: q
           in: query
@@ -32,6 +39,7 @@ paths:
             - 'http://identifiers.org/uniprot/'
       responses:
         '200':
+          description: 'A query response object with "hits" property'
           x-responseValueType:
             - path: _id
               valueType: 'http://identifiers.org/inchikey/'
@@ -49,8 +57,9 @@ paths:
               valueType: 'http://identifiers.org/rxcui/'
           x-JSONLDContext:
             'https://github.com/NCATS-Tangerine/translator-api-registry/blob/master/mychem.info/jsonld_context/mychem_context.json'
-  '/drug/{drugid}':
+  '/drug/{drugid}'
     get:
+      summary: 'For a given chemical id, return the matching chemical object'
       parameters:
         - name: drugid
           in: path
@@ -61,7 +70,7 @@ paths:
             - 'http://identifiers.org/inchikey/'
       responses:
         '200':
-          content:
+          description: 'A chemical object'
           x-responseValueType:
             - path: cadd.gene.genename
               valueType: 'http://identifiers.org/uniprot/'
