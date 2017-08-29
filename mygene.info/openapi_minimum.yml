@@ -30,32 +30,8 @@ paths:
             - 'http://identifiers.org/wikipathways/'
             - 'http://identifiers.org/pharmgkb.pathways/'
             - 'http://identifiers.org/reactome/'
-          x-requestTemplate:
-            'http://identifiers.org/hgnc.symbol/':
-              symbol:{{input}}
-            'http://identifiers.org/refseq/':
-              refseq.genomic:{{input}}
-            'http://identifiers.org/unigene/':
-              unigene:{{input}}
-            'http://identifiers.org/uniprot/':
-              uniprot.Swiss-Prot:{{input}}
-            'http://identifiers.org/pdb/':
-              pdb:{{input}}
-            'http://identifiers.org/biocarta.pathway/':
-              pathway.biocarta.id:{{input}}
-            'http://identifiers.org/kegg.pathway/':
-              pathway.kegg.id:{{input}}
-            'http://identifiers.org/wikipathways/':
-              pathway.wikipathways.id:{{input}}
-            'http://identifiers.org/pharmgkb.pathways/':
-              pathway.pharmgkb.id:{{input}}
-            'http://identifiers.org/reactome/':
-              pathway.reactome.id:{{input}}
       responses:
         '200':
-          content:
-            application/json:
-              x-responseProfile: 'http://www.w3.org/ns/anno.jsonld'
           x-responseValueType:
             - path: hits._id
               valueType: 'http://identifiers.org/ncbigene/'
@@ -65,66 +41,8 @@ paths:
               valueType: 'http://identifiers.org/hgnc.symbol/'
             - path: hits.taxid
               valueType: 'http://identifiers.org/taxonomy/'
-    post:
-      description: make gene queries in batch 
-      parameters:
-        - name: q
-          in: body
-          required: true
-          x-valueType:
-            - 'http://identifiers.org/hgnc.symbol/'
-            - 'http://identifiers.org/refseq/'
-            - 'http://identifiers.org/unigene/'
-            - 'http://identifiers.org/uniprot/'
-            - 'http://identifiers.org/pdb/'
-            - 'http://identifiers.org/biocarta.pathway/'
-            - 'http://identifiers.org/kegg.pathway/'
-            - 'http://identifiers.org/wikipathways/'
-            - 'http://identifiers.org/pharmgkb.pathways/'
-            - 'http://identifiers.org/reactome/'
-          x-batchSupport: true
-          x-batchInputType: delimited
-          x-batchDelimiter: ','
-        - name: scopes
-          in: body
-          required: true
-          x-requestTemplate:
-            'default':
-              ''
-            'http://identifiers.org/hgnc.symbol/':
-              symbol
-            'http://identifiers.org/refseq/':
-              refseq.genomic
-            'http://identifiers.org/unigene/':
-              unigene
-            'http://identifiers.org/uniprot/':
-              uniprot.Swiss-Prot
-            'http://identifiers.org/pdb/':
-              pdb
-            'http://identifiers.org/biocarta.pathway/':
-              pathway.biocarta.id
-            'http://identifiers.org/kegg.pathway/':
-              pathway.kegg.id
-            'http://identifiers.org/wikipathways/':
-              pathway.wikipathways.id
-            'http://identifiers.org/pharmgkb.pathways/':
-              pathway.pharmgkb.id
-            'http://identifiers.org/reactome/':
-              pathway.reactome.id
-      responses:
-        '200':
-          content:
-            application/json:
-              x-responseProfile: 'http://www.w3.org/ns/anno.jsonld'
-          x-responseValueType:
-            - path: hits._id
-              valueType: 'http://identifiers.org/ncbigene/'
-            - path: hits.entrezgene
-              valueType: 'http://identifiers.org/ncbigene/'
-            - path: hits.symbol
-              valueType: 'http://identifiers.org/hgnc.symbol/'
-            - path: hits.taxid
-              valueType: 'http://identifiers.org/taxonomy/'
+          x-JSONLDContext:
+            'https://github.com/NCATS-Tangerine/translator-api-registry/blob/master/mygene.info/jsonld_context/mygene_context.json'
   '/gene/{geneid}':
     get:
       parameters:
@@ -137,17 +55,9 @@ paths:
           required: true
           x-valueType:
             - 'http://identifiers.org/ncbigene/'
-            - 'http://identifiers.org/ensembl/'
-          x-requestTemplate:
-            'http://identifiers.org/ncbigene/':
-              /gene/{{input}}
-            'http://identifiers.org/ensembl/':
-              /gene/{{input}}           
+            - 'http://identifiers.org/ensembl/'          
       responses:
         '200':
-          content:
-            application/json:
-              x-responseProfile: 'http://www.w3.org/ns/anno.jsonld'
           x-responseValueType:
             - path: symbol
               valueType: 'http://identifiers.org/hgnc.symbol/'
@@ -167,47 +77,5 @@ paths:
               valueType: 'http://identifiers.org/wikipathways/'
             - path: pathway.pharmgkb.id
               valueType: 'http://identifiers.org/pharmgkb.pathways/'
-    post:
-      parameters:
-        - name: ids
-          in: body
-          required: true
-          x-valueType:
-            - 'http://identifiers.org/ncbigene/'
-            - 'http://identifiers.org/ensembl/'
-          x-batchSupport: true
-          x-batchInputType: delimited
-          x-batchDelimiter: ','
-        - name: species
-          in: body
-          required: false
-          x-valueType:
-            - 'http://identifiers.org/taxonomy/'
-          x-valueDefault: all
-          x-batchSupport: true
-          x-batchInputType: delimited
-          x-batchDelimiter: ','
-      responses:
-        '200':
-          content:
-            application/json:
-              x-responseProfile: 'http://www.w3.org/ns/anno.jsonld'
-          x-responseValueType:
-            - path: symbol
-              valueType: 'http://identifiers.org/hgnc.symbol/'
-            - path: unigene
-              valueType: 'http://identifiers.org/unigene/'
-            - path: uniprot.Swiss-Prot
-              valueType: 'http://identifiers.org/uniprot/'
-            - path: pdb
-              valueType: 'http://identifiers.org/pdb/'
-            - path: pathway.biocarta.id
-              valueType: 'http://identifiers.org/biocarta.pathway/'
-            - path: pathway.kegg.id
-              valueType: 'http://identifiers.org/kegg.pathway/'
-            - path: pathway.reactome.id
-              valueType: 'http://identifiers.org/reactome/'
-            - path: pathway.wikipathways.id
-              valueType: 'http://identifiers.org/wikipathways/'
-            - path: pathway.pharmgkb.id
-              valueType: 'http://identifiers.org/pharmgkb.pathways/'
+          x-JSONLDContext:
+            'https://github.com/NCATS-Tangerine/translator-api-registry/blob/master/mygene.info/jsonld_context/mygene_context.json'
