@@ -1,0 +1,118 @@
+openapi: '3.0'
+info:
+  version: '1.0'
+  title: MyChem.info API1
+  description: >-
+    Documentation of the MyChem.info Chemical Query web services. Learn more about
+    [MyChem.info](http://mychem.info/)
+  termsOfService: http://mychem.info/terms/
+  contact:
+    name: Chunlei Wu
+    x-role: responsible developer
+    email: help@mychem.info
+    x-id: 'http://orcid.org/0000-0002-2629-6124' 
+servers:
+  - url: 'http://mychem.info/v1'
+    description: 'Production server'
+paths:
+  /query:
+    get:
+      summary: 'Make chemical query and return matching chemical hits'
+      parameters:
+        - name: q
+          in: query
+          description: >-
+            Query string. Examples "Fludara", "CHEMBI:63599", "DB01073". 
+          required: true
+          x-valueType:
+            - 'http://identifiers.org/rxcui/'
+            - 'http://identifiers.org/chebi/'
+            - 'http://identifiers.org/chembl/'
+            - 'http://identifiers.org/drugbank/'
+            - 'http://identifiers.org/iuphar.ligand/'
+            - 'http://identifiers.org/kegg.drug/'
+            - 'http://identifiers.org/kegg.compound/'
+            - 'http://identifiers.org/pubchem.compound/'
+            - 'http://identifiers.org/unii/'
+            - 'http://identifiers.org/inchikey/'
+            - 'http://identifiers.org/inchi/'
+            - 'http://identifiers.org/uniprot/'
+          x-requestTemplate:
+            －valueType: 'http://identifiers.org/rxcui/':
+              template: aeolus.rxcui:{{input}} OR drugcentral.xref.rxnorm:{{input}} OR ginas.xrefs.RXCUI:{{input}} OR pharmgkb.external_vocabulary.rxnorm:{{input}}
+            - valueType: 'http://identifiers.org/chebi/':
+              template: drugcentral.xref.chebi:{{input}} OR chebi.chebi_id:{{input}}
+            - valueType: 'http://identifiers.org/chembl/':
+              template: chembl.molecule_chembl_id:{{input}} OR drugbank.chembl:{{input}} OR drugcentral.xref.chembl_id:{{input}}
+            - valueType: 'http://identifiers.org/drugbank/':
+              template: drugcentral.xref.drugbank_id:{{input}} OR pharmgkb.cross_references.drugbank:{{input}} OR drugbank.accession_number:{{input}} OR chebi.drugbank_database_links:{{input}}
+            - valueType: 'http://identifiers.org/iuphar.ligand/':
+              template: drugcentral.xref.iuphar_ligand_id:{{input}} OR pharmgkb.cross_references.iuphar_ligand:{{input}}
+            - valueType: 'http://identifiers.org/kegg.drug/':
+              template: drugcentral.xref.kegg_drug:{{input}} OR chebi.kegg_drug_database_links:{{input}} OR drugbank.kegg_drug:{{input}} OR pharmgkb.cross_references.kegg_drug:{{input}}
+            - valueType: 'http://identifiers.org/kegg.compound/':
+              template: chebi.kegg_compound_database_links:{{input}} OR pharmgkb.cross_references.kegg_compound:{{input}}
+            - valueType: 'http://identifiers.org/pubchem.compound/':
+              template: drugcentral.xref.pubchem_cid:{{input}} OR chebi.pubchem_database_links:{{input}} OR pharmgkb.cross_references.pubchem_compound:{{input}} OR pubchem.cid:{{input}}
+            - valueType: 'http://identifiers.org/unii/':
+              template: drugcentral.xref.unii:{{input}} OR aeolus.unii:{{input}} OR ginas.unii:{{input}} OR unii.unii:{{input}}
+            - valueType: 'http://identifiers.org/inchikey/':
+              template: aeolus.inchikey:{{input}} OR chebi.inchikey:{{input}} OR chembl.inchi_key:{{input}} OR drugbank.inchi_key:{{input}} OR drugcentral.structures.inchikey:{{input}} OR ginas.inchikey:{{input}} OR pubchem.inchi_key:{{input}} OR unii.inchikey:{{input}}
+            - valueType: 'http://identifiers.org/inchi/':
+              template: pubchem.inchi:{{input}} OR pharmgkb.inchi:{{input}} OR drugcentral.structures.inchi:{{input}} OR drugbank.inchi:{{input}} OR chembl.inchi:{{input}} OR chebi.inchi:{{input}}
+            - valueType: 'http://identifiers.org/uniprot/':
+              template: chebi.uniprot_database_links:{{input}} OR drugbank.enzymes.uniprot:{{input}} OR drugbank.pathways.enzymes.uniprot-id:{{input}} OR drugbank.pharmacology.snp_adverse_drug_reactions.reaction.uniprot-id:{{input}} OR drugbank.pharmacology.snp_effects.effect.uniprot-id:{{input}} OR drugbank.targets.uniprot:{{input}} OR drugbank.transporters.uniprot:{{input}} OR drugcentral.bioactivity.uniprot_id:{{input}} OR pharmgkb.cross_references.uniprotkb:{{input}} 
+      responses:
+        '200':
+          description: 'A query response object with "hits" property'
+          x-responseValueType:
+            - path: _id
+              valueType: 'http://identifiers.org/inchikey/'
+            - path: cadd.gene.genename
+              valueType: 'http://identifiers.org/uniprot/'
+            - path: clinvar.rsid
+              valueType: 'http://identifiers.org/drugbank/'
+            - path: cadd.gene.gene_id
+              valueType: 'http://identifiers.org/dbsnp/'
+            - path: cadd.gene.feature_id
+              valueType: 'http://identifiers.org/pubmed/'
+            - path: cadd.gene.ccds_id
+              valueType: 'http://identifiers.org/clinicaltrials/'
+            - path: clinvar.uniprot
+              valueType: 'http://identifiers.org/rxcui/'
+          x-JSONLDContext:
+            'https://github.com/NCATS-Tangerine/translator-api-registry/blob/master/mychem.info/jsonld_context/mychem_context.json'
+  '/drug/{drugid}':
+    get:
+      summary: 'For a given chemical id, return the matching chemical object'
+      parameters:
+        - name: drugid
+          in: path
+          description: >-
+            DrugBank ID, InCHIKey, CHEBI ID, CHEMBL ID
+          required: true
+          x-valueType:
+            - 'http://identifiers.org/inchikey/'
+          x-requestTemplate:
+            - valueType: 'http://identifiers.org/inchikey/'
+              template: /drug/{{input}}
+            - valueType: 'http://identifiers.org/drugbank/'
+              template: /drug/{{input}}
+      responses:
+        '200':
+          description: 'A chemical object'
+          x-responseValueType:
+            - path: cadd.gene.genename
+              valueType: 'http://identifiers.org/uniprot/'
+            - path: clinvar.rsid
+              valueType: 'http://identifiers.org/drugbank/'
+            - path: cadd.gene.gene_id
+              valueType: 'http://identifiers.org/dbsnp/'
+            - path: cadd.gene.feature_id
+              valueType: 'http://identifiers.org/pubmed/'
+            - path: cadd.gene.ccds_id
+              valueType: 'http://identifiers.org/clinicaltrials/'
+            - path: clinvar.uniprot
+              valueType: 'http://identifiers.org/rxcui/'
+          x-JSONLDContext:
+            'https://github.com/NCATS-Tangerine/translator-api-registry/blob/master/mychem.info/jsonld_context/mychem_context.json'
