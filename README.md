@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/NCATS-Tangerine/translator-api-registry.svg?branch=master)](https://travis-ci.org/NCATS-Tangerine/translator-api-registry)
+
 # translator-api-registry
 This repo hosts the API metadata for the Translator project
 
@@ -7,6 +9,7 @@ This repo hosts the API metadata for the Translator project
 2. Second, fill in the metadata about your API according to the instruction. Also please refer to the existing examples like "[mygene.info](mygene.info)" and "[myvariant.info](myvariant.info)" APIs.
 3. Add an entry to [API_LIST.yml](API_LIST.yml) file following the existing example. This is the master list of the APIs available in this repo. Our SmartAPI application will import all the API metadata based on this file.
 
+If you have the permission, commit your changes to this repo. Otherwise, feel free to submit a pull-request. Please check the "build status" badge above, and make sure it's green after your changes. We run some basic tests in this "[tests.py](tests.py)" for each commit.
 
 ## API_LIST.yml file
 This is a YAML file at the root of this repo to keep track of all APIs available in this repo. Our SmartAPI application will import all the API metadata based on this file and render an API registry web frontend.
