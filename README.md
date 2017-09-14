@@ -23,7 +23,7 @@ For each API, you just need to add a text block like this:
 
 * ***metadata*** field
 
-  The value of this field should be either the URL or the relative path pointing to the API metadata. The API metadata should follow [OpenAPI specifications](https://www.openapis.org/), in either JSON or YAML format. Specifically, we support OpenAPI v3 specification documented [here](https://github.com/OAI/OpenAPI-Specification/blob/OpenAPI.next/versions/3.0.0.md), plus the SmartAPI extensions documented [here](https://github.com/WebsmartAPI/OpenAPI-Specification/blob/OpenAPI.next/versions/3.0.md).
+  The value of this field should be either the URL or the relative path pointing to the API metadata. The API metadata should follow [OpenAPI specifications](https://www.openapis.org/), in either JSON or YAML format. Specifically, we support OpenAPI v3 specification documented [here](https://github.com/OAI/OpenAPI-Specification/blob/OpenAPI.next/versions/3.0.0.md), plus the SmartAPI extensions documented [here](https://github.com/SmartAPI/OpenAPI-Specification/blob/OpenAPI.next/versions/3.0.0.md).
 
 * ***translator*** field
 
