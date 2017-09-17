@@ -1,0 +1,212 @@
+openapi: '3.0'
+info:
+  version: '0.1.1'
+  title: BioLink API
+  description: >-
+    API integration layer for linked biological objects.
+  termsOfService: https://github.com/monarch-initiative/biolink-api/
+  contact:
+    name: Chris Mungall
+    x-role: responsible developer
+    email: help@myvariant.info
+    x-id: 
+      - 'https://orcid.org/0000-0002-6601-2165'
+      - 'https://github.com/cmungall'
+servers:
+  - url: 'https://api.monarchinitiative.org/api'
+    description: 'Production server'
+paths:
+  '/bioentity/disease/{disease id}/genes/':
+    get:
+      summary: 'Returns genes associated with a disease'
+      parameters:
+        - name: disease id
+          in: path
+          description: >-
+            CURIE identifier of disease, e.g. OMIM:605543, DOID:678. Equivalent IDs can be used with same results
+          required: true
+          x-valueType:
+            - 'http://identifiers.org/omim/'
+            - 'http://identifiers.org/doid/'
+          x-requestTemplate:
+            - valueType: 'http://identifiers.org/omim/'
+              template: /bioentity/disease/OMIM:{{input}}/genes/
+            - valueType: 'http://identifiers.org/doid/'
+              template: /bioentity/disease/{{input}}/genes/
+      responses:
+        '200':
+          description: 'A distinct set of association.objects (typically ontology terms). This appears at the top level of the results payload'
+          x-responseValueType:
+            - path: edge.obj
+              valueType: 'http://identifiers.org/ncbigene/'
+          x-JSONLDContext:
+            'https://raw.githubusercontent.com/NCATS-Tangerine/translator-api-registry/master/myvariant.info/jsonld_context/myvariant_query_1.1.json'
+  '/bioentity/disease/{disease id}/phenotypes/':
+    get:
+      summary: 'Returns phenotypes associated with a disease'
+      parameters:
+        - name: disease id
+          in: path
+          description: >-
+            CURIE identifier of disease, e.g. OMIM:605543, DOID:678. Equivalent IDs can be used with same results
+          required: true
+          x-valueType:
+            - 'http://identifiers.org/omim/'
+            - 'http://identifiers.org/doid/'
+          x-requestTemplate:
+            - valueType: 'http://identifiers.org/omim/'
+              template: /bioentity/disease/OMIM:{{input}}/phenotypes/
+            - valueType: 'http://identifiers.org/doid/'
+              template: /bioentity/disease/{{input}}/phenotypes/
+      responses:
+        '200':
+          description: 'A distinct set of association.objects (typically ontology terms). This appears at the top level of the results payload'
+          x-responseValueType:
+            - path: edge.obj
+              valueType: 'http://identifiers.org/hp/'
+          x-JSONLDContext:
+            'https://raw.githubusercontent.com/NCATS-Tangerine/translator-api-registry/master/myvariant.info/jsonld_context/myvariant_query_1.1.json'
+  '/bioentity/disease/{disease id}/phenotypes/':
+    get:
+      summary: 'Returns substances associated with a disease'
+      parameters:
+        - name: disease id
+          in: path
+          description: >-
+            CURIE identifier of disease, e.g. OMIM:605543, DOID:678. Equivalent IDs can be used with same results
+          required: true
+          x-valueType:
+            - 'http://identifiers.org/omim/'
+            - 'http://identifiers.org/doid/'
+          x-requestTemplate:
+            - valueType: 'http://identifiers.org/omim/'
+              template: /bioentity/disease/OMIM:{{input}}/substance/
+            - valueType: 'http://identifiers.org/doid/'
+              template: /bioentity/disease/{{input}}/substance/
+      responses:
+        '200':
+          description: 'A distinct set of association.objects (typically ontology terms). This appears at the top level of the results payload'
+          x-responseValueType:
+            - path: edge.obj
+              valueType: 'http://identifiers.org/chembi/'
+          x-JSONLDContext:
+            'https://raw.githubusercontent.com/NCATS-Tangerine/translator-api-registry/master/myvariant.info/jsonld_context/myvariant_query_1.1.json'
+  '/bioentity/gene/{gene id}/diseases/':
+    get:
+      summary: 'Returns diseases associated with gene'
+      parameters:
+        - name: gene id
+          in: path
+          description: >-
+            CURIE identifier of gene, e.g. NCBIGene:4750, Orphanet:173505. Equivalent IDs can be used with same results
+          required: true
+          x-valueType:
+            - 'http://identifiers.org/ncbigene/'
+            - 'http://identifiers.org/orphanet/'
+          x-requestTemplate:
+            - valueType: 'http://identifiers.org/ncbigene/'
+              template: /bioentity/gene/NCBIGene:{{input}}/diseases/
+            - valueType: 'http://identifiers.org/orphanet/'
+              template: /bioentity/gene/Orphanet{{input}}/diseases/
+      responses:
+        '200':
+          description: 'A distinct set of association.objects (typically ontology terms). This appears at the top level of the results payload'
+          x-responseValueType:
+            - path: edge.obj
+              valueType: 'http://identifiers.org/doid/'
+            - path: edge.obj
+              valueType: 'http://identifiers.org/omim/'
+          x-JSONLDContext:
+            'https://raw.githubusercontent.com/NCATS-Tangerine/translator-api-registry/master/myvariant.info/jsonld_context/myvariant_query_1.1.json'
+  '/bioentity/gene/{gene id}/homologs/':
+    get:
+      summary: 'Returns homologs for a gene'
+      parameters:
+        - name: gene id
+          in: path
+          description: >-
+            CURIE identifier of gene, e.g. NCBIGene:4750. Equivalent IDs can be used with same results
+          required: true
+          x-valueType:
+            - 'http://identifiers.org/ncbigene/'
+          x-requestTemplate:
+            - valueType: 'http://identifiers.org/ncbigene/'
+              template: /bioentity/gene/NCBIGene:{{input}}/homologs/
+      responses:
+        '200':
+          description: 'A distinct set of association.objects (typically ontology terms). This appears at the top level of the results payload'
+          x-responseValueType:
+            - path: edge.obj
+              valueType: 'http://identifiers.org/mgi/'
+            - path: edge.obj
+              valueType: 'http://identifiers.org/zfin/'
+            - path: edge.obj
+              valueType: 'http://identifiers.org/ncbigene/'
+          x-JSONLDContext:
+            'https://raw.githubusercontent.com/NCATS-Tangerine/translator-api-registry/master/myvariant.info/jsonld_context/myvariant_query_1.1.json'
+  '/bioentity/gene/{gene id}/interactions/':
+    get:
+      summary: 'Returns interactions for a gene'
+      parameters:
+        - name: gene id
+          in: path
+          description: >-
+            CURIE identifier of gene, e.g. NCBIGene:4750. Equivalent IDs can be used with same results
+          required: true
+          x-valueType:
+            - 'http://identifiers.org/ncbigene/'
+          x-requestTemplate:
+            - valueType: 'http://identifiers.org/ncbigene/'
+              template: /bioentity/gene/NCBIGene:{{input}}/interactions/
+      responses:
+        '200':
+          description: 'A distinct set of association.objects (typically ontology terms). This appears at the top level of the results payload'
+          x-responseValueType:
+            - path: edge.obj
+              valueType: 'http://identifiers.org/ncbigene/'
+          x-JSONLDContext:
+            'https://raw.githubusercontent.com/NCATS-Tangerine/translator-api-registry/master/myvariant.info/jsonld_context/myvariant_query_1.1.json'
+  '/bioentity/gene/{gene id}/phenotypes/':
+    get:
+      summary: 'Returns phenotypes associated with gene'
+      parameters:
+        - name: gene id
+          in: path
+          description: >-
+            CURIE identifier of gene, e.g. NCBIGene:4750. Equivalent IDs can be used with same results
+          required: true
+          x-valueType:
+            - 'http://identifiers.org/ncbigene/'
+          x-requestTemplate:
+            - valueType: 'http://identifiers.org/ncbigene/'
+              template: /bioentity/gene/NCBIGene:{{input}}/phenotypes
+      responses:
+        '200':
+          description: 'A distinct set of association.objects (typically ontology terms). This appears at the top level of the results payload'
+          x-responseValueType:
+            - path: edge.obj
+              valueType: 'http://identifiers.org/hp/'
+          x-JSONLDContext:
+            'https://raw.githubusercontent.com/NCATS-Tangerine/translator-api-registry/master/myvariant.info/jsonld_context/myvariant_query_1.1.json'
+  '/bioentity/gene/{gene id}/phenotypes/':
+    get:
+      summary: 'Returns phenotypes associated with gene'
+      parameters:
+        - name: gene id
+          in: path
+          description: >-
+            CURIE identifier of gene, e.g. NCBIGene:4750. Equivalent IDs can be used with same results
+          required: true
+          x-valueType:
+            - 'http://identifiers.org/ncbigene/'
+          x-requestTemplate:
+            - valueType: 'http://identifiers.org/ncbigene/'
+              template: /bioentity/gene/NCBIGene:{{input}}/phenotypes
+      responses:
+        '200':
+          description: 'A distinct set of association.objects (typically ontology terms). This appears at the top level of the results payload'
+          x-responseValueType:
+            - path: edge.obj
+              valueType: 'http://identifiers.org/hp/'
+          x-JSONLDContext:
+            'https://raw.githubusercontent.com/NCATS-Tangerine/translator-api-registry/master/myvariant.info/jsonld_context/myvariant_query_1.1.json'
