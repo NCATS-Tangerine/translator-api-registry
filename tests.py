@@ -90,7 +90,7 @@ class TestAPIRegistry(unittest.TestCase):
         api_li = self.api_d["APIs"]
         for api in api_li:
             metadata = get_api_metadata(api['metadata'])
-            api_title = api.get('info', {}).get('title', '')
+            api_title = metadata.get('info', {}).get('title', '')
             self.assertFalse(metadata.get('success', None) is False,
                              "Fail to retrieve metadata:\n" +
                              "\tAPI: {0}\n\tError: {1}".format(api_title, metadata.get("error", '')))
