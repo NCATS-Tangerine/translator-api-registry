@@ -1,4 +1,4 @@
-openapi: '3.0'
+openapi: '3.0.0'
 info:
   version: '1.0'
   title: MyVariant.info API
@@ -10,7 +10,9 @@ info:
     name: Chunlei Wu
     x-role: responsible developer
     email: help@myvariant.info
-    x-id: 'http://orcid.org/0000-0002-2629-6124'
+    x-id:
+      - 'http://orcid.org/0000-0002-2629-6124'
+      - 'https://github.com/newgene'
 servers:
   - url: 'http://myvariant.info/v1'
     description: 'Production server'
@@ -43,6 +45,7 @@ paths:
             - 'http://identifiers.org/hgnc/'
             - 'http://identifiers.org/pubmed/'
             - 'http://identifiers.org/refseq/'
+            - 'http://identifiers.org/clinicalsignificance/'
           x-requestTemplate:
             - valueType: 'http://identifiers.org/hgnc.symbol/'
               template: cadd.gene.genename:{{input}} OR cgi.gene:{{input}} OR clinvar.gene.symbol:{{input}} OR dbnsfp.genename:{{input}} OR dbsnp.gene.symbol:{{input}} OR docm.genename:{{input}} OR emv.gene:{{input}} OR evs.gene.symbol:{{input}} OR snpeff.ann.genename:{{input}}
@@ -68,6 +71,10 @@ paths:
               template: clinvar.gene.id:{{input}} OR dbsnp.gene.geneid:{{input}}
             - valueType: 'http://identifiers.org/pubmed/'
               template: civic.evidence_items.source.pubmed_id:{{input}} OR docm.pubmed_id:{{input}} OR gwassnps.pubmed:{{input}}
+            - valueType: 'http://identifiers.org/clinicalsignificance/'
+              template: clinvar.rcv.clinical_significance:{{input}}
+          schema:
+            type: string
       responses:
         '200':
           description: 'A query response object with "hits" property'
@@ -104,6 +111,8 @@ paths:
               valueType: 'http://identifiers.org/pubmed/'
             - path: evs.gene.accession
               valueType: 'http://identifiers.org/refseq/'
+            - path: clinvar.rcv.clinical_significance
+              valueType: 'http://identifiers.org/clinicalsignificance/'
           x-JSONLDContext:
             'https://raw.githubusercontent.com/NCATS-Tangerine/translator-api-registry/master/myvariant.info/jsonld_context/myvariant_query_1.1.json'
   '/variant/variantid':
@@ -123,6 +132,8 @@ paths:
               template: /variant/{{input}}
             - valueType: 'http://identifiers.org/dbsnp/'
               template: /variant/{{input}}
+          schema:
+            type: string
       responses:
         '200':
           description: 'A variant object'
@@ -155,5 +166,7 @@ paths:
               valueType: 'http://identifiers.org/pubmed/'
             - path: evs.gene.accession
               valueType: 'http://identifiers.org/refseq/'
+            - path: clinvar.rcv.clinical_significance
+              valueType: 'http://identifiers.org/clinicalsignificance/'
           x-JSONLDContext:
             'https://raw.githubusercontent.com/NCATS-Tangerine/translator-api-registry/master/myvariant.info/jsonld_context/myvariant_variant_1.1.json'

@@ -1,0 +1,41 @@
+openapi: '3.0'
+info:
+  version: '1.0'
+  title: DGIdb API
+  description: >-
+    Drug gene interaction database
+  termsOfService: http://dgidb.genome.wustl.edu/contact
+  contact:
+    name: Malachi Griffith
+    x-role: responsible developer
+    email: help@dgidb.org
+    x-id: 
+      - 'https://github.com/malachig'
+servers:
+  - url: 'http://dgidb.genome.wustl.edu/api/v1/'
+    description: 'Production server'
+paths:
+  '/interactions.json':
+    get:
+      summary: 'return interactions for a gene with a drug, or a drug with a gene'
+      parameters:
+        - name: interactions.json
+          in: query
+          description: >-
+            Put gene names here, e.g. FLT1, CXCR4 
+          required: true
+          x-valueType:
+            - 'http://identifiers.org/hgnc.symbol/'
+            - 'http://identifiers.org/drugname/'
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 'A query response object with "matchedTerm" property'
+          x-responseValueType:
+            - path: matchedTerm.interactions.drugName
+              valueType: 'http://identifiers.org/drugname/'
+            - path: matchedTerm.interactions.genename
+              valueType: 'http://identifiers.org/hgnc.symbol/'
+          x-JSONLDContext:
+            'https://github.com/NCATS-Tangerine/translator-api-registry/blob/master/mychem.info/jsonld_context/mychem_context.json'
