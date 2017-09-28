@@ -16,6 +16,8 @@ If you have the permission, commit your changes to this repo. Otherwise, feel fr
 ### Starting from the scratch
 You can use [this editor](http://dev.smart-api.info/editor-oa3/) to write/edit your API metadata. You can start with an existing metadata example from "[mygene.info](mygene.info/openapi_minimum.yml)" or "[myvariant.info](myvariant.info/openapi_minimum.yml)" APIs. The editor automatically validates your API metadata and gives a live preview of auto-generated API documentation.
 
+This [OpenAPI GUI](http://dev.smart-api.info/openapi-gui/) interface can also be useful for creating your API metadata from the scratch. But be aware of that this interface does not support any [SmartAPI extensions](https://github.com/SmartAPI/smartAPI-Specification/blob/OpenAPI.next/versions/smartapi-list.md) (those fields with "x-" prefix) we added to the standard OpenAPI v3 specifications. You can of course add extra SmartAPI fields after you export your metadata from the GUI interface to the editor.
+
 ### Converting from a Swagger/OpenAPI v2 metadata
 If you already have an API metadata document in older Swagger/OpenAPI v2 specification. You can try this conversion tool to convert it to the latest OpenAPI v3 format, and then edit it in the [editor](http://dev.smart-api.info/editor-oa3/):
 
