@@ -6,10 +6,23 @@ This repo hosts the API metadata for the Translator project
 ## How to add your API
 
 1. First, each API should create a separate folder to host its metadata. The folder "_example_api" provides basic template for adding API metadata, so you can start with copying "_example_api" folder and renaming it to your API name.
-2. Second, fill in the metadata about your API according to the instruction. Also please refer to the existing examples like "[mygene.info](mygene.info)" and "[myvariant.info](myvariant.info)" APIs.
+2. Second, fill in the metadata about your API according to the instruction. Also please refer to the existing examples like "[mygene.info](mygene.info)" and "[myvariant.info](myvariant.info)" APIs. See more details in the next section.
 3. Add an entry to [API_LIST.yml](API_LIST.yml) file following the existing example. This is the master list of the APIs available in this repo. Our SmartAPI application will import all the API metadata based on this file.
 
 If you have the permission, commit your changes to this repo. Otherwise, feel free to submit a pull-request. Please check the "build status" badge above, and make sure it's green after your changes. We run some basic tests in this "[tests.py](tests.py)" for each commit.
+
+## How to create your OpenAPI v3 metadata
+
+### Starting from the scratch
+You can use [this editor](http://dev.smart-api.info/editor-oa3/) to write/edit your API metadata. You can start with an existing metadata example from "[mygene.info](mygene.info/openapi_minimum.yml)" or "[myvariant.info](myvariant.info/openapi_minimum.yml)" APIs. The editor automatically validates your API metadata and gives a live preview of auto-generated API documentation.
+
+### Converting from a Swagger/OpenAPI v2 metadata
+If you already have an API metadata document in older Swagger/OpenAPI v2 specification. You can try this conversion tool to convert it to the latest OpenAPI v3 format, and then edit it in the [editor](http://dev.smart-api.info/editor-oa3/):
+
+http://openapi-converter.appspot.com/
+
+This converter is not perfect, but still a good starting point.
+
 
 ## API_LIST.yml file
 This is a YAML file at the root of this repo to keep track of all APIs available in this repo. Our SmartAPI application will import all the API metadata based on this file and render an API registry web frontend.
