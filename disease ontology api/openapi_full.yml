@@ -1,0 +1,46 @@
+openapi: '3.0'
+info:
+  version: '0.1.1'
+  title: Disease Ontology API
+  description: >-
+    A RESTful API service is also offered to users of the Disease Ontology browser website to allow for programmatic access to the metadata found in the database.
+  termsOfService: http://disease-ontology.org/faq/
+  contact:
+    name: Chris Mungall
+    x-role: responsible developer
+    email: help@myvariant.info
+    x-id: 
+      - 'https://orcid.org/0000-0002-6601-2165'
+      - 'https://github.com/cmungall'
+servers:
+  - url: 'http://www.disease-ontology.org/api'
+    description: 'Production server'
+paths:
+  '/metadata/doid':
+    get:
+      summary: 'Returns xref related to a doid'
+      parameters:
+        - name: doid
+          in: path
+          description: >-
+            DOID, e.g. DOID:678. 
+          required: true
+          x-valueType:
+            - 'http://identifiers.org/doid/'
+          x-requestTemplate:
+            - valueType: 'http://identifiers.org/doid/'
+              template: /metadata/{{input}}
+      responses:
+        '200':
+          description: 'A distinct set of association.objects (typically ontology terms). This appears at the top level of the results payload'
+          x-responseValueType:
+            - path: xref
+              valueType: 'http://identifiers.org/mesh/'
+            - path: xref
+              valueType: 'http://identifiers.org/ncit/'
+            - path: xref
+              valueType: 'http://identifiers.org/snomedct/'
+            - path: xref
+              valueType: http://identifiers.org/umls/
+          x-JSONLDContext:
+            'https://raw.githubusercontent.com/NCATS-Tangerine/translator-api-registry/master/myvariant.info/jsonld_context/myvariant_query_1.1.json'
