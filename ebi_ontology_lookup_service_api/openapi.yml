@@ -1,0 +1,45 @@
+openapi: '3.0.0'
+info:
+  version: '1.0'
+  title: EBI Ontology Service API
+  description: >-
+    The Ontology Lookup Service (OLS) is a repository for biomedical ontologies that aims to provide a single point of access to the latest ontology versions. You can browse the ontologies through the website as well as programmatically via the OLS API. OLS is developed and maintained by the Samples, Phenotypes and Ontologies Team at EMBL-EBI.
+  termsOfService: https://www.ebi.ac.uk/ols/docs/about
+  contact:
+    name: Jupp S.
+    x-role: responsible developer
+    email: ols-support@ebi.ac.uk
+    x-id:
+      - 'https://github.com/EBISPOT/OLS'
+servers:
+  - url: 'https://www.ebi.ac.uk/ols/api'
+    description: 'Production server'
+tags:
+  - name: ontology
+  - name: query
+  - name: translator
+paths:
+  /query:
+    get:
+      summary: 'The search API is independent of the REST API and supports free text search over the ontologies. The default search is across all textual fields in the ontology, but results are ranked towards hits in labels, then synonyms, then definitions, then annotations.'
+      parameters:
+        - name: q
+          in: query
+          description: >-
+            The terms to search. By default the search is performed over term labels, synonyms, descriptions, identifiers and annotation properties.
+          required: true
+          x-valueType:
+            - 'http://biothings.io/concepts/disease_name/'
+          x-requestTemplate:
+            - valueType: 'http://biothings.io/concepts/disease_name/'
+              template: '{{input}}&ontology=doid'
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 'A query response object with "hits" property'
+          x-responseValueType:
+            - path: response.docs.obo_id
+              valueType: 'http://identifiers.org/doid/'
+          x-JSONLDContext:
+            'https://raw.githubusercontent.com/NCATS-Tangerine/translator-api-registry/master/ebi_ontology_lookup_service_api/jsonld_context/ols_query_1.1.json'
