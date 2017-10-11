@@ -1,0 +1,152 @@
+openapi: '3.0.0'
+info:
+  version: '1.0'
+  title: EBI Proteins API
+  description: >-
+    The proteins service provides an interface for accessing UniProtKB entries and UniProtKB isoform entries. The features service provides protein functional annotations from UniProt Knowledgebase (UniProtKB) protein entries. The variation, proteomics and antigen services provide annotations imported and mapped from Large Scale data Sources (LSS) such as 1000Genomes, ExAC, PeptideAtlas, MaxQB and HPA along with UniProtKB annotations for these feature types (if applicable).
+    The Proteins service returns XML, JSON and FASTA formatted results. Features, variation, proteomics and antigen all return XML, JSON and GFF formatted results.
+  termsOfService: https://groups.google.com/d/forum/ebi-proteins-api
+  contact:
+    name: EBI
+    x-role: group 
+servers:
+  - url: 'https://www.ebi.ac.uk/proteins/api'
+    description: 'Production server'
+tags:
+  - name: protein
+  - name: variant
+  - name: annotation
+  - name: translator
+paths:
+  '/proteins/interaction/{accession}':
+    get:
+      summary: 'Get Uniprot Interactions by Accession'
+      parameters:
+        - name: accession
+          in: path
+          description: >-
+            Uniprot Accession number for proteins, e.g. P51587.
+          required: true
+          x-valueType:
+            - 'http://identifiers.org/uniprot/'
+          x-requestTemplate:
+            - valueType: 'http://identifiers.org/uniprot/'
+              template: /proteins/interaction/{{input}}
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 'A query response object with "hits" property'
+          x-responseValueType:
+            - path: interactions.id
+              valueType: 'http://identifiers.org/uniprot/'
+            - path: interactions.gene
+              valueType: 'http://identifiers.org/hgnc.symbol/'
+  '/features/{accession}?categories=PTM':
+    get:
+      summary: 'Get UniProt protein sequence features (PTM) by accession'
+      parameters:
+        - name: accession
+          in: path
+          description: >-
+            Uniprot accession number for proteins, e.g. P51587.
+          required: true
+          x-valueType:
+            - 'http://identifiers.org/uniprot/'
+          x-requestTemplate:
+            - valueType: 'http://identifiers.org/uniprot/'
+              template: /features/{{input}}?categories=PTM
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 'PTMs related to the accession'
+          x-responseValueType:
+            - path: features
+              valueType: 'http://biothings.io/concepts/ptm/'
+  '/features/{accession}?categories=MOLECULAR_PROCESSING':
+    get:
+      summary: 'Get UniProt protein sequence features (MOLECULAR_PROCESSING) by accession'
+      parameters:
+        - name: accession
+          in: path
+          description: >-
+            Uniprot accession number for proteins, e.g. P51587.
+          required: true
+          x-valueType:
+            - 'http://identifiers.org/uniprot/'
+          x-requestTemplate:
+            - valueType: 'http://identifiers.org/uniprot/'
+              template: /features/{{input}}?categories=MOLECULAR_PROCESSING
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 'MOLECULAR_PROCESSINGs related to the accession'
+          x-responseValueType:
+            - path: features
+              valueType: 'http://biothings.io/concepts/molecular_processing/'
+  '/features/{accession}?categories=TOPOLOGY':
+    get:
+      summary: 'Get UniProt protein sequence features (TOPOLOGY) by accession'
+      parameters:
+        - name: accession
+          in: path
+          description: >-
+            Uniprot accession number for proteins, e.g. P51587.
+          required: true
+          x-valueType:
+            - 'http://identifiers.org/uniprot/'
+          x-requestTemplate:
+            - valueType: 'http://identifiers.org/uniprot/'
+              template: /features/{{input}}?categories=TOPOLOGY
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 'TOPOLOGYs related to the accession'
+          x-responseValueType:
+            - path: features
+              valueType: 'http://biothings.io/concepts/topology/'
+  '/variation/{accession}':
+    get:
+      summary: 'Get natural variants by UniProt accession'
+      parameters:
+        - name: accession
+          in: path
+          description: >-
+            UniProt accession
+          required: true
+          x-valueType:
+            - 'http://identifiers.org/uniprot/'
+          x-requestTemplate:
+            - valueType: 'http://identifiers.org/uniprot/'
+              template: /variation/{{input}}
+          schema:
+            type: string
+        - name: sourcetype
+          in: query
+          description: >-
+            Filter by the sourceType for variants: uniprot, large_scale_study and mixed. Comma separated values accepted up to 2.
+          required: false
+          x-valueType:
+            - 'http://identifiers.org/sourcetype/'
+          schema:
+            type: string
+            enum: ["uniprot", "large_scale_study", "mixed"]
+        - name: consequencetype
+          in: query
+          description: >-
+            Filter by consequenceType for variants: missense, stop gained or stop lost. Comma separated values accepted up to 2.
+          required: false
+          x-valueType:
+            - 'http://identifiers.org/consequencetype/'
+          schema:
+            type: string
+            enum: ["missense", "stop gained", "stop lost"]
+      responses:
+        '200':
+          description: 'Variants related to the UniProt accession number'
+          x-responseValueType:
+            - path: features.xrefs.id
+              valueType: 'http://identifiers.org/dbsnp/'
