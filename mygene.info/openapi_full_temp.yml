@@ -1,0 +1,257 @@
+openapi: '3.0.0'
+info:
+  version: '3.0'
+  title: MyGene.info API
+  description: >-
+    Documentation of the MyGene.info Gene Query web services. Learn more about
+    [MyGene.info](http://mygene.info/)
+  termsOfService: http://mygene.info/terms/
+  contact:
+    name: Chunlei Wu
+    x-role: responsible developer
+    email: help@mygene.info
+    x-id:
+      - 'http://orcid.org/0000-0002-2629-6124'
+      - 'https://github.com/newgene'
+servers:
+  - url: 'http://mygene.info/v3'
+    description: 'Production server'
+tags:
+  - name: gene
+  - name: annotation
+  - name: query
+  - name: translator
+paths:
+  /query:
+    get:
+      summary: 'Make gene query and return matching gene hits'
+      parameters:
+        - name: q
+          in: query
+          description: >-
+            Query string. Examples "CDK2", "NM_052827", "204639_at". The
+            detailed query syntax can be found at
+            http://docs.mygene.info/en/latest/doc/query_service.html
+          required: true
+          x-valueType:
+            - 'http://identifiers.org/hgnc.symbol/'
+            - 'http://identifiers.org/refseq/'
+            - 'http://identifiers.org/unigene/'
+            - 'http://identifiers.org/uniprot/'
+            - 'http://identifiers.org/pdb/'
+            - 'http://identifiers.org/biocarta.pathway/'
+            - 'http://identifiers.org/kegg.pathway/'
+            - 'http://identifiers.org/wikipathways/'
+            - 'http://identifiers.org/pharmgkb.pathways/'
+            - 'http://identifiers.org/reactome/'
+            - 'http://identifiers.org/ensembl.gene/'
+            - 'http://identifiers.org/ensembl.protein/'
+            - 'http://identifiers.org/ensembl.transcript/'
+            - 'http://identifiers.org/ensembl.translation/'
+          x-requestTemplate:
+            - valueType: 'http://identifiers.org/hgnc.symbol/'
+              template: symbol:{{input}}
+            - valueType: 'http://identifiers.org/refseq/'
+              template: refseq.genomic:{{input}}
+            - valueType: 'http://identifiers.org/unigene/'
+              template: unigene:{{input}}
+            - valueType: 'http://identifiers.org/uniprot/'
+              template: uniprot.Swiss-Prot:{{input}}
+            - valueType: 'http://identifiers.org/pdb/'
+              template: pdb:{{input}}
+            - valueType: 'http://identifiers.org/biocarta.pathway/'
+              template: pathway.biocarta.id:{{input}}
+            - valueType: 'http://identifiers.org/kegg.pathway/'
+              template: pathway.kegg.id:{{input}}
+            - valueType: 'http://identifiers.org/wikipathways/'
+              template: pathway.wikipathways.id:{{input}}
+            - valueType: 'http://identifiers.org/pharmgkb.pathways/'
+              template: pathway.pharmgkb.id:{{input}}
+            - valueType: 'http://identifiers.org/reactome/'
+              template: pathway.reactome.id:{{input}}
+            - valueType: 'http://identifiers.org/ensembl.gene/'
+              template: ensembl.gene
+            - valueType: 'http://identifiers.org/ensembl.protein/'
+              template: ensembl.protein
+            - valueType: 'http://identifiers.org/ensembl.transcript/'
+              template: ensembl.transcript
+            - valueType: 'http://identifiers.org/ensembl.translation/'
+              template: ensembl.translation
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 'A query response object with "hits" property'
+          x-responseValueType:
+            - path: hits._id
+              valueType: 'http://identifiers.org/ncbigene/'
+            - path: hits.entrezgene
+              valueType: 'http://identifiers.org/ncbigene/'
+            - path: hits.symbol
+              valueType: 'http://identifiers.org/hgnc.symbol/'
+            - path: hits.taxid
+              valueType: 'http://identifiers.org/taxonomy/'
+          x-JSONLDContext:
+            'https://raw.githubusercontent.com/NCATS-Tangerine/translator-api-registry/master/mygene.info/jsonld_context/mygene_query_1.1.json'
+    post:
+      summary: 'Make gene batch query and return matching gene hits'
+      parameters:
+        - name: q
+          in: body
+          required: true
+          x-valueType:
+            - 'http://identifiers.org/hgnc.symbol/'
+            - 'http://identifiers.org/refseq/'
+            - 'http://identifiers.org/unigene/'
+            - 'http://identifiers.org/uniprot/'
+            - 'http://identifiers.org/pdb/'
+            - 'http://identifiers.org/biocarta.pathway/'
+            - 'http://identifiers.org/kegg.pathway/'
+            - 'http://identifiers.org/wikipathways/'
+            - 'http://identifiers.org/pharmgkb.pathways/'
+            - 'http://identifiers.org/reactome/'
+          x-batchSupport: true
+          x-batchInputType: delimited
+          x-batchDelimiter: ','
+          schema:
+            type: string
+        - name: scopes
+          in: body
+          required: true
+          x-requestTemplate:
+            - valueType: 'default'
+              template: entrezgene,ensemblgene,retired
+            - valueType: 'http://identifiers.org/hgnc.symbol/'
+              template: symbol
+            - valueType: 'http://identifiers.org/refseq/'
+              template: refseq.genomic
+            - valueType: 'http://identifiers.org/unigene/'
+              template: unigene
+            - valueType: 'http://identifiers.org/uniprot/'
+              template: uniprot.Swiss-Prot
+            - valueType: 'http://identifiers.org/pdb/'
+              template: pdb
+            - valueType: 'http://identifiers.org/biocarta.pathway/'
+              template: pathway.biocarta.id
+            - valueType: 'http://identifiers.org/kegg.pathway/'
+              template: pathway.kegg.id
+            - valueType: 'http://identifiers.org/wikipathways/'
+              template: pathway.wikipathways.id
+            - valueType: 'http://identifiers.org/pharmgkb.pathways/'
+              template: pathway.pharmgkb.id
+            - valueType: 'http://identifiers.org/reactome/'
+              template: pathway.reactome.id
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 'Query response objects with "hits" property'
+          x-responseValueType:
+            - path: hits._id
+              valueType: 'http://identifiers.org/ncbigene/'
+            - path: hits.entrezgene
+              valueType: 'http://identifiers.org/ncbigene/'
+            - path: hits.symbol
+              valueType: 'http://identifiers.org/hgnc.symbol/'
+            - path: hits.taxid
+              valueType: 'http://identifiers.org/taxonomy/'
+          x-JSONLDContext:
+            'https://raw.githubusercontent.com/NCATS-Tangerine/translator-api-registry/master/mygene.info/jsonld_context/mygene_query_1.1.json'
+  '/gene/{geneid}':
+    get:
+      summary: 'For a given gene id, return the matching gene object'
+      parameters:
+        - name: geneid
+          in: path
+          description: >-
+            Entrez or Ensembl gene id, e.g., 1017, ENSG00000170248. A retired
+            Entrez Gene id works too if it is replaced by a new one, e.g.,
+            245794
+          required: true
+          x-valueType:
+            - 'http://identifiers.org/ncbigene/'
+            - 'http://identifiers.org/ensembl/'
+          x-requestTemplate:
+            - valueType: 'http://identifiers.org/ncbigene/'
+              template: /gene/{{input}}
+            - valueType: 'http://identifiers.org/ensembl/'
+              template: /gene/{{input}}
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 'A gene object'
+          x-responseValueType:
+            - path: symbol
+              valueType: 'http://identifiers.org/hgnc.symbol/'
+            - path: unigene
+              valueType: 'http://identifiers.org/unigene/'
+            - path: uniprot.Swiss-Prot
+              valueType: 'http://identifiers.org/uniprot/'
+            - path: pdb
+              valueType: 'http://identifiers.org/pdb/'
+            - path: pathway.biocarta.id
+              valueType: 'http://identifiers.org/biocarta.pathway/'
+            - path: pathway.kegg.id
+              valueType: 'http://identifiers.org/kegg.pathway/'
+            - path: pathway.reactome.id
+              valueType: 'http://identifiers.org/reactome/'
+            - path: pathway.wikipathways.id
+              valueType: 'http://identifiers.org/wikipathways/'
+            - path: pathway.pharmgkb.id
+              valueType: 'http://identifiers.org/pharmgkb.pathways/'
+          x-JSONLDContext:
+            'https://raw.githubusercontent.com/NCATS-Tangerine/translator-api-registry/master/mygene.info/jsonld_context/mygene_gene_1.1.json'
+    post:
+      summary: 'For a list of gene ids, return the matching gene objects'
+      parameters:
+        - name: ids
+          in: body
+          description: >-
+            Entrez or Ensembl gene id, e.g., 1017, ENSG00000170248. A retired
+            Entrez Gene id works too if it is replaced by a new one, e.g.,
+            245794
+          required: true
+          x-valueType:
+            - 'http://identifiers.org/ncbigene/'
+            - 'http://identifiers.org/ensembl/'
+          x-batchSupport: true
+          x-batchInputType: delimited
+          x-batchDelimiter: ','
+          schema:
+            type: string
+        - name: species
+          in: body
+          required: false
+          x-valueType:
+            - 'http://identifiers.org/taxonomy/'
+          x-valueDefault: all
+          x-batchSupport: true
+          x-batchInputType: delimited
+          x-batchDelimiter: ','
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 'gene objects'
+          x-responseValueType:
+            - path: symbol
+              valueType: 'http://identifiers.org/hgnc.symbol/'
+            - path: unigene
+              valueType: 'http://identifiers.org/unigene/'
+            - path: uniprot.Swiss-Prot
+              valueType: 'http://identifiers.org/uniprot/'
+            - path: pdb
+              valueType: 'http://identifiers.org/pdb/'
+            - path: pathway.biocarta.id
+              valueType: 'http://identifiers.org/biocarta.pathway/'
+            - path: pathway.kegg.id
+              valueType: 'http://identifiers.org/kegg.pathway/'
+            - path: pathway.reactome.id
+              valueType: 'http://identifiers.org/reactome/'
+            - path: pathway.wikipathways.id
+              valueType: 'http://identifiers.org/wikipathways/'
+            - path: pathway.pharmgkb.id
+              valueType: 'http://identifiers.org/pharmgkb.pathways/'
+          x-JSONLDContext:
+            'https://raw.githubusercontent.com/NCATS-Tangerine/translator-api-registry/master/mygene.info/jsonld_context/mygene_gene_1.1.json'
