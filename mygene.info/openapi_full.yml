@@ -24,13 +24,13 @@ tags:
 paths:
   /query:
     get:
-      summary: 'Make gene query and return matching gene hits'
+      summary: 'Make gene query and return matching gene list. Support JSONP and CORS as well.'
       tags:
         - query
       parameters:
         - name: q
           in: query
-          description: 'Query string. Examples "CDK2", "NM_052827", "204639_at". The detailed query syntax can be found from our [docs](http://docs.mygene.info/en/latest/doc/query_service.html)'
+          description: 'Query string. Examples "CDK2", "NM_052827", "204639_at". The detailed query syntax can be found from our [docs](http://docs.mygene.info/en/latest/doc/query_service.html).'
           required: true
           example:
             - CDK2
@@ -183,7 +183,7 @@ paths:
             'https://raw.githubusercontent.com/NCATS-Tangerine/translator-api-registry/master/mygene.info/jsonld_context/mygene_query_1.1.json'
   '/gene/{geneid}':
     get:
-      summary: 'For a given gene id, return the matching gene object'
+      summary: 'Retrieve gene annotation based on Entrez or Ensembl gene id, support JSONP and CORS as well.'
       tags:
         - annotation
       parameters:
@@ -206,8 +206,6 @@ paths:
             type: string
         - name: fields
           $ref: '#/components/parameters/fields'
-        - name: species
-          $ref: '#/components/parameters/species'
         - name: dotfield
           $ref: '#/components/parameters/dotfield'
         - name: callback
@@ -286,6 +284,25 @@ paths:
               valueType: 'http://identifiers.org/pharmgkb.pathways/'
           x-JSONLDContext:
             'https://raw.githubusercontent.com/NCATS-Tangerine/translator-api-registry/master/mygene.info/jsonld_context/mygene_gene_1.1.json'
+
+  '/metadata':
+    get:
+      summary: 'Get metadata about the data available from MyGene.info.'
+      parameters:
+        - name: callback
+          $ref: '#/components/parameters/callback'
+      responses:
+        '200':
+          description: 'MyGene.info metadata object'
+  '/metadata/fields':
+    get:
+      summary: 'Get metadata about the data fields available from MyGene.info.'
+      parameters:
+        - name: callback
+          $ref: '#/components/parameters/callback'
+      responses:
+        '200':
+          description: 'MyGene.info metadata fields object'
 components:
   parameters:
     fields:
