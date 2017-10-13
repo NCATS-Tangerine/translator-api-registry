@@ -25,14 +25,21 @@ paths:
   /query:
     get:
       summary: 'Make gene query and return matching gene hits'
+      tags:
+        - query
       parameters:
         - name: q
           in: query
-          description: >-
-            Query string. Examples "CDK2", "NM_052827", "204639_at". The
-            detailed query syntax can be found at
-            http://docs.mygene.info/en/latest/doc/query_service.html
+          description: 'Query string. Examples "CDK2", "NM_052827", "204639_at". The detailed query syntax can be found from our [docs](http://docs.mygene.info/en/latest/doc/query_service.html)'
           required: true
+          example:
+            - CDK2
+            - NM_052827
+            - 204639_at
+            - chr1:151,073,054-151,383,976
+            - hg19.chr1:151073054-151383976
+          schema:
+            type: string
           x-valueType:
             - 'http://identifiers.org/hgnc.symbol/'
             - 'http://identifiers.org/refseq/'
@@ -77,8 +84,48 @@ paths:
               template: ensembl.transcript
             - valueType: 'http://identifiers.org/ensembl.translation/'
               template: ensembl.translation
+        - name: fields
+          $ref: '#/components/parameters/fields'
+        - name: species
+          $ref: '#/components/parameters/species'
+        - name: size
+          $ref: '#/components/parameters/size'
+        - name: from
+          $ref: '#/components/parameters/from'
+        - name: sort
+          $ref: '#/components/parameters/sort'
+        - name: facets
+          in: query
+          description: 'a single field or comma-separated fields to return facets, for example, "facets=taxid", "facets=taxid,type_of_gene".'
+          example:
+            - taxid
+            - taxid,type_of_gene
           schema:
             type: string
+        - name: species_facet_filter
+          in: query
+          description: 'relevant when faceting on species (i.e., “facets=taxid” are passed). It’s used to pass species filter without changing the scope of faceting, so that the returned facet counts won’t change. Either species name or taxonomy id can be used, just like “species” parameter.'
+          example:
+            - human
+            - '9606'
+          schema:
+            type: string
+        - name: entrezonly
+          in: query
+          description: 'when passed as “true” or “1”, the query returns only the hits with valid Entrez gene ids. Default: false.'
+          schema:
+            type: boolean
+        - name: ensemblonly
+          in: query
+          description: 'when passed as “true” or “1”, the query returns only the hits with valid Ensembl gene ids. Default: false.'
+          schema:
+            type: boolean
+        - name: callback
+          $ref: '#/components/parameters/callback'
+        - name: dotfield
+          $ref: '#/components/parameters/dotfield'
+        - name: email
+          $ref: '#/components/parameters/email'
       responses:
         '200':
           description: 'A query response object with "hits" property'
@@ -95,54 +142,31 @@ paths:
             'https://raw.githubusercontent.com/NCATS-Tangerine/translator-api-registry/master/mygene.info/jsonld_context/mygene_query_1.1.json'
     post:
       summary: 'Make gene batch query and return matching gene hits'
+      tags:
+        - query
+      requestBody:
+        content:
+          'application/x-www-form-urlencoded':
+            schema:
+             properties:
+                q:
+                  description: >-
+                    multiple query terms seperated by comma (also support "+" or white space), but no wildcard, e.g., "q=1017,1018" or "q=CDK2+BTK"
+                  type: string
+                scopes:
+                  description: 'Specify one or more fields (separated by comma) as the search "scopes", e.g., "scopes=entrezgene", "scopes=entrezgene,ensemblgene". The available "fields" can be passed to "scopes" parameter are listed [here](http://mygene.info/doc/query_service.html#available-fields). Default: "scopes=entrezgene,ensemblgene,retired" (either Entrez or Ensembl gene ids).'
+                  type: string
+             required:
+               - q
       parameters:
-        - name: q
-          in: body
-          required: true
-          x-valueType:
-            - 'http://identifiers.org/hgnc.symbol/'
-            - 'http://identifiers.org/refseq/'
-            - 'http://identifiers.org/unigene/'
-            - 'http://identifiers.org/uniprot/'
-            - 'http://identifiers.org/pdb/'
-            - 'http://identifiers.org/biocarta.pathway/'
-            - 'http://identifiers.org/kegg.pathway/'
-            - 'http://identifiers.org/wikipathways/'
-            - 'http://identifiers.org/pharmgkb.pathways/'
-            - 'http://identifiers.org/reactome/'
-          x-batchSupport: true
-          x-batchInputType: delimited
-          x-batchDelimiter: ','
-          schema:
-            type: string
-        - name: scopes
-          in: body
-          required: true
-          x-requestTemplate:
-            - valueType: 'default'
-              template: entrezgene,ensemblgene,retired
-            - valueType: 'http://identifiers.org/hgnc.symbol/'
-              template: symbol
-            - valueType: 'http://identifiers.org/refseq/'
-              template: refseq.genomic
-            - valueType: 'http://identifiers.org/unigene/'
-              template: unigene
-            - valueType: 'http://identifiers.org/uniprot/'
-              template: uniprot.Swiss-Prot
-            - valueType: 'http://identifiers.org/pdb/'
-              template: pdb
-            - valueType: 'http://identifiers.org/biocarta.pathway/'
-              template: pathway.biocarta.id
-            - valueType: 'http://identifiers.org/kegg.pathway/'
-              template: pathway.kegg.id
-            - valueType: 'http://identifiers.org/wikipathways/'
-              template: pathway.wikipathways.id
-            - valueType: 'http://identifiers.org/pharmgkb.pathways/'
-              template: pathway.pharmgkb.id
-            - valueType: 'http://identifiers.org/reactome/'
-              template: pathway.reactome.id
-          schema:
-            type: string
+        - name: fields
+          $ref: '#/components/parameters/fields'
+        - name: species
+          $ref: '#/components/parameters/species'
+        - name: dotfield
+          $ref: '#/components/parameters/dotfield'
+        - name: email
+          $ref: '#/components/parameters/email'
       responses:
         '200':
           description: 'Query response objects with "hits" property'
@@ -160,6 +184,8 @@ paths:
   '/gene/{geneid}':
     get:
       summary: 'For a given gene id, return the matching gene object'
+      tags:
+        - annotation
       parameters:
         - name: geneid
           in: path
@@ -178,6 +204,16 @@ paths:
               template: /gene/{{input}}
           schema:
             type: string
+        - name: fields
+          $ref: '#/components/parameters/fields'
+        - name: species
+          $ref: '#/components/parameters/species'
+        - name: dotfield
+          $ref: '#/components/parameters/dotfield'
+        - name: callback
+          $ref: '#/components/parameters/callback'
+        - name: email
+          $ref: '#/components/parameters/email'
       responses:
         '200':
           description: 'A gene object'
@@ -202,35 +238,30 @@ paths:
               valueType: 'http://identifiers.org/pharmgkb.pathways/'
           x-JSONLDContext:
             'https://raw.githubusercontent.com/NCATS-Tangerine/translator-api-registry/master/mygene.info/jsonld_context/mygene_gene_1.1.json'
+  '/gene':
     post:
       summary: 'For a list of gene ids, return the matching gene objects'
+      tags:
+        - annotation
+      requestBody:
+        content:
+          'application/x-www-form-urlencoded':
+            schema:
+             properties:
+                ids:
+                  description: 'multiple geneids seperated by comma, e.g., "ids=1017,1018" or "ids=695,ENSG00000123374". Note that currently we only take the input ids up to 1000 maximum, the rest will be omitted.'
+                  type: string
+             required:
+               - ids
       parameters:
-        - name: ids
-          in: body
-          description: >-
-            Entrez or Ensembl gene id, e.g., 1017, ENSG00000170248. A retired
-            Entrez Gene id works too if it is replaced by a new one, e.g.,
-            245794
-          required: true
-          x-valueType:
-            - 'http://identifiers.org/ncbigene/'
-            - 'http://identifiers.org/ensembl/'
-          x-batchSupport: true
-          x-batchInputType: delimited
-          x-batchDelimiter: ','
-          schema:
-            type: string
+        - name: fields
+          $ref: '#/components/parameters/fields'
         - name: species
-          in: body
-          required: false
-          x-valueType:
-            - 'http://identifiers.org/taxonomy/'
-          x-valueDefault: all
-          x-batchSupport: true
-          x-batchInputType: delimited
-          x-batchDelimiter: ','
-          schema:
-            type: string
+          $ref: '#/components/parameters/species'
+        - name: dotfield
+          $ref: '#/components/parameters/dotfield'
+        - name: email
+          $ref: '#/components/parameters/email'
       responses:
         '200':
           description: 'gene objects'
@@ -255,3 +286,59 @@ paths:
               valueType: 'http://identifiers.org/pharmgkb.pathways/'
           x-JSONLDContext:
             'https://raw.githubusercontent.com/NCATS-Tangerine/translator-api-registry/master/mygene.info/jsonld_context/mygene_gene_1.1.json'
+components:
+  parameters:
+    fields:
+      name: fields
+      in: query
+      description:
+        'a comma-separated fields to limit the fields returned from the matching gene hits. The supported field names can be found from any gene object (e.g. http://mygene.info/v3/gene/1017). Note that it supports dot notation as well, e.g., you can pass "refseq.rna". If "fields=all", all available fields will be returned. Default: "symbol,name,taxid,entrezgene,ensemblgene".'
+      schema:
+        type: string
+    species:
+      name: species
+      in: query
+      description:
+          'can be used to limit the gene hits from given species. You can use "common names" for nine common species (human, mouse, rat, fruitfly, nematode, zebrafish, thale-cress, frog and pig). All other species, you can provide their taxonomy ids. Multiple species can be passed using comma as a separator. Default: human,mouse,rat.'
+      schema:
+        type: string
+    size:
+      name: size
+      in: query
+      description:
+          'the maximum number of matching gene hits to return (with a cap of 1000 at the moment). Default: 10.'
+      schema:
+        type: integer
+    from:
+      name: from
+      in: query
+      description:
+          'the number of matching gene hits to skip, starting from 0. Combining with "size" parameter, this can be useful for paging. Default: 0.'
+      schema:
+        type: integer
+    sort:
+      name: sort
+      in: query
+      description:
+          'the comma-separated fields to sort on. Prefix with "-" for descending order, otherwise in ascending order. Default: sort by matching scores in decending order.'
+      schema:
+        type: string
+    dotfield:
+      name: dotfield
+      in: query
+      description: 'control the format of the returned fields when passed "fields" parameter contains dot notation, e.g. "fields=refseq.rna". If "true" or "1", the returned data object contains a single "refseq.rna" field, otherwise ("false" or "0"), a single "refseq" field with a sub-field of "rna". Default: true.'
+      schema:
+        type: boolean
+    callback:
+      name: callback
+      in: query
+      description: 'you can pass a "callback" parameter to make a JSONP call.'
+      schema:
+        type: string
+    email:
+      name: email
+      in: query
+      description:
+          'If you are regular users of our services, we encourage you to provide us an email, so that we can better track the usage or follow up with you.'
+      schema:
+        type: string
