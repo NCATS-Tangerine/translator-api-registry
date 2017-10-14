@@ -16,6 +16,8 @@ info:
 servers:
   - url: 'http://mygene.info/v3'
     description: 'Production server'
+  - url: 'https://mygene.info/v3'
+    description: 'Encrypted Production server'
 tags:
   - name: gene
   - name: annotation
@@ -30,14 +32,9 @@ paths:
       parameters:
         - name: q
           in: query
-          description: 'Query string. Examples "CDK2", "NM_052827", "204639_at". The detailed query syntax can be found from our [docs](http://docs.mygene.info/en/latest/doc/query_service.html).'
+          description: 'Query string. Examples "CDK2", "NM_052827", "204639_at", "chr1:151,073,054-151,383,976", "hg19.chr1:151073054-151383976". The detailed query syntax can be found from our [docs](http://docs.mygene.info/en/latest/doc/query_service.html).'
           required: true
-          example:
-            - CDK2
-            - NM_052827
-            - 204639_at
-            - chr1:151,073,054-151,383,976
-            - hg19.chr1:151073054-151383976
+          example: CDK2
           schema:
             type: string
           x-valueType:
@@ -97,17 +94,11 @@ paths:
         - name: facets
           in: query
           description: 'a single field or comma-separated fields to return facets, for example, "facets=taxid", "facets=taxid,type_of_gene".'
-          example:
-            - taxid
-            - taxid,type_of_gene
           schema:
             type: string
         - name: species_facet_filter
           in: query
           description: 'relevant when faceting on species (i.e., “facets=taxid” are passed). It’s used to pass species filter without changing the scope of faceting, so that the returned facet counts won’t change. Either species name or taxonomy id can be used, just like “species” parameter.'
-          example:
-            - human
-            - '9606'
           schema:
             type: string
         - name: entrezonly
@@ -129,6 +120,10 @@ paths:
       responses:
         '200':
           description: 'A query response object with "hits" property'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QueryResult'
           x-responseValueType:
             - path: hits._id
               valueType: 'http://identifiers.org/ncbigene/'
@@ -170,6 +165,10 @@ paths:
       responses:
         '200':
           description: 'Query response objects with "hits" property'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QueryPOSTResult'
           x-responseValueType:
             - path: hits._id
               valueType: 'http://identifiers.org/ncbigene/'
@@ -183,7 +182,7 @@ paths:
             'https://raw.githubusercontent.com/NCATS-Tangerine/translator-api-registry/master/mygene.info/jsonld_context/mygene_query_1.1.json'
   '/gene/{geneid}':
     get:
-      summary: 'Retrieve gene annotation based on Entrez or Ensembl gene id, support JSONP and CORS as well.'
+      summary: 'Retrieve gene annotation object based on Entrez or Ensembl gene id, support JSONP and CORS as well.'
       tags:
         - annotation
       parameters:
@@ -194,6 +193,7 @@ paths:
             Entrez Gene id works too if it is replaced by a new one, e.g.,
             245794
           required: true
+          example: 1017
           x-valueType:
             - 'http://identifiers.org/ncbigene/'
             - 'http://identifiers.org/ensembl/'
@@ -214,7 +214,11 @@ paths:
           $ref: '#/components/parameters/email'
       responses:
         '200':
-          description: 'A gene object'
+          description: 'A matching gene object'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Gene'
           x-responseValueType:
             - path: symbol
               valueType: 'http://identifiers.org/hgnc.symbol/'
@@ -262,7 +266,13 @@ paths:
           $ref: '#/components/parameters/email'
       responses:
         '200':
-          description: 'gene objects'
+          description: 'a list of matching gene objects'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Gene'
           x-responseValueType:
             - path: symbol
               valueType: 'http://identifiers.org/hgnc.symbol/'
@@ -298,6 +308,16 @@ paths:
     get:
       summary: 'Get metadata about the data fields available from MyGene.info.'
       parameters:
+        - name: search
+          in: query
+          description: 'Pass a search term to filter the available fields, e.g. "search=clinvar".'
+          schema:
+            type: string
+        - name: prefix
+          in: query
+          description: 'Pass a prefix string to filter the available fields, e.g. "prefix=refseq".'
+          schema:
+            type: string
         - name: callback
           $ref: '#/components/parameters/callback'
       responses:
@@ -359,3 +379,181 @@ components:
           'If you are regular users of our services, we encourage you to provide us an email, so that we can better track the usage or follow up with you.'
       schema:
         type: string
+  schemas:
+    string_or_array:
+      oneOf:
+        - type: array
+          items:
+            type: string
+        - type: string
+    int64_or_array:
+      oneOf:
+        - type: array
+          items:
+            type: integer
+            format: int64
+        - type: integer
+          format: int64
+    QueryResult:
+      type: object
+      properties:
+        max_score:
+          type: number
+          format: float
+        took:
+          type: integer
+        total:
+          type: integer
+        hits:
+          type: array
+          items:
+            $ref: '#/components/schemas/Gene'
+    QueryPOSTResult:
+      type: array
+      items:
+        allOf:
+          - $ref: '#/components/schemas/MinimalGene'
+          - type: object
+            properties:
+              _score:
+                type: number
+                format: float
+              query:
+                type: string
+    MinimalGene:
+        type: object
+        required:
+          - _id
+          - taxid
+        properties:
+          _id:
+            type: string
+          entrezgene:
+            type: integer
+            format: int64
+          name:
+            type: string
+          symbol:
+            type: string
+          taxid:
+            type: integer
+            format: int32
+    Gene:
+      type: object
+      required:
+        - _id
+        - taxid
+      properties:
+        _id:
+          type: string
+        entrezgene:
+          type: integer
+          format: int64
+        name:
+          type: string
+        symbol:
+          type: string
+        taxid:
+          type: integer
+          format: int32
+
+        summary:
+          type: string
+        type_of_gene:
+          type: string
+        ec:
+          type: string
+        aliase:
+          type: string
+        locus_tag:
+          type: string
+        map_location:
+          type: string
+        other_names:
+          $ref: '#/components/schemas/string_or_array'
+
+        pdb:
+          $ref: '#/components/schemas/string_or_array'
+        pfam:
+          type: string
+        pharmgkb:
+          type: string
+        pid:
+          type: string
+        pir:
+          type: string
+        prosite:
+          type: string
+        unigene:
+          type: string
+
+        refseq:
+          type: object
+        accession:
+          type: object
+        ensembl:
+          type: object
+        uniprot:
+          type: object
+          properties:
+            Swiss-Prot:
+              $ref: '#/components/schemas/string_or_array'
+            TrEMBL:
+              $ref: '#/components/schemas/string_or_array'
+        generif:
+          type: object
+          properties:
+            pubmed:
+              $ref: '#/components/schemas/int64_or_array'
+            text:
+              type: string
+        genomic_pos:
+          type: object
+        go:
+          type: object
+        homologene:
+          type: object
+        interpro:
+          type: object
+        pathway:
+          type: object
+        umls:
+          type: object
+        wikipedia:
+          type: object
+          properties:
+            url_stub:
+              type: string
+        reagent:
+          type: object
+        reporter:
+          type: object
+
+        AnimalQTLdb:
+          type: string
+        FLYBASE:
+          type: string
+        HGNC:
+          type: string
+        HPRD:
+          type: string
+        MGI:
+          type: string
+        MIM:
+          type: string
+        RATMAP:
+          type: string
+        RGD:
+          type: string
+        TAIR:
+          type: string
+        Vega:
+          type: string
+        WormBase:
+          type: string
+        Xenbase:
+          type: string
+        ZFIN:
+          type: string
+        miRBase:
+          type: string
