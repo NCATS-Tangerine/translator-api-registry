@@ -9,7 +9,7 @@ This repo hosts the API metadata for the Translator project
 2. Second, fill in the metadata about your API according to the instruction. Also please refer to the existing examples like "[mygene.info](mygene.info)" and "[myvariant.info](myvariant.info)" APIs. See more details in the next section.
 3. Add an entry to [API_LIST.yml](API_LIST.yml) file following the existing example. This is the master list of the APIs available in this repo. Our SmartAPI application will import all the API metadata based on this file.
 
-If you have the permission, commit your changes to this repo. Otherwise, feel free to submit a pull-request. Please check the "build status" badge above, and make sure it's green after your changes. We run some basic tests in this "[tests.py](tests.py)" for each commit.
+If you have the permission, commit your changes to this repo. Otherwise, feel free to submit a pull-request. Please check the "build status" badge above, and make sure it's green after your changes. We run some validation tests in this "[tests.py](tests.py)" for each commit. (Tip: you can run `python tests.py` locally from the root of this repo to make sure all tests pass before you commit your code.)
 
 ## How to create your OpenAPI v3 metadata
 
@@ -25,6 +25,7 @@ http://openapi-converter.appspot.com/
 
 This converter is not perfect, but still a good starting point.
 
+Tip: Feel free to play with your API metadata file with the tools we mentioned above, and commit your changes even when they are not fully complete or valid. As along as the metadata entry has not been added to the API_LIST.yml file (see below), you will be fine :-). When you are happy with your metadata, you can now move to the next step to add it to the API_LIST.yml file.
 
 ## API_LIST.yml file
 This is a YAML file at the root of this repo to keep track of all APIs available in this repo. Our SmartAPI application will import all the API metadata based on this file and render an API registry web frontend.
