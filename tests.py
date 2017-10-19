@@ -48,7 +48,7 @@ def get_api_metadata_by_path(file_path):
                             "error": "Not a valid JSON or YAML format."}
         return metadata
     else:
-        return {"success": False, "error": "Invalid metadata file path."}
+        return {"success": False, "error": "Invalid metadata file path \"{}\".".format(file_path)}
 
 
 def get_api_metadata(metadata_src):
@@ -93,7 +93,7 @@ class TestAPIRegistry(unittest.TestCase):
             api_title = metadata.get('info', {}).get('title', '')
             self.assertFalse(metadata.get('success', None) is False,
                              "Fail to retrieve metadata:\n" +
-                             "\tAPI: {0}\n\tError: {1}".format(api_title, metadata.get("error", '')))
+                             "\tmetadata: {}\n\tAPI: {}\n\tError: {}".format(api['metadata'], api_title, metadata.get("error", '')))
             self.assertTrue(metadata.get('tags', None),
                             "Missing required \"tags\" field in the metadata content.\n" +
                             "\tAPI: {}".format(api_title))
