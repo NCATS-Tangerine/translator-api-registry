@@ -1,0 +1,239 @@
+openapi: 3.0.0
+servers:
+  - url: 'https://translator.ncats.io/broad-pgm-translator'
+info:
+  title: Broad probabilistic graphical models translator
+  contact:
+    name: Broad PGM translator
+    url: 'https://translator.ncats.io/broad-pgm-translator/'
+    email: translator@broadinstitute.org
+    x-role: responsible organization
+  version: 0.1.0
+paths:
+  /modelList:
+    get:
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  modelID:
+                    type: array
+                    items:
+                      type: string
+      description: List available models
+  '/{modelID}/modelSignature':
+    get:
+      description: Get model signature
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  modelID:
+                    type: string
+                  variableGroup:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        variableGroupID:
+                          type: string
+                        authorityURL:
+                          type: string
+                        asInput:
+                          type: boolean
+                        asOutput:
+                          type: boolean
+                        groupDistribution:
+                          enum:
+                            - discrete
+                            - empirical
+                            - Gaussian
+                            - Poisson
+                        groupType:
+                          enum:
+                            - Bollean
+                            - Number
+                            - String
+                          type: string
+                        groupValue:
+                          type: array
+                          items:
+                            type: string
+                        modelVariable:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              variableID:
+                                type: string
+                              authorityURI:
+                                type: string
+                              groupDistribution:
+                                enum:
+                                  - discrete
+                                  - empirical
+                                  - Gaussian
+                                  - Poisson
+                              variableType:
+                                enum:
+                                  - Bollean
+                                  - Number
+                                  - String
+                                type: string
+                              variableValue:
+                                type: array
+                                items:
+                                  type: string
+      parameters:
+        - name: modelID
+          in: path
+          description: Model identifier
+          required: true
+          schema:
+            type: string
+  /evaluateModel:
+    post:
+      description: evaluate model
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                modelID:
+                  type: string
+                modelInput:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      variableGroupID:
+                        type: string
+                      modelVariable:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            variableID:
+                              type: string
+                            priorDistribution:
+                              type: object
+                              properties:
+                                discreteDistribution:
+                                  type: array
+                                  items:
+                                    type: object
+                                    properties:
+                                      variableValue:
+                                        type: string
+                                      priorProbability:
+                                        type: number
+                                GaussianDistribution:
+                                  type: object
+                                  properties:
+                                    distributionMean: 
+                                      type: number
+                                    distributionStDev: 
+                                      type: number
+                                PoissonDistribution:
+                                  type: object
+                                  properties:
+                                    lambdaParameter: 
+                                      type: number
+                                empiricalDistribution:
+                                  type: object
+                                  properties:
+                                    distributionMean: 
+                                      type: number
+                                    distributionStDev: 
+                                      type: number
+                                    distributionPercentile: 
+                                      type: array
+                                      items: 
+                                        type: number
+                modelOutput:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      variableGroupID:
+                        type: string
+                      variableID:
+                        type: array
+                        items:
+                          type: string
+                      rawOutput:
+                        type: boolean
+        required: true
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  posteriorProbabilities:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        variableGroupID:
+                          type: string
+                        modelVariable:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              variableID:
+                                type: string
+                              posteriorDistribution:
+                                type: object
+                                properties:
+                                  discreteDistribution:
+                                    type: array
+                                    items:
+                                      type: object
+                                      properties:
+                                        variableValue:
+                                          type: string
+                                        posteriorProbability:
+                                          type: number
+                                  GaussianDistribution:
+                                    type: object
+                                    properties:
+                                      distributionMean: 
+                                        type: number
+                                      distributionStDev: 
+                                        type: number
+                                  PoissonDistribution:
+                                    type: object
+                                    properties:
+                                      lambdaParameter: 
+                                        type: number
+                                  empiricalDistribution:
+                                    type: object
+                                    properties:
+                                      distributionMean: 
+                                        type: number
+                                      distributionStDev: 
+                                        type: number
+                                      distributionPercentile: 
+                                        type: array
+                                        items: 
+                                          type: number
+                                  rawDistribution:
+                                    type: array
+                                    items:
+                                      type: number
+
+components:
+  schemas: {}
