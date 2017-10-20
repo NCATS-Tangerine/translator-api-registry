@@ -33,43 +33,51 @@ def get_api_metadata_by_url(url, as_string=False):
             return metadata
 
 
-def get_api_metadata_by_path(file_path):
+def get_api_metadata_by_path(file_path, as_string=False):
     if os.path.exists(file_path):
         with open(file_path) as in_f:
-            try:
-                metadata = json.load(in_f)
-            except ValueError:
-                in_f.seek(0)
+            if as_string:
+                metadata = in_f.read()
+            else:
                 try:
-                    metadata = yaml.load(in_f)
-                except (yaml.scanner.ScannerError,
-                        yaml.parser.ParserError):
-                    return {"success": False,
-                            "error": "Not a valid JSON or YAML format."}
+                    metadata = json.load(in_f)
+                except ValueError:
+                    in_f.seek(0)
+                    try:
+                        metadata = yaml.load(in_f)
+                    except (yaml.scanner.ScannerError,
+                            yaml.parser.ParserError):
+                        return {"success": False,
+                                "error": "Not a valid JSON or YAML format."}
         return metadata
     else:
         return {"success": False, "error": "Invalid metadata file path \"{}\".".format(file_path)}
 
 
-def get_api_metadata(metadata_src):
+def get_api_metadata(metadata_src, as_string=False):
     if isinstance(metadata_src, str) and metadata_src:
         if metadata_src.startswith('http') or metadata_src.startswith('ftp'):
-            return get_api_metadata_by_url(metadata_src)
+            return get_api_metadata_by_url(metadata_src, as_string=as_string)
         else:
-            return get_api_metadata_by_path(metadata_src)
+            return get_api_metadata_by_path(metadata_src, as_string=as_string)
     else:
         return {"success": False, "error": "Invalid metadata field value."}
 
 
 def validate_api_metadata(metadata_src):
-    VALIDATE_API = 'http://dev.smart-api.info/api/validate'
-    if metadata_src.startswith('http') or metadata_src.startswith('ftp'):
-        metadata_url = metadata_src
-    else:
-        metadata_url = "https://raw.githubusercontent.com/NCATS-Tangerine/translator-api-registry/master/"
-        metadata_url += metadata_src
-
-    res = requests.get(VALIDATE_API, {'url': metadata_url})
+    VALIDATE_API = 'http://smart-api.info/api/validate'
+    metadata = get_api_metadata(metadata_src, as_string=True)
+    if isinstance(metadata, dict) and metadata.get('success', None) is False:
+        return metadata
+    if len(metadata) >= 1024*1024*10:
+        return {"success": False, "error": "Metadata is too big, should be < 10M."}
+    res = requests.post(VALIDATE_API, data=metadata.encode('utf-8'))
+    # if metadata_src.startswith('http') or metadata_src.startswith('ftp'):
+    #     metadata_url = metadata_src
+    # else:
+    #     metadata_url = "https://raw.githubusercontent.com/NCATS-Tangerine/translator-api-registry/master/"
+    #     metadata_url += metadata_src
+    # res = requests.get(VALIDATE_API, {'url': metadata_url})
     valid = res.json()
     return valid
 
