@@ -52,6 +52,9 @@ For each API, you just need to add a text block like this:
       * open an issue in this repo
       * submit a pull-request for your modified [API_LIST.yml](API_LIST.yml) file
 
+## CORS support
+If you want users are able to request your API from the browser, e.g. in a web application, your API should support [CORS](https://en.wikipedia.org/wiki/Cross-origin_resource_sharing). We recommend every translator API to support CORS. Depending on your web server (e.g. Apache or Nginx) and/or the web framework (e.g. Django, Flask, Tornado) you use, you can find the relevant instruction to enable CORS for your API [here](https://enable-cors.org/), or via Google.
+
 ## How to pick URIs for annotating input parameters or the response data object?
 Typically for a JSON-based REST API, we use URIs to annotate both the acceptable parameter value types and the fields from the response data object, both in  [OpenAPI](https://www.openapis.org/) metdata files and JSON-LD context files. You can find some examples for "[mygene.info](mygene.info)" and "[myvariant.info](myvariant.info)" APIs.
 
