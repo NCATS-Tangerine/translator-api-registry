@@ -1,0 +1,356 @@
+openapi: 3.0.0
+servers:
+  - url: 'https://exposures.renci.org/v1'
+info:
+  description: Environmental Exposures API
+  version: 0.0.1
+  title: Environmental Exposures API
+  termsOfService: None
+  contact:
+    name: Michael J. Stealey
+    url: 'https://github.com/renci/nih-exposures-api'
+    email: stealey@renci.org
+  license:
+    name: MIT
+    url: 'http://opensource.org/licenses/MIT'
+tags:
+  - name: environment
+  - name: exposure
+  - name: query
+  - name: translator
+paths:
+  /cmaq:
+    get:
+      tags:
+        - default
+      summary: list of CMAQ exposures
+      description: |
+        list of CMAQ exposures
+        @param 
+        - None
+
+        @return 
+        - {JSON object} cmaq - returns array of exposure objects available from
+      operationId: controllers.default_controller.cmaq_get
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_200'
+        '400':
+          description: Invalid parameter
+        '404':
+          description: No exposure types found
+        '500':
+          description: Server error
+  /cmaq/getValues:
+    get:
+      tags:
+        - default
+      summary: get values for exposure type at location for date range
+      description: >
+        get values for exposure type at location for date range
+
+        @param  - {string} exposureType - unique exposure type in CMAQ
+
+        - {date} startDate - start date of exposure
+
+        - {date} endDate - end date of exposure
+
+        - {string} latLon - latitude, longitude of exposure (multiples to be
+
+        seperated by semicolon ";")
+
+        - {string} - resolution - temporal resolution (hour, day, 7day, 14day),
+        default day
+
+        - {string} - aggregation - numerical aggrigation (max, avg), default max
+
+        - {string} - utcOffset - timezone offset from UTC (utc, eastern,
+        central, mountain, pacific) - default=utc
+          
+        @return 
+
+        - {JSON object} values - returns array of exposure values based on date
+        range and location
+      operationId: controllers.default_controller.cmaq_get_values_get
+      parameters:
+        - name: exposureType
+          in: query
+          description: exposure type
+          required: true
+          schema:
+            type: string
+        - name: startDate
+          in: query
+          description: start date of range
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          description: end date of range
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: latLon
+          in: query
+          description: 'latitude,longitude - multiples separated by ;'
+          required: true
+          schema:
+            type: string
+        - name: resolution
+          in: query
+          description: temporal resolution - default=day
+          required: false
+          schema:
+            type: string
+            default: day
+        - name: aggregation
+          in: query
+          description: numerical aggregation - default=max
+          required: false
+          schema:
+            type: string
+            default: max
+        - name: utcOffset
+          in: query
+          description: >-
+            timezone offset from UTC (utc, eastern, central, mountain, pacific)
+            - default=utc
+          required: false
+          schema:
+            type: string
+            default: utc
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_200_1'
+        '400':
+          description: Invalid parameter
+        '404':
+          description: No values found
+        '500':
+          description: Server error
+  /cmaq/getScores:
+    get:
+      tags:
+        - default
+      summary: get score for exposure type at location for date range
+      description: >
+        get score for exposure type at location for date range
+
+        @param  - {string} exposureType - unique exposure type in CMAQ
+
+        - {date} startDate - start date of exposure
+
+        - {date} endDate - end date of exposure
+
+        - {string} latLon - latitude, longitude of exposure (multiples to be
+        seperated by semicolon ";")
+
+        - {string} - resolution - temporal resolution (hour, day, 7day, 14day),
+        default day
+
+        - {string} - aggregation - numerical aggrigation (max, avg), default max
+
+        - {string} - utcOffset - timezone offset from UTC (utc, eastern,
+        central, mountain, pacific) - default=utc
+
+
+        @return 
+
+        - {JSON object} scores - returns array of exposure scores based on date
+        range and location
+      operationId: controllers.default_controller.cmaq_get_scores_get
+      parameters:
+        - name: exposureType
+          in: query
+          description: exposure type
+          required: true
+          schema:
+            type: string
+        - name: startDate
+          in: query
+          description: start date of range
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          description: end date of range
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: latLon
+          in: query
+          description: 'latitude,longitude - multiples separated by ;'
+          required: true
+          schema:
+            type: string
+        - name: resolution
+          in: query
+          description: temporal resolution - default=day
+          required: false
+          schema:
+            type: string
+            default: day
+        - name: aggregation
+          in: query
+          description: numerical aggregation - default=max
+          required: false
+          schema:
+            type: string
+            default: max
+        - name: utcOffset
+          in: query
+          description: >-
+            timezone offset from UTC (utc, eastern, central, mountain, pacific)
+            - default=utc
+          required: false
+          schema:
+            type: string
+            default: utc
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_200_2'
+        '400':
+          description: Invalid parameter
+        '404':
+          description: No scores found
+        '500':
+          description: Server error
+components:
+  schemas:
+    inline_response_200_2_scores:
+      properties:
+        score:
+          type: string
+        dateTime:
+          type: string
+          format: date-time
+        latLon:
+          type: string
+      type: object
+    inline_response_200_1_values:
+      properties:
+        value:
+          type: string
+        dateTime:
+          type: string
+          format: date-time
+        latLon:
+          type: string
+      type: object
+    inline_response_200_1:
+      properties:
+        values:
+          type: array
+          items:
+            $ref: '#/components/schemas/inline_response_200_1_values'
+      type: object
+    inline_response_200:
+      properties:
+        cmaq:
+          type: array
+          items:
+            $ref: '#/components/schemas/inline_response_200_cmaq'
+      type: object
+    inline_response_200_2:
+      properties:
+        scores:
+          type: array
+          items:
+            $ref: '#/components/schemas/inline_response_200_2_scores'
+      type: object
+    inline_response_200_cmaq:
+      properties:
+        exposureType:
+          type: string
+        exposureUnit:
+          type: string
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        resolution:
+          type: array
+          items:
+            type: string
+        aggregation:
+          type: array
+          items:
+            type: string
+      type: object
+  parameters:
+    cmaq_exposureType:
+      name: exposureType
+      in: query
+      description: exposure type
+      required: true
+      schema:
+        type: string
+    cmaq_startDate:
+      name: startDate
+      in: query
+      description: start date of range
+      required: true
+      schema:
+        type: string
+        format: date
+    cmaq_endDate:
+      name: endDate
+      in: query
+      description: end date of range
+      required: true
+      schema:
+        type: string
+        format: date
+    cmaq_latLon:
+      name: latLon
+      in: query
+      description: 'latitude,longitude - multiples separated by ;'
+      required: true
+      schema:
+        type: string
+    cmaq_resolution:
+      name: resolution
+      in: query
+      description: temporal resolution - default=day
+      required: false
+      schema:
+        type: string
+        default: day
+    cmaq_aggregation:
+      name: aggregation
+      in: query
+      description: numerical aggregation - default=max
+      required: false
+      schema:
+        type: string
+        default: max
+    cmaq_utcOffset:
+      name: utcOffset
+      in: query
+      description: >-
+        timezone offset from UTC (utc, eastern, central, mountain, pacific) -
+        default=utc
+      required: false
+      schema:
+        type: string
+        default: utc
