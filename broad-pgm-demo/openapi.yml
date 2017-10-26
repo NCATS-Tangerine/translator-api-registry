@@ -1,0 +1,60 @@
+openapi: 3.0.0
+info:
+  title: Broad PGM Discrete Gene Expression To Gene Knockdown API
+  termsOfService: http://to-be-specified.com
+  version: '0.1'
+  description: A demo API of Broad PGM for tranlator project
+  contact:
+    name: Broad PGM translator
+    url: 'https://translator.ncats.io/broad-pgm-translator/'
+    email: translator@broadinstitute.org
+    x-role: responsible organization
+    x-id: 'https://github.com/broadinstitute/broad-translator'
+servers:
+  - url: 'http://translator.ncats.io:8000'
+    description: Development server
+tags:
+  - name: gene
+  - name: knockdown
+  - name: translator
+paths:
+  /query:
+    get:
+      summary: Return a list of Knock-down genes to produce the similar expression patterns as the input gene list.
+      parameters:
+        - required: true
+          in: query
+          x-valueType:
+            - 'http://purl.obolibrary.org/obo/GO_0010467'
+          name: input_gene_expr_list
+          description: 'An array of input gene list with their expression levels.'
+          schema:
+            type: array
+            required:
+              - geneid
+              - updown
+            items:
+              type: object
+              properties:
+                geneid:
+                    type: string
+                updown:
+                    enum: [up, unchanged, down]
+      responses:
+        '200':
+          description: 'A query response object with "hits" property'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    geneid:
+                        type: string
+                    p-value:
+                        type: number
+                        format: float
+          x-responseValueType:
+            - path: geneid
+              valueType: 'http://identifiers.org/ensembl.gene/'
