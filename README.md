@@ -27,6 +27,9 @@ This converter is not perfect, but still a good starting point.
 
 Tip: Feel free to play with your API metadata file with the tools we mentioned above, and commit your changes even when they are not fully complete or valid. As along as the metadata entry has not been added to the API_LIST.yml file (see below), you will be fine :-). When you are happy with your metadata, you can now move to the next step to add it to the API_LIST.yml file.
 
+A [code snippet](https://github.com/PriceLab/translator-bigquery-api/blob/6d652ec28d0ae7b893395b3e3c360c9d5b144fe3/app/api/bigquery/endpoints/metadata.py#L115) to convert [flask-restful](http://flask-restful.readthedocs.io) auto-generated swagger v2 specification to SmartAPI metedata, kindly provided by @JohnCEarls.
+
+
 ## API_LIST.yml file
 This is a YAML file at the root of this repo to keep track of all APIs available in this repo. Our SmartAPI application will import all the API metadata based on this file and render an API registry web frontend.
 
