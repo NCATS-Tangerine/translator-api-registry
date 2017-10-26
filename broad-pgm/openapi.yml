@@ -1,242 +1,60 @@
 openapi: 3.0.0
-servers:
-  - url: 'https://translator.ncats.io/broad-pgm-translator'
 info:
-  title: Broad probabilistic graphical models translator
+  title: Broad PGM Discrete Gene Expression To Gene Knockdown API
+  termsOfService: http://to-be-specified.com
+  version: '0.1'
+  description: A demo API of Broad PGM for tranlator project
   contact:
     name: Broad PGM translator
     url: 'https://translator.ncats.io/broad-pgm-translator/'
     email: translator@broadinstitute.org
     x-role: responsible organization
     x-id: 'https://github.com/broadinstitute/broad-translator'
-  version: 0.1.0
+servers:
+  - url: 'http://translator.ncats.io:8000'
+    description: Development server
 tags:
+  - name: gene
+  - name: knockdown
   - name: translator
 paths:
-  /modelList:
+  /query:
     get:
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  modelID:
-                    type: array
-                    items:
-                      type: string
-      description: List available models
-  '/{modelID}/modelSignature':
-    get:
-      description: Get model signature
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  modelID:
-                    type: string
-                  variableGroup:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        variableGroupID:
-                          type: string
-                        authorityURL:
-                          type: string
-                        asInput:
-                          type: boolean
-                        asOutput:
-                          type: boolean
-                        groupDistribution:
-                          enum:
-                            - discrete
-                            - empirical
-                            - Gaussian
-                            - Poisson
-                        groupType:
-                          enum:
-                            - Bollean
-                            - Number
-                            - String
-                          type: string
-                        groupValue:
-                          type: array
-                          items:
-                            type: string
-                        modelVariable:
-                          type: array
-                          items:
-                            type: object
-                            properties:
-                              variableID:
-                                type: string
-                              authorityURI:
-                                type: string
-                              groupDistribution:
-                                enum:
-                                  - discrete
-                                  - empirical
-                                  - Gaussian
-                                  - Poisson
-                              variableType:
-                                enum:
-                                  - Bollean
-                                  - Number
-                                  - String
-                                type: string
-                              variableValue:
-                                type: array
-                                items:
-                                  type: string
+      summary: Return a list of Knock-down genes to produce the similar expression patterns as the input gene list.
       parameters:
-        - name: modelID
-          in: path
-          description: Model identifier
-          required: true
+        - required: true
+          in: query
+          x-valueType:
+            - 'http://purl.obolibrary.org/obo/GO_0010467'
+          name: input_gene_expr_list
+          description: 'An array of input gene list with their expression levels.'
           schema:
-            type: string
-  /evaluateModel:
-    post:
-      description: evaluate model
-      requestBody:
-        content:
-          application/json:
-            schema:
+            type: array
+            required:
+              - geneid
+              - updown
+            items:
               type: object
               properties:
-                modelID:
-                  type: string
-                modelInput:
-                  type: array
-                  items:
-                    type: object
-                    properties:
-                      variableGroupID:
-                        type: string
-                      modelVariable:
-                        type: array
-                        items:
-                          type: object
-                          properties:
-                            variableID:
-                              type: string
-                            priorDistribution:
-                              type: object
-                              properties:
-                                discreteDistribution:
-                                  type: array
-                                  items:
-                                    type: object
-                                    properties:
-                                      variableValue:
-                                        type: string
-                                      priorProbability:
-                                        type: number
-                                GaussianDistribution:
-                                  type: object
-                                  properties:
-                                    distributionMean: 
-                                      type: number
-                                    distributionStDev: 
-                                      type: number
-                                PoissonDistribution:
-                                  type: object
-                                  properties:
-                                    lambdaParameter: 
-                                      type: number
-                                empiricalDistribution:
-                                  type: object
-                                  properties:
-                                    distributionMean: 
-                                      type: number
-                                    distributionStDev: 
-                                      type: number
-                                    distributionPercentile: 
-                                      type: array
-                                      items: 
-                                        type: number
-                modelOutput:
-                  type: array
-                  items:
-                    type: object
-                    properties:
-                      variableGroupID:
-                        type: string
-                      variableID:
-                        type: array
-                        items:
-                          type: string
-                      rawOutput:
-                        type: boolean
-        required: true
+                geneid:
+                    type: string
+                updown:
+                    enum: [up, unchanged, down]
       responses:
         '200':
-          description: Successful response
+          description: 'A query response object with "hits" property'
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  posteriorProbabilities:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        variableGroupID:
-                          type: string
-                        modelVariable:
-                          type: array
-                          items:
-                            type: object
-                            properties:
-                              variableID:
-                                type: string
-                              posteriorDistribution:
-                                type: object
-                                properties:
-                                  discreteDistribution:
-                                    type: array
-                                    items:
-                                      type: object
-                                      properties:
-                                        variableValue:
-                                          type: string
-                                        posteriorProbability:
-                                          type: number
-                                  GaussianDistribution:
-                                    type: object
-                                    properties:
-                                      distributionMean: 
-                                        type: number
-                                      distributionStDev: 
-                                        type: number
-                                  PoissonDistribution:
-                                    type: object
-                                    properties:
-                                      lambdaParameter: 
-                                        type: number
-                                  empiricalDistribution:
-                                    type: object
-                                    properties:
-                                      distributionMean: 
-                                        type: number
-                                      distributionStDev: 
-                                        type: number
-                                      distributionPercentile: 
-                                        type: array
-                                        items: 
-                                          type: number
-                                  rawDistribution:
-                                    type: array
-                                    items:
-                                      type: number
-
-components:
-  schemas: {}
+                type: array
+                items:
+                  type: object
+                  properties:
+                    geneid:
+                        type: string
+                    p-value:
+                        type: number
+                        format: float
+          x-responseValueType:
+            - path: geneid
+              valueType: 'http://identifiers.org/ensembl.gene/'
