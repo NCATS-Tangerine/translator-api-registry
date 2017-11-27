@@ -21,7 +21,7 @@ This [OpenAPI GUI](http://smart-api.info/openapi-gui/) interface can also be use
 ### Converting from a Swagger/OpenAPI v2 metadata
 If you already have an API metadata document in older Swagger/OpenAPI v2 specification. You can try this conversion tool to convert it to the latest OpenAPI v3 format, and then edit it in the [editor](http://smart-api.info/editor-oa3/):
 
-http://openapi-converter.appspot.com/
+https://mermade.org.uk/openapi-converter
 
 This converter is not perfect, but still a good starting point.
 
