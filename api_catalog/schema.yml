@@ -51,14 +51,20 @@ properties:
     items: For allowable values here, see ENUM3 in the VALUE SET ENUMERATIONS section below ($ENUM3)
     example: [Gene, Disease, Phenotype]
  
-  entityAssociationTypes:
-  	description: If the API returns 'associations' between domain entities, list pairs/sets of entity types that are directly connected in the data it serves. The entity associations here are directionless, so [Gene - Phenotype] is equivalent to [Phenotype - Gene]. These associations can be pre-indexed associations (e.g. Biolink, Wikidata), or algorithmically computed associations (e.g. BigGIM). Finally, note that this field may not be relevant for APIs that don’t serve 'associations', such as those serving EHR data, experimental measurements, exposure data, etc.
+  entityAssociations:
+  	description: If the API returns 'associations' between domain entities, list pairs of entity types that are directly connected in the data it serves. These associations can be pre-indexed associations (e.g. Biolink, Wikidata), or algorithmically computed associations (e.g. BigGIM). In cases where it is useful to make such clarifications, the type of relationship associating the entities, or a specific role played by an entity in the association, can be described parenthetically after the entity pair (see examples below). 
+    comments: Note that the entity associations here are directionless, so [Gene - Phenotype] is equivalent to [Phenotype - Gene]. Note also that this field may not be relevant for APIs that don’t serve 'associations', such as those serving EHR data, experimental measurements, exposure data, etc.
     type: array 
-    items: hyphen-separated pairs of terms, each of which is an entity type from $ENUM3
+    items: hyphen-separated pairs of terms, each of which is an entity type from $ENUM3. And optionally, a parenthetical description of the relationship described between the entities, or a role played by one of the entities).
     example: [Gene - Phenotype, Gene - Disease, Disease - Phenotype, Drug - Protein]
+    # Examples where type of relationship indicated parenthetically.
+    example: [Gene - Gene (homology), Gene - Gene (part  of same operon), Gene - Gene (co-expressed with)]
+    # Examples where a role played by one of the entities is indicated parenthetically)  
+    example: [Drug - Protein (Drug Target)]
+    example: [Drug - Phenotype (Side Effect)]
 
-  entityAttributeTypes:
-    description:  The types of attributes or data types that an API returns about the entities it describes. This field records entity-datatype associations, as opposed to entity-entity associations captured by the entityAssociationTypes field. 
+  entityAttributes:
+    description:  The types of attributes or data that an API returns about the entities it describes. Captured as 'entity - attribute' pairs that describe a link between an entity type and some data item about them (e.g. 'Allele - frequency', or 'Patient - exposure score'), as opposed associations between two entity types as captured by the entityAssociationTypes field.
     type: array
     items: hyphen-separated pairs of terms. The first is an entity type from $ENUM3, and the second is a user-defined attribute or data type.
     example: [Variant/Allele - frequency] 
@@ -92,6 +98,11 @@ properties:
     description: Whether the  API returns  data in JSON format.
     type: boolean
     example: true
+
+  notes:
+    description: Any other important information or nuance not adequately captured in the fields above.
+    type: string
+    example: "Biolink does not yet serve entity-attribute data that is captured in its underlying Monarch database, but will do so in the near future. This includes Variant/Allele - frequency data, and SequenceFeature - genomic position data"
 
 ###############################################################################
 
@@ -141,20 +152,16 @@ valueSetEnumerations:
         - ProteinModification
         - EpigeneticModification
         - Operon
-        - Homolog*
-        - DrugTarget*
       - ChemicalEntity
         - Substance
         - SmallMolecule
         - Metabolite
         - PharmaceuticalProduct
-        - ChemicalReagent*
-        - Drug*
+        - Drug
       - PhysicalCondition
         - Trait
         - Phenotype
         - Disease
-        - SideEffect*
       - ModelSystem
         - Organism/Strain
         - CellLine
@@ -186,7 +193,7 @@ valueSetEnumerations:
         - Construct
         - Biospecimen
         - ModelSystem
-        - ChemicalReagent*
+        - ChemicalEntity
       - InformationResource
         - Identifier
         - DataModel
@@ -207,9 +214,7 @@ valueSetEnumerations:
         - Treatment/Therapy
         - Drug Response
         - AdverseEvent
-
-     # Note that asterisks mark entities that are really context dependent "roles" played by some physical entity (e.g. a ChemicalEntity that is a drug, or a Gene that is a homolog). Omit asterisks when terms used in metadata.
-     
+        
 
   - id: ENUM4
     name: Translator Teams
