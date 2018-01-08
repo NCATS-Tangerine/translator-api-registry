@@ -14,4 +14,4 @@ API metadata for the Translator Catalog will be contributed by API developers us
 
 Initially we will target high-level metadata **about each API** in the Translator system. It should pose a minimal barrier for API developers/stewards to enter metadata (i.e. require 15 minutes or less) - so we can deliver a catalog quickly.  This metadata will complement the more granular metadata captured in the smartAPI yaml config files for each API (e.g. for the [mygene.info API](https://github.com/NCATS-Tangerine/translator-api-registry/blob/master/mygene.info/openapi_full.yml)). Subsequent extensions to the metadata extension fields may be implemented at a later date to enable description of **each primary source** that aggregating APIs serve data from (e.g. Monarch-Biolink, Wikidata, Biothings, NSIDES). 
 
-**INSTRUCTIONS FOR CREATING AN API METADATA RECORD CAN BE FOUND IN ISSUE #8.**
+### INSTRUCTIONS FOR CREATING AN API METADATA RECORD CAN BE FOUND IN ISSUE [#8](https://github.com/NCATS-Tangerine/translator-api-registry/issues/8).
