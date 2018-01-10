@@ -1,0 +1,48 @@
+graphql: '0.0.0'
+info:
+  version: '0.0.1'
+  title: GreenT API
+  description: >-
+    API integration layer for linked biological objects.
+  termsOfService: https://github.com/monarch-initiative/biolink-api/
+  contact:
+    name: Chris Mungall
+    x-role: responsible developer
+    email: scox@renci.org
+    x-id: 'https://github.com/cmungall'
+servers:
+  - url: 'http://stars-dw9.edc.renci.org:5000/graphql'
+    description: 'Production server'
+tags:
+  - name: disease
+paths:
+  exposureConditions:
+    parameters:
+      chemicals:
+        type:
+          list: String
+        x-requestTemplate:
+          template: |+
+            query getExposureConditions($chemicals : [String] ) {
+              exposureConditions(chemicals: $chemicals) {
+                chemical
+                gene
+                pathway
+                pathName
+                pathID
+                human
+              }
+            }
+          valueType: http://schema.org/name
+          variables:
+            chemicals: []
+        x-valueType: http://schema.org/name
+    responses:
+      '200':
+        x-JSONLDContext: exposureConditions.jsonld
+        x-responseValueType:
+          path: '...'
+          valueType: '...'
+
+          
+
