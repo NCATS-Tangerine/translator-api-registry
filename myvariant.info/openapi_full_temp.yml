@@ -18,15 +18,11 @@ servers:
     description: 'Encrypted Production server'
 tags:
   - name: variant
-  - name: annotation
   - name: query
-  - name: translator
 paths:
   /query:
     get:
       summary: 'Make variant query and return matching variant list. Support JSONP and CORS as well.'
-      tags:
-        - query
       parameters:
         - name: q
           in: query
@@ -120,8 +116,6 @@ paths:
                 $ref: '#/components/schemas/ErrorResult'
     post:
       summary: 'Make variant batch query and return matching variant hits'
-      tags:
-        - query
       requestBody:
         content:
           'application/x-www-form-urlencoded':
@@ -164,8 +158,6 @@ paths:
   '/variant/{variantid}':
     get:
       summary: 'Retrieve variant annotation object based on HGVS or rsid, support JSONP and CORS as well.'
-      tags:
-        - annotation
       parameters:
         - name: variantid
           in: path
@@ -203,11 +195,11 @@ paths:
               valueType: 'http://identifiers.org/hgvs/'
           x-JSONLDContext:
             'https://raw.githubusercontent.com/NCATS-Tangerine/translator-api-registry/master/myvariant.info/jsonld_context/myvariant_variant_1.1.json'
+        '404':
+          description: 'A response indicating an unknown variant id'
   '/variant':
     post:
       summary: 'For a list of variant ids, return the matching variant objects'
-      tags:
-        - annotation
       requestBody:
         content:
           'application/x-www-form-urlencoded':
@@ -219,6 +211,8 @@ paths:
              required:
                - ids
       parameters:
+        - name: ids
+          $ref: '#/components/parameters/ids'
         - name: fields
           $ref: '#/components/parameters/fields'
         - name: dotfield
@@ -269,6 +263,12 @@ paths:
           description: 'MyVariant.info metadata fields object'
 components:
   parameters:
+    ids:
+      name: ids
+      in: variant
+      description: 'multiple variant ids seperated by comma, e.g., "ids=chr6:g.152708291G>A,chr1:g.35367G>A" or "ids=rs5882,rs12190874". Note that currently we only take the input ids up to 1000 maximum, the rest will be omitted.'
+      schema:
+        type: string
     fields:
       name: fields
       in: query
