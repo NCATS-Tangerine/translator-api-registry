@@ -28,7 +28,7 @@ paths:
       summary: 'Make variant query and return matching variant list. Support JSONP and CORS as well.'
       parameters:
         - name: q
-          in: query
+          in: "query"
           description: 'Query string. Examples "rs752396467", "possibly_damaging", "CDK7". The detailed query syntax can be found from our [docs](http://docs.myvariant.info/en/latest/doc/variant_query_service.html).'
           required: true
           example: CDK7
@@ -81,23 +81,30 @@ paths:
             - valueType: 'http://biothings.io/terms/drugname/'
               template: civic.evidence_items.drugs.name:{{input}}
         - name: fields
+          in: "query"
           $ref: '#/components/parameters/fields'
         - name: size
+          in: "query"
           $ref: '#/components/parameters/size'
         - name: from
+          in: "query"
           $ref: '#/components/parameters/from'
         - name: sort
+          in: "query"
           $ref: '#/components/parameters/sort'
         - name: facets
-          in: query
+          in: "query"
           description: 'a single field or comma-separated fields to return facets, for example, "facets=clinvar.gene.id", "facets=clinvar.gene.id,dbnsfp.uniprot.acc".'
           schema:
             type: string
         - name: callback
+          in: "query"
           $ref: '#/components/parameters/callback'
         - name: dotfield
+          in: "query"
           $ref: '#/components/parameters/dotfield'
         - name: email
+          in: "query"
           $ref: '#/components/parameters/email'
       responses:
         '200':
@@ -137,10 +144,13 @@ paths:
                - q
       parameters:
         - name: fields
+          in: "query"
           $ref: '#/components/parameters/fields'
         - name: dotfield
+          in: "query"
           $ref: '#/components/parameters/dotfield'
         - name: email
+          in: "query"
           $ref: '#/components/parameters/email'
       responses:
         '200':
@@ -183,12 +193,16 @@ paths:
           schema:
             type: string
         - name: fields
+          in: "query"
           $ref: '#/components/parameters/fields'
         - name: dotfield
+          in: "query"
           $ref: '#/components/parameters/dotfield'
         - name: callback
+          in: "query"
           $ref: '#/components/parameters/callback'
         - name: email
+          in: "query"
           $ref: '#/components/parameters/email'
       responses:
         '200':
@@ -207,7 +221,7 @@ paths:
   '/variant':
     post:
       tags:
-        - "query"
+        - "variant"
       summary: 'For a list of variant ids, return the matching variant objects'
       requestBody:
         content:
@@ -220,13 +234,14 @@ paths:
              required:
                - ids
       parameters:
-        - name: ids
-          $ref: '#/components/parameters/ids'
         - name: fields
+          in: "query"
           $ref: '#/components/parameters/fields'
         - name: dotfield
+          in: "query"
           $ref: '#/components/parameters/dotfield'
         - name: email
+          in: "query"
           $ref: '#/components/parameters/email'
       responses:
         '200':
@@ -249,6 +264,7 @@ paths:
       summary: 'Get metadata about the data available from MyVariant.info.'
       parameters:
         - name: callback
+          in: "query"
           $ref: '#/components/parameters/callback'
       responses:
         '200':
@@ -260,71 +276,66 @@ paths:
       summary: 'Get metadata about the data fields available from MyVariant.info.'
       parameters:
         - name: search
-          in: query
+          in: "query"
           description: 'Pass a search term to filter the available fields, e.g. "search=clinvar".'
           schema:
             type: string
         - name: prefix
-          in: query
+          in: "query"
           description: 'Pass a prefix string to filter the available fields, e.g. "prefix=refseq".'
           schema:
             type: string
         - name: callback
+          in: "query"
           $ref: '#/components/parameters/callback'
       responses:
         '200':
           description: 'MyVariant.info metadata fields object'
 components:
   parameters:
-    ids:
-      name: ids
-      in: variant
-      description: 'multiple variant ids seperated by comma, e.g., "ids=chr6:g.152708291G>A,chr1:g.35367G>A" or "ids=rs5882,rs12190874". Note that currently we only take the input ids up to 1000 maximum, the rest will be omitted.'
-      schema:
-        type: string
     fields:
       name: fields
-      in: query
+      in: "query"
       description:
         'a comma-separated fields to limit the fields returned from the matching variant hits. The supported field names can be found from any variant object (e.g. http://myvariant.info/v1/variant/rs12190874). Note that it supports dot notation as well, e.g., you can pass "dbsnp.rsid". If "fields=all", all available fields will be returned. Default: "all".'
       schema:
         type: string
     size:
       name: size
-      in: query
+      in: "query"
       description:
           'the maximum number of matching variant hits to return (with a cap of 1000 at the moment). Default: 10.'
       schema:
         type: integer
     from:
       name: from
-      in: query
+      in: "query"
       description:
           'the number of matching variant hits to skip, starting from 0. Combining with "size" parameter, this can be useful for paging. Default: 0.'
       schema:
         type: integer
     sort:
       name: sort
-      in: query
+      in: "query"
       description:
           'the comma-separated fields to sort on. Prefix with "-" for descending order, otherwise in ascending order. Default: sort by matching scores in decending order.'
       schema:
         type: string
     dotfield:
       name: dotfield
-      in: query
+      in: "query"
       description: 'control the format of the returned variant object. If "true" or "1", all fields will be collapsed into a single level deep structure (all nested objects will be a single level deep, using dotfield notation to signify the nested structure) Default: false.'
       schema:
         type: boolean
     callback:
       name: callback
-      in: query
+      in: "query"
       description: 'you can pass a "callback" parameter to make a JSONP call.'
       schema:
         type: string
     email:
       name: email
-      in: query
+      in: "query"
       description:
           'If you are regular users of our services, we encourage you to provide us an email, so that we can better track the usage or follow up with you.'
       schema:
@@ -384,4 +395,3 @@ components:
       properties:
         _id:
           type: string
-
