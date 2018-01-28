@@ -1,0 +1,163 @@
+openapi: '3.0.0'
+info:
+  version: '1.0'
+  title: PubChem API
+  description: >-
+    PubChem is a database of chemical molecules and their activities against biological assays
+  termsOfService: https://pubchem.ncbi.nlm.nih.gov/
+  contact:
+    name: Pubchem Help Desk
+    x-role: responsible developer
+    email: pubchem-help@ncbi.nlm.nih.gov
+servers:
+  - url: 'https://pubchem.ncbi.nlm.nih.gov/rest/pug'
+    description: 'Production server'
+tags:
+  - name: drug
+  - name: bioassay
+  - name: annotation
+paths:
+  '/assay/target/genesymbol/{genesymbol}/aids/JSON'
+    get:
+      summary: 'return pubchem bioassay ids associated with a gene symbol'
+      parameters:
+        - name: genesymbol
+          in: path
+          description: >-
+            Put gene symbols here, e.g. CDK7 
+          required: true
+          x-valueType:
+            - 'http://identifiers.org/hgnc.symbol/'
+          x-requestTemplate:
+            - valueType: 'http://identifiers.org/hgnc.symbol/'
+              template: /assay/target/genesymbol/{genesymbol}/aids/JSON
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 'A query response object with "IdentifierList" property'
+          x-responseValueType:
+            - path: IdentifierList.AID
+              valueType: 'http://identifiers.org/pubchem.bioassay/'
+          x-JSONLDContext:
+            'pubchem/jsonld_context/puchem_gene2bioassay_context.json'
+  '/assay/target/geneid/{geneid}/aids/JSON'
+    get:
+      summary: 'return pubchem bioassay ids associated with a gene id'
+      parameters:
+        - name: geneid
+          in: path
+          description: >-
+            Put NCBI Gene ID here, e.g. 1017
+          required: true
+          x-valueType:
+            - 'http://identifiers.org/ncbigene/'
+          x-requestTemplate:
+            - valueType: 'http://identifiers.org/ncbigene/'
+              template: /assay/target/geneid/{geneid}/aids/JSON
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 'A query response object with "IdentifierList" property'
+          x-responseValueType:
+            - path: IdentifierList.AID
+              valueType: 'http://identifiers.org/pubchem.bioassay/'
+          x-JSONLDContext:
+            'pubchem/jsonld_context/puchem_gene2bioassay_context.json'
+  '/assay/aid/{bioassayid}/sids/JSON'
+    get:
+      summary: 'return pubchem substance ids associated with a pubchem bioassay id'
+      parameters:
+        - name: bioassayid
+          in: path
+          description: >-
+            Put PubChem Bioassay ID here, e.g. 650
+          required: true
+          x-valueType:
+            - 'http://identifiers.org/puchem.bioassay/'
+          x-requestTemplate:
+            - valueType: 'http://identifiers.org/pubchem.bioassay/'
+              template: /assay/aid/{bioassayid}/sids/JSON
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 'A query response object with "IdentifierList" property'
+          x-responseValueType:
+            - path: IdentifierList.SID
+              valueType: 'http://identifiers.org/pubchem.substance/'
+          x-JSONLDContext:
+            'pubchem/jsonld_context/puchem_bioassay2substance_context.json'
+  '/assay/aid/{bioassayid}/cids/JSON'
+    get:
+      summary: 'return pubchem compound ids associated with a pubchem bioassay id'
+      parameters:
+        - name: bioassayid
+          in: path
+          description: >-
+            Put PubChem Bioassay ID here, e.g. 650
+          required: true
+          x-valueType:
+            - 'http://identifiers.org/puchem.bioassay/'
+          x-requestTemplate:
+            - valueType: 'http://identifiers.org/pubchem.bioassay/'
+              template: /assay/aid/{bioassayid}/cids/JSON
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 'A query response object with "IdentifierList" property'
+          x-responseValueType:
+            - path: IdentifierList.CID
+              valueType: 'http://identifiers.org/pubchem.compound/'
+          x-JSONLDContext:
+            'pubchem/jsonld_context/puchem_bioassay2compound_context.json'
+  '/compound/cid/{compoundid}/sids/JSON'
+    get:
+      summary: 'return pubchem substance ids associated with a pubchem compound id'
+      parameters:
+        - name: compoundid
+          in: path
+          description: >-
+            Put PubChem Compound ID here, e.g. 2244
+          required: true
+          x-valueType:
+            - 'http://identifiers.org/puchem.compoundid/'
+          x-requestTemplate:
+            - valueType: 'http://identifiers.org/pubchem.compound/'
+              template: /assay/aid/{compoundid}/sids/JSON
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 'A query response object with "IdentifierList" property'
+          x-responseValueType:
+            - path: IdentifierList.Information.SID
+              valueType: 'http://identifiers.org/pubchem.substance/'
+          x-JSONLDContext:
+            'pubchem/jsonld_context/puchem_bioassay2substance_context.json'
+  '/substance/sid/{substanceid}/cids/JSON'
+    get:
+      summary: 'return pubchem compound ids associated with a pubchem substance id'
+      parameters:
+        - name: substanceid
+          in: path
+          description: >-
+            Put PubChem Substance ID here, e.g. 4594
+          required: true
+          x-valueType:
+            - 'http://identifiers.org/puchem.compound/'
+          x-requestTemplate:
+            - valueType: 'http://identifiers.org/pubchem.compound/'
+              template: /assay/aid/{substanceid}/cids/JSON
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 'A query response object with "IdentifierList" property'
+          x-responseValueType:
+            - path: IdentifierList.Information.CID
+              valueType: 'http://identifiers.org/pubchem.compound/'
+          x-JSONLDContext:
+            'pubchem/jsonld_context/puchem_bioassay2compound_context.json'
