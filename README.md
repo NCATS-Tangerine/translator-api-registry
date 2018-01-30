@@ -23,6 +23,7 @@ If you already have an API metadata document in older Swagger/OpenAPI v2 specifi
 
 http://openapi-converter.appspot.com/  (this link is dead, use the new one below)
 http://openapiconverter.azurewebsites.net/
+https://mermade.org.uk/openapi-converter
 
 This converter is not perfect, but still a good starting point.
 
