@@ -1,0 +1,41 @@
+openapi: '3.0.0'
+info:
+  version: '1.0'
+  title: NCBI etuils API
+  description: >-
+    The Entrez Programming Utilities (E-utilities) are a set of eight server-side programs that provide a stable interface into the Entrez query and database system at the National Center for Biotechnology Information (NCBI).
+  termsOfService: https://eutils.ncbi.nlm.nih.gov
+  contact:
+    name: etuils help desk
+    x-role: responsible developer
+    email: help@eutils.ncbi.nlm.nih.gov
+servers:
+  - url: 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils'
+    description: 'Production server'
+tags:
+  - name: publication
+paths:
+  '/elink.fcgi':
+    get:
+      summary: 'get all publications which a publication cites'
+      parameters:
+        - name: id
+          in: query
+          description: >-
+            Put Publication ID here, e.g. PMC2869000
+          required: true
+          x-valueType:
+            - 'http://identifiers.org/pubmed/'
+          x-requestTemplate:
+            - valueType: 'http://identifiers.org/pubmed/'
+              template: id={input}&retmode=json
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 'A publication annotation object'
+          x-responseValueType:
+            - path: linksets.linksetdbs.links
+              valueType: 'http://identifiers.org/pubmed/'
+          x-JSONLDContext:
+            'ncbi etuils api/jsonld_context/eutils_cite_context.json'
