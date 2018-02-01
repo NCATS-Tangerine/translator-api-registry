@@ -33,7 +33,7 @@ paths:
             - 'http://identifiers.org/dbsnp/'
           x-requestTemplate:
             - valueType: 'http://identifiers.org/dbsnp/'
-              template: '/variation/human/{{input}}?phenotypes=1'
+              template: '/variation/human/{dbsnp}?phenotypes=1'
           schema:
             type: string
       responses:
@@ -55,7 +55,7 @@ paths:
             - 'http://identifiers.org/dbsnp/'
           x-requestTemplate:
             - valueType: 'http://identifiers.org/dbsnp/'
-              template: '/variation/human/{{input}}?genotypes=1'
+              template: '/variation/human/{dbsnp}?genotypes=1'
           schema:
             type: string
       responses:
@@ -64,3 +64,57 @@ paths:
           x-responseValueType:
             - path: genotypes
               valueType: 'http://biothings.io/concepts/genotypes/'
+  '/taxonomy/id/{taxonomyid}':
+    get:
+      summary: 'Search for a taxonomic term by its identifier or name'
+      parameters:
+        - name: taxonomyid
+          in: path
+          description: >-
+            Put taxonomy ids here, e.g. 9606
+          required: true
+          x-valueType:
+            - 'http://identifiers.org/taxonomy/'
+          x-requestTemplate:
+            - valueType: 'http://identifiers.org/taxonomy/'
+              template: '/taxonomy/id/{taxonomyid}?content-type=application/json'
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 'taxonomy annotation information'
+          x-responseValueType:
+            - path: parent.id
+              valueType: 'http://identifiers.org/taxonomy/'
+          x-JSONLDContext:
+            'ensembl/jsonld_context/ensembl_taxonomy_context.json'
+  '/lookup/id/{geneid}':
+    get:
+      summary: 'Find the species and database for a single identifier e.g. gene, transcript, protein'
+      parameters:
+        - name: geneid
+          in: path
+          description: >-
+            Put ensembl gene ids here, e.g. ENSG00000157764
+          required: true
+          x-valueType:
+            - 'http://identifiers.org/ensembl.gene/'
+          x-requestTemplate:
+            - valueType: 'http://identifiers.org/ensembl.gene/'
+              template: '/lookup/id/{geneid}?content-type=application/json;phenotypes=1;expand=1'
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 'ensembl gene lookup information'
+          x-responseValueType:
+            - path: Transcript.Exon.id
+              valueType: 'http://identifiers.org/ensembl.exon/'
+            - path: Transcript.Translation.id
+              valueType: 'http://identifiers.org/ensembl.translation/'
+            - path: phenotypes.ontology_accessions
+              valueType: 'http://identifiers.org/efo/'
+            - path: phenotypes.ontology_accessions
+              valueType: 'http://identifiers.org/hp/'
+          x-JSONLDContext:
+            'ensembl/jsonld_context/ensembl_gene_context.json'
