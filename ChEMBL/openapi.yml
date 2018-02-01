@@ -1,0 +1,97 @@
+openapi: '3.0.0'
+info:
+  version: '1.0'
+  title: ChEMBL API
+  description: >-
+    ChEMBL is a database of bioactive drug-like small molecules, it contains 2-D structures, calculated properties (e.g. logP, Molecular Weight, Lipinski Parameters, etc.) and abstracted bioactivities (e.g. binding constants, pharmacology and ADMET data).
+  termsOfService: https://www.ebi.ac.uk/chembl/about
+  contact:
+    name: Andrew Leach
+    x-role: responsible developer
+    email: arl@ebi.ac.uk
+servers:
+  - url: 'https://www.ebi.ac.uk/chembl/api/data'
+    description: 'Production server'
+tags:
+  - name: drug
+  - name: protein
+  - name: bioassay
+paths:
+  '/target'
+    get:
+      summary: 'return drugs related to a protein target'
+      parameters:
+        - name: target_components__accession
+          in: query
+          description: >-
+            Put uniprot protein ID here. 
+          required: true
+          x-valueType:
+            - 'http://identifiers.org/uniprot/'
+          x-requestTemplate:
+            - valueType: 'http://identifiers.org/uniprot/'
+              template: {{input}}
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 'A query response object with "targets" property'
+          x-responseValueType:
+            - path: targets.target_chembl_id
+              valueType: 'http://identifiers.org/chembl.target/'
+          x-JSONLDContext:
+            'ChEMBL/jsonld_context/chembl_uniprot2chembl_context.json'
+  '/mechanism'
+    get:
+      summary: 'return drugs interacts with protein'
+      parameters:
+        - name: target_chembl_id
+          in: query
+          description: >-
+            Put target ChEMBL ID here, e.g. CHEMBL2326
+          required: true
+          x-valueType:
+            - 'http://identifiers.org/chembl.target/'
+          x-requestTemplate:
+            - valueType: 'http://identifiers.org/chembl.target/'
+              template: {{input}}
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 'A query response object with "mechanisms" property'
+          x-responseValueType:
+            - path: mechanisms.molecule_chembl_id
+              valueType: 'http://identifiers.org/chembl.compound/'
+          x-JSONLDContext:
+            'ChEMBL/jsonld_context/chembl_target2compound_context.json'
+  '/drug_indication'
+    get:
+      summary: 'return indications for drugs'
+      parameters:
+        - name: molecule_chembl_id
+          in: query
+          description: >-
+            Put ChEMBL compound ID here, e.g. CHEMBL112
+          required: true
+          x-valueType:
+            - 'http://identifiers.org/chembl.compound/'
+          x-requestTemplate:
+            - valueType: 'http://identifiers.org/chembl.compound/'
+              template: {{input}}
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 'A query response object with "drug_indications" property'
+          x-responseValueType:
+            - path: drug_indications.mesh_id
+              valueType: 'http://identifiers.org/mesh.disease/'
+            - path: drug_indications.efo_id
+              valueType: 'http://identifiers.org/hp/'
+            - path: drug_indications.efo_id
+              valueType: 'http://identifiers.org/efo/'
+            - path: drug_indications.efo_id
+              valueType: 'http://identifiers.org/orphanet/'
+          x-JSONLDContext:
+            'ChEMBL/jsonld_context/chembl_drugindication_context.json'
