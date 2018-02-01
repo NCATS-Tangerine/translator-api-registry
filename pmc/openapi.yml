@@ -1,0 +1,51 @@
+openapi: '3.0.0'
+info:
+  version: '1.0'
+  title: PMC API
+  description: >-
+    This is the RESTful API for accessing data stored in PMC. 
+  termsOfService: https://www.ncbi.nlm.nih.gov/pmc
+  contact:
+    name: pharmgkb help desk
+    x-role: responsible developer
+    email: help@pharmgkb.org
+servers:
+  - url: 'https://www.ncbi.nlm.nih.gov/pmc/utils/idconv/'
+    description: 'Production server'
+tags:
+  - name: publication
+paths:
+  '/idconv/v1.0/?ids={publicationid}':
+    get:
+      summary: 'return publication object given a publication id'
+      parameters:
+        - name: publicationid
+          in: path
+          description: >-
+            Put Publication ID here, e.g. PMC2869000
+          required: true
+          x-valueType:
+            - 'http://identifiers.org/pubmed/'
+            - 'http://identifiers.org/pmc/'
+            - 'http://identifiers.org/doi/'
+          x-requestTemplate:
+            - valueType: 'http://identifiers.org/pubmed/'
+              template: /idconv/v1.0/?ids={publicationid}&format=json
+            - valueType: 'http://identifiers.org/pmc/'
+              template: /idconv/v1.0/?ids={publicationid}&format=json
+            - valueType: 'http://identifiers.org/doi/'
+              template: /idconv/v1.0/?ids={publicationid}&format=json
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 'A publication annotation object'
+          x-responseValueType:
+            - path: records.pmcid
+              valueType: 'http://identifiers.org/pmc/'
+            - path: records.pmid
+              valueType: 'http://identifiers.org/pubmed/'
+            - path: records.doi
+              valueType: 'http://identifiers.org/doi/'
+          x-JSONLDContext:
+            'pmc/jsonld_context/pmc_context.json'
