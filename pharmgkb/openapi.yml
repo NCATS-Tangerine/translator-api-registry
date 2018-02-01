@@ -1,0 +1,100 @@
+openapi: '3.0.0'
+info:
+  version: '1.0'
+  title: PharmGKB API
+  description: >-
+    This is the RESTful API for accessing data stored in PharmGKB. 
+  termsOfService: https://api.pharmgkb.org
+  contact:
+    name: pharmgkb help desk
+    x-role: responsible developer
+    email: help@pharmgkb.org
+servers:
+  - url: 'https://api.pharmgkb.org/v1/data'
+    description: 'Production server'
+tags:
+  - name: drug
+  - name: gene
+  - name: pathway
+  - name: disease
+paths:
+  '/pathway/{pathwayid}':
+    get:
+      summary: 'return pathway object given a pharmgkb pathway id'
+      parameters:
+        - name: pathwayid
+          in: path
+          description: >-
+            Put PharmGKB pathway ID here, e.g. PA165986279
+          required: true
+          x-valueType:
+            - 'http://identifiers.org/pharmgkb.pathways/'
+          x-requestTemplate:
+            - valueType: 'http://identifiers.org/pharmgkb.pathways/'
+              template: /pathway/{pathwayid}?view=max
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 'A pathway annotation object'
+          x-responseValueType:
+            - path: chemicals.id
+              valueType: 'http://identifiers.org/pharmgkb.drug/'
+            - path: genes.id
+              valueType: 'http://identifiers.org/pharmgkb.gene/'
+            - path: genes.symbol
+              valueType: 'http://identifiers.org/hgnc.symbol/'
+            - path: diseases.id 
+              valueType: 'http://identifiers.org/pharmgkb.disease/'
+          x-JSONLDContext:
+            'pharmgkb/jsonld_context/phargkb_pathway_context.json'
+  '/gene/{geneid}':
+    get:
+      summary: 'return gene object given a pharmgkb gene id'
+      parameters:
+        - name: geneid
+          in: path
+          description: >-
+            Put PharmGKB gene ID here, e.g. PA101
+          required: true
+          x-valueType:
+            - 'http://identifiers.org/pharmgkb.gene/'
+          x-requestTemplate:
+            - valueType: 'http://identifiers.org/pharmgkb.gene/'
+              template: /gene/{geneid}?view=max
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 'A gene annotation object'
+          x-responseValueType:
+            - path: symbol
+              valueType: 'http://identifiers.org/hgnc.symbol/'
+          x-JSONLDContext:
+            'pharmgkb/jsonld_context/phargkb_gene_context.json'
+  '/chemical/{chemicalid}':
+    get:
+      summary: 'return gene object given a pharmgkb gene id'
+      parameters:
+        - name: chemicalid
+          in: path
+          description: >-
+            Put PharmGKB chemical ID here, e.g. PA451251
+          required: true
+          x-valueType:
+            - 'http://identifiers.org/pharmgkb.drug/'
+          x-requestTemplate:
+            - valueType: 'http://identifiers.org/pharmgkb.drug/'
+              template: /chemcial/{chemicalid}?view=max
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 'A chemical annotation object'
+          x-responseValueType:
+            - path: name
+              valueType: 'http://biothings.io/terms/drugname/'
+            - path: inChi
+              valueType: 'http://identifiers.org/inchi/'
+          x-JSONLDContext:
+            'pharmgkb/jsonld_context/phargkb_chemical_context.json'
