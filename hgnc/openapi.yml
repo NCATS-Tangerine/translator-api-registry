@@ -1,0 +1,69 @@
+openapi: '3.0.0'
+info:
+  version: '1.0'
+  title: HGNC API
+  description: >-
+    genenames.org is a curated online repository of HGNC-approved gene nomenclature, gene families and associated resources including links to genomic, proteomic and phenotypic information.
+  termsOfService: https://www.genenames.org/
+  contact:
+    name: HGNC help desk
+    x-role: responsible developer
+    email: hgnc@genenames.org
+servers:
+  - url: 'https://rest.genenames.org'
+    description: 'Production server'
+tags:
+  - name: gene
+  - name: protein
+paths:
+  '/fetch/{gene}'
+    get:
+      summary: 'The fetch request is the main request to retrieve particular records for the server that will return back all the fields as seen in the "storedFields" section of the info response.'
+        - name: gene
+          in: path
+          description: >-
+            Add the queriable field (as seen in the "searchableFields" section of the info) and the query term to the ur. 
+          required: true
+          x-valueType:
+            - 'http://identifiers.org/hgnc.symbol/'
+            - 'http://identifiers.org/hgnc/'
+            - 'http://identifiers.org/ensembl.gene/'
+          x-requestTemplate:
+            - valueType: 'http://identifiers.org/hgnc.symbol/'
+              template: /fetch/symbol/{gene}
+            - valueType: 'http://identifiers.org/hgnc/'
+              template: /fetch/hgnc_id/HGNC:{gene}
+            - valueType: 'http://identifiers.org/ensembl.gene/'
+              template: /fetch/ensembl_gene_id/{gene}
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 'A gene annotation object with "response" property'
+          x-responseValueType:
+            - path: response.docs.hgnc_id
+              valueType: 'http://identifiers.org/hgnc/'
+            - path: response.docs.symbol
+              valueType: 'http://identifiers.org/hgnc.symbol/'
+            - path: response.docs.entrez_id
+              valueType: 'http://identifiers.org/ncbigene/'
+            - path: response.docs.mgd_id
+              valueType: 'http://identifiers.org/mgi/'
+            - path: response.docs.refseq_accession
+              valueType: 'http://identifiers.org/refseq/'
+            - path: response.docs.ccds_id
+              valueType: 'http://identifiers.org/ccds/'
+            - path: response.docs.ensembl_gene_id
+              valueType: 'http://identifiers.org/ensembl.gene/'
+            - path: response.docs.omim_id
+              valueType: 'http://identifiers.org/omim.gene/'
+            - path: response.docs.uniprot_ids
+              valueType: 'http://identifiers.org/uniprot/'
+            - path: response.docs.rgd_id
+              valueType: 'http://identifiers.org/rgd/'
+            - path: response.docs.ena
+              valueType: 'http://identifiers.org/ena.embl/'
+            - path: repsonse.docs.pubmed_id
+              valueType: 'http://identifiers.org/pubmed/'
+          x-JSONLDContext:
+            'hgnc/jsonld_context/hgnc_fetch_context.json'
