@@ -1,0 +1,68 @@
+openapi: 3.0.0
+info:
+  version: '3.0'
+  termsOfService: 'http://biothings.io'
+  title: BioThings Explorer API
+  contact:
+    email: kevinxin@scripps.edu
+    x-id:
+      - 'http://orcid.org/0000-0002-2629-6124'
+      - 'https://github.com/kevinxin90'
+    x-role: responsible developer
+    name: Jiwen Xin
+  description: Documentation of the BioThings Explorer Web Services
+servers:
+  - url: 'http://biothings.io'
+    description: Production server
+paths:
+  /explorer/knowledgemap:
+    get:
+      summary: >-
+        Return information about how different biological entities are connected
+        together
+      responses:
+        '200':
+          description: >-
+            json document containing predicate, subject, object, endpoint
+            information
+  /explorer/knowledgemap/input:
+    get:
+      summary: >-
+        Return all biological entities which can be connected from the given
+        input
+      parameters:
+        - in: query
+          required: true
+          name: input
+          schema:
+            type: string
+          description: 'Put curie prefix here, e.g. ncbigene, ensembl.gene, wikipathways'
+      responses:
+        '200':
+          description: A query response object with "information" property
+  /explorer/knowledgemap/endpoint:
+    get:
+      summary: Return all inputs and outputs of the endpoint
+      parameters:
+        - in: query
+          required: true
+          name: endpoint
+          schema:
+            type: string
+          description: 'Put endpoint names here, e.g. http://mygene.info/v3/query'
+      responses:
+        '200':
+          description: A query response object with "information" property
+  '/explorer/metadata/{type}':
+    get:
+      summary: Return all inputs and outputs of the endpoint
+      parameters:
+        - in: path
+          required: true
+          name: type
+          schema:
+            type: string
+          description: 'Put either endpoint, bioentity, api here'
+      responses:
+        '200':
+          description: A query response object with "information" property
