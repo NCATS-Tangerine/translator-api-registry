@@ -1,0 +1,368 @@
+openapi: 3.0.0
+info:
+  version: '1.0'
+  title: c.biothings.io API
+  description: Documentation of the c.biothings.io drug query web services.  Learn
+    more about [c.biothings.io](http://c.biothings.io/)
+  termsOfService: http://c.biothings.io/terms
+  contact:
+    name: Chunlei Wu
+    x-role: responsible developer
+    email: help@biothings.io
+    x-id: https://github.com/newgene
+servers:
+- url: http://c.biothings.io/v1
+  description: Production server
+- url: https://c.biothings.io/v1
+  description: Encrypted Production server
+tags:
+- name: drug
+- name: query
+- name: metadata
+paths:
+  /drug/{drugid}:
+    get:
+      tags:
+      - drug
+      summary: Retrieve drug objects based on drug id.  Supports JSONP and CORS as
+        well.
+      parameters:
+      - name: drugid
+        in: path
+        description: drug id
+        required: true
+        example: USNINKBPBVKHHZ-CYUUQNCZSA-L
+        schema:
+          type: string
+      - name: dotfield
+        $ref: '#/components/parameters/dotfield'
+      - name: callback
+        $ref: '#/components/parameters/callback'
+      - name: fields
+        $ref: '#/components/parameters/fields'
+      - name: email
+        $ref: '#/components/parameters/email'
+      - name: format
+        $ref: '#/components/parameters/format'
+      responses:
+        '200':
+          description: A matching drug object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Drug'
+        '404':
+          description: A response indicating an unknown drug id
+  /drug:
+    post:
+      tags:
+      - drug
+      summary: For a list of drug ids, return the matching drug object
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              properties:
+                ids:
+                  description: 'multiple drug ids separated by comma. Note that currently
+                    we only take the input ids up to 1000 maximum, the rest will be
+                    omitted. Type: string (list). Max: 1000.'
+                  type: string
+              required:
+              - ids
+      parameters:
+      - name: dotfield
+        $ref: '#/components/parameters/dotfield'
+      - name: fields
+        $ref: '#/components/parameters/fields'
+      - name: email
+        $ref: '#/components/parameters/email'
+      - name: format
+        $ref: '#/components/parameters/format'
+      responses:
+        '200':
+          description: A list of matching drug objects
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/Drug'
+                type: array
+        '400':
+          description: A response indicating an improperly formatted query
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResult'
+  /query:
+    get:
+      tags:
+      - query
+      summary: Make drug queries and return matching drug hits. Supports JSONP and
+        CORS as well.
+      parameters:
+      - name: q
+        in: query
+        description: Query string.  The detailed query syntax can be found from our
+          [docs]
+        required: true
+        example: USNINKBPBVKHHZ-CYUUQNCZSA-L
+        schema:
+          type: string
+      - name: dotfield
+        $ref: '#/components/parameters/dotfield'
+      - name: fields
+        $ref: '#/components/parameters/fields'
+      - name: facet_size
+        $ref: '#/components/parameters/facet_size'
+      - name: sort
+        $ref: '#/components/parameters/sort'
+      - name: callback
+        $ref: '#/components/parameters/callback'
+      - name: email
+        $ref: '#/components/parameters/email'
+      - name: facets
+        $ref: '#/components/parameters/facets'
+      - name: size
+        $ref: '#/components/parameters/size'
+      - name: from
+        $ref: '#/components/parameters/from'
+      - name: format
+        $ref: '#/components/parameters/format'
+      responses:
+        '200':
+          description: A query response with the "hits" property
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QueryResult'
+        '400':
+          description: A response indicating an improperly formatted query
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResult'
+    post:
+      tags:
+      - query
+      summary: Make drug batch queries and return matching drug hits
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              properties:
+                q:
+                  description: multiple query terms separated by comma (also "+" or
+                    whitespace).  Does not support wildcard queries
+                  type: string
+                scopes:
+                  description: 'a comma-separated list of fields as the search "scopes"
+                    (fields to search through for query term). The available "fields"
+                    that can be passed to the "scopes" parameter are listed in the
+                    **/metadata/fields** endpoint.string Default: "scopes=_id".'
+                  type: string
+      parameters:
+      - name: dotfield
+        $ref: '#/components/parameters/dotfield'
+      - name: email
+        $ref: '#/components/parameters/email'
+      - name: fields
+        $ref: '#/components/parameters/fields'
+      - name: size
+        $ref: '#/components/parameters/size'
+      - name: format
+        $ref: '#/components/parameters/format'
+      responses:
+        '200':
+          description: Query response objects with the "hits" property
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QueryPOSTResult'
+        '400':
+          description: A response indicating an improperly formatted query
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResult'
+  /metadata:
+    get:
+      tags:
+      - metadata
+      summary: Get metadata about the data available from c.biothings.io
+      parameters:
+      - name: callback
+        in: query
+        $ref: '#/components/parameters/callback'
+      responses:
+        '200':
+          description: c.biothings.io metadata object
+  /metadata/fields:
+    get:
+      tags:
+      - metadata
+      summary: Get metadata about the data fields available from a c.biothings.io
+        drug object
+      parameters:
+      - name: search
+        $ref: '#/components/parameters/search'
+      - name: callback
+        $ref: '#/components/parameters/callback'
+      - name: prefix
+        $ref: '#/components/parameters/prefix'
+      - name: format
+        $ref: '#/components/parameters/format'
+      responses:
+        '200':
+          description: c.biothings.io metadata fields object
+components:
+  parameters:
+    search:
+      name: search
+      in: query
+      description: 'Pass a search term to filter the available fields. Type: string.
+        Default: None.'
+      schema:
+        type: string
+    fields:
+      name: fields
+      in: query
+      description: 'a comma-separated list of fields (in dotfield notation) used to
+        limit the fields returned from the matching drug hit(s). The supported field
+        names can be found from any drug object or from the /metadata/fields endpoint.
+        If "fields=all", all available fields will be returned. Type: string (list).
+        Default: None. Max: 1000.'
+      schema:
+        type: string
+    format:
+      name: format
+      in: query
+      description: 'controls output format of server response, currently supports:
+        "json", "jsonld", "html". Type: string. Default: json.'
+      schema:
+        type: string
+    dotfield:
+      name: dotfield
+      in: query
+      description: 'control the format of the returned drug object. If "true" or "1",
+        all fields will be collapsed into a single level deep object (all nested objects
+        will be a single level deep, using dotfield notation to signify the nested
+        structure) Type: boolean. Default: None.'
+      schema:
+        type: boolean
+    from:
+      name: from
+      in: query
+      description: 'the number of matching drug hits to skip, starting from 0.  This
+        can be useful for paging in combination with the "size" parameter. Type: integer.
+        Default: None.'
+      schema:
+        type: integer
+    prefix:
+      name: prefix
+      in: query
+      description: 'Pass a prefix string to filter the available fields. Type: string.
+        Default: None.'
+      schema:
+        type: string
+    size:
+      name: size
+      in: query
+      description: 'the maximum number of matching drug hits to return per batch.
+        Type: integer. Default: 10.'
+      schema:
+        type: integer
+    facet_size:
+      name: facet_size
+      in: query
+      description: 'the number of facet buckets to return in the response. Type: integer.
+        Default: 10. Max: 1000.'
+      schema:
+        type: integer
+    facets:
+      name: facets
+      in: query
+      description: 'a comma-separated list of fields to return facets on.  In addition
+        to query hits, the fields notated in "facets" will be aggregated by value
+        and bucklet counts will be displayed in the "facets" field of the response
+        object. Type: string (list). Default: None. Max: 1000.'
+      schema:
+        type: string
+    sort:
+      name: sort
+      in: query
+      description: 'the comma-separated list of fields to sort on. Prefix each with
+        "-" for descending order, otherwise in ascending order. Default: sort by descending
+        score.'
+      schema:
+        type: string
+    callback:
+      name: callback
+      in: query
+      description: 'you can pass a "callback" parameter to make a JSONP call. Type:
+        string.'
+      schema:
+        type: string
+    email:
+      name: email
+      in: query
+      description: If you are regular users of our services, we encourage you to provide
+        us with an email, so that we can better track the usage or follow up with
+        you.
+      schema:
+        type: string
+  schemas:
+    string_or_array:
+      oneOf:
+      - items:
+          type: string
+        type: array
+      - type: string
+    int64_or_array:
+      oneOf:
+      - items:
+          format: int64
+          type: integer
+        type: array
+      - format: int64
+        type: integer
+    QueryResult:
+      properties:
+        max_score:
+          format: float
+          type: number
+        took:
+          type: integer
+        total:
+          type: integer
+        hits:
+          items:
+            $ref: '#/components/schemas/Drug'
+          type: array
+      type: object
+    QueryPOSTResult:
+      items:
+        allOf:
+        - $ref: '#/components/schemas/Drug'
+        - properties:
+            _score:
+              format: float
+              type: number
+            query:
+              type: string
+          type: object
+      type: array
+    ErrorResult:
+      properties:
+        message:
+          type: string
+        success:
+          type: boolean
+      type: object
+    Drug:
+      properties:
+        _id:
+          type: string
+      required:
+      - _id
+      type: object
