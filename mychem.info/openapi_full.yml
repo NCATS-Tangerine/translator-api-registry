@@ -47,6 +47,7 @@ paths:
             - 'http://identifiers.org/uniprot/'
             - 'http://biothings.io/terms/drugname/'
             - 'http://identifiers.org/snomedct/'
+            - 'http://identifiers.org/pharmgkb.drug/'
           x-requestTemplate:
             - valueType: 'http://identifiers.org/rxcui/'
               template: aeolus.rxcui:input_value OR drugcentral.xref.rxnorm:input_value OR ginas.xrefs.RXCUI:input_value OR pharmgkb.external_vocabulary.rxnorm:input_value
@@ -71,11 +72,13 @@ paths:
             - valueType: 'http://identifiers.org/inchi/'
               template: pubchem.inchi:input_value OR pharmgkb.inchi:input_value OR drugcentral.structures.inchi:input_value OR drugbank.inchi:input_value OR chembl.inchi:input_value OR chebi.inchi:input_value
             - valueType: 'http://identifiers.org/uniprot/'
-              template: chebi.uniprot_database_links:input_value OR drugbank.enzymes.uniprot:input_value OR drugbank.pathways.enzymes.uniprot-id:input_value OR drugbank.pharmacology.snp_adverse_drug_reactions.reaction.uniprot-id:input_value OR drugbank.pharmacology.snp_effects.effect.uniprot-id:input_value OR drugbank.targets.uniprot:input_value OR drugbank.transporters.uniprot:input_value OR drugcentral.bioactivity.uniprot_id:input_value OR pharmgkb.cross_references.uniprotkb:input_value
+              template: drugbank.enzymes.uniprot:input_value OR drugbank.pathways.enzymes.uniprot-id:input_value OR drugbank.pharmacology.snp_adverse_drug_reactions.reaction.uniprot-id:input_value OR drugbank.pharmacology.snp_effects.effect.uniprot-id:input_value OR drugbank.targets.uniprot:input_value OR drugbank.transporters.uniprot:input_value OR drugcentral.bioactivity.uniprot_id:input_value OR pharmgkb.cross_references.uniprotkb:input_value
             - valueType: 'http://biothings.io/terms/drugname/'
               template: aeolus.drug_name:input_value OR chebi.chebi_name:input_value OR chembl.pref_name:input_value OR drugbank.name:input_value
             - valueType: 'http://identifiers.org/pharmgkb.drug/'
               template: pharmgkb.pharmgkb_accession_id:input_value
+            - valueType: 'http://identifiers.org/snomedct/'
+              template: drugcentral.drug_use.snomed_id:input_value
           schema:
             type: string
       responses:
@@ -84,6 +87,20 @@ paths:
           x-responseValueType:
             - path: _id
               valueType: 'http://identifiers.org/inchikey/'
+            - path: unii.unii
+              valueType: 'http://identifiers.org/unii/'
+            - path: aeolus.drug_name
+              valueType: 'http://biothings.io/terms/drugname/'
+            - path: drgucentral.xref.pubchem_cid
+              valueType: 'http://identifiers.org/pubchem.compound/'
+            - path: drugcentral.xref.iuphar_ligand_id
+              valueType: 'http://identifiers.org/iuphar.ligand/'
+            - path: aeolus.rxcui
+              valueType: 'http://identifiers.org/rxcui/'
+            - path: drugcentral.xref.chebi
+              valueType: 'http://identifiers.org/chebi/'
+            - path: drugbank.accession_number
+              valueType: 'http://identifiers.org/drugbank/'
           x-JSONLDContext:
             'mychem.info/jsonld_context/mychem_query_1.1.json'
   '/drug/{drugid}':
@@ -97,6 +114,7 @@ paths:
           required: true
           x-valueType:
             - 'http://identifiers.org/inchikey/'
+            - 'http://identifiers.org/drugbank/'
           x-requestTemplate:
             - valueType: 'http://identifiers.org/inchikey/'
               template: /drug/{drugid}
@@ -142,8 +160,6 @@ paths:
               valueType: 'http://identifiers.org/iuphar.ligand/'
             - path: drugcentral.drug_use.snomed_name
               valueType: 'http://biothings.io/concepts/disease_name/'
-            - path: drugbank.targets
-              valueType: 'http://biothings.io/concepts/drug_interaction/'
             - path: pharmgkb.pharmgkb_accession_id
               valueType: 'http://identifiers.org/pharmgkb.drug/'
             - path: drugcentral.xref.pubchem_cid

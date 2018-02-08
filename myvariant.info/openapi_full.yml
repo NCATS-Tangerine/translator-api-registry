@@ -47,7 +47,7 @@ paths:
             - 'http://identifiers.org/pubmed/'
             - 'http://identifiers.org/clinicalsignificance/'
             - 'http://biothings.io/terms/drugname/'
-            - 'http://identifiers.org/do/'
+            - 'http://identifiers.org/doid/'
             - 'http://biothings.io/concepts/disease_name/'
           x-requestTemplate:
             - valueType: 'http://identifiers.org/hgnc.symbol/'
@@ -56,7 +56,7 @@ paths:
               template: clinvar.rsid:input_value OR dbnsfp.rsid:input_value OR dbsnp.rsid:input_value OR evs.rsid:input_value
             - valueType: 'http://identifiers.org/ensembl.gene/'
               template: dbnsfp.ensembl.geneid:input_value OR cadd.gene.gene_id:input_value
-            - valueType: 'http://identifiers.org/ensembl.transcript'
+            - valueType: 'http://identifiers.org/ensembl.transcript/'
               template: dbnsfp.ensembl.transcriptid:input_value OR cadd.gene.feature_id:input_value
             - valueType: 'http://identifiers.org/ensembl.protein/'
               template: dbnsfp.ensembl.proteinid:input_value
@@ -78,10 +78,12 @@ paths:
               template: clinvar.rcv.clinical_significance:input_value
             - valueType: 'http://biothings.io/terms/drugname/'
               template: civic.evidence_items.drugs.name:input_value
-            - valueType: 'http://identifiers.org/do/'
+            - valueType: 'http://identifiers.org/doid/'
               template: civic.evidence_items.disease.doid:"input_value"
-            - valueType: 'http://biothings.io/concepts/disease_name'
+            - valueType: 'http://biothings.io/concepts/disease_name/'
               template: civic.evidence_items.disease.display_name:input_value
+            - valueType: 'http://identifiers.org/clinvar/'
+              template: clinvar.rcv.accession:input_value
           schema:
             type: string
       responses:
@@ -90,6 +92,8 @@ paths:
           x-responseValueType:
             - path: _id
               valueType: 'http://identifiers.org/hgvs/'
+            - path: dbsnp.rsid
+              valueType: 'http://identifiers.org/dbsnp/'
           x-JSONLDContext:
             'myvariant.info/jsonld_context/myvariant_query_1.1.json'
   '/variant/{variantid}':
@@ -106,9 +110,9 @@ paths:
             - 'http://identifiers.org/dbsnp/'
           x-requestTemplate:
             - valueType: 'http://identifiers.org/hgvs/'
-              template: /variant/input_value
+              template: /variant/{variantid}
             - valueType: 'http://identifiers.org/dbsnp/'
-              template: /variant/input_value
+              template: /variant/{variantid}
           schema:
             type: string
       responses:
@@ -130,25 +134,25 @@ paths:
             - path: clinvar.rcv.accession
               valueType: 'http://identifiers.org/clinvar/'
             - path: clinvar.rcv.conditions.identifiers.omim
+              valueType: 'http://identifiers.org/omim.disease/'
+            - path: clinvar.omim
               valueType: 'http://identifiers.org/omim.variant/'
             - path: clinvar.rcv.conditions.identifiers.efo
               valueType: 'http://identifiers.org/efo/'
             - path: clinvar.rcv.conditions.identifiers.orphanet
               valueType: 'http://identifiers.org/orphanet/'
             - path: clinvar.gene.id
-              valueType: 'http://identifiers.org/hgnc/'
+              valueType: 'http://identifiers.org/ncbigene/'
             - path: dbnsfp.ensembl.proteinid
               valueType: 'http://identifiers.org/ensembl.protein/'
             - path: docm.pubmed_id
               valueType: 'http://identifiers.org/pubmed/'
             - path: clinvar.rcv.clinical_significance
               valueType: 'http://identifiers.org/clinicalsignificance/'
-            - path: civic.evidence_items
-              valueType: 'http://biothings.io/concepts/clinical_evidence/'
             - path: civic.evidence_items.drugs.name
               valueType: 'http://biothings.io/terms/drugname/'
             - path: civic.evidence_items.disease.doid
-              valueType: 'http://identifiers.org/do/'
+              valueType: 'http://identifiers.org/doid/'
             - path: civic.evidence_items.disease.display_name
               valueType: 'http://biothings.io/concepts/disease_name/'
           x-JSONLDContext:
