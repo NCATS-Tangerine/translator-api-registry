@@ -10,57 +10,210 @@ info:
     name: Jiwen Xin
   description: Documentation of the BioThings Explorer Web Services
 servers:
-  - url: 'http://biothings.io'
+  - url: 'http://biothings.io/explorer'
     description: Production server
 paths:
-  /explorer/knowledgemap:
+  '/metadata/{type}':
     get:
       summary: >-
-        Return information about how different biological entities are connected
-        together
-      responses:
-        '200':
-          description: >-
-            json document containing predicate, subject, object, endpoint
-            information
-  /explorer/knowledgemap/input:
-    get:
-      summary: >-
-        Return all biological entities which can be connected from the given
-        input
-      parameters:
-        - in: query
-          required: true
-          name: input
-          schema:
-            type: string
-          description: 'Put curie prefix here, e.g. ncbigene, ensembl.gene, wikipathways'
-      responses:
-        '200':
-          description: A query response object with "information" property
-  /explorer/knowledgemap/endpoint:
-    get:
-      summary: Return all inputs and outputs of the endpoint
-      parameters:
-        - in: query
-          required: true
-          name: endpoint
-          schema:
-            type: string
-          description: 'Put endpoint names here, e.g. http://mygene.info/v3/query'
-      responses:
-        '200':
-          description: A query response object with "information" property
-  '/explorer/metadata/{type}':
-    get:
-      summary: Return all inputs and outputs of the endpoint
+        Return available API resources and Bioentities integarated in BioThings
+        Explorer.
       parameters:
         - in: path
           required: true
           name: type
           schema:
             type: string
+            enum:
+              - api
+              - endpoint
+              - bioentity
           description: 'Put either endpoint, bioentity, api here'
       responses:
         '200':
+          description: >-
+            The response includes all available resources integrated in
+            BioThings Explorer related to the data type you specified, e.g. when
+            you specify 'endpoint' as your input, the response will be all
+            endpoints integrated in BioThings Explorer
+  /knowledgemap:
+    get:
+      summary: >-
+        Return all subject-predicate-object triples in BioThings Explorer at
+        Biological ID level
+      responses:
+        '200':
+          description: >-
+            List of subject-predicate-object triples together with endpoint
+            information. Also each subject and object contains both semantic
+            type and prefix information
+  /knowledgemap/input:
+    get:
+      summary: >-
+        Return endpoints, bioentities which can be directly connected from the
+        given input, together with the predicate information
+      parameters:
+        - in: query
+          required: true
+          name: input
+          schema:
+            type: string
+            enum:
+              - ccds
+              - ena
+              - ensembl.gene
+              - hgnc
+              - hgnc.symbol
+              - mgi
+              - ncbigene
+              - omim.gene
+              - rgd
+              - zfin
+              - chembl.target
+              - ensembl.protein
+              - ensembl.translation
+              - refseq
+              - uniprot
+              - Disease Name
+              - do
+              - efo
+              - mesh.disease
+              - nci
+              - omim.disease
+              - orphanet
+              - snomed
+              - umls
+              - biocarta.pathway
+              - kegg.pathway
+              - pharmgkb.pathway
+              - reactome
+              - wikipathways
+              - chebi
+              - chembl.compound
+              - drugbank
+              - drugname
+              - inchi
+              - inchikey
+              - iuphar.ligand
+              - kegg.compound
+              - kegg.drug
+              - pharmgkb.drug
+              - pubchem.compound
+              - pubchem.substance
+              - puchem.bioassay
+              - rxnorm
+              - unii
+              - go
+              - pdb
+              - hp
+              - doi
+              - pmc
+              - pubmed
+              - clinvar
+              - dbsnp
+              - hgvs
+              - omim.variant
+              - taxonomy
+          description: 'Put curie prefix here, e.g. ncbigene, ensembl.gene, wikipathways'
+      responses:
+        '200':
+          description: >-
+            A query response object with "information" property. Contains
+            information about endpoints which takes the bioentity you specified
+            as input, as well as bioentities these endpoints outputs, together
+            with the predicate information
+  /knowledgemap/endpoint:
+    get:
+      summary: >-
+        Return all inputs and outputs of the endpoint, together with the
+        predicate information
+      parameters:
+        - in: query
+          required: true
+          name: endpoint
+          schema:
+            type: string
+            enum:
+              - >-
+                http://dgidb.genome.wustl.edu/api/v2/interactions.json?drugs={drugname}
+              - >-
+                http://dgidb.genome.wustl.edu/api/v2/interactions.json?genes={genesymbol}
+              - 'http://mychem.info/v1/drug/{drugid}'
+              - 'http://mychem.info/v1/query'
+              - 'http://mygene.info/v3/gene/{geneid}'
+              - 'http://mygene.info/v3/query'
+              - 'http://myvariant.info/v1/query'
+              - 'http://myvariant.info/v1/variant/{variantid}'
+              - 'http://rest.ensembl.org/lookup/id/{geneid}'
+              - 'http://rest.ensembl.org/taxonomy/id/{taxonomyid}'
+              - 'http://www.disease-ontology.org/api/metadata/{doid}'
+              - >-
+                https://api.monarchinitiative.org/api/bioentity/disease/{diseaseid}/genes
+              - >-
+                https://api.monarchinitiative.org/api/bioentity/disease/{diseaseid}/phenotypes
+              - >-
+                https://api.monarchinitiative.org/api/bioentity/gene/{geneid}/homologs
+              - >-
+                https://api.monarchinitiative.org/api/bioentity/gene/{geneid}/interactions
+              - >-
+                https://api.monarchinitiative.org/api/bioentity/gene/{geneid}/phenotypes
+              - >-
+                https://eutils.ncbi.nlm.nih.gov/entrez/eutils/elink.fcgi/{pubmedid}
+              - >-
+                https://pubchem.ncbi.nlm.nih.gov/rest/pug/assay/aid/{bioassayid}/cids/JSON
+              - >-
+                https://pubchem.ncbi.nlm.nih.gov/rest/pug/assay/aid/{bioassayid}/sids/JSON
+              - >-
+                https://pubchem.ncbi.nlm.nih.gov/rest/pug/assay/target/geneid/{geneid}/aids/JSON
+              - >-
+                https://pubchem.ncbi.nlm.nih.gov/rest/pug/assay/target/genesymbol/{genesymbol}/aids/JSON
+              - >-
+                https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/{compoundid}/sids/JSON
+              - >-
+                https://pubchem.ncbi.nlm.nih.gov/rest/pug/substance/sid/{substanceid}/cids/JSON
+              - 'https://rest.genenames.org/fetch/{gene}'
+              - >-
+                https://www.ebi.ac.uk/QuickGO/services/ontology/go/terms/{goid}/ancestors
+              - >-
+                https://www.ebi.ac.uk/QuickGO/services/ontology/go/terms/{goid}/descendants
+              - 'https://www.ebi.ac.uk/chembl/api/data/drug_indication'
+              - 'https://www.ebi.ac.uk/chembl/api/data/mechanism'
+              - 'https://www.ebi.ac.uk/chembl/api/data/target'
+              - >-
+                https://www.ebi.ac.uk/proteins/api/proteins/interaction/{accession}
+              - 'https://www.ebi.ac.uk/proteins/api/variation/{accession}'
+              - >-
+                https://www.ncbi.nlm.nih.gov/pmc/utils/idconv/v1.0/?ids={publicationid}
+          description: 'Put endpoint names here, e.g. http://mygene.info/v3/query'
+      responses:
+        '200':
           description: A query response object with "information" property
+  /knowledgemap/path:
+    get:
+      summary: Return all potential paths connecting from input to output
+      parameters:
+        - in: query
+          required: true
+          name: start
+          schema:
+            type: string
+          description: >-
+            Put either bioentity id you would like for the start point here,
+            e.g. ncbigene
+        - in: query
+          required: true
+          name: end
+          schema:
+            type: string
+          description: >-
+            Put either bioentity id you would like for the end point here, e.g.
+            uniprot
+        - in: query
+          required: true
+          name: max_api
+          schema:
+            type: string
+          description: 'Put maximum number of APIs to be used here, e.g. 3'
+      responses:
+        '200':
+          description: A query response object with "path" property
