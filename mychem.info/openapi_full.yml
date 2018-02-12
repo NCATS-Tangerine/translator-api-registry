@@ -1,108 +1,64 @@
-openapi: '3.0.0'
+openapi: 3.0.0
 info:
   version: '1.0'
   title: MyChem.info API
-  description: >-
-    Documentation of the MyChem.info Chemical Query web services. Learn more about
-    [MyChem.info](http://mychem.info/)
-  termsOfService: http://mychem.info/terms/
+  description: Documentation of the MyChem.info chem query web services.  Learn
+    more about [MyChem.info](http://MyChem.info/)
+  termsOfService: http://MyChem.info/terms
   contact:
     name: Chunlei Wu
     x-role: responsible developer
-    email: help@mychem.info
-    x-id: 'https://github.com/newgene'
+    email: help@biothings.io
+    x-id: https://github.com/newgene
 servers:
-  - url: 'http://mychem.info/v1'
-    description: 'Production server'
+- url: http://MyChem.info/v1
+  description: Production server
+- url: https://MyChem.info/v1
+  description: Encrypted Production server
 tags:
-  - name: chemical
-  - name: drug
-  - name: annotation
-  - name: query
-  - name: translator
+- name: chemical
+- name: drug
+- name: annotation
+- name: query
+- name: translator
 paths:
-  /query:
+  /chem/{chemid}:
     get:
-      summary: 'Make chemical query and return matching chemical hits'
+      tags:
+      - chemical
+      summary: Retrieve chemical objects based on ID
       parameters:
-        - name: q
-          in: query
-          description: >-
-            Query string. Examples "Fludara", "CHEMBI:63599", "DB01073".
-          required: true
-          x-valueType:
-            - 'http://identifiers.org/rxcui/'
-            - 'http://identifiers.org/chebi/'
-            - 'http://identifiers.org/chembl/'
-            - 'http://identifiers.org/drugbank/'
-            - 'http://identifiers.org/iuphar.ligand/'
-            - 'http://identifiers.org/kegg.drug/'
-            - 'http://identifiers.org/kegg.compound/'
-            - 'http://identifiers.org/pubchem.compound/'
-            - 'http://identifiers.org/unii/'
-            - 'http://identifiers.org/inchikey/'
-            - 'http://identifiers.org/inchi/'
-            - 'http://identifiers.org/uniprot/'
-            - 'http://biothings.io/terms/drugname/'
-            - 'http://identifiers.org/snomedct/'
-          x-requestTemplate:
-            - valueType: 'http://identifiers.org/rxcui/'
-              template: aeolus.rxcui:{{input}} OR drugcentral.xref.rxnorm:{{input}} OR ginas.xrefs.RXCUI:{{input}} OR pharmgkb.external_vocabulary.rxnorm:{{input}}
-            - valueType: 'http://identifiers.org/chebi/'
-              template: drugcentral.xref.chebi:{{input}} OR chebi.chebi_id:{{input}}
-            - valueType: 'http://identifiers.org/chembl/'
-              template: chembl.molecule_chembl_id:{{input}} OR drugbank.chembl:{{input}} OR drugcentral.xref.chembl_id:{{input}}
-            - valueType: 'http://identifiers.org/drugbank/'
-              template: drugcentral.xref.drugbank_id:{{input}} OR pharmgkb.cross_references.drugbank:{{input}} OR drugbank.drugbank_id:{{input}} OR chebi.drugbank_database_links:{{input}}
-            - valueType: 'http://identifiers.org/iuphar.ligand/'
-              template: drugcentral.xref.iuphar_ligand_id:{{input}} OR pharmgkb.cross_references.iuphar_ligand:{{input}}
-            - valueType: 'http://identifiers.org/kegg.drug/'
-              template: drugcentral.xref.kegg_drug:{{input}} OR chebi.kegg_drug_database_links:{{input}} OR drugbank.kegg_drug:{{input}} OR pharmgkb.cross_references.kegg_drug:{{input}}
-            - valueType: 'http://identifiers.org/kegg.compound/'
-              template: chebi.kegg_compound_database_links:{{input}} OR pharmgkb.cross_references.kegg_compound:{{input}}
-            - valueType: 'http://identifiers.org/pubchem.compound/'
-              template: drugcentral.xref.pubchem_cid:{{input}} OR chebi.pubchem_database_links:{{input}} OR pharmgkb.cross_references.pubchem_compound:{{input}} OR pubchem.cid:{{input}}
-            - valueType: 'http://identifiers.org/unii/'
-              template: drugcentral.xref.unii:{{input}} OR aeolus.unii:{{input}} OR ginas.unii:{{input}} OR unii.unii:{{input}}
-            - valueType: 'http://identifiers.org/inchikey/'
-              template: aeolus.inchikey:{{input}} OR chebi.inchikey:{{input}} OR chembl.inchi_key:{{input}} OR drugbank.inchi_key:{{input}} OR drugcentral.structures.inchikey:{{input}} OR ginas.inchikey:{{input}} OR pubchem.inchi_key:{{input}} OR unii.inchikey:{{input}}
-            - valueType: 'http://identifiers.org/inchi/'
-              template: pubchem.inchi:{{input}} OR pharmgkb.inchi:{{input}} OR drugcentral.structures.inchi:{{input}} OR drugbank.inchi:{{input}} OR chembl.inchi:{{input}} OR chebi.inchi:{{input}}
-            - valueType: 'http://identifiers.org/uniprot/'
-              template: chebi.uniprot_database_links:{{input}} OR drugbank.enzymes.uniprot:{{input}} OR drugbank.pathways.enzymes.uniprot-id:{{input}} OR drugbank.pharmacology.snp_adverse_drug_reactions.reaction.uniprot-id:{{input}} OR drugbank.pharmacology.snp_effects.effect.uniprot-id:{{input}} OR drugbank.targets.uniprot:{{input}} OR drugbank.transporters.uniprot:{{input}} OR drugcentral.bioactivity.uniprot_id:{{input}} OR pharmgkb.cross_references.uniprotkb:{{input}}
-            - valueType: 'http://biothings.io/terms/drugname/'
-              template: aeolus.drug_name:{{input}} OR chebi.chebi_name:{{input}} OR chembl.pref_name:{{input}} OR drugbank.name:{{input}}
-          schema:
-            type: string
+      - name: chemid
+        in: path
+        description: "Retrieve chemical objects based on ID - currently one of: [InChiKey](https://en.wikipedia.org/wiki/International_Chemical_Identifier#InChIKey), [DrugBank accession number](https://www.drugbank.ca/documentation), [ChEMBLID](https://www.ebi.ac.uk/chembl/faq#faq40), [ChEBI identifier](http://www.ebi.ac.uk/chebi/aboutChebiForward.do), [PubChem CID](https://pubchem.ncbi.nlm.nih.gov/search/help_search.html#Cid), [UNII](https://www.fda.gov/ForIndustry/DataStandards/SubstanceRegistrationSystem-UniqueIngredientIdentifierUNII/).  Supports JSONP and CORS as well."
+        required: true
+        x-valueType:
+          - 'http://identifiers.org/inchikey/'
+        x-requestTemplate:
+          - valueType: 'http://identifiers.org/inchikey/'
+            template: /drug/{{input}}
+          - valueType: 'http://identifiers.org/drugbank/'
+            template: /drug/{{input}}
+        example: USNINKBPBVKHHZ-CYUUQNCZSA-L
+        schema:
+          type: string
+      - name: dotfield
+        $ref: '#/components/parameters/dotfield'
+      - name: callback
+        $ref: '#/components/parameters/callback'
+      - name: fields
+        $ref: '#/components/parameters/fields'
+      - name: email
+        $ref: '#/components/parameters/email'
+      - name: format
+        $ref: '#/components/parameters/format'
       responses:
         '200':
-          description: 'A query response object with "hits" property'
-          x-responseValueType:
-            - path: _id
-              valueType: 'http://identifiers.org/inchikey/'
-          x-JSONLDContext:
-            'https://raw.githubusercontent.com/NCATS-Tangerine/translator-api-registry/master/mychem.info/jsonld_context/mychem_query_1.1.json'
-  '/drug/{drugid}':
-    get:
-      summary: 'For a given chemical id, return the matching chemical object'
-      parameters:
-        - name: drugid
-          in: path
-          description: >-
-            DrugBank ID, InCHIKey, CHEBI ID, CHEMBL ID
-          required: true
-          x-valueType:
-            - 'http://identifiers.org/inchikey/'
-          x-requestTemplate:
-            - valueType: 'http://identifiers.org/inchikey/'
-              template: /drug/{{input}}
-            - valueType: 'http://identifiers.org/drugbank/'
-              template: /drug/{{input}}
-          schema:
-            type: string
-      responses:
-        '200':
-          description: 'A chemical object'
+          description: A matching chemical object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Chem'
           x-responseValueType:
             - path: _id
               valueType: 'http://identifiers.org/inchikey/'
@@ -142,3 +98,360 @@ paths:
               valueType: 'http://biothings.io/concepts/drug_interaction/'
           x-JSONLDContext:
             'https://raw.githubusercontent.com/NCATS-Tangerine/translator-api-registry/master/mychem.info/jsonld_context/mychem_drug_1.1.json'
+        '404':
+          description: A response indicating an unknown chemical ID
+  /chem:
+    post:
+      tags:
+      - chemical
+      summary: For a list of chemical IDs, return the matching chemical object
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              properties:
+                ids:
+                  description: 'multiple chemical IDs separated by comma. Note that currently
+                    we only take the input ids up to 1000 maximum, the rest will be
+                    omitted. Type: string (list). Max: 1000.'
+                  type: string
+              required:
+              - ids
+      parameters:
+      - name: dotfield
+        $ref: '#/components/parameters/dotfield'
+      - name: fields
+        $ref: '#/components/parameters/fields'
+      - name: email
+        $ref: '#/components/parameters/email'
+      - name: format
+        $ref: '#/components/parameters/format'
+      responses:
+        '200':
+          description: A list of matching chemical objects
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/Chem'
+                type: array
+        '400':
+          description: A response indicating an improperly formatted query
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResult'
+  /query:
+    get:
+      tags:
+      - query
+      summary: Make chemical queries and return matching chemical hits. Supports JSONP and
+        CORS as well.
+      parameters:
+      - name: q
+        in: query
+        description: 'Query string.  The detailed query syntax can be found from our
+          [docs](http://MyChem.info).  Examples: "Fludara", "CHEMBI:63599", "DB01073".'
+        required: true
+        x-valueType:
+          - 'http://identifiers.org/rxcui/'
+          - 'http://identifiers.org/chebi/'
+          - 'http://identifiers.org/chembl/'
+          - 'http://identifiers.org/drugbank/'
+          - 'http://identifiers.org/iuphar.ligand/'
+          - 'http://identifiers.org/kegg.drug/'
+          - 'http://identifiers.org/kegg.compound/'
+          - 'http://identifiers.org/pubchem.compound/'
+          - 'http://identifiers.org/unii/'
+          - 'http://identifiers.org/inchikey/'
+          - 'http://identifiers.org/inchi/'
+          - 'http://identifiers.org/uniprot/'
+          - 'http://biothings.io/terms/drugname/'
+          - 'http://identifiers.org/snomedct/'
+        x-requestTemplate:
+          - valueType: 'http://identifiers.org/rxcui/'
+            template: aeolus.rxcui:{{input}} OR drugcentral.xref.rxnorm:{{input}} OR ginas.xrefs.RXCUI:{{input}} OR pharmgkb.external_vocabulary.rxnorm:{{input}}
+          - valueType: 'http://identifiers.org/chebi/'
+            template: drugcentral.xref.chebi:{{input}} OR chebi.chebi_id:{{input}}
+          - valueType: 'http://identifiers.org/chembl/'
+            template: chembl.molecule_chembl_id:{{input}} OR drugbank.chembl:{{input}} OR drugcentral.xref.chembl_id:{{input}}
+          - valueType: 'http://identifiers.org/drugbank/'
+            template: drugcentral.xref.drugbank_id:{{input}} OR pharmgkb.cross_references.drugbank:{{input}} OR drugbank.drugbank_id:{{input}} OR chebi.drugbank_database_links:{{input}}
+          - valueType: 'http://identifiers.org/iuphar.ligand/'
+            template: drugcentral.xref.iuphar_ligand_id:{{input}} OR pharmgkb.cross_references.iuphar_ligand:{{input}}
+          - valueType: 'http://identifiers.org/kegg.drug/'
+            template: drugcentral.xref.kegg_drug:{{input}} OR chebi.kegg_drug_database_links:{{input}} OR drugbank.kegg_drug:{{input}} OR pharmgkb.cross_references.kegg_drug:{{input}}
+          - valueType: 'http://identifiers.org/kegg.compound/'
+            template: chebi.kegg_compound_database_links:{{input}} OR pharmgkb.cross_references.kegg_compound:{{input}}
+          - valueType: 'http://identifiers.org/pubchem.compound/'
+            template: drugcentral.xref.pubchem_cid:{{input}} OR chebi.pubchem_database_links:{{input}} OR pharmgkb.cross_references.pubchem_compound:{{input}} OR pubchem.cid:{{input}}
+          - valueType: 'http://identifiers.org/unii/'
+            template: drugcentral.xref.unii:{{input}} OR aeolus.unii:{{input}} OR ginas.unii:{{input}} OR unii.unii:{{input}}
+          - valueType: 'http://identifiers.org/inchikey/'
+            template: aeolus.inchikey:{{input}} OR chebi.inchikey:{{input}} OR chembl.inchi_key:{{input}} OR drugbank.inchi_key:{{input}} OR drugcentral.structures.inchikey:{{input}} OR ginas.inchikey:{{input}} OR pubchem.inchi_key:{{input}} OR unii.inchikey:{{input}}
+          - valueType: 'http://identifiers.org/inchi/'
+            template: pubchem.inchi:{{input}} OR pharmgkb.inchi:{{input}} OR drugcentral.structures.inchi:{{input}} OR drugbank.inchi:{{input}} OR chembl.inchi:{{input}} OR chebi.inchi:{{input}}
+          - valueType: 'http://identifiers.org/uniprot/'
+            template: chebi.uniprot_database_links:{{input}} OR drugbank.enzymes.uniprot:{{input}} OR drugbank.pathways.enzymes.uniprot-id:{{input}} OR drugbank.pharmacology.snp_adverse_drug_reactions.reaction.uniprot-id:{{input}} OR drugbank.pharmacology.snp_effects.effect.uniprot-id:{{input}} OR drugbank.targets.uniprot:{{input}} OR drugbank.transporters.uniprot:{{input}} OR drugcentral.bioactivity.uniprot_id:{{input}} OR pharmgkb.cross_references.uniprotkb:{{input}}
+          - valueType: 'http://biothings.io/terms/drugname/'
+            template: aeolus.drug_name:{{input}} OR chebi.chebi_name:{{input}} OR chembl.pref_name:{{input}} OR drugbank.name:{{input}}
+        example: USNINKBPBVKHHZ-CYUUQNCZSA-L
+        schema:
+          type: string
+      - name: dotfield
+        $ref: '#/components/parameters/dotfield'
+      - name: fields
+        $ref: '#/components/parameters/fields'
+      - name: facet_size
+        $ref: '#/components/parameters/facet_size'
+      - name: sort
+        $ref: '#/components/parameters/sort'
+      - name: callback
+        $ref: '#/components/parameters/callback'
+      - name: email
+        $ref: '#/components/parameters/email'
+      - name: facets
+        $ref: '#/components/parameters/facets'
+      - name: size
+        $ref: '#/components/parameters/size'
+      - name: from
+        $ref: '#/components/parameters/from'
+      - name: format
+        $ref: '#/components/parameters/format'
+      responses:
+        '200':
+          description: A query response with the "hits" property
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QueryResult'
+        '400':
+          description: A response indicating an improperly formatted query
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResult'
+    post:
+      tags:
+      - query
+      summary: Make batch chemical queries and return matching chemical hits
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              properties:
+                q:
+                  description: multiple query terms separated by comma (also "+" or
+                    whitespace).  Does not support wildcard queries
+                  type: string
+                scopes:
+                  description: 'a comma-separated list of fields as the search "scopes"
+                    (fields to search through for query term). The available "fields"
+                    that can be passed to the "scopes" parameter are listed in the
+                    **/metadata/fields** endpoint.string Default: "scopes=_id".'
+                  type: string
+      parameters:
+      - name: dotfield
+        $ref: '#/components/parameters/dotfield'
+      - name: email
+        $ref: '#/components/parameters/email'
+      - name: fields
+        $ref: '#/components/parameters/fields'
+      - name: size
+        $ref: '#/components/parameters/size'
+      - name: format
+        $ref: '#/components/parameters/format'
+      responses:
+        '200':
+          description: Query response objects with the "hits" property
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QueryPOSTResult'
+        '400':
+          description: A response indicating an improperly formatted query
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResult'
+  /metadata:
+    get:
+      tags:
+      - metadata
+      summary: Get metadata about the data available from MyChem.info
+      parameters:
+      - name: callback
+        in: query
+        $ref: '#/components/parameters/callback'
+      responses:
+        '200':
+          description: MyChem.info metadata object
+  /metadata/fields:
+    get:
+      tags:
+      - metadata
+      summary: Get metadata about the data fields available from a MyChem.info
+        chem object
+      parameters:
+      - name: search
+        $ref: '#/components/parameters/search'
+      - name: callback
+        $ref: '#/components/parameters/callback'
+      - name: prefix
+        $ref: '#/components/parameters/prefix'
+      - name: format
+        $ref: '#/components/parameters/format'
+      responses:
+        '200':
+          description: MyChem.info metadata fields object
+components:
+  parameters:
+    search:
+      name: search
+      in: query
+      description: 'Pass a search term to filter the available fields. Type: string.
+        Default: None.'
+      schema:
+        type: string
+    fields:
+      name: fields
+      in: query
+      description: 'a comma-separated list of fields (in dotfield notation) used to
+        limit the fields returned from the matching chem hit(s). The supported field
+        names can be found from any chem object or from the /metadata/fields endpoint.
+        If "fields=all", all available fields will be returned. Type: string (list).
+        Default: all. Max: 1000.'
+      schema:
+        type: string
+    format:
+      name: format
+      in: query
+      description: 'controls output format of server response, currently supports:
+        "json", "jsonld", "html". Type: string. Default: json.'
+      schema:
+        type: string
+    dotfield:
+      name: dotfield
+      in: query
+      description: 'control the format of the returned chem object. If "true" or "1",
+        all fields will be collapsed into a single level deep object (all nested objects
+        will be a single level deep, using dotfield notation to signify the nested
+        structure) Type: boolean. Default: false.'
+      schema:
+        type: boolean
+    from:
+      name: from
+      in: query
+      description: 'the number of matching chem hits to skip, starting from 0.  This
+        can be useful for paging in combination with the "size" parameter. Type: integer.
+        Default: None.'
+      schema:
+        type: integer
+    prefix:
+      name: prefix
+      in: query
+      description: 'Pass a prefix string to filter the available fields. Type: string.
+        Default: None.'
+      schema:
+        type: string
+    size:
+      name: size
+      in: query
+      description: 'the maximum number of matching chem hits to return per batch.
+        Type: integer. Default: 10.'
+      schema:
+        type: integer
+    facet_size:
+      name: facet_size
+      in: query
+      description: 'the number of facet buckets to return in the response. Type: integer.
+        Default: 10. Max: 1000.'
+      schema:
+        type: integer
+    facets:
+      name: facets
+      in: query
+      description: 'a comma-separated list of fields to return facets on.  In addition
+        to query hits, the fields notated in "facets" will be aggregated by value
+        and bucklet counts will be displayed in the "facets" field of the response
+        object. Type: string (list). Default: None. Max: 1000.'
+      schema:
+        type: string
+    sort:
+      name: sort
+      in: query
+      description: 'the comma-separated list of fields to sort on. Prefix each with
+        "-" for descending order, otherwise in ascending order. Default: sort by descending
+        score.'
+      schema:
+        type: string
+    callback:
+      name: callback
+      in: query
+      description: 'you can pass a "callback" parameter to make a JSONP call. Type:
+        string.'
+      schema:
+        type: string
+    email:
+      name: email
+      in: query
+      description: If you are regular users of our services, we encourage you to provide
+        us with an email, so that we can better track the usage or follow up with
+        you.
+      schema:
+        type: string
+  schemas:
+    string_or_array:
+      oneOf:
+      - items:
+          type: string
+        type: array
+      - type: string
+    int64_or_array:
+      oneOf:
+      - items:
+          format: int64
+          type: integer
+        type: array
+      - format: int64
+        type: integer
+    QueryResult:
+      properties:
+        max_score:
+          format: float
+          type: number
+        took:
+          type: integer
+        total:
+          type: integer
+        hits:
+          items:
+            $ref: '#/components/schemas/Chem'
+          type: array
+      type: object
+    QueryPOSTResult:
+      items:
+        allOf:
+        - $ref: '#/components/schemas/Chem'
+        - properties:
+            _score:
+              format: float
+              type: number
+            query:
+              type: string
+          type: object
+      type: array
+    ErrorResult:
+      properties:
+        message:
+          type: string
+        success:
+          type: boolean
+      type: object
+    Chem:
+      properties:
+        _id:
+          type: string
+      required:
+      - _id
+      type: object
