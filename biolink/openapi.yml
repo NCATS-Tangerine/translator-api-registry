@@ -166,3 +166,54 @@ paths:
               valueType: 'http://identifiers.org/hp/'
           x-JSONLDContext:
             'biolink/jsonld_context/biolinks_phenotype_context.json'
+  '/bioentity/gene/{geneid}/pathways':
+    get:
+      summary: 'Returns pathways associated with gene'
+      parameters:
+        - name: geneid
+          in: path
+          description: >-
+            CURIE identifier of gene, e.g. NCBIGene:4750. Equivalent IDs can be used with same results
+          required: true
+          schema:
+            type: string
+          x-valueType:
+            - 'http://identifiers.org/ncbigene/'
+            - 'http://identifiers.org/hgnc/'
+          x-requestTemplate:
+            - valueType: 'http://identifiers.org/ncbigene/'
+              template: /bioentity/gene/NCBIGene:{geneid}/pathways
+            - valueType: 'http://identifiers.org/hgnc/'
+              template: /bioentity/gene/HGNC:{geneid}/pathways
+      responses:
+        '200':
+          description: 'A distinct set of association.objects (typically ontology terms). This appears at the top level of the results payload'
+          x-responseValueType:
+            - path: edge.obj
+              valueType: 'http://identifiers.org/reactome/'
+          x-JSONLDContext:
+            'biolink/jsonld_context/biolinks_pathway_context.json'
+  '/bioentity/pathway/{pathwayid}/genes':
+    get:
+      summary: 'Returns genes associated with a pathway'
+      parameters:
+        - name: pathwayid
+          in: path
+          description: >-
+            CURIE any pathway element. E.g. REACT:R-HSA-5387390
+          required: true
+          schema:
+            type: string
+          x-valueType:
+            - 'http://identifiers.org/reactome/'
+          x-requestTemplate:
+            - valueType: 'http://identifiers.org/reactome/'
+              template: /bioentity/pathway/REACT:{pathwayid}/genes
+      responses:
+        '200':
+          description: 'A distinct set of association.objects (typically ontology terms). This appears at the top level of the results payload'
+          x-responseValueType:
+            - path: association.object.id
+              valueType: 'http://identifiers.org/hgnc/'
+          x-JSONLDContext:
+            'biolink/jsonld_context/biolinks_gene_context.json'
