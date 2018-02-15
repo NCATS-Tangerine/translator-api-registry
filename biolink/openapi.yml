@@ -217,3 +217,27 @@ paths:
               valueType: 'http://identifiers.org/hgnc/'
           x-JSONLDContext:
             'biolink/jsonld_context/biolinks_gene_context.json'
+  '/bioentity/variant/{variantid}/genes':
+    get:
+      summary: 'Returns genes associated with a variant'
+      parameters:
+        - name: variantid
+          in: path
+          description: >-
+            CURIE identifier of variant, e.g. ZFIN:ZDB-ALT-010427-8, ClinVarVariant:39783
+          required: true
+          schema:
+            type: string
+          x-valueType:
+            - 'http://identifiers.org/clinvar/'
+          x-requestTemplate:
+            - valueType: 'http://identifiers.org/clinvar/'
+              template: /bioentity/variant/ClinVarVariant:{variantid}/genes
+      responses:
+        '200':
+          description: 'A distinct set of association.objects (typically ontology terms). This appears at the top level of the results payload'
+          x-responseValueType:
+            - path: association.object.id
+              valueType: 'http://identifiers.org/hgnc/'
+          x-JSONLDContext:
+            'biolink/jsonld_context/biolinks_variant2gene_context.json'
