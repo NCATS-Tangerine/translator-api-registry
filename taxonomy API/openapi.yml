@@ -1,0 +1,48 @@
+openapi: '3.0.0'
+info:
+  version: '1.0'
+  title: Taxonomy API
+  description: >-
+    Documentation of the t.biothings.io Taxonomy Query web services. Learn more about
+    [t.biothings.io](http://t.biothings.io/)
+  termsOfService: http://t.biothings.io
+  contact:
+    name: Chunlei Wu
+    x-role: responsible developer
+    email: help@t.biothings.io
+    x-id:
+      - 'http://orcid.org/0000-0002-2629-6124'
+      - 'https://github.com/newgene'
+servers:
+  - url: 'http://t.biothings.io/v1'
+    description: 'Production server'
+tags:
+  - name: taxonomy
+  - name: annotation
+  - name: query
+  - name: translator
+paths:
+  '/taxonomy/{taxonomyid}':
+    get:
+      summary: 'Retrieve taxonomy annotation based on NCBI taxon id.'
+      parameters:
+        - name: taxonomyid
+          in: path
+          description: >-
+            NCBI Taxon ID, e.g. 9606
+          required: true
+          x-valueType:
+            - 'http://identifiers.org/taxonomy'
+          x-requestTemplate:
+            - valueType: 'http://identifiers.org/taxonomy/'
+              template: /taxonomy/{taxonomyid}
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 'A taxonomy object'
+          x-responseValueType:
+            - path: parent_taxid
+              valueType: 'http://identifiers.org/taxonomy/'
+          x-JSONLDContext:
+            'taxonomy API/jsonld_context/taxonomy_1.1.json'
