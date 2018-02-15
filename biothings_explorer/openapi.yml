@@ -10,7 +10,7 @@ info:
     name: Jiwen Xin
   description: Documentation of the BioThings Explorer Web Services
 servers:
-  - url: 'http://biothings.io/explorer'
+  - url: 'http://biothings.io/explorer/api/v1'
     description: Production server
 paths:
   '/metadata/{type}':
@@ -25,170 +25,92 @@ paths:
           schema:
             type: string
             enum:
-              - api
-              - endpoint
-              - bioentity
+              - apis
+              - endpoints
+              - bioentities
           description: 'Put either endpoint, bioentity, api here'
       responses:
         '200':
           description: >-
             The response includes all available resources integrated in
             BioThings Explorer related to the data type you specified, e.g. when
-            you specify 'endpoint' as your input, the response will be all
+            you specify 'endpoints' as your input, the response will be all
             endpoints integrated in BioThings Explorer
   /knowledgemap:
     get:
       summary: >-
         Return all subject-predicate-object triples in BioThings Explorer at
         Biological ID level
+      parameters:
+        - in: query
+          required: false
+          name: endpoint
+          schema:
+            type: string
+          description: >-
+            Put endpoint name here, for the list of endpoints available, please
+            refer to http://biothings.io/explorer/api/v1/metadata/endpoints. The
+            results will return all associations included in this endpoint
+        - in: query
+          required: false
+          name: predicate
+          schema:
+            type: string
+          description: >-
+            Put predicate here, e.g. hasXref, associatedWithCompound,
+            associatedWithPhenotype. The results will return all associations
+            which has the specified predicate
+        - in: query
+          required: false
+          name: subject.semantic_type
+          schema:
+            type: string
+          description: >-
+            Put semmantic type for the subject here, e.g. gene, variant,
+            phenotype; for a list of semantic types available, please refer to
+            http://biothings.io/explorer/api/v1/metadata/bioentities. The
+            results will return all associations having the specified semantic
+            type as subject.
+        - in: query
+          required: false
+          name: object.semantic_type
+          schema:
+            type: string
+          description: >-
+            Put semmantic type for the object here, e.g. gene, variant,
+            phenotype; for a list of semantic types available, please refer to
+            http://biothings.io/explorer/api/v1/metadata/bioentities. The
+            results will return all associations having the specified semantic
+            type as object.
+        - in: query
+          required: false
+          name: subject.prefix
+          schema:
+            type: string
+          description: >-
+            Put prefix for the subject here, e.g. ncbigene, uniprot, reactome;
+            for a list of prefix available, please refer to
+            http://biothings.io/explorer/api/v1/metadata/bioentities. The
+            results will return all associations having the specified prefix as
+            subject.
+        - in: query
+          required: false
+          name: object.prefix
+          schema:
+            type: string
+          description: >-
+            Put prefix for the object here, e.g. ncbigene, uniprot, reactome;
+            for a list of prefix available, please refer to
+            http://biothings.io/explorer/api/v1/metadata/bioentities. The
+            results will return all associations having the specified prefix as
+            object.
       responses:
         '200':
           description: >-
             List of subject-predicate-object triples together with endpoint
             information. Also each subject and object contains both semantic
             type and prefix information
-  /knowledgemap/input:
-    get:
-      summary: >-
-        Return endpoints, bioentities which can be directly connected from the
-        given input, together with the predicate information
-      parameters:
-        - in: query
-          required: true
-          name: input
-          schema:
-            type: string
-            enum:
-              - ccds
-              - ena
-              - ensembl.gene
-              - hgnc
-              - hgnc.symbol
-              - mgi
-              - ncbigene
-              - omim.gene
-              - rgd
-              - zfin
-              - chembl.target
-              - ensembl.protein
-              - ensembl.translation
-              - refseq
-              - uniprot
-              - Disease Name
-              - do
-              - efo
-              - mesh.disease
-              - nci
-              - omim.disease
-              - orphanet
-              - snomed
-              - umls
-              - biocarta.pathway
-              - kegg.pathway
-              - pharmgkb.pathway
-              - reactome
-              - wikipathways
-              - chebi
-              - chembl.compound
-              - drugbank
-              - drugname
-              - inchi
-              - inchikey
-              - iuphar.ligand
-              - kegg.compound
-              - kegg.drug
-              - pharmgkb.drug
-              - pubchem.compound
-              - pubchem.substance
-              - puchem.bioassay
-              - rxnorm
-              - unii
-              - go
-              - pdb
-              - hp
-              - doi
-              - pmc
-              - pubmed
-              - clinvar
-              - dbsnp
-              - hgvs
-              - omim.variant
-              - taxonomy
-          description: 'Put curie prefix here, e.g. ncbigene, ensembl.gene, wikipathways'
-      responses:
-        '200':
-          description: >-
-            A query response object with "information" property. Contains
-            information about endpoints which takes the bioentity you specified
-            as input, as well as bioentities these endpoints outputs, together
-            with the predicate information
-  /knowledgemap/endpoint:
-    get:
-      summary: >-
-        Return all inputs and outputs of the endpoint, together with the
-        predicate information
-      parameters:
-        - in: query
-          required: true
-          name: endpoint
-          schema:
-            type: string
-            enum:
-              - >-
-                http://dgidb.genome.wustl.edu/api/v2/interactions.json?drugs={drugname}
-              - >-
-                http://dgidb.genome.wustl.edu/api/v2/interactions.json?genes={genesymbol}
-              - 'http://mychem.info/v1/drug/{drugid}'
-              - 'http://mychem.info/v1/query'
-              - 'http://mygene.info/v3/gene/{geneid}'
-              - 'http://mygene.info/v3/query'
-              - 'http://myvariant.info/v1/query'
-              - 'http://myvariant.info/v1/variant/{variantid}'
-              - 'http://rest.ensembl.org/lookup/id/{geneid}'
-              - 'http://rest.ensembl.org/taxonomy/id/{taxonomyid}'
-              - 'http://www.disease-ontology.org/api/metadata/{doid}'
-              - >-
-                https://api.monarchinitiative.org/api/bioentity/disease/{diseaseid}/genes
-              - >-
-                https://api.monarchinitiative.org/api/bioentity/disease/{diseaseid}/phenotypes
-              - >-
-                https://api.monarchinitiative.org/api/bioentity/gene/{geneid}/homologs
-              - >-
-                https://api.monarchinitiative.org/api/bioentity/gene/{geneid}/interactions
-              - >-
-                https://api.monarchinitiative.org/api/bioentity/gene/{geneid}/phenotypes
-              - >-
-                https://eutils.ncbi.nlm.nih.gov/entrez/eutils/elink.fcgi/{pubmedid}
-              - >-
-                https://pubchem.ncbi.nlm.nih.gov/rest/pug/assay/aid/{bioassayid}/cids/JSON
-              - >-
-                https://pubchem.ncbi.nlm.nih.gov/rest/pug/assay/aid/{bioassayid}/sids/JSON
-              - >-
-                https://pubchem.ncbi.nlm.nih.gov/rest/pug/assay/target/geneid/{geneid}/aids/JSON
-              - >-
-                https://pubchem.ncbi.nlm.nih.gov/rest/pug/assay/target/genesymbol/{genesymbol}/aids/JSON
-              - >-
-                https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/{compoundid}/sids/JSON
-              - >-
-                https://pubchem.ncbi.nlm.nih.gov/rest/pug/substance/sid/{substanceid}/cids/JSON
-              - 'https://rest.genenames.org/fetch/{gene}'
-              - >-
-                https://www.ebi.ac.uk/QuickGO/services/ontology/go/terms/{goid}/ancestors
-              - >-
-                https://www.ebi.ac.uk/QuickGO/services/ontology/go/terms/{goid}/descendants
-              - 'https://www.ebi.ac.uk/chembl/api/data/drug_indication'
-              - 'https://www.ebi.ac.uk/chembl/api/data/mechanism'
-              - 'https://www.ebi.ac.uk/chembl/api/data/target'
-              - >-
-                https://www.ebi.ac.uk/proteins/api/proteins/interaction/{accession}
-              - 'https://www.ebi.ac.uk/proteins/api/variation/{accession}'
-              - >-
-                https://www.ncbi.nlm.nih.gov/pmc/utils/idconv/v1.0/?ids={publicationid}
-          description: 'Put endpoint names here, e.g. http://mygene.info/v3/query'
-      responses:
-        '200':
-          description: A query response object with "information" property
-  /knowledgemap/path:
+  /path:
     get:
       summary: Return all potential paths connecting from input to output
       parameters:
@@ -198,22 +120,27 @@ paths:
           schema:
             type: string
           description: >-
-            Put either bioentity id you would like for the start point here,
-            e.g. ncbigene
+            Put prefix you would like for the start point here, e.g. ncbigene.
+            For a full list of prefix available, please refer to
+            http://biothings.io/explorer/api/v1/metadata/bioentities.
         - in: query
           required: true
           name: end
           schema:
             type: string
           description: >-
-            Put either bioentity id you would like for the end point here, e.g.
-            uniprot
+            Put prefix you would like for the end point here, e.g. uniprot. For
+            a full list of prefix available, please refer to
+            http://biothings.io/explorer/api/v1/metadata/bioentities.
         - in: query
-          required: true
+          required: false
           name: max_api
           schema:
             type: string
-          description: 'Put maximum number of APIs to be used here, e.g. 3'
+          description: >-
+            Put maximum number of APIs to be used here, e.g. 3. If you would
+            like to get direct connection between two biological entities, set
+            this field to be 1.
       responses:
         '200':
           description: A query response object with "path" property
