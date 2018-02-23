@@ -1,0 +1,4451 @@
+openapi: 3.0.0
+x-origin:
+  - url: 'https://www.ebi.ac.uk/proteins/api/swagger.json'
+    format: swagger
+    version: '2.0'
+    converter:
+      url: 'https://github.com/mermade/swagger2openapi'
+      version: 2.11.16
+info:
+  description: >-
+    The Proteins REST API provides access to key biological data from UniProt
+    and data from Large Scale Studies data mapped to UniProt. The services
+    provide sequence feature annotations from UniProtKB, variation data from
+    UniProtKB and mapped from Large Scale data sources (1000 Genomes, ExAC and
+    COSMIC), proteomics data mapped from Large Scale sources (PeptideAtlas,
+    MaxQB and EPD) and genome coordinate mappings.
+  version: '1.0'
+  title: Proteins REST API
+tags:
+  - name: variation
+  - name: uniparc
+  - name: proteomes
+  - name: coordinates
+  - name: genecentric
+  - name: proteomics
+  - name: antigen
+  - name: proteins
+  - name: features
+paths:
+  /antigen:
+    get:
+      tags:
+        - antigen
+      summary: Search antigens in UniProt
+      description: ''
+      operationId: search
+      parameters:
+        - name: offset
+          in: query
+          description: 'Off set, page starting point, with default value 0'
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+            default: 0
+        - name: size
+          in: query
+          description: >-
+            Page size with default value 100. When page size is -1, it returns
+            all records and offset will be ignored
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 100
+        - name: accession
+          in: query
+          description: UniProt accession(s). Comma separated values accepted up to 100.
+          required: false
+          schema:
+            type: string
+        - name: antigen_sequence
+          in: query
+          description: Antigen sequence
+          required: false
+          schema:
+            type: string
+            minItems: 4
+            maxItems: 2147483647
+        - name: antigen_id
+          in: query
+          description: >-
+            Human Protein Atlas (HPA) antigen ID. Comma separated values
+            accepted up to 20.
+          required: false
+          schema:
+            type: string
+            minItems: 4
+            maxItems: 2147483647
+        - name: ensembl_ids
+          in: query
+          description: Ensembl IDs. Comma separated values accepted up to 20.
+          required: false
+          schema:
+            type: string
+            minItems: 4
+            maxItems: 2147483647
+        - name: match_score
+          in: query
+          description: >-
+            Minimum alignment score for the antigen sequence and the target
+            protein sequence
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+            maximum: 100
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProteinFeatureInfo'
+            application/xml:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProteinFeatureInfo'
+            text/x-gff:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProteinFeatureInfo'
+        '400':
+          description: Invalid request Parameter.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            text/x-gff:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '404':
+          description: Resources not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            text/x-gff:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+  '/antigen/{accession}':
+    get:
+      tags:
+        - antigen
+      summary: Get antigen by UniProt accession
+      description: ''
+      operationId: getByAccession
+      parameters:
+        - name: accession
+          in: path
+          description: UniProt accession
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProteinFeatureInfo'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ProteinFeatureInfo'
+            text/x-gff:
+              schema:
+                $ref: '#/components/schemas/ProteinFeatureInfo'
+        '400':
+          description: >-
+            Invalid accession parameter. The values's format should be a valid
+            UniProtKB accession.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            text/x-gff:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '404':
+          description: Resources not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            text/x-gff:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+  /coordinates:
+    get:
+      tags:
+        - coordinates
+      summary: Search genomic coordinates for UniProt entries
+      description: ''
+      operationId: search
+      parameters:
+        - name: offset
+          in: query
+          description: 'Off set, page starting point, with default value 0'
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+            default: 0
+        - name: size
+          in: query
+          description: >-
+            Page size with default value 100. When page size is -1, it returns
+            all records and offset will be ignored
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 100
+        - name: accession
+          in: query
+          description: UniProt accession(s). Comma separated values accepted up to 100.
+          required: false
+          schema:
+            type: string
+        - name: chromosome
+          in: query
+          description: >-
+            Chromosome name, i.e. 1, 2, X, etc. Comma separated values accepted
+            up to 20.
+          required: false
+          schema:
+            type: string
+            minItems: 1
+            maxItems: 50
+        - name: ensembl
+          in: query
+          description: >-
+            Ensembl gene ID, transcript ID or translation ID. Comma separated
+            values accepted up to 20.
+          required: false
+          schema:
+            type: string
+            minItems: 6
+            maxItems: 100
+        - name: gene
+          in: query
+          description: UniProt gene name. Comma separated values accepted up to 20.
+          required: false
+          schema:
+            type: string
+            minItems: 3
+            maxItems: 50
+        - name: protein
+          in: query
+          description: UniProt protein name
+          required: false
+          schema:
+            type: string
+            minItems: 3
+            maxItems: 50
+        - name: taxid
+          in: query
+          description: Organism taxon ID. Comma separated values accepted up to 20.
+          required: false
+          schema:
+            type: string
+        - name: location
+          in: query
+          description: >-
+            Genome location range such as 58205437-58219305 (genome start to
+            genome end)
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GnEntry'
+            application/xml:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GnEntry'
+        '400':
+          description: Invalid request Parameter.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '404':
+          description: Resources not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+  '/coordinates/location/{accession}:{pPosition}':
+    get:
+      tags:
+        - coordinates
+      summary: Get genome coordinate by protein sequence position
+      description: ''
+      operationId: getGenomePositionByAccession
+      parameters:
+        - name: accession
+          in: path
+          description: UniProt accession
+          required: true
+          schema:
+            type: string
+        - name: pPosition
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PLocation2GLocationCollection'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/PLocation2GLocationCollection'
+        '400':
+          description: Invalid request Parameter.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '404':
+          description: Resources not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+  '/coordinates/location/{accession}:{pStart}-{pEnd}':
+    get:
+      tags:
+        - coordinates
+      summary: Get genome coordinate by protein sequence position range
+      description: ''
+      operationId: getGenomeLocationByAccession
+      parameters:
+        - name: accession
+          in: path
+          description: UniProt accession
+          required: true
+          schema:
+            type: string
+        - name: pStart
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+        - name: pEnd
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PLocation2GLocationCollection'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/PLocation2GLocationCollection'
+        '400':
+          description: Invalid request Parameter.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '404':
+          description: Resources not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+  '/coordinates/{accession}':
+    get:
+      tags:
+        - coordinates
+      summary: Get genomic coordinates for a UniProt accession
+      description: ''
+      operationId: getByAccession
+      parameters:
+        - name: accession
+          in: path
+          description: UniProt accession
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GnEntry'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/GnEntry'
+        '400':
+          description: >-
+            Invalid accession parameter. The values's format should be a valid
+            UniProtKB accession.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '404':
+          description: Resources not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+  '/coordinates/{dbtype}:{dbid}':
+    get:
+      tags:
+        - coordinates
+      summary: >-
+        Search UniProt entries by genomic database cross reference IDs: Ensembl,
+        CCDS, HGNC or RefSeq
+      description: ''
+      operationId: getByDbXRef
+      parameters:
+        - name: offset
+          in: query
+          description: 'Off set, page starting point, with default value 0'
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+            default: 0
+        - name: size
+          in: query
+          description: >-
+            Page size with default value 100. When page size is -1, it returns
+            all records and offset will be ignored
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 100
+        - name: dbtype
+          in: path
+          description: 'Cross-reference database type: Ensembl, CCDC, HGNC or RefSeq'
+          required: true
+          schema:
+            type: string
+        - name: dbid
+          in: path
+          description: >-
+            Cross reference ID, such as ENSP00000351276 for Ensembl, NP_083392
+            for RefSeq, CCDS52493 for CCDS, 26588 for HGNC, (case insensitive).
+          required: true
+          schema:
+            type: string
+            minItems: 4
+            maxItems: 50
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GnEntry'
+            application/xml:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GnEntry'
+        '400':
+          description: Invalid request Parameter.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '404':
+          description: Resources not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+  '/coordinates/{taxonomy}/{chromosome}:{gstart}-{gend}':
+    get:
+      tags:
+        - coordinates
+      summary: Search UniProt entries by taxonomy and genomic coordinates
+      description: ''
+      operationId: getByLocation
+      parameters:
+        - name: offset
+          in: query
+          description: 'Off set, page starting point, with default value 0'
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+            default: 0
+        - name: size
+          in: query
+          description: >-
+            Page size with default value 100. When page size is -1, it returns
+            all records and offset will be ignored
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 100
+        - name: taxonomy
+          in: path
+          description: Organism taxon ID
+          required: true
+          schema:
+            type: string
+        - name: chromosome
+          in: path
+          description: 'Chromosome name, i.e. 1, 2, X, etc.'
+          required: true
+          schema:
+            type: string
+        - name: gstart
+          in: path
+          description: Genome location start
+          required: true
+          schema:
+            type: string
+        - name: gend
+          in: path
+          description: Genome location end
+          required: true
+          schema:
+            type: string
+        - name: in_range
+          in: query
+          description: >-
+            When it is set to true for location search, only those entries that
+            are in the range will be retrieved
+          required: false
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GnEntry'
+            application/xml:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GnEntry'
+        '400':
+          description: Invalid request Parameter.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '404':
+          description: Resources not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+  /features:
+    get:
+      tags:
+        - features
+      summary: Search protein sequence features in UniProt
+      description: ''
+      operationId: search
+      parameters:
+        - name: offset
+          in: query
+          description: 'Off set, page starting point, with default value 0'
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+            default: 0
+        - name: size
+          in: query
+          description: >-
+            Page size with default value 100. When page size is -1, it returns
+            all records and offset will be ignored
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 100
+        - name: accession
+          in: query
+          description: UniProt accession(s). Comma separated values accepted up to 100.
+          required: false
+          schema:
+            type: string
+        - name: reviewed
+          in: query
+          description: The reviewed parameter can only be true or false
+          required: false
+          schema:
+            type: string
+        - name: gene
+          in: query
+          description: UniProt gene name. Comma separated values accepted up to 20.
+          required: false
+          schema:
+            type: string
+            minItems: 3
+            maxItems: 100
+        - name: protein
+          in: query
+          description: UniProt protein name
+          required: false
+          schema:
+            type: string
+            minItems: 3
+            maxItems: 50
+        - name: organism
+          in: query
+          description: Organism name
+          required: false
+          schema:
+            type: string
+            minItems: 3
+            maxItems: 50
+        - name: taxid
+          in: query
+          description: Organism taxon ID. Comma separated values accepted up to 20.
+          required: false
+          schema:
+            type: string
+        - name: categories
+          in: query
+          description: >-
+            Category type(s): MOLECULE_PROCESSING, TOPOLOGY,
+            SEQUENCE_INFORMATION, STRUCTURAL, DOMAINS_AND_SITES, PTM, VARIANT,
+            MUTAGENESIS. Comma separated values accepted up to 20
+          required: false
+          schema:
+            type: string
+        - name: types
+          in: query
+          description: >-
+            Feature type(s): INIT_MET, SIGNAL, PROPEP, TRANSIT, CHAIN, PEPTIDE,
+            TOPO_DOM, TRANSMEM, DOMAIN, REPEAT, CA_BIND, ZN_FING, DNA_BIND,
+            NP_BIND, REGION, COILED, MOTIF, COMPBIAS, ACT_SITE, METAL, BINDING,
+            SITE, NON_STD, MOD_RES, LIPID, CARBOHYD, DISULFID, CROSSLNK,
+            VAR_SEQ, VARIANT, MUTAGEN, UNSURE, CONFLICT, NON_CONS, NON_TER,
+            HELIX, TURN, STRAND, INTRAMEM. Comma separated values accepted up to
+            20
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProteinFeatureInfo'
+            application/xml:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProteinFeatureInfo'
+            text/x-gff:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProteinFeatureInfo'
+        '400':
+          description: Invalid request Parameter.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            text/x-gff:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '404':
+          description: Resources not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            text/x-gff:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+  '/features/type/{type}':
+    get:
+      tags:
+        - features
+      summary: Search protein sequence features of a given type in UniProt
+      description: ''
+      operationId: searchFeatureType
+      parameters:
+        - name: offset
+          in: query
+          description: 'Off set, page starting point, with default value 0'
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+            default: 0
+        - name: size
+          in: query
+          description: >-
+            Page size with default value 100. When page size is -1, it returns
+            all records and offset will be ignored
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 100
+        - name: type
+          in: path
+          description: >-
+            Feature type: INIT_MET, SIGNAL, PROPEP, TRANSIT, CHAIN, PEPTIDE,
+            TOPO_DOM, TRANSMEM, DOMAIN, REPEAT, CA_BIND, ZN_FING, DNA_BIND,
+            NP_BIND, REGION, COILED, MOTIF, COMPBIAS, ACT_SITE, METAL, BINDING,
+            SITE, NON_STD, MOD_RES, LIPID, CARBOHYD, DISULFID, CROSSLNK,
+            VAR_SEQ, VARIANT, MUTAGEN, UNSURE, CONFLICT, NON_CONS, NON_TER,
+            HELIX, TURN, STRAND, INTRAMEM
+          required: true
+          schema:
+            type: string
+        - name: categories
+          in: query
+          description: >-
+            Category type(s): MOLECULE_PROCESSING, TOPOLOGY,
+            SEQUENCE_INFORMATION, STRUCTURAL, DOMAINS_AND_SITES, PTM, VARIANT,
+            MUTAGENESIS. Comma separated values accepted up to 20
+          required: false
+          explode: true
+          schema:
+            type: array
+            items:
+              type: string
+        - name: types
+          in: query
+          description: >-
+            Feature type(s): INIT_MET, SIGNAL, PROPEP, TRANSIT, CHAIN, PEPTIDE,
+            TOPO_DOM, TRANSMEM, DOMAIN, REPEAT, CA_BIND, ZN_FING, DNA_BIND,
+            NP_BIND, REGION, COILED, MOTIF, COMPBIAS, ACT_SITE, METAL, BINDING,
+            SITE, NON_STD, MOD_RES, LIPID, CARBOHYD, DISULFID, CROSSLNK,
+            VAR_SEQ, VARIANT, MUTAGEN, UNSURE, CONFLICT, NON_CONS, NON_TER,
+            HELIX, TURN, STRAND, INTRAMEM. Comma separated values accepted up to
+            20
+          required: false
+          explode: true
+          schema:
+            type: array
+            items:
+              type: string
+        - name: terms
+          in: query
+          description: >-
+            Search for term(s) that appear in feature description for your
+            specified feature type. For example, you can search by type=DOMAIN
+            and Term=Kinase.  Comma separated values accepted up to 20.
+          required: true
+          explode: true
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProteinFeatureInfo'
+            application/xml:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProteinFeatureInfo'
+            text/x-gff:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProteinFeatureInfo'
+        '400':
+          description: Invalid request Parameter.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            text/x-gff:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '404':
+          description: Resources not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            text/x-gff:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+  '/features/{accession}':
+    get:
+      tags:
+        - features
+      summary: 'Get UniProt protein sequence features by accession '
+      description: ''
+      operationId: getByAccession
+      parameters:
+        - name: accession
+          in: path
+          description: UniProt accession
+          required: true
+          schema:
+            type: string
+        - name: categories
+          in: query
+          description: >-
+            Category type(s): MOLECULE_PROCESSING, TOPOLOGY,
+            SEQUENCE_INFORMATION, STRUCTURAL, DOMAINS_AND_SITES, PTM, VARIANT,
+            MUTAGENESIS. Comma separated values accepted up to 20
+          required: false
+          explode: true
+          schema:
+            type: array
+            items:
+              type: string
+        - name: types
+          in: query
+          description: >-
+            Feature type(s): INIT_MET, SIGNAL, PROPEP, TRANSIT, CHAIN, PEPTIDE,
+            TOPO_DOM, TRANSMEM, DOMAIN, REPEAT, CA_BIND, ZN_FING, DNA_BIND,
+            NP_BIND, REGION, COILED, MOTIF, COMPBIAS, ACT_SITE, METAL, BINDING,
+            SITE, NON_STD, MOD_RES, LIPID, CARBOHYD, DISULFID, CROSSLNK,
+            VAR_SEQ, VARIANT, MUTAGEN, UNSURE, CONFLICT, NON_CONS, NON_TER,
+            HELIX, TURN, STRAND, INTRAMEM. Comma separated values accepted up to
+            20
+          required: false
+          explode: true
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProteinFeatureInfo'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ProteinFeatureInfo'
+            text/x-gff:
+              schema:
+                $ref: '#/components/schemas/ProteinFeatureInfo'
+        '400':
+          description: >-
+            Invalid accession parameter. The values's format should be a valid
+            UniProtKB accession.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            text/x-gff:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '404':
+          description: Resources not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            text/x-gff:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+  /genecentric:
+    get:
+      tags:
+        - genecentric
+      summary: Search gene centric proteins
+      description: ''
+      operationId: getGeneCentricByUpid
+      parameters:
+        - name: offset
+          in: query
+          description: 'Off set, page starting point, with default value 0'
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+            default: 0
+        - name: size
+          in: query
+          description: >-
+            Page size with default value 100. When page size is -1, it returns
+            all records and offset will be ignored
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 100
+        - name: upid
+          in: query
+          description: UniProt proteome UPID(s). Comma separated values accepted up to 100.
+          required: false
+          schema:
+            type: string
+        - name: accession
+          in: query
+          description: UniProt accession(s). Comma separated values accepted up to 100.
+          required: false
+          schema:
+            type: string
+        - name: gene
+          in: query
+          description: >-
+            It is a unique gene identifier found in MOD, Ensembl, Ensembl
+            Genomes, OLN ,ORF or UniProt Gene Name database. Comma separated
+            values accepted up to 20.
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CanonicalGene'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/CanonicalGene'
+        '400':
+          description: Invalid request Parameter.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '404':
+          description: Resources not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+  '/genecentric/{accession}':
+    get:
+      tags:
+        - genecentric
+      summary: Get gene centric proteins by Uniprot accession
+      description: ''
+      operationId: getGeneCentricByAccession
+      parameters:
+        - name: accession
+          in: path
+          description: UniProt accession
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CanonicalGene'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/CanonicalGene'
+        '400':
+          description: >-
+            Invalid accession parameter. The values's format should be a valid
+            UniProtKB accession.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '404':
+          description: Resources not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+  /proteins:
+    get:
+      tags:
+        - proteins
+      summary: Search UniProt entries
+      description: ''
+      operationId: search
+      parameters:
+        - name: offset
+          in: query
+          description: 'Off set, page starting point, with default value 0'
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+            default: 0
+        - name: size
+          in: query
+          description: >-
+            Page size with default value 100. When page size is -1, it returns
+            all records and offset will be ignored
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 100
+        - name: accession
+          in: query
+          description: UniProt accession(s). Comma separated values accepted up to 100.
+          required: false
+          schema:
+            type: string
+        - name: reviewed
+          in: query
+          description: Reviewed(true) or not Reviewed (false)
+          required: false
+          schema:
+            type: string
+        - name: isoform
+          in: query
+          description: >-
+            0 for excluding isoform, 1 for isoform only and 2 for both canonical
+            and isoform
+          required: false
+          schema:
+            type: integer
+            format: int32
+        - name: goterms
+          in: query
+          description: GO ontology terms
+          required: false
+          schema:
+            type: string
+            minItems: 3
+            maxItems: 50
+        - name: keywords
+          in: query
+          description: UniProt keywords
+          required: false
+          schema:
+            type: string
+            minItems: 3
+            maxItems: 50
+        - name: ec
+          in: query
+          description: UniProt EC number. Comma separated values accepted up to 20.
+          required: false
+          schema:
+            type: string
+        - name: gene
+          in: query
+          description: UniProt gene name. Comma separated values accepted up to 20.
+          required: false
+          schema:
+            type: string
+            minItems: 3
+            maxItems: 50
+        - name: protein
+          in: query
+          description: UniProt protein name
+          required: false
+          schema:
+            type: string
+            minItems: 3
+            maxItems: 50
+        - name: organism
+          in: query
+          description: Organism name
+          required: false
+          schema:
+            type: string
+            minItems: 3
+            maxItems: 50
+        - name: taxid
+          in: query
+          description: Organism taxon ID. Comma separated values accepted up to 20.
+          required: false
+          schema:
+            type: string
+        - name: pubmed
+          in: query
+          description: >-
+            UniProt reference PubMed ID. Comma separated values accepted up to
+            20.
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/xml:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Entry'
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Entry'
+            text/x-fasta:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Entry'
+        '400':
+          description: Invalid request Parameter.
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            text/x-fasta:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '404':
+          description: Resources not found
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            text/x-fasta:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+  '/proteins/interaction/{accession}':
+    get:
+      tags:
+        - proteins
+      summary: Get UniProt interactions by accession
+      description: ''
+      operationId: getAllInteractionEntries
+      parameters:
+        - name: accession
+          in: path
+          description: UniProt accession
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/xml:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UPInteraction'
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UPInteraction'
+        '400':
+          description: >-
+            Invalid accession parameter. The values's format should be a valid
+            UniProtKB accession.
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '404':
+          description: Resources not found
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+  '/proteins/{accession}':
+    get:
+      tags:
+        - proteins
+      summary: Get UniProt entry by accession
+      description: ''
+      operationId: getByAccession
+      parameters:
+        - name: accession
+          in: path
+          description: UniProt accession
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Entry'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Entry'
+            text/x-fasta:
+              schema:
+                $ref: '#/components/schemas/Entry'
+        '400':
+          description: >-
+            Invalid accession parameter. The values's format should be a valid
+            UniProtKB accession.
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            text/x-fasta:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '404':
+          description: Resources not found
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            text/x-fasta:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+  '/proteins/{accession}/isoforms':
+    get:
+      tags:
+        - proteins
+      summary: Get UniProt isoform entries from parent entry accession
+      description: ''
+      operationId: getEntriesForIsoforms
+      parameters:
+        - name: accession
+          in: path
+          description: UniProt accession
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/xml:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Entry'
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Entry'
+            text/x-fasta:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Entry'
+        '400':
+          description: >-
+            Invalid accession parameter. The values's format should be a valid
+            UniProtKB accession.
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            text/x-fasta:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '404':
+          description: Resources not found
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            text/x-fasta:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+  '/proteins/{dbtype}:{dbid}':
+    get:
+      tags:
+        - proteins
+      summary: Get UniProt entries by UniProt cross reference and its ID
+      description: ''
+      operationId: getByCrossReference
+      parameters:
+        - name: offset
+          in: query
+          description: 'Off set, page starting point, with default value 0'
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+            default: 0
+        - name: size
+          in: query
+          description: >-
+            Page size with default value 100. When page size is -1, it returns
+            all records and offset will be ignored
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 100
+        - name: dbtype
+          in: path
+          description: 'Cross reference database type, e.g, Ensembl, PDBe, etc. '
+          required: true
+          schema:
+            type: string
+        - name: dbid
+          in: path
+          description: 'Cross-reference ID, e.g. ENSP00000351276 for Ensembl'
+          required: true
+          schema:
+            type: string
+            minItems: 4
+            maxItems: 50
+        - name: reviewed
+          in: query
+          description: Reviewed(true) or not Reviewed (false)
+          required: false
+          schema:
+            type: string
+        - name: isoform
+          in: query
+          description: 0 for exclude isoform only and 1 for isoform only
+          required: false
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/xml:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Entry'
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Entry'
+            text/x-fasta:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Entry'
+        '400':
+          description: Invalid request Parameter.
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            text/x-fasta:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '404':
+          description: Resources not found
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            text/x-fasta:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+  /proteomes:
+    get:
+      tags:
+        - proteomes
+      summary: Search proteomes in UniProt
+      description: ''
+      operationId: search
+      parameters:
+        - name: offset
+          in: query
+          description: 'Off set, page starting point, with default value 0'
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+            default: 0
+        - name: size
+          in: query
+          description: >-
+            Page size with default value 100. When page size is -1, it returns
+            all records and offset will be ignored
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 100
+        - name: upid
+          in: query
+          description: UniProt proteome UPID(s). Comma separated values accepted up to 100.
+          required: false
+          schema:
+            type: string
+        - name: name
+          in: query
+          description: Search proteome name
+          required: false
+          schema:
+            type: string
+            minItems: 3
+            maxItems: 50
+        - name: taxid
+          in: query
+          description: Organism taxon ID. Comma separated values accepted up to 20.
+          required: false
+          schema:
+            type: string
+        - name: keyword
+          in: query
+          description: Terms the proteome contains
+          required: false
+          schema:
+            type: string
+            minItems: 3
+            maxItems: 50
+        - name: xref
+          in: query
+          description: >-
+            Proteome cross references such as Genome assembly ID or Biosample
+            ID. Comma separated values accepted up to 20.
+          required: false
+          schema:
+            type: string
+            minItems: 3
+            maxItems: 50
+        - name: genome_acc
+          in: query
+          description: Genome accession. Comma separated values accepted up to 20.
+          required: false
+          schema:
+            type: string
+            minItems: 3
+            maxItems: 50
+        - name: is_ref_proteome
+          in: query
+          description: Reference Proteome(true) or not reference proteome (false)
+          required: false
+          schema:
+            type: string
+        - name: is_redundant
+          in: query
+          description: Redundant Proteome(true) or non redundant proteome (false)
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Proteome'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Proteome'
+        '400':
+          description: Invalid request Parameter.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '404':
+          description: Resources not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+  '/proteomes/genecentric/{upid}':
+    get:
+      tags:
+        - proteomes
+      summary: >-
+        Get gene centric proteins by proteome UPID is deprecated, please use new
+        /genecentric?upid= endpoint
+      description: ''
+      operationId: getGeneCentricByUpidDeprecated
+      parameters:
+        - name: upid
+          in: path
+          description: UniProt Proteome UPID
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Proteome'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Proteome'
+        '400':
+          description: >-
+            Invalid upid parameter. The value format should match the regular
+            expression UP[0-9]{9}.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '404':
+          description: Resources not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+      deprecated: true
+  '/proteomes/proteins/{upid}':
+    get:
+      tags:
+        - proteomes
+      summary: Get proteins by proteome UPID
+      description: ''
+      operationId: getProteinsByUpid
+      parameters:
+        - name: upid
+          in: path
+          description: UniProt Proteome UPID
+          required: true
+          schema:
+            type: string
+        - name: reviewed
+          in: query
+          description: Reviewed(true) or not Reviewed (false)
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Proteome'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Proteome'
+        '400':
+          description: >-
+            Invalid upid parameter. The value format should match the regular
+            expression UP[0-9]{9}.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '404':
+          description: Resources not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+  '/proteomes/{upid}':
+    get:
+      tags:
+        - proteomes
+      summary: Get proteome by proteome UPID
+      description: ''
+      operationId: getByUpid
+      parameters:
+        - name: upid
+          in: path
+          description: UniProt Proteome UPID
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Proteome'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Proteome'
+        '400':
+          description: >-
+            Invalid upid parameter. The value format should match the regular
+            expression UP[0-9]{9}.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '404':
+          description: Resources not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+  /proteomics:
+    get:
+      tags:
+        - proteomics
+      summary: Search proteomics peptides in UniProt
+      description: ''
+      operationId: search
+      parameters:
+        - name: offset
+          in: query
+          description: 'Off set, page starting point, with default value 0'
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+            default: 0
+        - name: size
+          in: query
+          description: >-
+            Page size with default value 100. When page size is -1, it returns
+            all records and offset will be ignored
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 100
+        - name: accession
+          in: query
+          description: UniProt accession(s). Comma separated values accepted up to 100.
+          required: false
+          schema:
+            type: string
+        - name: taxid
+          in: query
+          description: Organism taxon ID. Comma separated values accepted up to 20.
+          required: false
+          schema:
+            type: string
+        - name: upid
+          in: query
+          description: UniProt proteome UPID(s). Comma separated values accepted up to 100.
+          required: false
+          schema:
+            type: string
+        - name: datasource
+          in: query
+          description: >-
+            Proteomics data source(s): MaxQB, PeptideAtlas or EPD. Comma
+            separated values accepted up to 2.
+          required: false
+          schema:
+            type: string
+            minItems: 3
+            maxItems: 2147483647
+        - name: peptide
+          in: query
+          description: Peptide sequence. Comma separated values accepted up to 20.
+          required: false
+          schema:
+            type: string
+            minItems: 4
+            maxItems: 2147483647
+        - name: unique
+          in: query
+          description: >-
+            Peptide uniqueness (unique peptides map to one gene group only).
+            Values can be true or false.
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProteinFeatureInfo'
+            application/xml:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProteinFeatureInfo'
+            text/x-gff:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProteinFeatureInfo'
+        '400':
+          description: Invalid request Parameter.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            text/x-gff:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '404':
+          description: Resources not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            text/x-gff:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+  '/proteomics/{accession}':
+    get:
+      tags:
+        - proteomics
+      summary: Get proteomics peptides mapped to UniProt by accession
+      description: ''
+      operationId: getByAccession
+      parameters:
+        - name: accession
+          in: path
+          description: UniProt accession
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProteinFeatureInfo'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ProteinFeatureInfo'
+            text/x-gff:
+              schema:
+                $ref: '#/components/schemas/ProteinFeatureInfo'
+        '400':
+          description: >-
+            Invalid accession parameter. The values's format should be a valid
+            UniProtKB accession.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            text/x-gff:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '404':
+          description: Resources not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            text/x-gff:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+  /uniparc:
+    get:
+      tags:
+        - uniparc
+      summary: Search UniParc entries
+      description: ''
+      operationId: searchUniParc
+      parameters:
+        - name: offset
+          in: query
+          description: 'Off set, page starting point, with default value 0'
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+            default: 0
+        - name: size
+          in: query
+          description: >-
+            Page size with default value 100. When page size is -1, it returns
+            all records and offset will be ignored
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 100
+        - name: upi
+          in: query
+          description: UniParc ID (UPI). Comma separated values accepted up to 100
+          required: false
+          schema:
+            type: string
+        - name: dbtype
+          in: query
+          description: >-
+            Search by Cross reference database type, e.g EMBL, RefSeq, Ensembl,
+            etc.
+          required: false
+          schema:
+            type: string
+        - name: accession
+          in: query
+          description: UniProt accession(s). Comma separated values accepted up to 100.
+          required: false
+          schema:
+            type: string
+        - name: dbid
+          in: query
+          description: >-
+            All UniParc cross reference accessions, eg. AAC02967 (EMBL) or 
+            XP_006524055 (RefSeq). Comma separated values accepted up to 100.
+          required: false
+          schema:
+            type: string
+        - name: gene
+          in: query
+          description: UniProt gene name. Comma separated values accepted up to 20.
+          required: false
+          schema:
+            type: string
+        - name: protein
+          in: query
+          description: UniProt protein name
+          required: false
+          schema:
+            type: string
+            minItems: 3
+            maxItems: 50
+        - name: taxid
+          in: query
+          description: Organism taxon ID. Comma separated values accepted up to 20.
+          required: false
+          schema:
+            type: string
+        - name: organism
+          in: query
+          description: Organism name
+          required: false
+          schema:
+            type: string
+            minItems: 3
+            maxItems: 50
+        - name: sequencechecksum
+          in: query
+          description: Sequence CRC64 checksum. eg 4104A3A57D1B08E3
+          required: false
+          schema:
+            type: string
+        - name: ipr
+          in: query
+          description: >-
+            Search by InterPro identifier(s). Comma separated values accepted up
+            to 20.
+          required: false
+          schema:
+            type: string
+        - name: signaturetype
+          in: query
+          description: >-
+            Search by signature database type, e.g. SMART, SUPFAM, Pfam, PIRSF,
+            PROSITE, etc. Comma separated values accepted up to 20.
+          required: false
+          schema:
+            type: string
+        - name: signatureid
+          in: query
+          description: >-
+            Search by signature database id, e.g. SM00044, SSF55073, PF00211,
+            PIRSF039050, PS00452, etc. Comma separated values accepted up to 20.
+          required: false
+          schema:
+            type: string
+        - name: upid
+          in: query
+          description: UniProt proteome UPID(s). Comma separated values accepted up to 100.
+          required: false
+          schema:
+            type: string
+        - name: rfActive
+          in: query
+          description: >-
+            Response filter by Active(true) or not Active(false) Cross
+            reference.
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Entry'
+            application/xml:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Entry'
+            text/x-fasta:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Entry'
+        '400':
+          description: Invalid request Parameter.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            text/x-fasta:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+  '/uniparc/accession/{accession}':
+    get:
+      tags:
+        - uniparc
+      summary: Get UniParc entry only by UniProt accession
+      description: ''
+      operationId: getUniParcEntryByUniprotAccession
+      parameters:
+        - name: accession
+          in: path
+          description: UniProt accession
+          required: true
+          schema:
+            type: string
+        - name: rfActive
+          in: query
+          description: >-
+            Response filter by Active(true) or not Active(false) Cross
+            reference.
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Entry'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Entry'
+            text/x-fasta:
+              schema:
+                $ref: '#/components/schemas/Entry'
+        '400':
+          description: >-
+            Invalid accession parameter. The values's format should be a valid
+            UniProtKB accession.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            text/x-fasta:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '404':
+          description: Resources not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            text/x-fasta:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+  '/uniparc/dbreference/{dbid}':
+    get:
+      tags:
+        - uniparc
+      summary: Get UniParc entries by all UniParc cross reference accessions
+      description: ''
+      operationId: getUniParcByUniparcAccessions
+      parameters:
+        - name: dbid
+          in: path
+          description: >-
+            All UniParc cross reference accessions, eg. AAC02967 (EMBL) or 
+            XP_006524055 (RefSeq).
+          required: true
+          schema:
+            type: string
+        - name: offset
+          in: query
+          description: 'Off set, page starting point, with default value 0'
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+            default: 0
+        - name: size
+          in: query
+          description: >-
+            Page size with default value 100. When page size is -1, it returns
+            all records and offset will be ignored
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 100
+        - name: rfActive
+          in: query
+          description: >-
+            Response filter by Active(true) or not Active(false) Cross
+            reference.
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Entry'
+            application/xml:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Entry'
+            text/x-fasta:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Entry'
+        '400':
+          description: Invalid request Parameter.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            text/x-fasta:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '404':
+          description: Resources not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            text/x-fasta:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+  '/uniparc/proteome/{upid}':
+    get:
+      tags:
+        - uniparc
+      summary: Get UniParc entries by Proteome UPID
+      description: ''
+      operationId: getByProteomeId
+      parameters:
+        - name: upid
+          in: path
+          description: UniProt Proteome UPID
+          required: true
+          schema:
+            type: string
+        - name: offset
+          in: query
+          description: 'Off set, page starting point, with default value 0'
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+            default: 0
+        - name: size
+          in: query
+          description: >-
+            Page size with default value 100. When page size is -1, it returns
+            all records and offset will be ignored
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 100
+        - name: rfActive
+          in: query
+          description: >-
+            Response filter by Active(true) or not Active(false) Cross
+            reference.
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Entry'
+            application/xml:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Entry'
+            text/x-fasta:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Entry'
+        '400':
+          description: Invalid request Parameter.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            text/x-fasta:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '404':
+          description: Resources not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            text/x-fasta:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+  '/uniparc/upi/{upi}':
+    get:
+      tags:
+        - uniparc
+      summary: Get UniParc entry by UniParc UPI
+      description: ''
+      operationId: getUniParcEntryByUpId
+      parameters:
+        - name: upi
+          in: path
+          description: UniParc ID (UPI)
+          required: true
+          schema:
+            type: string
+        - name: rfActive
+          in: query
+          description: >-
+            Response filter by Active(true) or not Active(false) Cross
+            reference.
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Entry'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Entry'
+            text/x-fasta:
+              schema:
+                $ref: '#/components/schemas/Entry'
+        '400':
+          description: >-
+            Invalid upid parameter. The value format should match the regular
+            expression UPI[\w]{10}.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            text/x-fasta:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '404':
+          description: Resources not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            text/x-fasta:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+  /variation:
+    get:
+      tags:
+        - variation
+      summary: Search natural variants in UniProt
+      description: ''
+      operationId: search
+      parameters:
+        - name: offset
+          in: query
+          description: 'Off set, page starting point, with default value 0'
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+            default: 0
+        - name: size
+          in: query
+          description: >-
+            Page size with default value 100. When page size is -1, it returns
+            all records and offset will be ignored
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 100
+        - name: sourcetype
+          in: query
+          description: >-
+            Filter by the sourceType for variants: uniprot, large_scale_study
+            and mixed. Comma separated values accepted up to 2.
+          required: false
+          schema:
+            type: string
+        - name: consequencetype
+          in: query
+          description: >-
+            Filter by consequenceType for variants: missense, stop gained or
+            stop lost. Comma separated values accepted up to 2.
+          required: false
+          schema:
+            type: string
+        - name: wildtype
+          in: query
+          description: >-
+            Search by specific wildType amino acid. Options: Any single letter
+            amino acid and * for stop codon. Comma separated values accepted up
+            to 20.
+          required: false
+          schema:
+            type: string
+        - name: alternativesequence
+          in: query
+          description: >-
+            Filter by the alternativeSequence amino acid. Any single letter
+            amino acid and * for stopcodon and - for deletions. Comma separated
+            values accepted up to 20.
+          required: false
+          schema:
+            type: string
+        - name: location
+          in: query
+          description: >-
+            Filter by the amino acid range position in the sequence(s). Any
+            valid amino acid range position within the length of the protein
+            sequence such as 10-60 (start position to end position)
+          required: false
+          schema:
+            type: string
+        - name: accession
+          in: query
+          description: UniProt accession(s). Comma separated values accepted up to 100.
+          required: false
+          schema:
+            type: string
+        - name: disease
+          in: query
+          description: >-
+            Search by disease name/ acronym for associated variants , e.g.
+            alzheimer disease 1 or AD1. Partial names allowed.
+          required: false
+          schema:
+            type: string
+            minItems: 2
+            maxItems: 60
+        - name: omim
+          in: query
+          description: >-
+            Search by MIM ID, e.g. 104300. Comma separated values accepted up to
+            20.
+          required: false
+          schema:
+            type: string
+        - name: evidence
+          in: query
+          description: >-
+            Search by PubMed ID, e.g. 22472873. Comma separated values accepted
+            up to 20.
+          required: false
+          schema:
+            type: string
+        - name: taxid
+          in: query
+          description: Organism taxon ID. Comma separated values accepted up to 20.
+          required: false
+          schema:
+            type: string
+        - name: dbtype
+          in: query
+          description: >-
+            Cross reference database type, e.g, dbSNP, cosmic curate or ClinVar.
+            Comma separated values accepted up to 2.
+          required: false
+          schema:
+            type: string
+        - name: dbid
+          in: query
+          description: >-
+            Cross-reference database ID, e.g. rs121918508 for dbSNP, COSM29836
+            for cosmic curated, rcv61200 for ClinVar. Comma separated values
+            accepted up to 20.
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProteinFeatureInfo'
+            application/xml:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProteinFeatureInfo'
+            text/x-gff:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProteinFeatureInfo'
+        '400':
+          description: Invalid request Parameter.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            text/x-gff:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '404':
+          description: Resources not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            text/x-gff:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+  '/variation/dbsnp/{dbid}':
+    get:
+      tags:
+        - variation
+      summary: Get natural variants in UniProt by NIH-NCBI SNP database identifier
+      description: ''
+      operationId: searchByDbSNP
+      parameters:
+        - name: dbid
+          in: path
+          description: 'Cross-reference NIH-NCBI SNP database identifier, e.g. rs121918508'
+          required: true
+          schema:
+            type: string
+        - name: offset
+          in: query
+          description: 'Off set, page starting point, with default value 0'
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+            default: 0
+        - name: size
+          in: query
+          description: >-
+            Page size with default value 100. When page size is -1, it returns
+            all records and offset will be ignored
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 100
+        - name: sourcetype
+          in: query
+          description: >-
+            Filter by the sourceType for variants: uniprot, large_scale_study
+            and mixed. Comma separated values accepted up to 2.
+          required: false
+          schema:
+            type: string
+        - name: consequencetype
+          in: query
+          description: >-
+            Filter by consequenceType for variants: missense, stop gained or
+            stop lost. Comma separated values accepted up to 2.
+          required: false
+          schema:
+            type: string
+        - name: wildtype
+          in: query
+          description: >-
+            Search by specific wildType amino acid. Options: Any single letter
+            amino acid and * for stop codon. Comma separated values accepted up
+            to 20.
+          required: false
+          schema:
+            type: string
+        - name: alternativesequence
+          in: query
+          description: >-
+            Filter by the alternativeSequence amino acid. Any single letter
+            amino acid and * for stopcodon and - for deletions. Comma separated
+            values accepted up to 20.
+          required: false
+          schema:
+            type: string
+        - name: location
+          in: query
+          description: >-
+            Filter by the amino acid range position in the sequence(s). Any
+            valid amino acid range position within the length of the protein
+            sequence such as 10-60 (start position to end position)
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProteinFeatureInfo'
+            application/xml:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProteinFeatureInfo'
+            text/x-gff:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProteinFeatureInfo'
+        '400':
+          description: Invalid request Parameter.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            text/x-gff:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '404':
+          description: Resources not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            text/x-gff:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+  '/variation/{accession}':
+    get:
+      tags:
+        - variation
+      summary: Get natural variants by UniProt accession
+      description: ''
+      operationId: getVariation
+      parameters:
+        - name: accession
+          in: path
+          description: UniProt accession
+          required: true
+          schema:
+            type: string
+        - name: sourcetype
+          in: query
+          description: >-
+            Filter by the sourceType for variants: uniprot, large_scale_study
+            and mixed. Comma separated values accepted up to 2.
+          required: false
+          schema:
+            type: string
+        - name: consequencetype
+          in: query
+          description: >-
+            Filter by consequenceType for variants: missense, stop gained or
+            stop lost. Comma separated values accepted up to 2.
+          required: false
+          schema:
+            type: string
+        - name: wildtype
+          in: query
+          description: >-
+            Search by specific wildType amino acid. Options: Any single letter
+            amino acid and * for stop codon. Comma separated values accepted up
+            to 20.
+          required: false
+          schema:
+            type: string
+        - name: alternativesequence
+          in: query
+          description: >-
+            Filter by the alternativeSequence amino acid. Any single letter
+            amino acid and * for stopcodon and - for deletions. Comma separated
+            values accepted up to 20.
+          required: false
+          schema:
+            type: string
+        - name: location
+          in: query
+          description: >-
+            Filter by the amino acid range position in the sequence(s). Any
+            valid amino acid range position within the length of the protein
+            sequence such as 10-60 (start position to end position)
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProteinFeatureInfo'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ProteinFeatureInfo'
+            text/x-gff:
+              schema:
+                $ref: '#/components/schemas/ProteinFeatureInfo'
+        '400':
+          description: >-
+            Invalid accession parameter. The values's format should be a valid
+            UniProtKB accession.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            text/x-gff:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '404':
+          description: Resources not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            text/x-gff:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+servers:
+  - url: /proteins/api
+components:
+  schemas:
+    RedundantProteomeType:
+      type: object
+      properties:
+        upid:
+          type: string
+          xml:
+            attribute: true
+        similarity:
+          type: number
+          format: float
+          xml:
+            attribute: true
+    PolyphenPredictionType:
+      type: object
+      properties:
+        value:
+          type: string
+        score:
+          type: number
+          format: double
+          xml:
+            attribute: true
+        predication:
+          type: string
+          xml:
+            attribute: true
+    Disease:
+      type: object
+      required:
+        - acronym
+        - dbReference
+        - description
+        - name
+      properties:
+        name:
+          type: string
+        acronym:
+          type: string
+        description:
+          type: string
+        dbReference:
+          $ref: '#/components/schemas/DbReferenceType'
+        id:
+          type: string
+          xml:
+            attribute: true
+    EventType:
+      type: object
+      properties:
+        type:
+          type: string
+          xml:
+            attribute: true
+    ProteinFeatureInfo:
+      type: object
+      required:
+        - accession
+        - entryName
+        - features
+        - sequence
+        - version
+      properties:
+        version:
+          type: string
+        accession:
+          type: string
+          xml:
+            attribute: true
+          pattern: >-
+            (^([OPQ][0-9][A-Z,0-9]{3}[0-9])(-(\d+))?$)|(^([A-NR-Z]([0-9][A-Z][A-Z0-9]{2}){1,2}[0-9])(-(\d+))?$)
+        entryName:
+          type: string
+          xml:
+            attribute: true
+          pattern: (^\w+_\w+$)
+        sequence:
+          type: string
+          xml:
+            attribute: true
+        sequenceChecksum:
+          type: string
+          xml:
+            attribute: true
+        geteGeneId:
+          type: string
+          xml:
+            attribute: true
+          description: Ensembl Gene ID
+        geteProteinId:
+          type: string
+          xml:
+            attribute: true
+        taxid:
+          type: integer
+          format: int32
+          xml:
+            attribute: true
+          description: UniProt taxonomy ID
+        features:
+          type: array
+          items:
+            $ref: '#/components/schemas/Feature'
+    SourceType:
+      type: object
+      properties:
+        dbReference:
+          $ref: '#/components/schemas/DbReferenceType'
+        ref:
+          type: integer
+          xml:
+            attribute: true
+    RedoxPotential:
+      type: object
+      required:
+        - text
+      properties:
+        text:
+          type: array
+          items:
+            $ref: '#/components/schemas/EvidencedStringType'
+    PropertyType:
+      type: object
+      properties:
+        type:
+          type: string
+          xml:
+            attribute: true
+        value:
+          type: string
+          xml:
+            attribute: true
+    Feature:
+      type: object
+      required:
+        - begin
+        - category
+        - end
+        - evidences
+        - type
+      properties:
+        type:
+          type: string
+          xml:
+            attribute: true
+        category:
+          type: string
+          xml:
+            attribute: true
+          enum:
+            - MOLECULE_PROCESSING
+            - STRUCTURAL
+            - DOMAINS_AND_SITES
+            - MUTAGENESIS
+            - PTM
+            - SEQUENCE_INFORMATION
+            - TOPOLOGY
+            - VARIANTS
+        cvId:
+          type: string
+          xml:
+            attribute: true
+        ftId:
+          type: string
+          xml:
+            attribute: true
+        description:
+          type: string
+          xml:
+            attribute: true
+        alternativeSequence:
+          type: string
+          xml:
+            attribute: true
+        begin:
+          type: string
+          xml:
+            attribute: true
+          pattern: '^(\?|<?[1-9][0-9]*)$'
+        end:
+          type: string
+          xml:
+            attribute: true
+          pattern: '^(\?|[1-9][0-9]*>?)$'
+        xrefs:
+          type: array
+          items:
+            $ref: '#/components/schemas/DbReferenceObject'
+        evidences:
+          type: array
+          items:
+            $ref: '#/components/schemas/Evidence'
+    SubcellularLocationType:
+      type: object
+      required:
+        - location
+      properties:
+        location:
+          type: array
+          items:
+            $ref: '#/components/schemas/EvidencedStringType'
+        topology:
+          type: array
+          items:
+            $ref: '#/components/schemas/EvidencedStringType'
+        orientation:
+          type: array
+          items:
+            $ref: '#/components/schemas/EvidencedStringType'
+    ReferenceType:
+      type: object
+      required:
+        - citation
+        - scope
+      properties:
+        citation:
+          $ref: '#/components/schemas/CitationType'
+        scope:
+          type: array
+          items:
+            type: string
+        source:
+          $ref: '#/components/schemas/SourceDataType'
+        evidence:
+          type: array
+          items:
+            type: integer
+            format: int32
+        key:
+          type: string
+          xml:
+            attribute: true
+    SiftPredictionType:
+      type: object
+      properties:
+        value:
+          type: string
+        score:
+          type: number
+          format: double
+          xml:
+            attribute: true
+        predication:
+          type: string
+          xml:
+            attribute: true
+    Name:
+      type: object
+      properties:
+        value:
+          type: string
+        evidence:
+          type: array
+          items:
+            type: integer
+            format: int32
+    CanonicalGene:
+      type: object
+      required:
+        - gene
+      properties:
+        gene:
+          $ref: '#/components/schemas/GeneType'
+        relatedGene:
+          type: array
+          items:
+            $ref: '#/components/schemas/GeneType'
+      xml:
+        name: canonicalGene
+    DiseaseComment:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - FUNCTION
+            - CATALYTIC_ACTIVITY
+            - COFACTOR
+            - ENZYME_REGULATION
+            - BIOPHYSICOCHEMICAL_PROPERTIES
+            - PATHWAY
+            - SUBUNIT
+            - INTERACTION
+            - SUBCELLULAR_LOCATION
+            - ALTERNATIVE_PRODUCTS
+            - TISSUE_SPECIFICITY
+            - DEVELOPMENTAL_STAGE
+            - INDUCTION
+            - DOMAIN
+            - PTM
+            - RNA_EDITING
+            - MASS_SPECTROMETRY
+            - POLYMORPHISM
+            - DISEASE
+            - DISRUPTION_PHENOTYPE
+            - ALLERGEN
+            - TOXIC_DOSE
+            - BIOTECHNOLOGY
+            - PHARMACEUTICAL
+            - MISCELLANEOUS
+            - SIMILARITY
+            - CAUTION
+            - SEQUENCE_CAUTION
+            - WEBRESOURCE
+            - PAGE
+            - UNKNOWN
+        diseaseId:
+          type: string
+        acronym:
+          type: string
+        dbReference:
+          $ref: '#/components/schemas/DbReference'
+        description:
+          $ref: '#/components/schemas/EvidencedString'
+        text:
+          type: array
+          items:
+            $ref: '#/components/schemas/EvidencedString'
+    IntAct:
+      type: object
+      required:
+        - id
+        - interactionType
+      properties:
+        interactionType:
+          type: string
+        id:
+          type: string
+        gene:
+          type: string
+        interactor1:
+          type: string
+        interactor2:
+          type: string
+        experiments:
+          type: integer
+          format: int32
+    OrganismNameType:
+      type: object
+      properties:
+        value:
+          type: string
+        type:
+          type: string
+          xml:
+            attribute: true
+    DbReferenceType:
+      type: object
+      properties:
+        molecule:
+          $ref: '#/components/schemas/MoleculeType'
+        property:
+          type: array
+          items:
+            $ref: '#/components/schemas/PropertyType'
+        type:
+          type: string
+          xml:
+            attribute: true
+        id:
+          type: string
+          xml:
+            attribute: true
+        evidence:
+          type: array
+          items:
+            type: integer
+            format: int32
+    ProteinNameType:
+      type: object
+      required:
+        - fullName
+      properties:
+        fullName:
+          type: string
+        shortName:
+          type: array
+          items:
+            type: string
+    IsoformType:
+      type: object
+      required:
+        - id
+        - name
+        - sequence
+      properties:
+        id:
+          type: array
+          items:
+            type: string
+        name:
+          type: array
+          items:
+            $ref: '#/components/schemas/Name'
+        sequence:
+          $ref: '#/components/schemas/Sequence'
+        text:
+          type: array
+          items:
+            $ref: '#/components/schemas/EvidencedStringType'
+    KeywordType:
+      type: object
+      properties:
+        value:
+          type: string
+        evidence:
+          type: array
+          items:
+            type: integer
+            format: int32
+        id:
+          type: string
+          xml:
+            attribute: true
+    ProteinType:
+      type: object
+      properties:
+        recommendedName:
+          $ref: '#/components/schemas/RecommendedName'
+        alternativeName:
+          type: array
+          items:
+            $ref: '#/components/schemas/AlternativeName'
+        submittedName:
+          type: array
+          items:
+            $ref: '#/components/schemas/SubmittedName'
+        allergenName:
+          $ref: '#/components/schemas/EvidencedStringType'
+        biotechName:
+          $ref: '#/components/schemas/EvidencedStringType'
+        cdAntigenName:
+          type: array
+          items:
+            $ref: '#/components/schemas/EvidencedStringType'
+        innName:
+          type: array
+          items:
+            $ref: '#/components/schemas/EvidencedStringType'
+        domain:
+          type: array
+          items:
+            $ref: '#/components/schemas/Domain'
+        component:
+          type: array
+          items:
+            $ref: '#/components/schemas/Component'
+    GnEntry:
+      type: object
+      required:
+        - accession
+        - name
+        - protein
+        - sequence
+      properties:
+        accession:
+          type: string
+        name:
+          type: string
+        taxid:
+          type: integer
+          format: int32
+        sequence:
+          type: string
+        protein:
+          $ref: '#/components/schemas/ProteinType'
+        gene:
+          type: array
+          items:
+            $ref: '#/components/schemas/GeneNameType'
+        gnCoordinate:
+          type: array
+          items:
+            $ref: '#/components/schemas/GnCoordinateType'
+      xml:
+        name: gnEntry
+    GeneNameType:
+      type: object
+      properties:
+        value:
+          type: string
+        evidence:
+          type: array
+          items:
+            type: integer
+            format: int32
+        type:
+          type: string
+          xml:
+            attribute: true
+    Lineage:
+      type: object
+      required:
+        - taxon
+      properties:
+        taxon:
+          type: array
+          items:
+            type: string
+    Proteome:
+      type: object
+      required:
+        - component
+        - name
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        isReferenceProteome:
+          type: boolean
+          default: false
+        isRepresentativeProteome:
+          type: boolean
+          default: false
+        redundantTo:
+          type: string
+        strain:
+          type: string
+        isolate:
+          type: string
+        dbReference:
+          type: array
+          items:
+            $ref: '#/components/schemas/DbReferenceType'
+        component:
+          type: array
+          items:
+            $ref: '#/components/schemas/ComponentType'
+        reference:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReferenceType'
+        redundantProteome:
+          type: array
+          items:
+            $ref: '#/components/schemas/RedundantProteomeType'
+        canonicalGene:
+          type: array
+          items:
+            $ref: '#/components/schemas/CanonicalGene'
+        upid:
+          type: string
+          xml:
+            attribute: true
+        modified:
+          type: string
+          format: date-time
+          xml:
+            attribute: true
+        taxonomy:
+          type: integer
+          format: int64
+          xml:
+            attribute: true
+        source:
+          type: string
+          xml:
+            attribute: true
+        sourceTaxonomy:
+          type: integer
+          format: int64
+          xml:
+            attribute: true
+        superregnum:
+          type: string
+          xml:
+            attribute: true
+          enum:
+            - EUKARYOTA
+            - BACTERIA
+            - VIRUSES
+            - ARCHAEA
+      xml:
+        name: proteome
+    RecommendedName:
+      type: object
+      required:
+        - fullName
+      properties:
+        fullName:
+          $ref: '#/components/schemas/EvidencedStringType'
+        shortName:
+          type: array
+          items:
+            $ref: '#/components/schemas/EvidencedStringType'
+        ecNumber:
+          type: array
+          items:
+            $ref: '#/components/schemas/EvidencedStringType'
+    Sequence:
+      type: object
+      properties:
+        type:
+          type: string
+          xml:
+            attribute: true
+        ref:
+          type: string
+          xml:
+            attribute: true
+    ProteinExistenceType:
+      type: object
+      properties:
+        type:
+          type: string
+          xml:
+            attribute: true
+    CofactorType:
+      type: object
+      required:
+        - dbReference
+        - name
+      properties:
+        name:
+          type: string
+        dbReference:
+          $ref: '#/components/schemas/DbReferenceType'
+        evidence:
+          type: array
+          items:
+            type: integer
+            format: int32
+    UPInteraction:
+      type: object
+      required:
+        - accession
+        - interactions
+        - name
+        - proteinExistence
+        - taxonomy
+      properties:
+        accession:
+          type: string
+        name:
+          type: string
+        proteinExistence:
+          type: string
+        taxonomy:
+          type: integer
+          format: int64
+        interactions:
+          type: array
+          items:
+            $ref: '#/components/schemas/IntAct'
+        diseases:
+          type: array
+          items:
+            $ref: '#/components/schemas/DiseaseComment'
+        subcellularLocations:
+          type: array
+          items:
+            $ref: '#/components/schemas/SubcellLocationComment'
+    AlternativeName:
+      type: object
+      properties:
+        fullName:
+          $ref: '#/components/schemas/EvidencedStringType'
+        shortName:
+          type: array
+          items:
+            $ref: '#/components/schemas/EvidencedStringType'
+        ecNumber:
+          type: array
+          items:
+            $ref: '#/components/schemas/EvidencedStringType'
+    ImportedFromType:
+      type: object
+      required:
+        - dbReference
+      properties:
+        dbReference:
+          $ref: '#/components/schemas/DbReferenceType'
+    GeneLocationType:
+      type: object
+      properties:
+        name:
+          type: array
+          items:
+            $ref: '#/components/schemas/StatusType'
+        type:
+          type: string
+          xml:
+            attribute: true
+        evidence:
+          type: array
+          items:
+            type: integer
+            format: int32
+    Conflict:
+      type: object
+      properties:
+        sequence:
+          $ref: '#/components/schemas/Sequence'
+        type:
+          type: string
+          xml:
+            attribute: true
+        ref:
+          type: string
+          xml:
+            attribute: true
+    PLocation2GLocationCollection:
+      type: object
+      properties:
+        locations:
+          type: array
+          items:
+            $ref: '#/components/schemas/PLocation2GLocation'
+      xml:
+        name: genomeLocation
+    GeneType:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: array
+          items:
+            $ref: '#/components/schemas/GeneNameType'
+    GenomicLocationType:
+      type: object
+      required:
+        - exon
+      properties:
+        exon:
+          type: array
+          items:
+            $ref: '#/components/schemas/ExonMapType'
+        chromosome:
+          type: string
+          xml:
+            attribute: true
+        start:
+          type: integer
+          format: int64
+          xml:
+            attribute: true
+        end:
+          type: integer
+          format: int64
+          xml:
+            attribute: true
+        reverseStrand:
+          type: boolean
+          xml:
+            name: reverse_strand
+            attribute: true
+          default: false
+    SubcellLocationComment:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - FUNCTION
+            - CATALYTIC_ACTIVITY
+            - COFACTOR
+            - ENZYME_REGULATION
+            - BIOPHYSICOCHEMICAL_PROPERTIES
+            - PATHWAY
+            - SUBUNIT
+            - INTERACTION
+            - SUBCELLULAR_LOCATION
+            - ALTERNATIVE_PRODUCTS
+            - TISSUE_SPECIFICITY
+            - DEVELOPMENTAL_STAGE
+            - INDUCTION
+            - DOMAIN
+            - PTM
+            - RNA_EDITING
+            - MASS_SPECTROMETRY
+            - POLYMORPHISM
+            - DISEASE
+            - DISRUPTION_PHENOTYPE
+            - ALLERGEN
+            - TOXIC_DOSE
+            - BIOTECHNOLOGY
+            - PHARMACEUTICAL
+            - MISCELLANEOUS
+            - SIMILARITY
+            - CAUTION
+            - SEQUENCE_CAUTION
+            - WEBRESOURCE
+            - PAGE
+            - UNKNOWN
+        molecule:
+          type: string
+        locations:
+          type: array
+          items:
+            $ref: '#/components/schemas/SubcellularLocation'
+        text:
+          type: array
+          items:
+            $ref: '#/components/schemas/EvidencedString'
+    SubcellularLocation:
+      type: object
+      properties:
+        location:
+          $ref: '#/components/schemas/EvidencedString'
+        topology:
+          $ref: '#/components/schemas/EvidencedString'
+        orientation:
+          $ref: '#/components/schemas/EvidencedString'
+    Kinetics:
+      type: object
+      properties:
+        km:
+          type: array
+          xml:
+            name: KM
+          items:
+            $ref: '#/components/schemas/EvidencedStringType'
+        vmax:
+          type: array
+          xml:
+            name: Vmax
+          items:
+            $ref: '#/components/schemas/EvidencedStringType'
+        text:
+          type: array
+          items:
+            $ref: '#/components/schemas/EvidencedStringType'
+    Domain:
+      type: object
+      properties:
+        recommendedName:
+          $ref: '#/components/schemas/RecommendedName'
+        alternativeName:
+          type: array
+          items:
+            $ref: '#/components/schemas/AlternativeName'
+        submittedName:
+          type: array
+          items:
+            $ref: '#/components/schemas/SubmittedName'
+        allergenName:
+          $ref: '#/components/schemas/EvidencedStringType'
+        biotechName:
+          $ref: '#/components/schemas/EvidencedStringType'
+        cdAntigenName:
+          type: array
+          items:
+            $ref: '#/components/schemas/EvidencedStringType'
+        innName:
+          type: array
+          items:
+            $ref: '#/components/schemas/EvidencedStringType'
+    Link:
+      type: object
+      properties:
+        uri:
+          type: string
+          xml:
+            attribute: true
+    PeptideType:
+      type: object
+      required:
+        - peptideSequence
+      properties:
+        peptideSequence:
+          type: string
+        unique:
+          type: boolean
+          xml:
+            attribute: true
+          default: false
+    EvidenceType:
+      type: object
+      properties:
+        source:
+          $ref: '#/components/schemas/SourceType'
+        importedFrom:
+          $ref: '#/components/schemas/ImportedFromType'
+        type:
+          type: string
+          xml:
+            attribute: true
+        key:
+          type: integer
+          xml:
+            attribute: true
+    FeatureType:
+      type: object
+      required:
+        - location
+      properties:
+        original:
+          type: string
+        variation:
+          type: array
+          items:
+            type: string
+        location:
+          $ref: '#/components/schemas/LocationType'
+        type:
+          type: string
+          xml:
+            attribute: true
+        status:
+          type: string
+          xml:
+            attribute: true
+        id:
+          type: string
+          xml:
+            attribute: true
+        description:
+          type: string
+          xml:
+            attribute: true
+        evidence:
+          type: array
+          items:
+            type: integer
+            format: int32
+        ref:
+          type: string
+          xml:
+            attribute: true
+    PhDependence:
+      type: object
+      required:
+        - text
+      properties:
+        text:
+          type: array
+          items:
+            $ref: '#/components/schemas/EvidencedStringType'
+    VariantType:
+      type: object
+      required:
+        - clinicalSignificance
+        - consequenceType
+        - cytogeneticBand
+        - genomicLocation
+        - mutatedType
+        - polyphenPrediction
+        - siftPrediction
+        - wildType
+      properties:
+        cytogeneticBand:
+          type: string
+        genomicLocation:
+          type: string
+        consequenceType:
+          type: string
+        wildType:
+          type: string
+        mutatedType:
+          type: string
+        frequency:
+          type: number
+          format: double
+        polyphenPrediction:
+          $ref: '#/components/schemas/PolyphenPredictionType'
+        siftPrediction:
+          $ref: '#/components/schemas/SiftPredictionType'
+        somaticStatus:
+          type: boolean
+          default: false
+        clinicalSignificance:
+          type: string
+        association:
+          type: array
+          items:
+            $ref: '#/components/schemas/AssociationType'
+        sourceType:
+          type: string
+          xml:
+            attribute: true
+    PLocation2GLocation:
+      type: object
+      properties:
+        accession:
+          type: string
+        taxid:
+          type: integer
+          format: int32
+        chromosome:
+          type: string
+        ensemblTranslationId:
+          type: string
+        proteinStart:
+          type: integer
+          format: int32
+        geneStart:
+          type: integer
+          format: int64
+        proteinEnd:
+          type: integer
+          format: int32
+        geneEnd:
+          type: integer
+          format: int64
+      xml:
+        name: GenomeLocation
+    SequenceType:
+      type: object
+      properties:
+        value:
+          type: string
+        length:
+          type: integer
+          format: int32
+          xml:
+            attribute: true
+        mass:
+          type: integer
+          format: int32
+          xml:
+            attribute: true
+        checksum:
+          type: string
+          xml:
+            attribute: true
+        modified:
+          type: string
+          format: date-time
+          xml:
+            attribute: true
+        version:
+          type: integer
+          format: int32
+          xml:
+            attribute: true
+        precursor:
+          type: boolean
+          xml:
+            attribute: true
+          default: false
+        fragment:
+          type: string
+          xml:
+            attribute: true
+    EvidencedStringType:
+      type: object
+      properties:
+        value:
+          type: string
+        evidence:
+          type: array
+          items:
+            type: integer
+            format: int32
+        status:
+          type: string
+          xml:
+            attribute: true
+    SeqFeatureGroupType:
+      type: object
+      properties:
+        name:
+          type: string
+          xml:
+            attribute: true
+        id:
+          type: string
+          xml:
+            attribute: true
+    InteractantType:
+      type: object
+      properties:
+        id:
+          type: string
+        label:
+          type: string
+        intactId:
+          type: string
+          xml:
+            attribute: true
+    Entry:
+      type: object
+      required:
+        - accession
+        - name
+        - organism
+        - protein
+        - proteinExistence
+        - reference
+        - sequence
+      properties:
+        accession:
+          type: array
+          items:
+            type: string
+        name:
+          type: array
+          items:
+            type: string
+        protein:
+          $ref: '#/components/schemas/ProteinType'
+        gene:
+          type: array
+          items:
+            $ref: '#/components/schemas/GeneType'
+        organism:
+          $ref: '#/components/schemas/OrganismType'
+        organismHost:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrganismType'
+        geneLocation:
+          type: array
+          items:
+            $ref: '#/components/schemas/GeneLocationType'
+        reference:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReferenceType'
+        comment:
+          type: array
+          items:
+            $ref: '#/components/schemas/CommentType'
+        dbReference:
+          type: array
+          items:
+            $ref: '#/components/schemas/DbReferenceType'
+        proteinExistence:
+          $ref: '#/components/schemas/ProteinExistenceType'
+        keyword:
+          type: array
+          items:
+            $ref: '#/components/schemas/KeywordType'
+        feature:
+          type: array
+          items:
+            $ref: '#/components/schemas/FeatureType'
+        evidence:
+          type: array
+          items:
+            $ref: '#/components/schemas/EvidenceType'
+        sequence:
+          $ref: '#/components/schemas/SequenceType'
+        dataset:
+          type: string
+          xml:
+            attribute: true
+        created:
+          type: string
+          format: date-time
+          xml:
+            attribute: true
+        modified:
+          type: string
+          format: date-time
+          xml:
+            attribute: true
+        version:
+          type: integer
+          format: int32
+          xml:
+            attribute: true
+      xml:
+        name: entry
+    CommentType:
+      type: object
+      properties:
+        molecule:
+          $ref: '#/components/schemas/MoleculeType'
+        absorption:
+          $ref: '#/components/schemas/Absorption'
+        kinetics:
+          $ref: '#/components/schemas/Kinetics'
+        phDependence:
+          $ref: '#/components/schemas/PhDependence'
+        redoxPotential:
+          $ref: '#/components/schemas/RedoxPotential'
+        temperatureDependence:
+          $ref: '#/components/schemas/TemperatureDependence'
+        cofactor:
+          type: array
+          items:
+            $ref: '#/components/schemas/CofactorType'
+        subcellularLocation:
+          type: array
+          items:
+            $ref: '#/components/schemas/SubcellularLocationType'
+        conflict:
+          $ref: '#/components/schemas/Conflict'
+        link:
+          type: array
+          items:
+            $ref: '#/components/schemas/Link'
+        event:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventType'
+        isoform:
+          type: array
+          items:
+            $ref: '#/components/schemas/IsoformType'
+        interactant:
+          type: array
+          items:
+            $ref: '#/components/schemas/InteractantType'
+        organismsDiffer:
+          type: boolean
+          default: false
+        experiments:
+          type: integer
+          format: int32
+        disease:
+          $ref: '#/components/schemas/Disease'
+        location:
+          type: array
+          items:
+            $ref: '#/components/schemas/LocationType'
+        text:
+          type: array
+          items:
+            $ref: '#/components/schemas/EvidencedStringType'
+        type:
+          type: string
+          xml:
+            attribute: true
+        locationType:
+          type: string
+          xml:
+            attribute: true
+        name:
+          type: string
+          xml:
+            attribute: true
+        mass:
+          type: number
+          format: float
+          xml:
+            attribute: true
+        error:
+          type: string
+          xml:
+            attribute: true
+        method:
+          type: string
+          xml:
+            attribute: true
+        evidence:
+          type: array
+          items:
+            type: integer
+            format: int32
+    Absorption:
+      type: object
+      properties:
+        max:
+          $ref: '#/components/schemas/EvidencedStringType'
+        text:
+          type: array
+          items:
+            $ref: '#/components/schemas/EvidencedStringType'
+    GnFeatureType:
+      type: object
+      required:
+        - description
+        - genomeLocation
+        - location
+      properties:
+        original:
+          type: string
+        variation:
+          type: array
+          items:
+            type: string
+        location:
+          $ref: '#/components/schemas/LocationType'
+        description:
+          type: string
+        evidence:
+          type: array
+          items:
+            $ref: '#/components/schemas/EvidenceType'
+        xrefs:
+          type: array
+          items:
+            $ref: '#/components/schemas/DbReferenceType'
+        variant:
+          $ref: '#/components/schemas/VariantType'
+        peptide:
+          $ref: '#/components/schemas/PeptideType'
+        type:
+          type: string
+          xml:
+            attribute: true
+        id:
+          type: string
+          xml:
+            attribute: true
+        genomeLocation:
+          $ref: '#/components/schemas/LocationType'
+    TemperatureDependence:
+      type: object
+      required:
+        - text
+      properties:
+        text:
+          type: array
+          items:
+            $ref: '#/components/schemas/EvidencedStringType'
+    Evidence:
+      type: object
+      required:
+        - code
+        - source
+      properties:
+        code:
+          type: string
+          xml:
+            attribute: true
+          pattern: '^ECO:[0-9]{7}$'
+        label:
+          type: string
+          xml:
+            attribute: true
+        source:
+          $ref: '#/components/schemas/DbReferenceObject'
+    Component:
+      type: object
+      properties:
+        recommendedName:
+          $ref: '#/components/schemas/RecommendedName'
+        alternativeName:
+          type: array
+          items:
+            $ref: '#/components/schemas/AlternativeName'
+        submittedName:
+          type: array
+          items:
+            $ref: '#/components/schemas/SubmittedName'
+        allergenName:
+          $ref: '#/components/schemas/EvidencedStringType'
+        biotechName:
+          $ref: '#/components/schemas/EvidencedStringType'
+        cdAntigenName:
+          type: array
+          items:
+            $ref: '#/components/schemas/EvidencedStringType'
+        innName:
+          type: array
+          items:
+            $ref: '#/components/schemas/EvidencedStringType'
+    NameListType:
+      type: object
+      properties:
+        consortiumOrPerson:
+          type: array
+          items:
+            type: object
+    ComponentType:
+      type: object
+      required:
+        - genomeAccession
+      properties:
+        description:
+          type: string
+        biosampleId:
+          type: string
+        genomeAccession:
+          type: array
+          items:
+            type: string
+        protein:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProteinType'
+        name:
+          type: string
+          xml:
+            attribute: true
+    MoleculeType:
+      type: object
+      properties:
+        value:
+          type: string
+        id:
+          type: string
+          xml:
+            attribute: true
+    SeqFeatureType:
+      type: object
+      required:
+        - lcn
+      properties:
+        ipr:
+          $ref: '#/components/schemas/SeqFeatureGroupType'
+        lcn:
+          type: array
+          items:
+            $ref: '#/components/schemas/LocationType'
+        database:
+          type: string
+          xml:
+            attribute: true
+        id:
+          type: string
+          xml:
+            attribute: true
+    GnCoordinateType:
+      type: object
+      required:
+        - genomicLocation
+      properties:
+        genomicLocation:
+          $ref: '#/components/schemas/GenomicLocationType'
+        feature:
+          type: array
+          items:
+            $ref: '#/components/schemas/GnFeatureType'
+        ensemblGeneId:
+          type: string
+          xml:
+            name: ensembl_gene_id
+            attribute: true
+        ensemblTranscriptId:
+          type: string
+          xml:
+            name: ensembl_transcript_id
+            attribute: true
+        ensemblTranslationId:
+          type: string
+          xml:
+            name: ensembl_translation_id
+            attribute: true
+    DbReference:
+      type: object
+      properties:
+        type:
+          type: string
+        id:
+          type: string
+        properties:
+          type: object
+          additionalProperties:
+            type: string
+        isoform:
+          type: string
+        evidences:
+          type: array
+          items:
+            $ref: '#/components/schemas/Evidence'
+    SubmittedName:
+      type: object
+      required:
+        - fullName
+      properties:
+        fullName:
+          $ref: '#/components/schemas/EvidencedStringType'
+        ecNumber:
+          type: array
+          items:
+            $ref: '#/components/schemas/EvidencedStringType'
+    PositionType:
+      type: object
+      properties:
+        position:
+          type: integer
+          xml:
+            attribute: true
+        status:
+          type: string
+          xml:
+            attribute: true
+        evidence:
+          type: array
+          items:
+            type: integer
+            format: int32
+    ExonMapType:
+      type: object
+      required:
+        - genomeLocation
+        - proteinLocation
+      properties:
+        proteinLocation:
+          $ref: '#/components/schemas/LocationType'
+        genomeLocation:
+          $ref: '#/components/schemas/LocationType'
+        id:
+          type: string
+          xml:
+            attribute: true
+    AssociationType:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        evidence:
+          type: array
+          items:
+            $ref: '#/components/schemas/EvidenceType'
+        xrefs:
+          type: array
+          items:
+            $ref: '#/components/schemas/DbReferenceType'
+        isDisease:
+          type: boolean
+          xml:
+            attribute: true
+          default: false
+    OrganismType:
+      type: object
+      required:
+        - dbReference
+        - name
+      properties:
+        name:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrganismNameType'
+        dbReference:
+          type: array
+          items:
+            $ref: '#/components/schemas/DbReferenceType'
+        lineage:
+          $ref: '#/components/schemas/Lineage'
+        evidence:
+          type: array
+          items:
+            type: integer
+            format: int32
+    CitationType:
+      type: object
+      properties:
+        title:
+          type: string
+        editorList:
+          $ref: '#/components/schemas/NameListType'
+        authorList:
+          $ref: '#/components/schemas/NameListType'
+        locator:
+          type: string
+        dbReference:
+          type: array
+          items:
+            $ref: '#/components/schemas/DbReferenceType'
+        type:
+          type: string
+          xml:
+            attribute: true
+        date:
+          type: string
+          xml:
+            attribute: true
+        name:
+          type: string
+          xml:
+            attribute: true
+        volume:
+          type: string
+          xml:
+            attribute: true
+        first:
+          type: string
+          xml:
+            attribute: true
+        last:
+          type: string
+          xml:
+            attribute: true
+        publisher:
+          type: string
+          xml:
+            attribute: true
+        city:
+          type: string
+          xml:
+            attribute: true
+        db:
+          type: string
+          xml:
+            attribute: true
+        number:
+          type: string
+          xml:
+            attribute: true
+        institute:
+          type: string
+          xml:
+            attribute: true
+        country:
+          type: string
+          xml:
+            attribute: true
+    StatusType:
+      type: object
+      properties:
+        value:
+          type: string
+        status:
+          type: string
+          xml:
+            attribute: true
+    SubmissionType:
+      type: object
+      required:
+        - citation
+      properties:
+        citation:
+          type: string
+        db:
+          type: string
+          xml:
+            attribute: true
+    SourceDataType:
+      type: object
+      properties:
+        strainOrPlasmidOrTransposon:
+          type: array
+          items:
+            type: object
+    ErrorMessage:
+      type: object
+      properties:
+        requestedURL:
+          type: string
+        errorMessage:
+          type: array
+          xml:
+            name: errorMessages
+            wrapped: true
+          items:
+            type: string
+    JournalType:
+      type: object
+      properties:
+        title:
+          type: string
+        dbReference:
+          type: array
+          items:
+            $ref: '#/components/schemas/DbReferenceType'
+        name:
+          type: string
+          xml:
+            attribute: true
+        volume:
+          type: string
+          xml:
+            attribute: true
+        first:
+          type: string
+          xml:
+            attribute: true
+        last:
+          type: string
+          xml:
+            attribute: true
+    DbReferenceObject:
+      type: object
+      required:
+        - alternativeUrl
+        - id
+        - name
+        - reviewed
+        - url
+      properties:
+        name:
+          type: string
+          xml:
+            attribute: true
+        id:
+          type: string
+          xml:
+            attribute: true
+        url:
+          type: string
+          xml:
+            attribute: true
+        alternativeUrl:
+          type: string
+          xml:
+            attribute: true
+        reviewed:
+          type: boolean
+          xml:
+            attribute: true
+          default: false
+    LocationType:
+      type: object
+      properties:
+        begin:
+          $ref: '#/components/schemas/PositionType'
+        end:
+          $ref: '#/components/schemas/PositionType'
+        position:
+          $ref: '#/components/schemas/PositionType'
+        sequence:
+          type: string
+          xml:
+            attribute: true
+    EvidencedString:
+      type: object
+      properties:
+        value:
+          type: string
+        evidences:
+          type: array
+          items:
+            $ref: '#/components/schemas/Evidence'
+
