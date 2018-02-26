@@ -1,11 +1,4 @@
 openapi: 3.0.0
-x-origin:
-  - url: 'https://www.ebi.ac.uk/proteins/api/swagger.json'
-    format: swagger
-    version: '2.0'
-    converter:
-      url: 'https://github.com/mermade/swagger2openapi'
-      version: 2.11.16
 info:
   description: >-
     The Proteins REST API provides access to key biological data from UniProt
@@ -16,16 +9,19 @@ info:
     MaxQB and EPD) and genome coordinate mappings.
   version: '1.0'
   title: Proteins REST API
+  contact:
+    name: UniProt (EBI)
+    url: https://groups.google.com/forum/#!forum/ebi-proteins-api
 tags:
-  - name: variation
-  - name: uniparc
-  - name: proteomes
   - name: coordinates
-  - name: genecentric
-  - name: proteomics
   - name: antigen
-  - name: proteins
+  - name: uniparc
+  - name: proteomics
   - name: features
+  - name: proteomes
+  - name: variation
+  - name: genecentric
+  - name: proteins
 paths:
   /antigen:
     get:
@@ -37,7 +33,7 @@ paths:
       parameters:
         - name: offset
           in: query
-          description: 'Off set, page starting point, with default value 0'
+          description: 'Off-set, page starting point, with default value 0'
           required: false
           schema:
             type: integer
@@ -2027,11 +2023,36 @@ paths:
           required: false
           schema:
             type: string
+        - name: rfDdtype
+          in: query
+          description: >-
+            Response filter by Cross reference database type, e.g EMBL, RefSeq,
+            Ensembl, etc. Comma separated values accepted.
+          required: false
+          schema:
+            type: string
+        - name: rfDbid
+          in: query
+          description: >-
+            Response filter by all UniParc cross reference accessions, eg.
+            AAC02967 (EMBL) or  XP_006524055 (RefSeq). Comma separated values
+            accepted.
+          required: false
+          schema:
+            type: string
         - name: rfActive
           in: query
           description: >-
             Response filter by Active(true) or not Active(false) Cross
             reference.
+          required: false
+          schema:
+            type: string
+        - name: rfTaxId
+          in: query
+          description: >-
+            Response filter by organism taxon ID. Comma separated values
+            accepted.
           required: false
           schema:
             type: string
@@ -2080,11 +2101,36 @@ paths:
           required: true
           schema:
             type: string
+        - name: rfDdtype
+          in: query
+          description: >-
+            Response filter by Cross reference database type, e.g EMBL, RefSeq,
+            Ensembl, etc. Comma separated values accepted.
+          required: false
+          schema:
+            type: string
+        - name: rfDbid
+          in: query
+          description: >-
+            Response filter by all UniParc cross reference accessions, eg.
+            AAC02967 (EMBL) or  XP_006524055 (RefSeq). Comma separated values
+            accepted.
+          required: false
+          schema:
+            type: string
         - name: rfActive
           in: query
           description: >-
             Response filter by Active(true) or not Active(false) Cross
             reference.
+          required: false
+          schema:
+            type: string
+        - name: rfTaxId
+          in: query
+          description: >-
+            Response filter by organism taxon ID. Comma separated values
+            accepted.
           required: false
           schema:
             type: string
@@ -2117,6 +2163,89 @@ paths:
                 $ref: '#/components/schemas/ErrorMessage'
         '404':
           description: Resources not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            text/x-fasta:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+  /uniparc/bestguess:
+    get:
+      tags:
+        - uniparc
+      summary: Get UniParc longest sequence for entries.
+      description: >-
+        For a given user input (request parameters), Best Guess returns the
+        UniParcEntry with a cross-reference to the longest active UniProtKB
+        sequence (preferably from Swiss-Prot and if not then TrEMBL). It also
+        returns the sequence and related information. If it finds more than one
+        longest active UniProtKB sequence it returns 400 (Bad Request) error
+        response with the list of cross references found.
+      operationId: getUniParcBestGuest
+      parameters:
+        - name: upi
+          in: query
+          description: UniParc ID (UPI). Comma separated values accepted up to 100
+          required: false
+          schema:
+            type: string
+        - name: accession
+          in: query
+          description: UniProt accession(s). Comma separated values accepted up to 100.
+          required: false
+          schema:
+            type: string
+        - name: dbid
+          in: query
+          description: >-
+            All UniParc cross reference accessions, eg. AAC02967 (EMBL) or 
+            XP_006524055 (RefSeq). Comma separated values accepted up to 100.
+          required: false
+          schema:
+            type: string
+        - name: gene
+          in: query
+          description: UniProt gene name. Comma separated values accepted up to 20.
+          required: false
+          schema:
+            type: string
+        - name: taxid
+          in: query
+          description: Organism taxon ID. Comma separated values accepted up to 20.
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Entry'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Entry'
+            text/x-fasta:
+              schema:
+                $ref: '#/components/schemas/Entry'
+        '400':
+          description: Invalid request Parameter.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            text/x-fasta:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '404':
+          description: Could not find best guess for the requested filter
           content:
             application/json:
               schema:
@@ -2162,11 +2291,36 @@ paths:
             type: integer
             format: int32
             default: 100
+        - name: rfDdtype
+          in: query
+          description: >-
+            Response filter by Cross reference database type, e.g EMBL, RefSeq,
+            Ensembl, etc. Comma separated values accepted.
+          required: false
+          schema:
+            type: string
+        - name: rfDbid
+          in: query
+          description: >-
+            Response filter by all UniParc cross reference accessions, eg.
+            AAC02967 (EMBL) or  XP_006524055 (RefSeq). Comma separated values
+            accepted.
+          required: false
+          schema:
+            type: string
         - name: rfActive
           in: query
           description: >-
             Response filter by Active(true) or not Active(false) Cross
             reference.
+          required: false
+          schema:
+            type: string
+        - name: rfTaxId
+          in: query
+          description: >-
+            Response filter by organism taxon ID. Comma separated values
+            accepted.
           required: false
           schema:
             type: string
@@ -2246,11 +2400,36 @@ paths:
             type: integer
             format: int32
             default: 100
+        - name: rfDdtype
+          in: query
+          description: >-
+            Response filter by Cross reference database type, e.g EMBL, RefSeq,
+            Ensembl, etc. Comma separated values accepted.
+          required: false
+          schema:
+            type: string
+        - name: rfDbid
+          in: query
+          description: >-
+            Response filter by all UniParc cross reference accessions, eg.
+            AAC02967 (EMBL) or  XP_006524055 (RefSeq). Comma separated values
+            accepted.
+          required: false
+          schema:
+            type: string
         - name: rfActive
           in: query
           description: >-
             Response filter by Active(true) or not Active(false) Cross
             reference.
+          required: false
+          schema:
+            type: string
+        - name: rfTaxId
+          in: query
+          description: >-
+            Response filter by organism taxon ID. Comma separated values
+            accepted.
           required: false
           schema:
             type: string
@@ -2297,6 +2476,99 @@ paths:
             text/x-fasta:
               schema:
                 $ref: '#/components/schemas/ErrorMessage'
+  /uniparc/sequence:
+    post:
+      tags:
+        - uniparc
+      summary: Get UniParc entries by sequence
+      description: ''
+      operationId: getBySequence
+      parameters:
+        - name: rfDdtype
+          in: query
+          description: >-
+            Response filter by Cross reference database type, e.g EMBL, RefSeq,
+            Ensembl, etc. Comma separated values accepted.
+          required: false
+          schema:
+            type: string
+        - name: rfDbid
+          in: query
+          description: >-
+            Response filter by all UniParc cross reference accessions, eg.
+            AAC02967 (EMBL) or  XP_006524055 (RefSeq). Comma separated values
+            accepted.
+          required: false
+          schema:
+            type: string
+        - name: rfActive
+          in: query
+          description: >-
+            Response filter by Active(true) or not Active(false) Cross
+            reference.
+          required: false
+          schema:
+            type: string
+        - name: rfTaxId
+          in: query
+          description: >-
+            Response filter by organism taxon ID. Comma separated values
+            accepted.
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Entry'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Entry'
+            text/x-fasta:
+              schema:
+                $ref: '#/components/schemas/Entry'
+        '400':
+          description: Invalid request Parameter.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            text/x-fasta:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '404':
+          description: Resources not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            text/x-fasta:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+      requestBody:
+        content:
+          text/plain:
+            schema:
+              $ref: '#/components/schemas/UniparcSequenceParam'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UniparcSequenceParam'
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/UniparcSequenceParam'
+        description: >-
+          Post uniparc Sequence in text, json or xml content type. Look the
+          expected model in Data Type column
+        required: true
   '/uniparc/upi/{upi}':
     get:
       tags:
@@ -2311,11 +2583,36 @@ paths:
           required: true
           schema:
             type: string
+        - name: rfDdtype
+          in: query
+          description: >-
+            Response filter by Cross reference database type, e.g EMBL, RefSeq,
+            Ensembl, etc. Comma separated values accepted.
+          required: false
+          schema:
+            type: string
+        - name: rfDbid
+          in: query
+          description: >-
+            Response filter by all UniParc cross reference accessions, eg.
+            AAC02967 (EMBL) or  XP_006524055 (RefSeq). Comma separated values
+            accepted.
+          required: false
+          schema:
+            type: string
         - name: rfActive
           in: query
           description: >-
             Response filter by Active(true) or not Active(false) Cross
             reference.
+          required: false
+          schema:
+            type: string
+        - name: rfTaxId
+          in: query
+          description: >-
+            Response filter by organism taxon ID. Comma separated values
+            accepted.
           required: false
           schema:
             type: string
@@ -2742,7 +3039,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorMessage'
 servers:
-  - url: /proteins/api
+  - url: 'https://www.ebi.ac.uk/proteins/api'
 components:
   schemas:
     RedundantProteomeType:
@@ -2953,6 +3250,20 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/EvidencedStringType'
+    SiftPredictionType:
+      type: object
+      properties:
+        value:
+          type: string
+        score:
+          type: number
+          format: double
+          xml:
+            attribute: true
+        predication:
+          type: string
+          xml:
+            attribute: true
     ReferenceType:
       type: object
       required:
@@ -2973,20 +3284,6 @@ components:
             type: integer
             format: int32
         key:
-          type: string
-          xml:
-            attribute: true
-    SiftPredictionType:
-      type: object
-      properties:
-        value:
-          type: string
-        score:
-          type: number
-          format: double
-          xml:
-            attribute: true
-        predication:
           type: string
           xml:
             attribute: true
@@ -3123,6 +3420,16 @@ components:
           type: array
           items:
             type: string
+    UniparcSequenceParam:
+      type: object
+      required:
+        - sequence
+      properties:
+        sequence:
+          type: string
+          pattern: '[A-Z]+'
+      xml:
+        name: body
     IsoformType:
       type: object
       required:
@@ -3158,6 +3465,35 @@ components:
           type: string
           xml:
             attribute: true
+    GnEntry:
+      type: object
+      required:
+        - accession
+        - name
+        - protein
+        - sequence
+      properties:
+        accession:
+          type: string
+        name:
+          type: string
+        taxid:
+          type: integer
+          format: int32
+        sequence:
+          type: string
+        protein:
+          $ref: '#/components/schemas/ProteinType'
+        gene:
+          type: array
+          items:
+            $ref: '#/components/schemas/GeneNameType'
+        gnCoordinate:
+          type: array
+          items:
+            $ref: '#/components/schemas/GnCoordinateType'
+      xml:
+        name: gnEntry
     ProteinType:
       type: object
       properties:
@@ -3191,35 +3527,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Component'
-    GnEntry:
-      type: object
-      required:
-        - accession
-        - name
-        - protein
-        - sequence
-      properties:
-        accession:
-          type: string
-        name:
-          type: string
-        taxid:
-          type: integer
-          format: int32
-        sequence:
-          type: string
-        protein:
-          $ref: '#/components/schemas/ProteinType'
-        gene:
-          type: array
-          items:
-            $ref: '#/components/schemas/GeneNameType'
-        gnCoordinate:
-          type: array
-          items:
-            $ref: '#/components/schemas/GnCoordinateType'
-      xml:
-        name: gnEntry
     GeneNameType:
       type: object
       properties:
@@ -3455,15 +3762,6 @@ components:
             $ref: '#/components/schemas/PLocation2GLocation'
       xml:
         name: genomeLocation
-    GeneType:
-      type: object
-      required:
-        - name
-      properties:
-        name:
-          type: array
-          items:
-            $ref: '#/components/schemas/GeneNameType'
     GenomicLocationType:
       type: object
       required:
@@ -3493,6 +3791,15 @@ components:
             name: reverse_strand
             attribute: true
           default: false
+    GeneType:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: array
+          items:
+            $ref: '#/components/schemas/GeneNameType'
     SubcellLocationComment:
       type: object
       properties:
@@ -4396,6 +4703,19 @@ components:
           type: string
           xml:
             attribute: true
+    LocationType:
+      type: object
+      properties:
+        begin:
+          $ref: '#/components/schemas/PositionType'
+        end:
+          $ref: '#/components/schemas/PositionType'
+        position:
+          $ref: '#/components/schemas/PositionType'
+        sequence:
+          type: string
+          xml:
+            attribute: true
     DbReferenceObject:
       type: object
       required:
@@ -4426,19 +4746,6 @@ components:
           xml:
             attribute: true
           default: false
-    LocationType:
-      type: object
-      properties:
-        begin:
-          $ref: '#/components/schemas/PositionType'
-        end:
-          $ref: '#/components/schemas/PositionType'
-        position:
-          $ref: '#/components/schemas/PositionType'
-        sequence:
-          type: string
-          xml:
-            attribute: true
     EvidencedString:
       type: object
       properties:
