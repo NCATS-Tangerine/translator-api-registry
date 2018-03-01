@@ -1,0 +1,1190 @@
+openapi: 3.0.0
+info:
+  description: >-
+    The Taxonomy REST API provides access to the UniProt taxonomy database. The services can be queried with taxonomy
+    identifier(s) to retrieve hierarchical information (children, parent, sibling taxa), taxonomic lineage,
+    relationships between two taxa, and common ancestors of an organism. The services can also be queried with a
+    taxonomy name to find all related information to that node or hierarchical information about its children, parent
+    and sibling nodes.
+  version: '1.0'
+  title: Taxonomy Service
+  termsOfService: https://www.ebi.ac.uk/proteins/api/doc/
+  contact:
+    name: UniProt (EBI)
+    url: https://groups.google.com/forum/#!forum/ebi-proteins-api
+tags:
+  - name: taxonomy
+  - name: translator
+paths:
+  '/ancestor/{ids}':
+    get:
+      tags:
+        - taxonomy
+      summary: >-
+        This service returns the lowest common ancestor (LCA) of two taxonomy
+        nodes.
+      description: ''
+      operationId: getTaxonomyAncestor
+      parameters:
+        - name: ids
+          in: path
+          description: ' A comma separated list of Taxonomy element unique identification'
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/TaxonomyNode'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaxonomyNode'
+        '400':
+          description: 'Request parameter {parameterName} contains unsupported value.'
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '404':
+          description: No ancestors found for the taxonomy IDs
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '500':
+          description: Unexpected error. Please try again later.
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+  '/id/{id}':
+    get:
+      tags:
+        - taxonomy
+      summary: ' This service returns details about a taxonomy node, and also links to its parent, sibling and children nodes.'
+      description: with taxonomy identification as parameter
+      operationId: getTaxonomyDetailsById
+      parameters:
+        - name: id
+          in: path
+          description: ' Taxonomy element unique identification'
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/TaxonomyNode'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaxonomyNode'
+        '400':
+          description: 'Request parameter {parameterName} contains unsupported value.'
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '404':
+          description: No results found for the taxonomy ID
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '500':
+          description: Unexpected error. Please try again later.
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+  '/id/{id}/children':
+    get:
+      tags:
+        - taxonomy
+      summary: >-
+        This service returns a list of children nodes that belongs to a taxonomy
+        node with links to its parent, sibling and children nodes.
+      description: with taxonomy identification as parameter
+      operationId: getTaxonomyNodesChildrenByIdWithDetail
+      parameters:
+        - name: pageNumber
+          in: query
+          description: pageNumber is the current page number
+          required: false
+          schema:
+            type: string
+            default: '1'
+        - name: pageSize
+          in: query
+          description: >-
+            pageSize is the number of records returned in the request, max value
+            is 200
+          required: false
+          schema:
+            type: string
+            default: '100'
+        - name: id
+          in: path
+          description: ' Taxonomy element unique identification'
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Taxonomies'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Taxonomies'
+        '400':
+          description: 'Request parameter {parameterName} contains unsupported value.'
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '404':
+          description: No results found for the taxonomy ID
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '500':
+          description: Unexpected error. Please try again later.
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+  '/id/{id}/children/node':
+    get:
+      tags:
+        - taxonomy
+      summary: >-
+        This service returns a list of children nodes that belongs to a taxonomy
+        node.
+      description: with taxonomy identification as parameter
+      operationId: getTaxonomyNodesChildrenById
+      parameters:
+        - name: pageNumber
+          in: query
+          description: pageNumber is the current page number
+          required: false
+          schema:
+            type: string
+            default: '1'
+        - name: pageSize
+          in: query
+          description: >-
+            pageSize is the number of records returned in the request, max value
+            is 200
+          required: false
+          schema:
+            type: string
+            default: '100'
+        - name: id
+          in: path
+          description: ' Taxonomy element unique identification'
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Taxonomies'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Taxonomies'
+        '400':
+          description: 'Request parameter {parameterName} contains unsupported value.'
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '404':
+          description: No results found for the taxonomy ID
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '500':
+          description: Unexpected error. Please try again later.
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+  '/id/{id}/node':
+    get:
+      tags:
+        - taxonomy
+      summary: >-
+        This service returns details about a taxonomy node such as the rank,
+        mnemonic, scientific name and common name.
+      description: with taxonomy identification as parameter
+      operationId: getTaxonomyBaseNodeById
+      parameters:
+        - name: id
+          in: path
+          description: ' Taxonomy element unique identification'
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/TaxonomyNode'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaxonomyNode'
+        '400':
+          description: 'Request parameter {parameterName} contains unsupported value.'
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '404':
+          description: No results found for the taxonomy ID
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '500':
+          description: Unexpected error. Please try again later.
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+  '/id/{id}/parent':
+    get:
+      tags:
+        - taxonomy
+      summary: >-
+        This service returns details about the parent node for a given taxonomy
+        node with links to its parent, sibling and children nodes.
+      description: with taxonomy identification as parameter
+      operationId: getTaxonomyNodeParentByIdWithDetail
+      parameters:
+        - name: id
+          in: path
+          description: ' Taxonomy element unique identification'
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/TaxonomyNode'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaxonomyNode'
+        '400':
+          description: The id parameter cannot be null
+  '/id/{id}/parent/node':
+    get:
+      tags:
+        - taxonomy
+      summary: >-
+        This service returns details about the parent node for a given taxonomy
+        node.
+      description: with taxonomy identification as parameter
+      operationId: getTaxonomyNodeParentById
+      parameters:
+        - name: id
+          in: path
+          description: ' Taxonomy element unique identification'
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/TaxonomyNode'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaxonomyNode'
+        '400':
+          description: The id parameter cannot be null
+  '/id/{id}/siblings':
+    get:
+      tags:
+        - taxonomy
+      summary: >-
+        This service returns a list of sibling nodes that belongs for a given
+        taxonomy node with links to its parent, sibling and children nodes.
+      description: with taxonomy identification as parameter
+      operationId: getTaxonomyNodesSiblingsByIdWithDetail
+      parameters:
+        - name: pageNumber
+          in: query
+          description: pageNumber is the current page number
+          required: false
+          schema:
+            type: string
+            default: '1'
+        - name: pageSize
+          in: query
+          description: >-
+            pageSize is the number of records returned in the request, max value
+            is 200
+          required: false
+          schema:
+            type: string
+            default: '100'
+        - name: id
+          in: path
+          description: ' Taxonomy element unique identification'
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Taxonomies'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Taxonomies'
+        '400':
+          description: 'Request parameter {parameterName} contains unsupported value.'
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '404':
+          description: No results found for the taxonomy ID
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '500':
+          description: Unexpected error. Please try again later.
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+  '/id/{id}/siblings/node':
+    get:
+      tags:
+        - taxonomy
+      summary: >-
+        This service returns a list of sibling nodes that belongs for a given
+        taxonomy node.
+      description: with taxonomy identification as parameter
+      operationId: getTaxonomyNodesSiblingsById
+      parameters:
+        - name: pageNumber
+          in: query
+          description: pageNumber is the current page number
+          required: false
+          schema:
+            type: string
+            default: '1'
+        - name: pageSize
+          in: query
+          description: >-
+            pageSize is the number of records returned in the request, max value
+            is 200
+          required: false
+          schema:
+            type: string
+            default: '100'
+        - name: id
+          in: path
+          description: ' Taxonomy element unique identification'
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Taxonomies'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Taxonomies'
+        '400':
+          description: 'Request parameter {parameterName} contains unsupported value.'
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '404':
+          description: No results found for the taxonomy ID
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '500':
+          description: Unexpected error. Please try again later.
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+  '/ids/{ids}':
+    get:
+      tags:
+        - taxonomy
+      summary: ' This service returns a list of taxonomy node details with links to its parent, sibling and children nodes.'
+      description: with taxonomy identification as parameter
+      operationId: getTaxonomyDetailsByIdList
+      parameters:
+        - name: ids
+          in: path
+          description: ' A comma separated list of Taxonomy element unique identification'
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Taxonomies'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Taxonomies'
+        '400':
+          description: 'Request parameter {parameterName} contains unsupported value.'
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '404':
+          description: No results found for the taxonomy ID
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '500':
+          description: Unexpected error. Please try again later.
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+  '/ids/{ids}/node':
+    get:
+      tags:
+        - taxonomy
+      summary: >-
+        This service returns a list of taxonomy node details such as the rank,
+        mnemonic, scientific name and common name.
+      description: with taxonomy identification as parameter
+      operationId: getTaxonomyBaseNodeByIds
+      parameters:
+        - name: ids
+          in: path
+          description: ' A comma separated list of Taxonomy element unique identification'
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Taxonomies'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Taxonomies'
+        '400':
+          description: 'Request parameter {parameterName} contains unsupported value.'
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '404':
+          description: No results found for the taxonomy ID
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '500':
+          description: Unexpected error. Please try again later.
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+  '/lineage/{id}':
+    get:
+      tags:
+        - taxonomy
+      summary: >-
+        This service returns the taxonomic lineage for a given taxonomy node. It
+        lists the nodes as they appear in the taxonomic tree, with the more
+        specific listed first.
+      description: with taxonomy identification as parameter
+      operationId: getTaxonomyLineageById
+      parameters:
+        - name: id
+          in: path
+          description: ' Taxonomy element unique identification'
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/TaxonomyNode'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaxonomyNode'
+        '400':
+          description: 'Request parameter {parameterName} contains unsupported value.'
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '404':
+          description: No lineage found for the taxonomy ID
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '500':
+          description: Unexpected error. Please try again later.
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+  '/name/{name}':
+    get:
+      tags:
+        - taxonomy
+      summary: >-
+        This service returns a list of taxonomic nodes with the specific queried
+        name. For each node, the service provides it’s taxonomic details and
+        also links to its parent, siblings and children nodes.
+      description: with taxonomy name as parameter
+      operationId: getTaxonomiesDetailsByName
+      parameters:
+        - name: pageNumber
+          in: query
+          description: pageNumber is the current page number
+          required: false
+          schema:
+            type: string
+            default: '1'
+        - name: pageSize
+          in: query
+          description: >-
+            pageSize is the number of records returned in the request, max value
+            is 200
+          required: false
+          schema:
+            type: string
+            default: '100'
+        - name: name
+          in: path
+          description: >-
+            Taxonomy name that will be searched in scientificName, commonName
+            and mnemonic
+          required: true
+          schema:
+            type: string
+        - name: searchType
+          in: query
+          description: >-
+            Type of the search, valid values are EQUALSTO,STARTSWITH,ENDSWITH or
+            CONTAINS
+          required: false
+          schema:
+            type: string
+            default: EQUALSTO
+        - name: fieldName
+          in: query
+          description: 'fieldName, valid values are SCIENTIFICNAME, COMMONNAME or MNEMONIC'
+          required: false
+          schema:
+            type: string
+            default: SCIENTIFICNAME
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Taxonomies'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Taxonomies'
+        '400':
+          description: 'Request parameter {parameterName} contains unsupported value.'
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '404':
+          description: No results found for the taxonomy name
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '500':
+          description: Unexpected error. Please try again later.
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+  '/name/{name}/node':
+    get:
+      tags:
+        - taxonomy
+      summary: >-
+        This service returns a list of taxonomic nodes with a specific name. For
+        each node, the service provides it’s taxonomic details such as the rank,
+        mnemonic, scientific name and common name.
+      description: with taxonomy name as parameter
+      operationId: getTaxonomiesNodeBaseByName
+      parameters:
+        - name: pageNumber
+          in: query
+          description: pageNumber is the current page number
+          required: false
+          schema:
+            type: string
+            default: '1'
+        - name: pageSize
+          in: query
+          description: >-
+            pageSize is the number of records returned in the request, max value
+            is 200
+          required: false
+          schema:
+            type: string
+            default: '100'
+        - name: name
+          in: path
+          description: >-
+            Taxonomy name that will be searched in scientificName, commonName
+            and mnemonic
+          required: true
+          schema:
+            type: string
+        - name: searchType
+          in: query
+          description: >-
+            Type of the search, valid values are EQUALSTO,STARTSWITH,ENDSWITH or
+            CONTAINS
+          required: false
+          schema:
+            type: string
+            default: EQUALSTO
+        - name: fieldName
+          in: query
+          description: 'fieldName, valid values are SCIENTIFICNAME, COMMONNAME or MNEMONIC'
+          required: false
+          schema:
+            type: string
+            default: SCIENTIFICNAME
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Taxonomies'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Taxonomies'
+        '400':
+          description: 'Request parameter {parameterName} contains unsupported value.'
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '404':
+          description: No results found for the taxonomy name
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '500':
+          description: Unexpected error. Please try again later.
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+  /path:
+    get:
+      tags:
+        - taxonomy
+      summary: >-
+        This service returns all taxonomic nodes that have a relationship with
+        the queried taxonomy ID in a specific direction (TOP or BOTTOM) and
+        depth level.
+      description: ''
+      operationId: getTaxonomyPath
+      parameters:
+        - name: id
+          in: query
+          description: ' Taxonomy element unique identification'
+          required: true
+          schema:
+            type: string
+        - name: depth
+          in: query
+          description: >-
+            Number of depth levels for taxonomy path, valid values between 1 and
+            5
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+        - name: direction
+          in: query
+          description: 'Direction for taxonomy path, valid values are TOP and BOTTOM'
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/TaxonomyNode'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaxonomyNode'
+        '400':
+          description: 'Request parameter {parameterName} contains unsupported value.'
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '404':
+          description: No taxonomy results found for the searched path
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '500':
+          description: Unexpected error. Please try again later.
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+  /path/nodes:
+    get:
+      tags:
+        - taxonomy
+      summary: >-
+        This service returns paginated taxonomy node list that have a
+        relationship with the queried taxonomy ID in a specific direction (TOP
+        or BOTTOM) and depth level.
+      description: ''
+      operationId: getTaxonomyPathNodes
+      parameters:
+        - name: id
+          in: query
+          description: ' Taxonomy element unique identification'
+          required: true
+          schema:
+            type: string
+        - name: depth
+          in: query
+          description: >-
+            Number of depth levels for taxonomy path, valid values between 1 and
+            5
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+        - name: direction
+          in: query
+          description: 'Direction for taxonomy path, valid values are TOP and BOTTOM'
+          required: true
+          schema:
+            type: string
+        - name: pageNumber
+          in: query
+          description: pageNumber is the current page number
+          required: false
+          schema:
+            type: string
+            default: '1'
+        - name: pageSize
+          in: query
+          description: >-
+            pageSize is the number of records returned in the request, max value
+            is 200
+          required: false
+          schema:
+            type: string
+            default: '100'
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/TaxonomyNode'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaxonomyNode'
+        '400':
+          description: 'Request parameter {parameterName} contains unsupported value.'
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '404':
+          description: No taxonomy results found for the searched path
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '500':
+          description: Unexpected error. Please try again later.
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+  /relationship:
+    get:
+      tags:
+        - taxonomy
+      summary: >-
+        This service returns the shortest path between two taxonomy nodes
+        showing their relationship.
+      description: ''
+      operationId: checkRelationshipBetweenTaxonomies
+      parameters:
+        - name: from
+          in: query
+          description: Initial taxonomy element unique identification for relationship
+          required: true
+          schema:
+            type: string
+        - name: to
+          in: query
+          description: Final taxonomy element unique identification for relationship
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/TaxonomyNode'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaxonomyNode'
+        '400':
+          description: 'Request parameter {parameterName} contains unsupported value.'
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '404':
+          description: No taxonomy results found for the searched relationship
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '500':
+          description: Unexpected error. Please try again later.
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+servers:
+  - url: 'https://www.ebi.ac.uk/proteins/api/taxonomy'
+components:
+  schemas:
+    TaxonomiesRedirect:
+      type: object
+      required:
+        - redirectLocation
+        - requestedId
+      properties:
+        requestedId:
+          type: integer
+          format: int64
+        redirectLocation:
+          type: string
+    Taxonomies:
+      type: object
+      properties:
+        pageInfo:
+          $ref: '#/components/schemas/PageInformation'
+        taxonomies:
+          type: array
+          xml:
+            name: taxonomy
+            wrapped: true
+          items:
+            $ref: '#/components/schemas/TaxonomyNode'
+        errors:
+          type: array
+          xml:
+            name: error
+            wrapped: true
+          items:
+            $ref: '#/components/schemas/TaxonomiesError'
+        redirects:
+          type: array
+          xml:
+            name: redirect
+            wrapped: true
+          items:
+            $ref: '#/components/schemas/TaxonomiesRedirect'
+    TaxonomiesError:
+      type: object
+      required:
+        - errorMessage
+        - requestedId
+      properties:
+        requestedId:
+          type: integer
+          format: int64
+        errorMessage:
+          type: string
+    PageInformation:
+      type: object
+      required:
+        - currentPage
+        - resultsPerPage
+        - totalRecords
+      properties:
+        resultsPerPage:
+          type: integer
+          format: int32
+        currentPage:
+          type: integer
+          format: int32
+        totalRecords:
+          type: integer
+          format: int32
+    ErrorMessage:
+      type: object
+      properties:
+        requestedURL:
+          type: string
+        errorMessage:
+          type: array
+          xml:
+            name: errorMessages
+            wrapped: true
+          items:
+            type: string
+    TaxonomyNode:
+      type: object
+      required:
+        - mnemonic
+        - taxonomyId
+      properties:
+        taxonomyId:
+          type: integer
+          format: int64
+        mnemonic:
+          type: string
+        scientificName:
+          type: string
+        commonName:
+          type: string
+        synonym:
+          type: string
+        rank:
+          type: string
+        superregnum:
+          type: string
+        parent:
+          $ref: '#/components/schemas/TaxonomyNode'
+        parentLink:
+          type: string
+        children:
+          type: array
+          xml:
+            name: child
+            wrapped: true
+          items:
+            $ref: '#/components/schemas/TaxonomyNode'
+        childrenLinks:
+          type: array
+          xml:
+            name: childLink
+            wrapped: true
+          items:
+            type: string
+        siblings:
+          type: array
+          xml:
+            name: sibling
+            wrapped: true
+          items:
+            $ref: '#/components/schemas/TaxonomyNode'
+        siblingsLinks:
+          type: array
+          xml:
+            name: siblingLinks
+            wrapped: true
+          items:
+            type: string
+
