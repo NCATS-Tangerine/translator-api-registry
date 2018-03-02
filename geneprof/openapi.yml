@@ -1,0 +1,47 @@
+openapi: '3.0.0'
+info:
+  version: '1.0'
+  title: Geneprof API
+  description: >-
+    The GeneProf Web Services enable programmatic access to the public data stored in GeneProf's databases via a simple web service API. 
+    GeneProf is a web-based data analysis for RNA-seq and ChIP-seq experiments that is coupled with a database of ready-analysed experiments. 
+  termsOfService: http://www.geneprof.org/GeneProf/terms_and_conditions.jsp
+  contact:
+    name: Simon Tomlinson
+    x-role: responsible developer
+    email: simon.tomlinson@ed.ac.uk
+    http://www.geneprof.org/GeneProf/api/gene.info/gp.id/human/C_NAME/CXCR4.json
+servers:
+  - url: 'http://www.geneprof.org/GeneProf/api/'
+    description: 'Production server'
+tags:
+  - name: drug
+  - name: gene
+  - name: disease
+  - name: translator
+paths:
+  '/gene.info/gp.id/human/C_NAME/{geneSymbol}.json':
+    get:
+      summary: 'return geneprof ID based on gene symbol'
+      parameters:
+        - name: geneSymbol
+          in: path
+          description: >-
+            Put hgnc symbol here, e.g. CXCR4
+          required: true
+          example: CXCR4
+          x-valueType:
+            - 'http://identifiers.org/hgnc.symbol/'
+          x-requestTemplate:
+            - valueType: 'http://identifiers.org/hgnc.symbol/'
+              template: /gene.info/gp.id/human/C_NAME/{geneSymbol}.json
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 'geneprof id'
+          x-responseValueType:
+            - path: ids
+              valueType: 'http://identifiers.org/geneprof/'
+          x-JSONLDContext:
+            'geneprof/jsonld_context/geneprof_symbol2geneprofid.json'
