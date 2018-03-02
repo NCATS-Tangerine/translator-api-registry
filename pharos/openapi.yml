@@ -1,0 +1,45 @@
+openapi: '3.0.0'
+info:
+  version: '1.0'
+  title: Pharos API
+  description: >-
+    Pharos presents the data from Target Central Resource Database (TCRD), which collates many heterogeneous gene/protein datasets.
+  termsOfService: https://pharos.nih.gov/idg/help
+  contact:
+    name: Dac-Trung Nguyen
+    x-role: responsible developer
+    email: pharos@mail.nih.gov
+servers:
+  - url: 'https://pharos.nih.gov/idg/api/v1'
+    description: 'Production server'
+tags:
+  - name: drug
+  - name: gene
+  - name: disease
+  - name: translator
+paths:
+  '/ligands/search':
+    get:
+      summary: 'return pharos ligand id based on drugname'
+      parameters:
+        - name: q
+          in: query
+          description: >-
+            Put drugname here, e.g. riluzole 
+          required: true
+          example: riluzole
+          x-valueType:
+            - 'http://biothings.io/terms/drugname/'
+          x-requestTemplate:
+            - valueType: 'http://biothings.io/terms/drugname/'
+              template: input_value
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 'A pharos ligand annotation object'
+          x-responseValueType:
+            - path: content.id
+              valueType: 'http://identifiers.org/pharos.ligand/'
+          x-JSONLDContext:
+            'pharos/jsonld_context/pharos_drugname2ligand.json'
