@@ -17,6 +17,58 @@ tags:
   - name: protein
   - name: bioassay
 paths:
+  '/comopund_record':
+    get:
+      summary: 'return chembl compound id corresponding to a drug name'
+      parameters:
+        - name: compound_name__iexact
+          in: query
+          description: >-
+            Put drugname here
+          required: true
+          example: riluzole
+          x-valueType:
+            - 'http://biothings.io/terms/drugname/'
+          x-requestTemplate:
+            - valueType: 'http://biothings.io/terms/drugname/'
+              template: input_value
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 'A query response object with "compound_records" property'
+          x-responseValueType:
+            - path: compound_records.molecule_chembl_id
+              valueType: 'http://identifiers.org/chembl.compound/'
+          x-JSONLDContext:
+            'ChEMBL/jsonld_context/chembl_drugname2chemblcompound_context.json'
+  '/target_prediction':
+    get:
+      summary: 'return predicted binding of a molecule to given biological target'
+      parameters:
+        - name: molecule_chembl_id__exact
+          in: query
+          description: >-
+            Put chembl compound id here
+          required: true
+          example: CHEMBL744
+          x-valueType:
+            - 'http://identifiers.org/chembl.compound/'
+          x-requestTemplate:
+            - valueType: 'http://identifiers.org/chembl.compound/'
+              template: input_value
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 'A query response object with "target_prediction" property'
+          x-responseValueType:
+            - path: target_prediction.target_chembl_id
+              valueType: 'http://identifiers.org/chembl.target/'
+            - path: target_prediction.target_accession
+              valueType: 'http://identifiers.org/uniprot/'
+          x-JSONLDContext:
+            'ChEMBL/jsonld_context/chembl_target_prediction_context.json'
   '/target':
     get:
       summary: 'return drugs related to a protein target'
