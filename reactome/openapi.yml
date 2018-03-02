@@ -1,0 +1,119 @@
+openapi: '3.0.0'
+info:
+  version: '1.0'
+  title: Reactome API
+  description: >-
+    RESTFul service for Reactome content。
+  termsOfService: https://reactome.org/ContentService/about/license-agreement
+  contact:
+    name: reactome
+    x-role: responsible developer
+    email: help@reactome.org
+servers:
+  - url: 'https://reactome.org/ContentService'
+    description: 'Production server'
+tags:
+  - name: pathway
+  - name: protein
+  - name: translator
+paths:
+  '/data/complexes/Uniprot/{uniprotId}':
+    get:
+      summary: 'Retrieves the list of complexes that contain a given uniprot id.'
+      parameters:
+        - name: uniprotId
+          in: path
+          description: >-
+            Put uniprot id here, e.g. P00533
+          required: true
+          example: P00533
+          x-valueType:
+            - 'http://identifiers.org/uniprot/'
+          x-requestTemplate:
+            - valueType: 'http://identifiers.org/uniprot/'
+              template: /data/complexes/UniProt/{uniprotId}
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 'List of reactome complexes'
+          x-responseValueType:
+            - path: data.stId
+              valueType: 'http://identifiers.org/reactome.complex/'
+          x-JSONLDContext:
+            'reactome/jsonld_context/uniprot2complex.json'
+  '/data/pathways/low/diagram/entity/{ReactomeComplexId}/allForms':
+    get:
+      summary: 'This method traverses the event hierarchy and retrieves the list of all lower level pathways that have a diagram and contain the given PhysicalEntity in any of its variant forms. These variant forms include for example different post-translationally modified versions of a single protein, or the same chemical in different compartments.'
+      parameters:
+        - name: ReactomeComplexId
+          in: path
+          description: >-
+            Put Reactome Complex id here, e.g. R-HSA-199420
+          required: true
+          example: R-HSA-199420
+          x-valueType:
+            - 'http://identifiers.org/reactome.complex/'
+          x-requestTemplate:
+            - valueType: 'http://identifiers.org/reactome.complex/'
+              template: /data/pathways/low/diagram/entity/{ReactomeComplexId}/allForms
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 'List of reactome pathways'
+          x-responseValueType:
+            - path: data.stId
+              valueType: 'http://identifiers.org/reactome.pathways/'
+          x-JSONLDContext:
+            'reactome/jsonld_context/complex2pathways.json'
+  '/data/participants/{ReactomePathwaysId}':
+    get:
+      summary: 'Participants contains a PhysicalEntity (dbId, displayName) and a collection of ReferenceEntities (dbId, name, identifier, url)'
+      parameters:
+        - name: ReactomePathwaysId
+          in: path
+          description: >-
+            Put Reactome Pathways id here, e.g. R-HSA-202403
+          required: true
+          example: R-HSA-202403
+          x-valueType:
+            - 'http://identifiers.org/reactome.pathways/'
+          x-requestTemplate:
+            - valueType: 'http://identifiers.org/reactome.pathways/'
+              template: /data/participants/{ReactomePathwaysId}
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 'List of uniprot Ids which participates in the pathways'
+          x-responseValueType:
+            - path: data.refEntities.identifier
+              valueType: 'http://identifiers.org/uniprot/'
+          x-JSONLDContext:
+            'reactome/jsonld_context/pathways2uniprot.json'
+  '/interactors/static/molecule/{uniprotId}/details':
+    get:
+      summary: 'Participants contains a PhysicalEntity (dbId, displayName) and a collection of ReferenceEntities (dbId, name, identifier, url)'
+      parameters:
+        - name: uniprotId
+          in: path
+          description: >-
+            Put uniprot id here, e.g. P61073
+          required: true
+          example: P61073
+          x-valueType:
+            - 'http://identifiers.org/uniprot/'
+          x-requestTemplate:
+            - valueType: 'http://identifiers.org/uniprot/'
+              template: /interactors/static/molecule/{uniprotId}/details
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 'List of uniprot Ids which interacts with the uniprot ID'
+          x-responseValueType:
+            - path: entities.interactors.acc
+              valueType: 'http://identifiers.org/uniprot/'
+          x-JSONLDContext:
+            'reactome/jsonld_context/reactome_interaction.json'
