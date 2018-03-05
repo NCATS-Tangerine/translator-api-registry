@@ -1,0 +1,234 @@
+openapi: 3.0.0
+servers:
+  - url: 'https://cmaq-dev.edc.renci.org/v1'
+info:
+  version: 1.0.0
+  title: CMAQ Exposure API
+  description: CMAQ Exposure API
+  termsOfService: None
+  contact:
+    name: Michael J. Stealey
+    url: 'https://github.com/renci/cmaq-exposure-api'
+    email: stealey@renci.org
+  license:
+    name: MIT
+    url: 'http://opensource.org/licenses/MIT'
+paths:
+  /variables:
+    get:
+      summary: CMAQ exposure variables
+      description: CMAQ exposure variables
+      parameters:
+        - $ref: '#/components/parameters/search'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  variables:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        variable:
+                          type: string
+                          example: o3
+                        description:
+                          type: string
+                          example: '1000.0*O3[1]'
+                        has_quality_metric:
+                          type: boolean
+                          example: true
+                        quality_metric:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              common_name:
+                                type: string
+                                example: root mean squared error
+                              variable:
+                                type: string
+                                example: rmse
+                        units:
+                          type: string
+                          example: ppbV
+                        common_name:
+                          type: string
+                          example: ozone
+                        utc_min_date_time:
+                          type: string
+                          format: date-time
+                          example: '2010-01-01 00:00:00'
+                        utc_max_date_time:
+                          type: string
+                          format: date-time
+                          example: '2010-12-31 23:00:00'
+                        resolution:
+                          type: array
+                          items:
+                            type: string
+                            example: hour;day;7day;14day
+                        aggregation:
+                          type: array
+                          items:
+                            type: string
+                            example: avg;max
+        '400':
+          description: Invalid parameter
+        '404':
+          description: No exposure types found
+        '500':
+          description: Server error
+  /values:
+    get:
+      summary: get values for exposure variable at location for date range
+      description: get values for exposure variable at location for date range
+      parameters:
+        - $ref: '#/components/parameters/variable'
+        - $ref: '#/components/parameters/start_date'
+        - $ref: '#/components/parameters/end_date'
+        - $ref: '#/components/parameters/lat_lon'
+        - $ref: '#/components/parameters/resolution'
+        - $ref: '#/components/parameters/aggregation'
+        - $ref: '#/components/parameters/utc_offset'
+        - $ref: '#/components/parameters/include_quality_metrics'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  values:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        variable:
+                          type: string
+                          example: o3
+                        lat_lon:
+                          type: string
+                          example: '35,-80'
+                        cmaq_output:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              date_time:
+                                type: string
+                                format: date-time
+                                example: '2010-01-01 00:00:00'
+                              value:
+                                type: number
+                                format: float
+                                example: 49.8195953369141
+                              quality_metric:
+                                type: object
+                                properties:
+                                  cor:
+                                    type: number
+                                    format: float
+                                    example: 0.54
+                                  mb:
+                                    type: number
+                                    format: float
+                                    example: 13.4852
+                                  mod_mean:
+                                    type: number
+                                    format: float
+                                    example: 31.6488
+                                  obs_mean:
+                                    type: number
+                                    format: float
+                                    example: 18.1636
+                                  rmse:
+                                    type: number
+                                    format: float
+                                    example: 18.7292
+        '400':
+          description: Invalid parameter
+        '404':
+          description: No values found
+        '500':
+          description: Server error
+components:
+  parameters:
+    search:
+      name: search
+      in: query
+      description: search for exposure variable like - default is empty
+      required: false
+      schema:
+        type: string
+    variable:
+      name: variable
+      in: query
+      description: cmaq variable - one or more seperated by ;
+      required: true
+      schema:
+        type: string
+    start_date:
+      name: start_date
+      in: query
+      description: start date of range
+      required: true
+      schema:
+        type: string
+        format: date
+    end_date:
+      name: end_date
+      in: query
+      description: end date of range
+      required: true
+      schema:
+        type: string
+        format: date
+    lat_lon:
+      name: lat_lon
+      in: query
+      description: 'latitude,longitude - one or more pairs seperated by ;'
+      required: true
+      schema:
+        type: string
+    resolution:
+      name: resolution
+      in: query
+      description: 'temporal resolution (hour, day, 7day, 14day) - default is day'
+      required: false
+      schema:
+        type: string
+        default: day
+    aggregation:
+      name: aggregation
+      in: query
+      description: 'numerical aggregation (max, avg) - default is max'
+      required: false
+      schema:
+        type: string
+        default: max
+    utc_offset:
+      name: utc_offset
+      in: query
+      description: >-
+        timezone offset from UTC (utc, eastern, central, mountain, pacific) -
+        default is utc
+      required: false
+      schema:
+        type: string
+        default: utc
+    include_quality_metrics:
+      name: include_quality_metrics
+      in: query
+      description: >-
+        if set to true, quality metrics, if available, will be returned with the
+        selected variables - default is false
+      required: false
+      schema:
+        type: boolean
+        default: false
