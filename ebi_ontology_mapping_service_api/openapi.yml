@@ -21,7 +21,7 @@ tags:
 paths:
   /mappings:
     get:
-      summary: 'Get direct xrefs between ontology terms. Xrefs are extracted from ontologies in the EBI Ontology Lookup Service.'
+	  summary: 'Get direct xrefs between ontology terms. Xrefs are extracted from ontologies in the EBI Ontology Lookup Service.'
       parameters:
         - name: fromId
           in: mappings
@@ -43,5 +43,38 @@ paths:
             - path: _embedded.mappings.sourcePrefix
               valueType: 'http://biothings.io/terms/ols/'
               description: 'The source that asserted the mapping'
-          x-JSONLDContext:
-            'https://raw.githubusercontent.com/NCATS-Tangerine/translator-api-registry/master/ebi_ontology_lookup_service_api/jsonld_context/ols_query_1.1.json'
+  /search:
+    post:
+      summary: 'Search xrefs between terms extracted from ontologies in the EBI Ontology Lookup Service. The search endpoint provides support for filtering results and getting multi-hop mappings'
+      consumes:
+        - application/json
+      parameters:
+        - in: body
+          name: ids
+          description: List of identifiers in compact URI format.
+          x-valueType:
+            - 'http://biothings.io/terms/ols/'
+          schema:
+            type: object
+            required:
+              - ids
+            properties:
+              ids:
+                type: array
+                items: string
+              mappingTarget:
+                type: array
+                items: string
+              distance:
+                type: integer
+      responses:
+        '200':
+          description: 'A collection of ontology mappings search results with provenance'
+          x-responseValueType:
+            - path: _embedded.searchResults.mappingResponseList.curie
+              valueType: 'http://biothings.io/terms/ols/'
+              description: 'The compact URI for the mapped term'
+          x-responseValueType:
+            - path: _embedded.searchResults.mappingResponseList.sourcePrefixes
+              valueType: 'http://biothings.io/terms/ols/'
+              description: 'The source that asserted the mapping'
