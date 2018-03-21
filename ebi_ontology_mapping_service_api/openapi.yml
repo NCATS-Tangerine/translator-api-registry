@@ -4,77 +4,67 @@ info:
   title: EBI OxO Service API
   description: >-
     OxO is a service for finding mappings (or cross-references) between terms from ontologies, vocabularies and coding standards. OxO imports mappings from a variety of sources including the Ontology Lookup Service and a subset of mappings provided by the UMLS.
-  termsOfService: https://www.ebi.ac.uk/spot/oxo/about
+  termsOfService: https://www.ebi.ac.uk/spot/oxo/docs/about
   contact:
-    name: Jupp S.
+    name: Simon Jupp
     x-role: responsible developer
-    email: ols-support@ebi.ac.uk
-    x-id: 'https://github.com/EBISPOT/OLS-mapping-service'
+    email: jupp@ebi.ac.uk
+    x-id: 'https://github.com/simonjupp'
 servers:
   - url: 'https://www.ebi.ac.uk/spot/oxo/api'
     description: 'Production server'
-tags:
-  - name: ontology
-  - name: query
-  - name: xrefs
-  - name: translator
 paths:
   /mappings:
     get:
+      tags:
+        - mapping
       summary: 'Get direct xrefs between ontology terms. Xrefs are extracted from ontologies in the EBI Ontology Lookup Service.'
       parameters:
         - name: fromId
-          in: mappings
+          in: query
           description: >-
-            The input terms for mappings. The format of the id can be either the full IRI or compact URI (e.g. DOID:162) for the term.
+            'The input terms for mappings. The format of the id can be either the full IRI or compact URI (e.g. DOID:162) for the term.'
           required: true
           x-valueType:
-            - 'http://biothings.io/terms/ols/'
+            - 'http://biothings.io/concepts/ontology_term/curie'
           schema:
             type: string
       responses:
         '200':
-          description: 'A collection of ontology mappings with provenance'
+          description: 'A query response object with "hits" property'
           x-responseValueType:
             - path: _embedded.mappings.toTerm.curie
-              valueType: 'http://biothings.io/terms/ols/'
+              valueType: 'http://biothings.io/concepts/ontology_term/curie'
               description: 'The compact URI for the mapped term'
-          x-responseValueType:
             - path: _embedded.mappings.sourcePrefix
-              valueType: 'http://biothings.io/terms/ols/'
+              valueType: 'http://biothings.io/concepts/ontology_term/curie'
               description: 'The source that asserted the mapping'
   /search:
     post:
       summary: 'Search xrefs between terms extracted from ontologies in the EBI Ontology Lookup Service. The search endpoint provides support for filtering results and getting multi-hop mappings'
-      consumes:
-        - application/json
-      parameters:
-        - in: body
-          name: ids
-          description: List of identifiers in compact URI format.
-          x-valueType:
-            - 'http://biothings.io/terms/ols/'
-          schema:
-            type: object
-            required:
-              - ids
-            properties:
-              ids:
-                type: array
-                items: string
-              mappingTarget:
-                type: array
-                items: string
-              distance:
-                type: integer
+      tags:
+        - search
+      requestBody:
+        content:
+          'application/json':
+            schema:
+             properties:
+                ids:
+                  description: 'List of identifiers in compact URI format.'
+                  type: array
+                mappingTarget:
+                  description: 'The target ontology or vocabulary e.g. MESH'
+                  type: array
+                distance:
+                  description: 'The number of mappings to hop through to find a mapping'
+                  type: integer
+                  default: 1
+             required:
+               - ids
       responses:
         '200':
           description: 'A collection of ontology mappings search results with provenance'
           x-responseValueType:
             - path: _embedded.searchResults.mappingResponseList.curie
-              valueType: 'http://biothings.io/terms/ols/'
+              valueType: 'http://biothings.io/concepts/ontology_term/curie'
               description: 'The compact URI for the mapped term'
-          x-responseValueType:
-            - path: _embedded.searchResults.mappingResponseList.sourcePrefixes
-              valueType: 'http://biothings.io/terms/ols/'
-              description: 'The source that asserted the mapping'
