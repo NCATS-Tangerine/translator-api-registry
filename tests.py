@@ -65,7 +65,7 @@ def get_api_metadata(metadata_src, as_string=False):
 
 
 def validate_api_metadata(metadata_src):
-    VALIDATE_API = 'http://smart-api.info/api/validate'
+    VALIDATE_API = 'https://smart-api.info/api/validate'
     metadata = get_api_metadata(metadata_src, as_string=True)
     if isinstance(metadata, dict) and metadata.get('success', None) is False:
         return metadata
