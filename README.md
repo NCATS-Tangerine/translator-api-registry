@@ -80,3 +80,9 @@ In general, we like to use the URIs from these repositories (also in that priori
   1. Identifiers.org
   2. purl.uniprot.org (?)
   3. [please add]
+
+
+## Know a knowledge source useful for Translator, but no API available?
+You can add a knowledge source (or datasets) to this [DATASET_LIST.yml](DATASET_LIST.yml) file. Follow the instruction and existing entries there.
+
+Translator team members monitor this list and can potentially build an API to serve that particulara knowledge source, so that it can be better integrated in the rest of Translator API ecosystem.
