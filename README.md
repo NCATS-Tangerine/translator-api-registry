@@ -11,6 +11,16 @@ This repo hosts the API metadata for the Translator project
 
 If you have the permission, commit your changes to this repo. Otherwise, feel free to submit a pull-request. Please check the "build status" badge above, and make sure it's green after your changes. We run some validation tests in this "[tests.py](tests.py)" for each commit. (Tip: you can run `python tests.py` locally from the root of this repo to make sure all tests pass before you commit your code.)
 
+### Specific notes for adding a [Reasoner API](https://github.com/NCATS-Tangerine/NCATS-ReasonerStdAPI)
+In addition to follow the above steps, we recommend to add these extra info into your Reasoner API metadata:
+
+    info:
+        x-reasoner_standard_version: 0.9
+    
+    tags:
+        name: translator
+        name: reasoner
+
 ## How to create your OpenAPI v3 metadata
 
 ### Starting from the scratch
@@ -70,3 +80,9 @@ In general, we like to use the URIs from these repositories (also in that priori
   1. Identifiers.org
   2. purl.uniprot.org (?)
   3. [please add]
+
+
+## Know a knowledge source useful for Translator, but no API available?
+You can add a knowledge source (or datasets) to this [DATASET_LIST.yml](DATASET_LIST.yml) file. Follow the instruction and existing entries there.
+
+Translator team members monitor this list and can potentially build an API to serve that particulara knowledge source, so that it can be better integrated in the rest of Translator API ecosystem.
