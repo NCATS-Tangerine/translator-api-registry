@@ -1,4 +1,76 @@
 openapi: 3.0.1
+info:
+  contact:
+    email: patrick@covar.com
+    name: Patrick Wang
+    url: robokop.renci.org
+  description: An API for answering biomedical questions
+  termsOfService: https://robokop.renci.org/termsofservice/
+  title: ROBOKOP Ranker
+  version: 0.0.1
+  x-reasoner_standard_version: 0.9.1
+tags:
+  - name: "0.9.2"
+  - name: translator
+  - name: reasoner
+paths:
+  /query/:
+    post:
+      parameters:
+        - description: Maximum number of results to return. Provide -1 to indicate no maximum.
+          in: query
+          name: max_results
+          schema:
+            type: integer
+            default: -1
+        - description: 'Requested output format. DENSE, MESSAGE, CSV or ANSWERS'
+          in: query
+          name: output_format
+          schema:
+            type: string
+            default: MESSAGE
+        - description: 'Max connectivity of nodes considered in the answers, Use -1 for no restriction'
+          in: query
+          name: max_connectivity
+          schema:
+            type: integer
+            default: -1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Query'
+            example:
+              message:
+                  query_graph:
+                      nodes:
+                        - id: "n00"
+                          type: "disease"
+                          curie: "MONDO:0005737"
+                        - id: "n01"
+                          type: "gene"
+                          set: true
+                        - id: "n02"
+                          type: genetic_condition
+                      edges:
+                        - id: "e00"
+                          source_id: "n00"
+                          target_id: "n01"
+                        - id: "e01"
+                          source_id: "n01"
+                          target_id: "n02"
+        description: A message with question graph.
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+          description: A message with knowledge graph and answers.
+      summary: Get answers to a question
+      tags:
+        - "0.9.2"
 servers:
   - url: https://robokop.renci.org/ranker/api/
 components:
@@ -272,75 +344,3 @@ components:
         description: Biolink model relations
         url: https://biolink.github.io/biolink-model/docs/related_to.html
       example: affects
-info:
-  contact:
-    email: patrick@covar.com
-    name: Patrick Wang
-    url: robokop.renci.org
-  description: An API for answering biomedical questions
-  termsOfService: https://robokop.renci.org/termsofservice/
-  title: ROBOKOP Ranker
-  version: 0.0.1
-  x-reasoner_standard_version: 0.9.1
-tags:
-  - name: "0.9.2"
-  - name: translator
-  - name: reasoner
-paths:
-  /query/:
-    post:
-      parameters:
-        - description: Maximum number of results to return. Provide -1 to indicate no maximum.
-          in: query
-          name: max_results
-          schema:
-            type: integer
-            default: -1
-        - description: 'Requested output format. DENSE, MESSAGE, CSV or ANSWERS'
-          in: query
-          name: output_format
-          schema:
-            type: string
-            default: MESSAGE
-        - description: 'Max connectivity of nodes considered in the answers, Use -1 for no restriction'
-          in: query
-          name: max_connectivity
-          schema:
-            type: integer
-            default: -1
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Query'
-            example:
-              message:
-                  query_graph:
-                      nodes:
-                        - id: "n00"
-                          type: "disease"
-                          curie: "MONDO:0005737"
-                        - id: "n01"
-                          type: "gene"
-                          set: true
-                        - id: "n02"
-                          type: genetic_condition
-                      edges:
-                        - id: "e00"
-                          source_id: "n00"
-                          target_id: "n01"
-                        - id: "e01"
-                          source_id: "n01"
-                          target_id: "n02"
-        description: A message with question graph.
-        required: true
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Message'
-          description: A message with knowledge graph and answers.
-      summary: Get answers to a question
-      tags:
-        - "0.9.2"
