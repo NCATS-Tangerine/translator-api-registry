@@ -1,6 +1,39 @@
 openapi: 3.0.1
 servers:
-  - url: "http://robokop.renci.org:6011/api/"
+  - url: "http://rtx.ncats.io/beta/api/rtx/v1"
+info:
+  contact:
+    email: edeutsch@systemsbiology.org
+    url: https://systemsbiology.org/bio/eric-deutsch-phd/
+  description: An API for answering biomedical questions
+  termsOfService: http://rtx.ncats.io/termsOfService.html
+  title: RTX Reasoner
+  version: 0.5.4
+tags:
+  - name: "0.9.1"
+  - name: translator
+paths:
+  /query:
+    post:
+      summary: Get answers to a question
+      requestBody:
+        description: Query instructions or other input data to trigger an operation
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Query'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+          description: A message with knowledge graph and answers.
+        '400':
+          description: Invalid status value
+      tags:
+        - "0.9.1"
 components:
   schemas:
     Query:
@@ -63,11 +96,11 @@ components:
                 source_id: n00
                 target_id: n01
             nodes:
-              - curie: 'MONDO:0005737'
+              - curie: 'DOID:12365'
                 node_id: n00
                 type: disease
               - node_id: n01
-                type: gene
+                type: protein
     PreviousMessageProcessingPlan:
       type: object
       properties:
@@ -643,55 +676,3 @@ components:
           example: 'https://www.ncbi.nlm.nih.gov/pubmed/29309293'
           description: A URL corresponding to this attribute
       additionalProperties: true
-info:
-  contact:
-    email: patrick@covar.com
-    url: www.covar.com
-  description: An API for answering biomedical questions
-  termsOfService: <url>
-  title: ROBOKOP Ranker
-  version: 0.0.1
-  x-reasoner_standard_version: 0.9.1
-tags:
-  - name: "0.9.1"
-  - name: translator
-  - name: reasoner
-paths:
-  /query:
-    post:
-      parameters:
-        - description: Maximum number of results to return. Provide -1 to indicate no maximum.
-          in: query
-          name: max_results
-          schema:
-            type: integer
-            default: 250
-        - description: 'Requested output format. DENSE, MESSAGE, CSV or ANSWERS'
-          in: query
-          name: output_format
-          schema:
-            type: string
-            default: MESSAGE
-        - description: 'Max connectivity of nodes considered in the answers, Use 0 for no restriction'
-          in: query
-          name: max_connectivity
-          schema:
-            type: integer
-            default: 0
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Query'
-        description: A message with question graph.
-        required: true
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Message'
-          description: A message with knowledge graph and answers.
-      summary: Get answers to a question
-      tags:
-        - "0.9.1"
