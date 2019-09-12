@@ -1,0 +1,1798 @@
+openapi: 3.0.0
+servers:
+  - url: 'http://cohd.io/api/'
+info:
+  description: |
+    The Columbia Open Health Data (COHD) API provides access to counts and frequencies (i.e., EHR prevalence) of conditions, procedures, drug exposures, and patient demographics, and the co-occurrence frequencies between them. Count and frequency data were derived from the [Columbia University Medical Center's](http://www.cumc.columbia.edu/) [OHDSI](https://www.ohdsi.org/) database including inpatient and outpatient data. Counts are the number of patients associated with the concept, e.g., diagnosed with a condition, exposed to a drug, or who had a procedure. Frequencies are the number of unique patients associated with the concept divided by the total number of patients in the dataset, i.e., prevalence in the electronic health records. To protect patient privacy, all concepts and pairs of concepts where the count <= 10 were excluded, and counts were randomized by the Poisson distribution. 
+    
+    A beta release of the 5-year hierarchical data set is now available. In this data, the counts for each concept include the patients from all descendant concepts. For example, the count for ibuprofen (ID 1177480) includes patients with Ibuprofen 600 MG Oral Tablet (ID 19019073 patients), Ibuprofen 400 MG Oral Tablet (ID 19019072), Ibuprofen 20 MG/ML Oral Suspension (ID 19019050), etc. 
+    
+    Two datasets are available: 
+    1) 5-year non-hierarchical dataset: Includes clinical data from 2013-2017  
+    2) lifetime non-hierarchical dataset: Includes clinical data from all dates  
+    3) BETA! 5-year hierarchical dataset: Counts for each concept include patients from descendant concepts. Includes clinical data from 2013-2017.
+    
+    While the lifetime dataset captures a larger patient population and range of concepts, the 5-year dataset has better underlying data consistency. 
+    
+    Clinical concepts (e.g., conditions, procedures, drugs) are coded by their standard concept ID in the [OMOP Common Data Model](https://github.com/OHDSI/CommonDataModel/wiki). API methods are provided to map to/from other vocabularies supported in OMOP and other ontologies using the EMBL-EBI Ontology Xref Service (OxO). 
+
+
+    The following resources are available through this API: 
+
+
+    1. Metadata: Metadata on the COHD database, including dataset descriptions, number of concepts, etc. 
+
+
+    2. OMOP: Access to the common vocabulary for name and concept identifier mapping
+
+
+    3. Clinical Frequencies: Access to the counts and frequencies of conditions, procedures, and drug exposures, and the associations between them. Frequency was determined as the number of patients with the code(s) / total number of patients. 
+
+
+    4. Concept Associations: Inferred associations between concepts using chi-square analysis, ratio between observed to expected frequency, and relative frequency. 
+    
+    
+    A [Python notebook](https://github.com/WengLab-InformaticsResearch/cohd_api/blob/master/notebooks/COHD_API_Example.ipynb) demonstrates simple examples of how to use the COHD API.
+
+
+    COHD was developed at the [Columbia University Department of Biomedical Informatics](https://www.dbmi.columbia.edu/) as a collaboration between the [Weng Lab](http://people.dbmi.columbia.edu/~chw7007/), [Tatonetti Lab](http://tatonettilab.org/), and the [NCATS Biomedical Data Translator](https://ncats.nih.gov/translator) program (Red Team). This work was supported in part by grants: NCATS OT3TR002027, NLM R01LM009886-08A1, and NIGMS R01GM107145.
+    
+    The following external resources may be useful:  
+    [OHDSI](https://www.ohdsi.org/)  
+    [OMOP Common Data Model](https://github.com/OHDSI/CommonDataModel/wiki)  
+    [Athena](http://athena.ohdsi.org) (OMOP vocabularies, search, concept relationships, concept hierarchy)  
+    [Atlas](http://www.ohdsi.org/web/atlas/) (OMOP vocabularies, search, concept relationships, concept hierarchy, concept sets)      
+  version: 2.2.0
+  termsOfService: 'http://cohd.nsides.io/terms/'
+  title: Columbia Open Health Data (COHD)
+  contact:
+    name: Nicholas Tatonetti
+    email: nick.tatonetti@columbia.edu
+    x-role: responsible developer
+    url: 'http://tatonettilab.org/'
+  license:
+    name: Apache 2.0
+    url: 'http://www.apache.org/licenses/LICENSE-2.0.html'
+  x-accessRestriction: none
+  x-implementationLanguage: Python
+tags:
+  - name: Metadata
+    description: COHD metadata
+  - name: OMOP
+    description: OMOP Common Data Model concepts
+  - name: Clinical Frequencies
+    description: Clinical frequency data
+  - name: Concept Associations
+    description: Estimated association between concepts
+x-externalResources:
+  - x-url: 'https://www.dbmi.columbia.edu/'
+    x-type: website
+    x-description: "Department of Biomedical Informatics, Columbia University"
+  - x-url: 'https://www.ohdsi.org/'
+    x-type: website
+    x-description: "Observational Health Data Sciences and Informatics"
+  - x-url: 'https://github.com/OHDSI/CommonDataModel/wiki'
+    x-type: website
+    x-description: "OMOP CDM"
+paths:
+  /metadata/datasets:
+    get:
+      tags:
+        - Metadata
+      summary: Enumerates the datasets available in COHD
+      description: 'Returns a list of datasets, including dataset ID, name, and description.'
+      operationId: datasets
+      responses:
+        default:
+          description: Unexpected error
+        '200':
+          description: An array of dataset descriptions.
+          content: 
+            application/json: 
+              schema:
+                type: object
+                properties:
+                  results:
+                    type: array
+                    items: 
+                      type: object
+                      properties:
+                        dataset_name:
+                          type: string
+                          example: '5-year non-hierarchical'                      
+                        dataset_id:
+                          type: integer
+                          example: 1
+                        dataset_description: 
+                          type: string
+                          example: '5-year non-hierarchical dataset: Includes clinical data from 2013-2017'
+  /metadata/domainCounts:
+    get:
+      tags:
+        - Metadata
+      summary: The number of concepts in each domain
+      description: Returns a list of domains and the number of concepts in each domain.
+      parameters:
+        - name: dataset_id
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: >-
+            The dataset_id of the dataset to query. Default dataset is the 5-year dataset.
+          example: 1
+      operationId: domainCounts
+      responses:
+        default:
+          description: Unexpected error
+        '200':
+          description: An array of domain counts.
+          content: 
+            application/json: 
+              schema:
+                type: object
+                properties:
+                  results:
+                    type: array
+                    items: 
+                      type: object
+                      properties:
+                        dataset_id:
+                          type: integer
+                          example: 1
+                        domain_id: 
+                          type: string
+                          example: 'Condition'
+                        count:
+                          type: integer
+                          example: 1000  
+  /metadata/domainPairCounts:
+    get:
+      tags:
+        - Metadata
+      summary: The number of pairs of concepts in each pair of domains
+      description: >-
+        Returns a list of pairs of domains and the number of pairs of concepts in each.
+      parameters:
+        - name: dataset_id
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: >-
+            The dataset_id of the dataset to query. Default dataset is the 5-year dataset.
+          example: 1
+      operationId: domainPairCounts
+      responses:
+        default:
+          description: Unexpected error
+        '200':
+          description: An array of domain pair counts.
+          content: 
+            application/json: 
+              schema:
+                type: object
+                properties:
+                  results:
+                    type: array
+                    items: 
+                      type: object
+                      properties:
+                        dataset_id:
+                          type: integer
+                          example: 1
+                        domain_id_1: 
+                          type: string
+                          example: 'Condition'
+                        domain_id_2: 
+                          type: string
+                          example: 'Drug'
+                        count:
+                          type: integer
+                          example: 1000  
+  /metadata/patientCount:
+    get:
+      tags:
+        - Metadata
+      summary: The number of patients in the dataset
+      description: Returns the number of patients in the dataset.
+      parameters:
+        - name: dataset_id
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: >-
+            The dataset_id of the dataset to query. Default dataset is the 5-year dataset.
+          example: 1
+      operationId: patientCount
+      responses:
+        default:
+          description: Unexpected error
+        '200':
+          description: An array of patient counts.
+          content: 
+            application/json: 
+              schema:
+                type: object
+                properties:
+                  results:
+                    type: array
+                    items: 
+                      type: object
+                      properties:
+                        dataset_id:
+                          type: integer
+                          example: 1
+                        count:
+                          type: integer
+                          example: 100000  
+  /omop/concepts:
+    get:
+      tags:
+        - OMOP
+      summary: Concept definitions from concept ID
+      description: >-
+        Returns the OMOP concept names and domains for the given list of concept IDs.
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+          description: >-
+            A comma separated list of OMOP concept ids, e.g., "192855" or "192855,2008271"
+          example: '192855,2008271'
+      operationId: concepts
+      responses:
+        default:
+          description: Unexpected error
+        '200':
+          description: An array of concepts.
+          content: 
+            application/json: 
+              schema:
+                type: object
+                properties:
+                  results:
+                    type: array
+                    items: 
+                      type: object
+                      properties:
+                        concept_id:
+                          type: integer
+                          example: 192855
+                        concept_name:
+                          type: string
+                          example: "Cancer in situ of urinary bladder"
+                        domain_id:
+                          type: string
+                          example: "Condition"
+                        vocabulary_id:
+                          type: string
+                          example: "SNOMED"
+                        concept_class_id:
+                          type: string
+                          example: "Clinical Finding"
+                        concept_code:
+                          type: string
+                          example: "92546004"                          
+  /omop/findConceptIDs:
+    get:
+      tags:
+        - OMOP
+      summary: Search for OMOP concepts by name and domain
+      description: >-
+        Searches the OMOP concept table for concept names similar to the query. Returns a list of concepts, including their names and IDs, sorted in decreasing order by the concept's prevalence. 
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+          description: 'The name of the concept to search for, e.g., "cancer" or "ibuprofen"'
+          example: cancer
+        - name: dataset_id
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: 'The dataset to reference when sorting concepts by their frequency. Default: 5-year dataset.'
+          example: 1
+        - name: domain
+          in: query
+          required: false
+          schema:
+            type: string
+          description: 'The domain (e.g., "Condition", "Drug", "Procedure") to restrict the search to. If not specified, the search will be unrestricted. See /metadata/domainCounts for a list of valid domain IDs.'
+          example: 'Condition'
+        - name: min_count
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: 'The minimum concept count (inclusive) to include a concept in the search results. Setting the min_count to 0 will cause findConceptIDs to return all matching standard OMOP concepts (this can be slow). Setting the min_count to 1 will cause findConceptIDs to only return concepts with count data (much faster). Default: 1.'
+          example: 1
+      operationId: findConceptIDs
+      responses:
+        default:
+          description: Unexpected error
+        '200':
+          description: An array of concepts.
+          content: 
+            application/json: 
+              schema:
+                type: object
+                properties:
+                  results:
+                    type: array
+                    items: 
+                      type: object
+                      properties:
+                        concept_class_id: 
+                          type: string
+                          example: "Clinical Finding"
+                        concept_code: 
+                          type: string
+                          example: "92546004"
+                        concept_count: 
+                          type: integer
+                          example: 368
+                        concept_id: 
+                          type: integer
+                          example: 192855
+                        concept_name: 
+                          type: string
+                          example: "Cancer in situ of urinary bladder"
+                        domain_id: 
+                          type: string
+                          example: "Condition"
+                        vocabulary_id: 
+                          type: string
+                          example: "SNOMED"
+  /omop/conceptAncestors:
+    get:
+      tags:
+        - OMOP
+      summary: Retrieve the concept's hierarchical ancestors
+      description: >-
+        Retrieves the given concept's hierarchical ancestors and their counts. The hierarchical definitions were derived from the OMOP concept_ancestor table. For more information, see the documentation on OMOP's concept_ancestor table on [ohdsi.org](http://www.ohdsi.org/web/wiki/doku.php?id=documentation:cdm:concept_ancestor) and [GitHub](https://github.com/OHDSI/CommonDataModel/wiki/CONCEPT_ANCESTOR).
+      parameters:
+        - name: concept_id
+          in: query
+          required: true
+          schema:
+            type: integer
+          description: 'An OMOP concept ID, e.g., 19019073'
+          example: 19019073
+        - name: vocabulary_id
+          in: query
+          required: false
+          schema:
+            type: string
+          description: 'The vocabulary_id to restrict ancestors to. For conditions, SNOMED and MedDRA are used. For drugs, RxNorm (only and ATC are used. For procedures, SNOMED, MedDRA, and ICD10PCS are used. Default: unrestricted'
+          example: 'RxNorm'
+        - name: concept_class_id
+          in: query
+          required: false
+          schema:
+            type: string
+          description: 'The concept_class_id to restrict ancestors to. Only certain hierarchical concept_class_ids are used in each vocabuarly: [ATC](https://en.wikipedia.org/wiki/Anatomical_Therapeutic_Chemical_Classification_System) {ATC 1st, ATC 2nd, ATC 3rd, ATC 4th, ATC 5th}; [MedDRA](https://en.wikipedia.org/wiki/MedDRA) {PT, HLT, HLGT, SOC}; [RxNorm](https://www.nlm.nih.gov/research/umls/rxnorm/docs/2015/appendix5.html) {Ingredient, Clinical Drug Form, Clinical Drug Comp, Clinical Drug}. Default: unrestricted'
+          example: 'Ingredient'
+        - name: dataset_id
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: 'The dataset_id to retrieve counts from. Default: 3 (5-year hierarchical data set)'
+          example: 3
+      operationId: conceptAncestors
+      responses:
+        default:
+          description: Unexpected error
+        '200':
+          description: An array of concepts.
+          content: 
+            application/json: 
+              schema:
+                type: object
+                properties:
+                  results:
+                    type: array
+                    items: 
+                      type: object
+                      properties:   
+                        ancestor_concept_id: 
+                          type: integer
+                          example: 1177480
+                        concept_class_id: 
+                          type: string
+                          example: "Ingredient"
+                        concept_code:  
+                          type: string
+                          example: "5640"
+                        concept_count: 
+                          type: integer
+                          example: 233514
+                        concept_name: 
+                          type: string
+                          example: "Ibuprofen"
+                        domain_id: 
+                          type: string
+                          example: "Drug"
+                        max_levels_of_separation: 
+                          type: integer
+                          example: 2
+                        min_levels_of_separation: 
+                          type: integer
+                          example: 2
+                        standard_concept: 
+                          type: string
+                          example: "S"
+                        vocabulary_id: 
+                          type: string
+                          example: "RxNorm"
+  /omop/conceptDescendants:
+    get:
+      tags:
+        - OMOP
+      summary: Retrieve the concept's hierarchical descendants
+      description: >-
+        Retrieves the given concept's hierarchical descendants and their counts. The hierarchical definitions were derived from the OMOP concept_ancestor table. See the documentation on OMOP's concept_ancestor table on [ohdsi.org](http://www.ohdsi.org/web/wiki/doku.php?id=documentation:cdm:concept_ancestor) and [GitHub](https://github.com/OHDSI/CommonDataModel/wiki/CONCEPT_ANCESTOR).
+      parameters:
+        - name: concept_id
+          in: query
+          required: true
+          schema:
+            type: integer
+          description: 'An OMOP concept ID, e.g., 313217'
+          example: 313217
+        - name: vocabulary_id
+          in: query
+          required: false
+          schema:
+            type: string
+          description: 'The vocabulary_id to restrict ancestors to. For conditions, SNOMED and MedDRA are used. For drugs, RxNorm and ATC are used. For procedures, SNOMED, MedDRA, and ICD10PCS are used. Default: unrestricted'
+          example: 
+        - name: concept_class_id
+          in: query
+          required: false
+          schema:
+            type: string
+          description: 'The concept_class_id to restrict ancestors to. Only certain hierarchical concept_class_ids are used in each vocabuarly: [ATC](https://en.wikipedia.org/wiki/Anatomical_Therapeutic_Chemical_Classification_System) {ATC 1st, ATC 2nd, ATC 3rd, ATC 4th, ATC 5th}; [MedDRA](https://en.wikipedia.org/wiki/MedDRA) {PT, HLT, HLGT, SOC}; [RxNorm](https://www.nlm.nih.gov/research/umls/rxnorm/docs/2015/appendix5.html) {Ingredient, Clinical Drug Form, Clinical Drug Comp, Clinical Drug}. Default: unrestricted'
+          example: 
+        - name: dataset_id
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: 'The dataset_id to retrieve counts from. Default: 3 (5-year hierarchical data set)'
+          example: 3   
+      operationId: conceptDescendants
+      responses:
+        default:
+          description: Unexpected error
+        '200':
+          description: An array of concepts.
+          content: 
+            application/json: 
+              schema:
+                type: object
+                properties:
+                  results:
+                    type: array
+                    items: 
+                      type: object
+                      properties:       
+                        concept_class_id: 
+                          type: string
+                          example: "Clinical Finding"
+                        concept_code:  
+                          type: string
+                          example: "49436004"
+                        concept_count:  
+                          type: integer
+                          example: 53272
+                        concept_name:  
+                          type: string
+                          example: "Atrial fibrillation"
+                        descendant_concept_id:   
+                          type: integer
+                          example: 313217
+                        domain_id:  
+                          type: string
+                          example: "Condition"
+                        max_levels_of_separation:   
+                          type: integer
+                          example: 0
+                        min_levels_of_separation:   
+                          type: integer
+                          example: 0
+                        standard_concept:  
+                          type: string
+                          example: "S"
+                        vocabulary_id:  
+                          type: string
+                          example: "SNOMED"                      
+  /omop/mapToStandardConceptID:
+    get:
+      tags:
+        - OMOP
+      summary: Map from a non-standard concept code to a standard OMOP concept ID
+      description: >-
+        Uses the OMOP concept_relationship table to map from a non-standard concept code (e.g., ICD9CM 715.3) to a standard OMOP concept ID (e.g., 72990). This method may return multiple results if vocabulary_id is not specified and the concept_code is not unique across vocabularies. If both concept_code and vocabulary_id are specified, then 1 result will be returned at most. 
+      parameters:
+        - name: concept_code
+          in: query
+          required: true
+          schema:
+            type: string
+          description: 'The concept code to map from, e.g., 715.3'
+          example: '715.3'
+        - name: vocabulary_id
+          in: query
+          required: false
+          schema:
+            type: string
+          description: >-
+            The vocabulary (e.g., "ICD9CM") that the concept code belongs to. If this parameter is not specified, the method will return mappings from any source vocabulary with matching concept code. See /omop/vocabularies for the list of supported vocabularies.
+          example: ICD9CM
+      operationId: mapToStandardConceptID
+      responses:
+        default:
+          description: Unexpected error
+        '200':
+          description: An array of concepts.
+          content: 
+            application/json: 
+              schema:
+                type: object
+                properties:
+                  results:
+                    type: array
+                    items: 
+                      type: object
+                      properties:      
+                        source_concept_code: 
+                          type: string
+                          example: "715.3"
+                        source_concept_id:   
+                          type: integer
+                          example: 44834979
+                        source_concept_name:  
+                          type: string
+                          example: "Osteoarthrosis, localized, not specified whether primary or secondary"
+                        source_vocabulary_id:  
+                          type: string
+                          example: "ICD9CM"
+                        standard_concept_id:  
+                          type: integer
+                          example: 72990
+                        standard_concept_name:  
+                          type: string
+                          example: "Localized osteoarthrosis uncertain if primary OR secondary"
+                        standard_domain_id:  
+                          type: string
+                          example: "Condition"                      
+  /omop/mapFromStandardConceptID:
+    get:
+      tags:
+        - OMOP
+      summary: >-
+        Map from a standard concept ID to concept code(s) in an external vocabulary
+      description: >-
+        Uses the OMOP concept_relationship table to map from a standard concept ID (e.g., 72990) to concept code(s) (e.g., ICD9CM 715.3, 715.31, 715.32, etc.). An OMOP standard concept ID may map to many concepts in the external vocabulary.
+      parameters:
+        - name: concept_id
+          in: query
+          required: true
+          schema:
+            type: integer
+          description: 'The standard OMOP concept id to map from, e.g., 72990'
+          example: 72990
+        - name: vocabulary_id
+          in: query
+          required: false
+          schema:
+            type: string
+          description: >-
+            The vocabulary (e.g., "ICD9CM") to map to. If this parameter is not specified, the method will return mappings to any matching vocabularies. See /omop/vocabularies for the list of supported vocabularies.
+          example: ICD9CM
+      operationId: mapFromStandardConceptID
+      responses:
+        default:
+          description: Unexpected error
+        '200':
+          description: An array of concepts.
+          content: 
+            application/json: 
+              schema:
+                type: object
+                properties:
+                  results:
+                    type: array
+                    items: 
+                      type: object
+                      properties:      
+                        concept_class_id: 
+                          type: string
+                          example: "4-dig nonbill code"
+                        concept_code: 
+                          type: string
+                          example: "715.3"
+                        concept_id: 
+                          type: integer
+                          example: 44834979
+                        concept_name: 
+                          type: string
+                          example: "Osteoarthrosis, localized, not specified whether primary or secondary"
+                        domain_id: 
+                          type: string
+                          example: "Condition"
+                        standard_concept: 
+                          type: string
+                          example: null
+                        vocabulary_id: 
+                          type: string
+                          example: "ICD9CM"                      
+  /omop/vocabularies:
+    get:
+      tags:
+        - OMOP
+      summary: List of vocabularies
+      description: >-
+        List of vocabulary_ids. Useful if you need to use /omop/mapToStandardConceptID to map a concept code from a source vocabulary to the OMOP standard vocabulary.
+      operationId: vocabularies
+      responses:
+        default:
+          description: Unexpected error
+        '200':
+          description: An array of vocabularies.
+          content: 
+            application/json: 
+              schema:
+                type: object
+                properties:
+                  results:
+                    type: array
+                    items: 
+                      type: object
+                      properties:      
+                        vocabulary_id: 
+                          type: string
+                          example: "SNOMED"
+  /omop/xrefToOMOP:
+    get:
+      tags:
+        - OMOP
+      summary: Cross-reference from an ontology to OMOP standard concepts using the Ontology Xref Service
+      description: >-
+        Attempts to map a concept from an external ontology to an OMOP standard concept ID using the EMBL-EBI Ontology Xref Service (OxO): https://www.ebi.ac.uk/spot/oxo/index. This method attempts to use OxO to map from the original ontology to an intermediate ontology that is included in OMOP (ICD9CM, ICD10CM, SNOMEDCT, and MeSH), then uses the OMOP mappings to the standard concepts. Multiple mappings may be returned. Results are sorted by total_distance (OxO distance + OMOP distance) in ascending order.
+      parameters:
+        - name: curie
+          in: query
+          required: true
+          schema:
+            type: string
+          description: 'Compact URI (CURIE) of the concept to map, e.g., DOID:8398'
+          example: 'DOID:8398'
+        - name: distance
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: >-
+            Mapping distance for OxO. Note: this is the distance used in the OxO API to map from the original concept to an ICD9CM, ICD10CM, SNOMEDCT, or MeSH concept. One additional step may be taken by the COHD API to map to the OMOP standard concept. Default: 2.
+          example: 2
+        - name: local
+          in: query
+          required: false
+          schema:
+            type: boolean
+          description: >-
+            COHD can either call the OxO API or use the local implementation of OxO. The full call to the OxO API will have the most updated mappings and term definitions, but is slower. The local implementation of OxO is faster but may contain outdated mappings and term definitions. If the parameter is false, COHD will call the full OxO API. If the parameter is true, COHD will use the local implementation.  Default: false.
+          example: false
+        - name: recommend
+          in: query
+          required: false
+          schema:
+            type: boolean
+          description: >-
+            By default (false), COHD returns all mappings found. If true, COHD will recommend a mapping based on path distances. Default: false.
+          example: false
+      operationId: xrefToOMOP
+      responses:
+        default:
+          description: Unexpected error
+        '200':
+          description: An array of mappings from external concepts to OMOP concepts.
+          content: 
+            application/json: 
+              schema:
+                type: object
+                properties:
+                  results:
+                    type: array
+                    items: 
+                      type: object
+                      properties:      
+                        intermediate_oxo_id: 
+                          type: string
+                          example: "ICD9CM:715.3"
+                        intermediate_oxo_label: 
+                          type: string
+                          example: ""
+                        omop_concept_name: 
+                          type: string
+                          example: "Localized osteoarthrosis uncertain if primary OR secondary"
+                        omop_distance: 
+                          type: integer
+                          example: 1
+                        omop_domain_id: 
+                          type: string
+                          example: "Condition"
+                        omop_standard_concept_id: 
+                          type: integer
+                          example: 72990
+                        oxo_distance: 
+                          type: integer
+                          example: 1
+                        source_oxo_id: 
+                          type: string
+                          example: "DOID:8398"
+                        source_oxo_label: 
+                          type: string
+                          example: "osteoarthritis"
+                        total_distance: 
+                          type: integer
+                          example: 2
+  /omop/xrefFromOMOP:
+    get:
+      tags:
+        - OMOP
+      summary: Cross-reference from an ontology to OMOP standard concepts using the Ontology Xref Service
+      description: >-
+        Attempts to map a concept from an external ontology to an OMOP standard concept ID using the EMBL-EBI Ontology Xref Service (OxO): https://www.ebi.ac.uk/spot/oxo/index. This method maps from the OMOP standard concept to an intermediate vocabulary included is OxO (ICD9CM, ICD10CM, SNOMEDCT, and MeSH), then uses the OxO API to map to other ontologies. Multiple mappings may be returned. Results are sorted by total_distance (OxO distance + OMOP distance) in ascending order.
+      parameters:
+        - name: concept_id
+          in: query
+          required: true
+          schema:
+            type: integer
+          description: 'OMOP standard concept_id to map, e.g., 192855'
+          example: 192855
+        - name: mapping_targets
+          in: query
+          required: false
+          schema:
+            type: string 
+          description: 'Target ontologies for OxO. Comma separated target prefixes, e.g., "DOID,UMLS"'
+          example: 'UMLS'
+        - name: distance
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: >-
+            Mapping distance for OxO. Note: this is the distance used in the OxO API to map from an ICD9CM, ICD10CM, SNOMEDCT, or MeSH concept to the desired ontology. One additional step may be taken by the COHD API to map to the OMOP standard concept to ICD9CM, ICD10CM, SNOMEDCT, or
+            MeSH. Default: 2.
+          example: 2
+        - name: local
+          in: query
+          required: false
+          schema:
+            type: boolean
+          description: >-
+            COHD can either call the OxO API or use the local implementation of OxO. The full call to the OxO API will have the most updated mappings and term definitions, but is slower. The local implementation of OxO is faster but may contain outdated mappings and term definitions. If the parameter is false, COHD will call the full OxO API. If the parameter is true, COHD will use the local implementation.  Default: false.
+          example: false
+        - name: recommend
+          in: query
+          required: false
+          schema:
+            type: boolean
+          description: >-
+            By default (false), COHD returns all mappings found. If true, COHD will recommend a mapping for each target based on path distances. Default: false.
+          example: false
+      operationId: xrefFromOMOP
+      responses:
+        default:
+          description: Unexpected error
+        '200':
+          description: An array of mappings from OMOP concepts to external concepts.
+          content: 
+            application/json: 
+              schema:
+                type: object
+                properties:
+                  results:
+                    type: array
+                    items: 
+                      type: object
+                      properties:      
+                        intermediate_omop_concept_code: 
+                          type: string
+                          example: "92546004"
+                        intermediate_omop_concept_id: 
+                          type: integer
+                          example: 192855
+                        intermediate_omop_concept_name: 
+                          type: string
+                          example: "Cancer in situ of urinary bladder"
+                        intermediate_omop_vocabulary_id: 
+                          type: string
+                          example: "SNOMED"
+                        intermediate_oxo_curie: 
+                          type: string
+                          example: "SNOMEDCT:92546004"
+                        intermediate_oxo_label: 
+                          type: string
+                          example: "Cancer in situ of urinary bladder"
+                        omop_distance: 
+                          type: integer
+                          example: 0
+                        oxo_distance: 
+                          type: integer
+                          example: 1
+                        source_omop_concept_code: 
+                          type: string
+                          example: "92546004"
+                        source_omop_concept_id: 
+                          type: integer
+                          example: 192855
+                        source_omop_concept_name: 
+                          type: string
+                          example: "Cancer in situ of urinary bladder"
+                        source_omop_vocabulary_id: 
+                          type: string
+                          example: "SNOMED"
+                        target_curie: 
+                          type: string
+                          example: "UMLS:C0154091"
+                        target_label: 
+                          type: string
+                          example: "Cancer in situ of urinary bladder"
+                        total_distance: 
+                          type: integer
+                          example: 1
+  /frequencies/singleConceptFreq:
+    get:
+      tags:
+        - Clinical Frequencies
+      summary: Clinical frequency of individual concepts
+      description: >-
+        Retrieves observed clinical frequencies of individual concepts. Multiple concepts may be requested in a comma separated list.
+      parameters:
+        - name: dataset_id
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: >-
+            The dataset_id of the dataset to query. Default dataset is the 5-year dataset.
+          example: 1
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+          description: >-
+            A comma separated list of OMOP concept ids, e.g., "192855" or "192855,2008271"
+          example: '192855'
+      operationId: singleConceptFreq
+      responses:
+        default:
+          description: Unexpected error
+        '200':
+          description: An array of single concept frequencies.
+          content: 
+            application/json: 
+              schema:
+                type: object
+                properties:
+                  results:
+                    type: array
+                    items: 
+                      type: object
+                      properties:   
+                        concept_count: 
+                          type: integer
+                          example: 368
+                        concept_frequency: 
+                          type: integer
+                          example: 0.0002055371025188907
+                        concept_id: 
+                          type: integer
+                          example: 192855
+                        dataset_id: 
+                          type: integer
+                          example: 1                      
+  /frequencies/pairedConceptFreq:
+    get:
+      tags:
+        - Clinical Frequencies
+      summary: Clinical frequency of a pair of concepts
+      description: Retrieves observed clinical frequencies of a pair of concepts.
+      parameters:
+        - name: dataset_id
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: >-
+            The dataset_id of the dataset to query. Default dataset is the 5-year dataset.
+          example: 1
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+          description: 'A comma pair of OMOP concept ids, e.g., "192855,2008271"'
+          example: '192855,2008271'
+      operationId: pairedConceptFreq
+      responses:
+        default:
+          description: Unexpected error
+        '200':
+          description: An array of paired concept frequencies.
+          content: 
+            application/json: 
+              schema:
+                type: object
+                properties:
+                  results:
+                    type: array
+                    items: 
+                      type: object
+                      properties:   
+                        concept_count: 
+                          type: integer
+                          example: 10
+                        concept_frequency: 
+                          type: integer
+                          example: 0.000005585247351056813
+                        concept_id_1: 
+                          type: integer
+                          example: 192855
+                        concept_id_2: 
+                          type: integer
+                          example: 2008271
+                        dataset_id: 
+                          type: integer
+                          example: 1                      
+  /frequencies/associatedConceptFreq:
+    get:
+      tags:
+        - Clinical Frequencies
+      summary: Clinical frequencies of all pairs of concepts given a concept id
+      description: >-
+        Retrieves observed clinical frequencies of all pairs of concepts given a concept id. Results are returned in descending order of paired concept count. Note that the largest paired concept counts are often dominated by associated concepts with high prevalence.
+      parameters:
+        - name: dataset_id
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: >-
+            The dataset_id of the dataset to query. Default dataset is the 5-year dataset.
+          example: 1
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: integer
+          description: 'An OMOP concept id, e.g., "192855"'
+          example: 192855
+      operationId: associatedConceptFreq
+      responses:
+        default:
+          description: Unexpected error
+        '200':
+          description: An array of associated concept frequencies.
+          content: 
+            application/json: 
+              schema:
+                type: object
+                properties:
+                  results:
+                    type: array
+                    items: 
+                      type: object
+                      properties:
+                        associated_concept_id: 
+                          type: integer
+                          example: 19041324
+                        associated_concept_name: 
+                          type: string
+                          example: "Acetaminophen 325 MG Oral Tablet [Tylenol]"
+                        associated_domain_id: 
+                          type: string
+                          example: "Drug"
+                        concept_count: 
+                          type: integer
+                          example: 277
+                        concept_frequency: 
+                          type: integer
+                          example: 0.0001547113516242737
+                        concept_id: 
+                          type: integer
+                          example: 192855
+                        dataset_id: 
+                          type: integer
+                          example: 1        
+  /frequencies/associatedConceptDomainFreq:
+    get:
+      tags:
+        - Clinical Frequencies
+      summary: Clinical frequencies of all pairs of concepts given a concept id
+      description: >-
+        Retrieves observed clinical frequencies of all pairs of concepts given a concept id restricted by domain of the associated concept_id.  Results are returned in descending order of paired concept count. Note that the largest paired concept counts are often dominated by associated concepts with high prevalence.
+      parameters:
+        - name: dataset_id
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: >-
+            The dataset_id of the dataset to query. Default dataset is the 5-year dataset.
+          example: 1
+        - name: concept_id
+          in: query
+          required: true
+          schema:
+            type: integer
+          description: 'An OMOP concept id, e.g., "192855"'
+          example: 192855
+        - name: domain
+          in: query
+          required: true
+          schema:
+            type: string
+          description: 'An OMOP domain id, e.g., "Condition", "Drug", "Procedure", etc. See /metadata/domainCounts for a list of valid domain IDs.'
+          example: Procedure
+      operationId: associatedConceptDomainFreq
+      responses:
+        default:
+          description: Unexpected error
+        '200':
+          description: An array of associated concept frequencies.
+          content: 
+            application/json: 
+              schema:
+                type: object
+                properties:
+                  results:
+                    type: array
+                    items: 
+                      type: object
+                      properties:
+                        associated_concept_id: 
+                          type: integer
+                          example: 2211361
+                        associated_concept_name: 
+                          type: string
+                          example: "Radiologic examination, chest, 2 views, frontal and lateral"
+                        associated_domain_id: 
+                          type: string
+                          example: "Procedure"
+                        concept_count: 
+                          type: integer
+                          example: 257
+                        concept_frequency: 
+                          type: integer
+                          example: 0.00014354085692216007
+                        concept_id: 
+                          type: integer
+                          example: 192855
+                        dataset_id: 
+                          type: integer
+                          example: 1                        
+  /frequencies/mostFrequentConcepts:
+    get:
+      tags:
+        - Clinical Frequencies
+      summary: Most frequent concepts [by domain]
+      description: Retrieves the most frequent concepts.
+      parameters:
+        - name: dataset_id
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: >-
+            The dataset_id of the dataset to query. Default dataset is the 5-year dataset.
+          example: 1
+        - name: q
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: '(Optional) The number of concepts to retreieve, e.g., 100. 0 or unspecified will return all matching concepts.'
+          example: 100
+        - name: domain
+          in: query
+          required: false
+          schema:
+            type: string
+          description: '(Optional) The domain_id to restrict to, e.g., "Condition", "Drug", "Procedure". See /metadata/domainCounts for a list of valid domain IDs.'
+          example: 'Condition'
+        - name: vocabulary_id
+          in: query
+          required: false
+          schema:
+            type: string
+          description: '(Optional) The vocabulary_id(s) to restrict to, e.g., "SNOMED", "MedDRA", "RxNorm", "ATC" etc. Comma separated to include multiple vocabularies, e.g., "SNOMED,MedDRA". Default: unrestricted'
+          example: 
+        - name: concept_class_id
+          in: query
+          required: false
+          schema:
+            type: string
+          description: '(Optional) The concept_class_id(s) to restrict to. concept_class_ids are specific to each vocabulary, e.g.,: [ATC](https://en.wikipedia.org/wiki/Anatomical_Therapeutic_Chemical_Classification_System) {ATC 1st, ATC 2nd, ATC 3rd, ATC 4th, ATC 5th}; [MedDRA](https://en.wikipedia.org/wiki/MedDRA) {PT, HLT, HLGT, SOC}; [RxNorm](https://www.nlm.nih.gov/research/umls/rxnorm/docs/2015/appendix5.html) {Ingredient, Clinical Drug Form, Clinical Drug Comp, Clinical Drug}. Comma separated to include multiple concept_class_ids, e.g., "PT,HLT". Default: unrestricted'
+          example:           
+      operationId: mostFrequentConcepts
+      responses:
+        default:
+          description: Unexpected error
+        '200':
+          description: An array of most frequent concepts.
+          content: 
+            application/json: 
+              schema:
+                type: object
+                properties:
+                  results:
+                    type: array
+                    items: 
+                      type: object
+                      properties:
+                        concept_class_id: 
+                          type: string
+                          example: "Clinical Finding"
+                        concept_count: 
+                          type: integer
+                          example: 233790
+                        concept_frequency: 
+                          type: integer
+                          example: 0.1305774978203572
+                        concept_id: 
+                          type: integer
+                          example: 320128
+                        concept_name: 
+                          type: string
+                          example: "Essential hypertension"
+                        dataset_id: 
+                          type: integer
+                          example: 1
+                        domain_id: 
+                          type: string
+                          example: "Condition"
+                        vocabulary_id: 
+                          type: string
+                          example: "SNOMED"                      
+  /association/chiSquare:
+    get:
+      tags:
+        - Concept Associations
+      summary: Chi-square analysis on pairs of concepts
+      description: >
+        Returns the chi-square statistic and p-value between pairs of concepts. Results are returned in descending order of the chi-square statistic. Note that due to large sample sizes, the chi-square can become very large. 
+        
+        
+        The expected frequencies for the chi-square analysis are calculated based on the single concept frequencies and assuming independence between concepts. P-value is calculated with 1 DOF. 
+
+
+        This method has overloaded behavior based on the specified parameters:
+
+
+        1) concept_id_1 and concept_id_2: Result for the pair (concept_id_1, concept_id_2)
+
+        2) concept_id_1: Results for all pairs of concepts that include concept_id_1
+
+        3) concept_id_1 and domain: Results for all pairs of concepts including concept_id_1 and where concept_id_2 belongs to the specified domain
+      parameters:
+        - name: dataset_id
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: >-
+            The dataset_id of the dataset to query. Default dataset is the 5-year dataset.
+          example: 1
+        - name: concept_id_1
+          in: query
+          required: true
+          schema:
+            type: integer
+          description: 'An OMOP concept id, e.g., "192855"'
+          example: 192855
+        - name: concept_id_2
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: >-
+            An OMOP concept id, e.g., "2008271". If this parameter is specified, then the chi-square between concept_id_1 and concept_id_2 is returned. If this parameter is not specified, then a list of chi-squared results between concept_id_1 and other concepts is returned.
+          example: 2008271
+        - name: domain
+          in: query
+          required: false
+          schema:
+            type: string
+          description: >-
+            An OMOP domain id, e.g., "Condition", "Drug", "Procedure", etc., to restrict the associated concept (concept_id_2) to. If this parameter is not specified, then the domain is unrestricted. See /metadata/domainCounts for a list of valid domain IDs.
+          example: Procedure
+      operationId: chiSquare
+      responses:
+        default:
+          description: Unexpected error
+        '200':
+          description: An array of concept pairs and chi-squared values.
+          content: 
+            application/json: 
+              schema:
+                type: object
+                properties:
+                  results:
+                    type: array
+                    items: 
+                      type: object
+                      properties:
+                        chi_square: 
+                          type: integer
+                          example: 370026.1780081638
+                        concept_2_domain: 
+                          type: string
+                          example: "Procedure"
+                        concept_2_name: 
+                          type: string
+                          example: "Instillation of therapeutic substance into bladder"
+                        concept_id_1: 
+                          type: integer
+                          example: 192855
+                        concept_id_2: 
+                          type: integer
+                          example: 4021588
+                        dataset_id: 
+                          type: integer
+                          example: 3
+                        p-value: 
+                          type: integer
+                          example: 0                          
+  /association/obsExpRatio:
+    get:
+      tags:
+        - Concept Associations
+      summary: Observed Count / Expected Count
+      description: >
+        Returns the natural logarithm of the ratio between the observed count and expected count. Expected count is calculated from the single concept frequencies and assuming independence between the concepts. Results are returned in descending order of ln_ratio.
+        
+        
+        expected_count = Count_1_and_2 * num_patients / (Count_1 * Count_2)
+
+
+        ln_ratio = ln(expected_count)
+        
+
+        This method has overloaded behavior based on the specified parameters:
+
+
+        1) concept_id_1 and concept_id_2: Results for the pair (concept_id_1, concept_id_2)
+
+        2) concept_id_1: Results for all pairs of concepts that include concept_id_1
+
+        3) concept_id_1 and domain: Results for all pairs of concepts including concept_id_1 and where concept_id_2 belongs to the specified domain
+      parameters:
+        - name: dataset_id
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: >-
+            The dataset_id of the dataset to query. Default dataset is the 5-year dataset.
+          example: 1
+        - name: concept_id_1
+          in: query
+          required: true
+          schema:
+            type: integer
+          description: 'An OMOP concept id, e.g., "192855"'
+          example: 192855
+        - name: concept_id_2
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: >-
+            An OMOP concept id, e.g., "2008271". If concept_id_2 is unspecified, then this method will return all pairs of concepts with concept_id_1.
+          example: 2008271
+        - name: domain
+          in: query
+          required: false
+          schema:
+            type: string
+          description: >-
+            An OMOP domain id, e.g., "Condition", "Drug", "Procedure", etc., to restrict the associated concept (concept_id_2) to. If this parameter is not specified, then the domain is unrestricted. See /metadata/domainCounts for a list of valid domain IDs.
+          example: Procedure
+      operationId: obsExpRatio
+      responses:
+        default:
+          description: Unexpected error
+        '200':
+          description: An array of paired concepts and observed-expected frequency ratio.
+          content: 
+            application/json: 
+              schema:
+                type: object
+                properties:
+                  results:
+                    type: array
+                    items: 
+                      type: object
+                      properties:
+                        concept_2_domain: 
+                          type: string
+                          example: "Procedure"
+                        concept_2_name: 
+                          type: string
+                          example: "Closed [transurethral] biopsy of bladder"
+                        concept_id_1: 
+                          type: integer
+                          example: 192855
+                        concept_id_2: 
+                          type: integer
+                          example: 2003784
+                        dataset_id: 
+                          type: integer
+                          example: 1
+                        expected_count: 
+                          type: integer
+                          example: 0.060838982345591645
+                        ln_ratio: 
+                          type: integer
+                          example: 7.561698473261244
+                        observed_count: 
+                          type: integer
+                          example: 117                      
+  /association/relativeFrequency:
+    get:
+      tags:
+        - Concept Associations
+      summary: Relative frequency between pairs of concepts
+      description: >
+        Calculates the relative frequency (i.e., conditional probability) between pairs of concepts. Results are returned in descending order of relative frequency. Note that due to the randomization of the counts, the calculated relative frequencies can exceed the limit of 1.0. 
+
+
+        Relative Frequency = Count_1_and_2 / Count_2
+
+
+        This method has overloaded behavior based on the specified parameters:
+
+
+        1) concept_id_1 and concept_id_2: Result for the pair (concept_id_1, concept_id_2)
+
+        2) concept_id_1: Results for all pairs of concepts that include concept_id_1
+
+        3) concept_id_1 and domain: Results for all pairs of concepts including concept_id_1 and where concept_id_2 belongs to the specified domain
+      parameters:
+        - name: dataset_id
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: >-
+            The dataset_id of the dataset to query. Default dataset is the 5-year dataset.
+          example: 1
+        - name: concept_id_1
+          in: query
+          required: true
+          schema:
+            type: integer
+          description: 'An OMOP concept id, e.g., "192855"'
+          example: 192855
+        - name: concept_id_2
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: >-
+            An OMOP concept id, e.g., "2008271". If concept_id_2 is unspecified, then this method will return all pairs of concepts with concept_id_1.
+          example: 2008271
+        - name: domain
+          in: query
+          required: false
+          schema:
+            type: string
+          description: >-
+            An OMOP domain id, e.g., "Condition", "Drug", "Procedure", etc., to restrict concept_id_2 (the base concept) to. If this parameter is not specified, then the domain is unrestricted. See /metadata/domainCounts for a list of valid domain IDs.
+          example: Procedure
+      operationId: relativeFrequency
+      responses:
+        default:
+          description: Unexpected error
+        '200':
+          description: An array of paired concepts and relative frequency.
+          content: 
+            application/json: 
+              schema:
+                type: object
+                properties:
+                  results:
+                    type: array
+                    items: 
+                      type: object
+                      properties:
+                        concept_2_count: 
+                          type: integer
+                          example: 82
+                        concept_2_domain: 
+                          type: string
+                          example: "Procedure"
+                        concept_2_name: 
+                          type: string
+                          example: "Radical cystectomy"
+                        concept_id_1: 
+                          type: integer
+                          example: 192855
+                        concept_id_2: 
+                          type: integer
+                          example: 2003805
+                        concept_pair_count: 
+                          type: integer
+                          example: 29
+                        dataset_id: 
+                          type: integer
+                          example: 1
+                        relative_frequency: 
+                          type: integer
+                          example: 0.35365853658536583
+  /translator/query:
+    post:
+      tags:
+        - Translator
+      summary: 'IN DEVELOPMENT: Query COHD following NCATS Translator Reasoner Standard API'
+      description: >-
+        IN DEVELOPMENT    
+            
+        Query the COHD API following the [NCATS Translator Reasoner Standard API] (https://github.com/NCATS-Tangerine/NCATS-ReasonerStdAPI). Only single hop queries are supported. See the example query_graph.    
+            
+        For the source node, the curie must be specified (type is ignored).    
+            
+        For the target node, both the curie and type are optional. If curie is specified for the target node, then the association between the two identified concepts is returned. If curie is not specified and type is specified, the associations between the source node and all concepts with the specified type are returned. If neither are specified, then the associations between the source node and all concepts are returned.
+        
+        COHD will attempt to map the CURIE to an OMOP concept and the node type to an OMOP domain. 
+      operationId: query
+      requestBody:
+        description: Query information to be submitted
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Query'
+            example: >-
+              {
+                "max_results": 50,
+                "query_message": {
+                  "query_graph": {
+                    "nodes": [
+                      {
+                        "node_id": "n00",
+                        "curie": "DOID:9053",
+                        "type": "disease"
+                      },
+                      {
+                        "node_id": "n01",
+                        "type": "procedure"
+                      }
+                    ],
+                    "edges": [
+                      {
+                        "edge_id": "e00",
+                        "type": "association",
+                        "source_id": "n00",
+                        "target_id": "n01"
+                      }
+                    ]
+                  }
+                },
+                "query_options": {
+                  "method": "obsExpRatio",
+                  "dataset_id": 3,
+                  "confidence_interval": 0.99,
+                  "min_cooccurrence": 50,
+                  "threshold": 0.5,
+                  "local_oxo": true,
+                  "ontology_targets": {
+                    "Condition": ["ICD9CM", "SNOMEDCT", "DOID"],
+                    "Drug": ["RxNorm"],
+                    "Procedure": ["ICD10PCS", "SNOMEDCT"],
+                    "_DEFAULT": []
+                  }
+                }
+              }
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+        '400':
+          description: Invalid status value
+      x-swagger-router-controller: swagger_server.controllers.query_controller
+components:
+  schemas:
+    Query:
+      x-body-name: request_body
+      type: object
+      properties:
+        max_results:
+          type: integer
+          description: Maximum number of results to return (default and system maximum is 500)
+        query_message:
+          $ref: '#/components/schemas/Message'
+        query_options:
+          $ref: '#/components/schemas/QueryOptions'
+      additionalProperties: true
+    QueryOptions:
+      description: Additional query options that apply to COHD
+      type: object
+      properties:
+        method:
+          description: "Type of association method to perform: 'obsExpRatio' (default), 'relativeFrequency', or 'chiSquare'"
+          type: string
+          example: 'obsExpRatio'
+        dataset_id:
+          description: "The COHD dataset to query"
+          type: integer
+          example: 3
+        confidence_interval:
+          description: "Criteria that the results are significant to the specified criteria level. This only applies when the method is 'obsExpRatio'. Default: not required."
+          type: number
+          example: 0.99
+        min_cooccurrence:
+          description: "Criteria that the results have a minimum co-occurrence count. Default: not required."
+          type: integer
+          example: 50
+        threshold:
+          description: "Criteria threshold to apply to the association metric. chiSquare: p-value < threshold. obsExpRatio: abs(ln_ratio) >= threshold. relativeFrequency: relative_frequency >= threshold." 
+          type: number
+          example: 0.5      
+        ontology_targets:
+          description: "COHD can attempt to map from OMOP concepts to a target ontology. You can identify target ontologies for each OMOP domain. They keys should be OMOP domains, e.g. 'Condition', 'Drug', etc. The values should be lists of target ontology prefixes, e.g., ['ICD9CM', 'UMLS', 'DOID']. An emtpy list indicates not to perform mapping for the specified domain. Use the key '_DEFAULT' to indicate a default list of target ontologies for any unspecified domain. If a domain is specified, it will override the '_DEFAULT' list. Target ontology prefixes can come from the OMOP Vocabulary (e.g., 'ICD9CM', 'RxNorm') or OxO (e.g., 'DOID', 'EFO')"
+          type: object
+          example:
+            {
+              "Condition": ["ICD9CM", "SNOMEDCT", "DOID"],
+              "Drug": ["RxNorm"],
+              "Procedure": ["ICD10PCS", "SNOMEDCT"],
+              "_DEFAULT": []
+            }
+        local_oxo:
+          description: "Whether to use the local implementation of OxO or the real implementation of OxO. Note, the local OxO implementation may contain outdated definitions and xrefs but runs faster. The real OxO has the most updated definitions and xrefs, but is slower (~1-2 seconds/concept). Default: true"
+          type: boolean
+          example: false
+    Message:
+      description: Message object that represents the query to be answered (input) or the answer to the query (response)
+      type: object
+      properties:
+        results:
+          description: List of all returned potential answers for the query posed
+          type: array
+          items:
+            $ref: '#/components/schemas/Result'
+        query_graph:
+          $ref: '#/components/schemas/QueryGraph'
+        knowledge_graph:
+          type: object
+          description: >-
+            KnowledgeGraph object that contains all the nodes and edges referenced
+            in any of the possible answers to the query OR connection information
+            for a remote knowledge graph
+          oneOf:
+            - $ref: '#/components/schemas/KnowledgeGraph'
+            - $ref: '#/components/schemas/RemoteKnowledgeGraph'
+      additionalProperties: true
+    Result:
+      type: object
+      description: One of potentially several results or answers for a query
+      properties:
+        node_bindings:
+          type: object
+          description: >-
+            Lookup dict that maps QNode identifiers in the QueryGraph to
+            Node identifiers in the KnowledgeGraph
+          additionalProperties:
+            oneOf:
+              - type: string
+              - type: array
+                items:
+                  type: string
+        edge_bindings:
+          type: object
+          description: >-
+            Lookup dict that maps QEdge identifiers in the QueryGraph to
+            Edge identifiers in the KnowledgeGraph
+          additionalProperties:
+            oneOf:
+              - type: string
+              - type: array
+                items:
+                  type: string
+    KnowledgeGraph:
+      type: object
+      description: >-
+        A thought graph associated with this result. This will commonly be a
+        linear path subgraph from one concept to another, but related items aside
+        of the path may be included.
+      properties:
+        nodes:
+          type: array
+          description: List of nodes in the KnowledgeGraph
+          items:
+            $ref: '#/components/schemas/Node'
+        edges:
+          type: array
+          description: List of edges in the KnowledgeGraph
+          items:
+            $ref: '#/components/schemas/Edge'
+      additionalProperties: true
+      required:
+        - nodes
+        - edges
+    RemoteKnowledgeGraph:
+      type: object
+      description: >-
+        A thought graph associated with this result that is not repeated here, but
+        stored elsewhere in a way that can be remotely accessed by the reader of
+        this Message
+      properties:
+        url:
+          type: string
+          example: 'http://robokop.renci.org/api/kg'
+          description: URL that provides programmatic access to the remote knowledge graph
+        credentials:
+          type: object
+          description: >-
+            Credentials needed for programmatic access to the remote knowledge
+            graph
+          items:
+            $ref: '#/components/schemas/Credentials'
+      additionalProperties: true
+    Credentials:
+      description: Credentials needed for programmatic access to the remote knowledge graph
+      type: object
+      required:
+        - username
+        - password
+      properties:
+        username:
+          description: Username needed for programmatic access to the remote knowledge graph
+          type: string
+        password:
+          type: string
+          description: Password needed for programmatic access to the remote knowledge graph
+      additionalProperties: true
+    QueryGraph:
+      type: object
+      description: >-
+        A graph intended to be the thought path to be followed by a reasoner to
+        answer the question. This graph is a representation of a question.
+      properties:
+        nodes:
+          type: array
+          description: List of nodes in the QueryGraph
+          items:
+            $ref: '#/components/schemas/QNode'
+        edges:
+          type: array
+          description: List of edges in the QueryGraph
+          items:
+            $ref: '#/components/schemas/QEdge'
+      additionalProperties: true
+      required:
+        - nodes
+        - edges
+    QNode:
+      type: object
+      description: A node in the QueryGraph
+      properties:
+        node_id:
+          type: string
+          example: n00
+          description: >-
+            QueryGraph internal identifier for this QNode. Recommended form: n00,
+            n01, n02, etc.
+        curie:
+          type: string
+          example: 'OMIM:603903'
+          description: CURIE identifier for this node
+        type:
+          type: string
+          description: 'Entity type of this node (e.g., protein, disease, etc.)'
+          example: disease
+      additionalProperties: true
+    QEdge:
+      type: object
+      description: An edge in the QueryGraph
+      properties:
+        edge_id:
+          type: string
+          example: e00
+          description: >-
+            QueryGraph internal identifier for this QEdge. Recommended form: e00,
+            e01, e02, etc.
+        type:
+          type: string
+          example: affects
+          description: Higher-level relationship type of this edge
+        source_id:
+          type: string
+          example: 'https://omim.org/entry/603903'
+          description: Corresponds to the @id of source node of this edge
+        target_id:
+          type: string
+          example: 'https://www.uniprot.org/uniprot/P00738'
+          description: Corresponds to the @id of target node of this edge
+      additionalProperties: true
+      required:
+        - source_id
+        - target_id
+    Node:
+      type: object
+      description: A node in the thought subgraph
+      properties:
+        id:
+          type: string
+          example: 'OMIM:603903'
+          description: CURIE identifier for this node
+        name:
+          type: string
+          example: Haptoglobin
+          description: Formal name of the entity
+        type:
+          type: array
+          description: 'Entity type of this node (e.g., protein, disease, etc.)'
+          example:
+            - protein
+          items:
+            type: string
+      additionalProperties: true
+      required:
+        - id
+    Edge:
+      type: object
+      description: An edge in the thought subgraph linking two nodes
+      properties:
+        id:
+          type: string
+          example: '553903'
+          description: >-
+            Local identifier for this node which is unique within this
+            KnowledgeGraph, and perhaps within the source reasoner's knowledge
+            graph
+        type:
+          type: string
+          example: affects
+          description: Higher-level relationship type of this edge
+        source_id:
+          type: string
+          example: 'https://omim.org/entry/603903'
+          description: Corresponds to the @id of source node of this edge
+        target_id:
+          type: string
+          example: 'https://www.uniprot.org/uniprot/P00738'
+          description: Corresponds to the @id of target node of this edge
+      additionalProperties: true
+      required:
+        - id
+        - source_id
+        - target_id
+  responses: {}
+  parameters: {}
+  examples: {}
+  requestBodies: {}
+  securitySchemes: {}
+  headers: {}
+  links: {}
+  callbacks: {}
+security: []
