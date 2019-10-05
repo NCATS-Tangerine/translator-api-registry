@@ -1,213 +1,91 @@
 openapi: 3.0.1
+info:
+  contact:
+    email: patrick@covar.com
+    name: Patrick Wang
+    url: robokop.renci.org
+  description: An API for answering biomedical questions
+  termsOfService: https://robokop.renci.org/termsofservice/
+  title: ROBOKOP Ranker
+  version: 0.0.1
+  x-reasoner_standard_version: 0.9.1
+tags:
+  - name: "0.9.2"
+  - name: translator
+  - name: reasoner
+paths:
+  /query/:
+    post:
+      parameters:
+        - description: Maximum number of results to return. Provide -1 to indicate no maximum.
+          in: query
+          name: max_results
+          schema:
+            type: integer
+            default: -1
+        - description: 'Requested output format. DENSE, MESSAGE, CSV or ANSWERS'
+          in: query
+          name: output_format
+          schema:
+            type: string
+            default: MESSAGE
+        - description: 'Max connectivity of nodes considered in the answers, Use -1 for no restriction'
+          in: query
+          name: max_connectivity
+          schema:
+            type: integer
+            default: -1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Query'
+            example:
+              message:
+                  query_graph:
+                      nodes:
+                        - id: "n00"
+                          type: "disease"
+                          curie: "MONDO:0005737"
+                        - id: "n01"
+                          type: "gene"
+                          set: true
+                        - id: "n02"
+                          type: genetic_condition
+                      edges:
+                        - id: "e00"
+                          source_id: "n00"
+                          target_id: "n01"
+                        - id: "e01"
+                          source_id: "n01"
+                          target_id: "n02"
+        description: A message with question graph.
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+          description: A message with knowledge graph and answers.
+      summary: Get answers to a question
+      tags:
+        - "0.9.2"
 servers:
-  - url: "http://robokop.renci.org:6011/api/"
+  - url: https://robokop.renci.org/ranker/api/
 components:
   schemas:
     Query:
+      x-body-name: request_body
       type: object
       properties:
-        bypass_cache:
-          type: string
-          example: 'true'
-          description: >-
-            Set to true in order to bypass any possible cached message and try to
-            answer the query over again
-        asynchronous:
-          type: string
-          example: 'false'
-          description: >-
-            Set to true in order to receive an incomplete message_id if the query
-            will take a while. Client can then periodically request that
-            message_id for a status update and eventual complete message
-        max_results:
-          type: integer
-          example: 100
-          description: Maximum number of individual results to return
-        page_size:
-          type: integer
-          example: 20
-          description: Split the results into pages with this number of results each
-        page_number:
-          type: integer
-          example: 1
-          description: >-
-            Page number of results when the number of results exceeds the
-            page_size
-        reasoner_ids:
-          type: array
-          example:
-            - RTX
-            - Robokop
-          description: List of reasoners to consult for the query
-          items:
-            type: string
-        query_message:
-          type: object
-          description: Message object that represents the query to be answered
-          items:
-            $ref: '#/components/schemas/Message'
-        previous_message_processing_plan:
-          type: object
-          description: >-
-            Container for one or more Message objects or identifiers for one or
-            more Messages along with a processing plan for how those messages
-            should be processed and returned
-          items:
-            $ref: '#/components/schemas/PreviousMessageProcessingPlan'
-      additionalProperties: true
-      example:
-        query_message:
-          query_graph:
-            edges:
-              - edge_id: e00
-                source_id: n00
-                target_id: n01
-            nodes:
-              - curie: 'MONDO:0005737'
-                node_id: n00
-                type: disease
-              - node_id: n01
-                type: gene
-    PreviousMessageProcessingPlan:
-      type: object
-      properties:
-        previous_message_uris:
-          type: array
-          example:
-            - 'https://rtx.ncats.io/api/rtx/v1/message/300'
-          description: List of URIs for Message objects to fetch and process
-          items:
-            type: string
-        previous_messages:
-          type: array
-          description: List of Message objects to process
-          items:
-            $ref: '#/components/schemas/Message'
-        processing_actions:
-          type: array
-          example:
-            - mod45filter
-            - redirect2RTX
-          description: >-
-            List of order-dependent actions to guide what happens with the Message
-            object(s)
-          items:
-            type: string
-        options:
-          type: object
-          example:
-            topNMostFrequent: 1
-          description: >-
-            Dict of options that apply during processing in an order independent
-            fashion
-          additionalProperties: true
-      additionalProperties: true
+        message:
+          $ref: '#/components/schemas/Message'
+      required:
+        - message
     Message:
       type: object
       properties:
-        context:
-          type: string
-          example: 'https://rtx.ncats.io/ns/translator.jsonld'
-          description: JSON-LD context URI
-        type:
-          type: string
-          example: translator_reasoner_message
-          description: Entity type of this message
-        id:
-          type: string
-          example: 'https://rtx.ncats.io/api/rtx/v1/message/123'
-          description: URI for this message
-        reasoner_id:
-          type: string
-          example: reasoner
-          description: >-
-            Identifier string of the reasoner that provided this message (one of
-            RTX, Robokop, Indigo, Integrator, etc.)
-        tool_version:
-          type: string
-          example: RTX 0.5.0
-          description: Version label of the tool that generated this message
-        schema_version:
-          type: string
-          example: 0.9.0
-          description: Version label of this JSON-LD schema
-        datetime:
-          type: string
-          example: '2018-01-09 12:34:45'
-          description: Datetime string for the time that this message was generated
-        n_results:
-          type: integer
-          example: 42
-          description: >-
-            Total number of results from the query (which may be less than what is
-            returned if limits were placed on the number of results to return)
-        message_code:
-          type: string
-          example: OK
-          description: >-
-            Set to OK for success, or some other short string to indicate and
-            error (e.g., KGUnavailable, TermNotFound, etc.)
-        code_description:
-          type: string
-          example: 9 results found
-          description: >-
-            Extended description denoting the success or mode of failure in the
-            generation of the message
-        table_column_names:
-          type: array
-          example:
-            - chemical_substance.name
-            - chemical_substance.id
-          description: List of column names that corresponds to the row_data for each result
-          items:
-            type: string
-        original_question:
-          type: string
-          example: what proteins are affected by sickle cell anemia
-          description: The original question text typed in by the user
-        restated_question:
-          type: string
-          example: Which proteins are affected by sickle cell anemia?
-          description: >-
-            A precise restatement of the question, as understood by the
-            Translator, for which the answer applies. The user should verify that
-            the restated question matches the intent of their original question
-            (it might not).
-        query_type_id:
-          type: string
-          example: Q2
-          description: >-
-            The query type id if one is known for the query/message (as defined in
-            https://docs.google.com/spreadsheets/d/18zW81wteUfOn3rFRVG0z8mW-ecNhdsfD_6s73ETJnUw/edit#gid=1742835901
-            )
-        terms:
-          type: object
-          description: Dict of terms needed by the specific query type
-          properties:
-            disease:
-              type: string
-              example: malaria
-            protein:
-              type: string
-              example: P12345
-            anatomical_entity:
-              type: string
-              example: liver
-            chemical_substance:
-              type: string
-              example: ibuprofen
-            metabolite:
-              type: string
-              example: ibuprofen
-          additionalProperties: true
-        query_options:
-          type: object
-          example: 
-            coalesce: true
-            threshold: 0.9
-          description: >-
-            Dict of options that can be sent with the query. Options are tool
-            specific and not stipulated here
         results:
           description: List of all returned potential answers for the query posed
           type: array
@@ -228,119 +106,56 @@ components:
           oneOf:
             - $ref: '#/components/schemas/KnowledgeGraph'
             - $ref: '#/components/schemas/RemoteKnowledgeGraph'
-      additionalProperties: true
     Result:
       type: object
       description: One of potentially several results or answers for a query
       properties:
-        id:
-          type: string
-          example: 'https://rtx.ncats.io/api/rtx/v1/result/234'
-          description: URI for this message
-        description:
-          type: string
-          example: >-
-            The genetic condition sickle cell anemia may provide protection from
-            cerebral malaria via genetic alterations of proteins HBB (P68871) and
-            HMOX1 (P09601).
-          description: A free text description of this result answer from the reasoner
-        essence:
-          type: string
-          example: ibuprofen
-          description: >-
-            A single string that is the terse essence of the result (useful for
-            simple answers)
-        essence_type:
-          type: string
-          example: drug
-          description: A Translator bioentity type of the essence
-        row_data:
+        node_bindings:
           type: array
-          example:
-            - ibuprofen
-            - 'CHEMBL:CHEMBL521'
-          description: >-
-            An arbitrary list of values that captures the essence of the result
-            that can be turned into a tabular result across all answers (each
-            result is a row) for a user that wants tabular output
+          description: List of QNode-KNode bindings.
           items:
-            type: string
+            $ref: '#/components/schemas/NodeBinding'
+        edge_bindings:
+          type: array
+          description: List of QEdge-KEdge bindings.
+          items:
+            $ref: '#/components/schemas/EdgeBinding'
         score:
           type: number
           format: float
-          example: 163.233
           description: Any type of score associated with this result
-        score_name:
+          example: 163.233
+      required:
+        - node_bindings
+        - edge_bindings
+    NodeBinding:
+      type: object
+      properties:
+        qg_id:
           type: string
-          example: Jaccard distance
-          description: Name for the score
-        score_direction:
+        kg_id:
+          oneOf:
+            - type: string
+            - type: array
+              items:
+                type: string
+      required:
+        - qg_id
+        - kg_id
+    EdgeBinding:
+      type: object
+      properties:
+        qg_id:
           type: string
-          example: lower_is_better
-          description: >-
-            Sorting indicator for the score: one of higher_is_better or
-            lower_is_better
-        confidence:
-          type: number
-          format: float
-          example: 0.9234
-          description: >-
-            Confidence metric for this result, a value between (inclusive) 0.0 (no
-            confidence) and 1.0 (highest confidence)
-        result_type:
-          type: string
-          example: individual query answer
-          description: >-
-            One of several possible result types: 'individual query answer',
-            'neighborhood graph', 'type summary graph'
-        result_group:
-          type: integer
-          example: 1
-          description: >-
-            An integer group number for results for use in cases where several
-            results should be grouped together. Also useful to control sorting
-            ascending.
-        result_group_similarity_score:
-          type: number
-          format: float
-          example: 0.95
-          description: >-
-            A score that denotes the similarity of this result to other members of
-            the result_group
-        reasoner_id:
-          type: string
-          example: RTX
-          description: >-
-            Identifier string of the reasoner that provided this result (e.g.,
-            RTX, Robokop, Indigo, Integrator)
-        result_graph:
-          type: object
-          description: >-
-            A graph that describes the thought pattern of this result (i.e. answer
-            to the query)
-          $ref: '#/components/schemas/KnowledgeGraph'
-        node_bindings:
-          type: object
-          description: >-
-            Lookup dict that maps QNode identifiers in the QueryGraph to
-            Node identifiers in the KnowledgeGraph
-          additionalProperties:
-            oneOf:
-              - type: string
-              - type: array
-                items:
-                  type: string
-        edge_bindings:
-          type: object
-          description: >-
-            Lookup dict that maps QEdge identifiers in the QueryGraph to
-            Edge identifiers in the KnowledgeGraph
-          additionalProperties:
-            oneOf:
-              - type: string
-              - type: array
-                items:
-                  type: string
+        kg_id:
+          oneOf:
+            - type: string
+            - type: array
+              items:
+                type: string
+      required:
+        - qg_id
+        - kg_id
     KnowledgeGraph:
       type: object
       description: >-
@@ -352,13 +167,12 @@ components:
           type: array
           description: List of nodes in the KnowledgeGraph
           items:
-            $ref: '#/components/schemas/Node'
+            $ref: '#/components/schemas/KNode'
         edges:
           type: array
           description: List of edges in the KnowledgeGraph
           items:
-            $ref: '#/components/schemas/Edge'
-      additionalProperties: true
+            $ref: '#/components/schemas/KEdge'
       required:
         - nodes
         - edges
@@ -378,9 +192,10 @@ components:
           description: >-
             Credentials needed for programmatic access to the remote knowledge
             graph
-          items:
-            $ref: '#/components/schemas/Credentials'
-      additionalProperties: true
+          $ref: '#/components/schemas/Credentials'
+      required:
+        - url
+        - credentials
     Credentials:
       description: Credentials needed for programmatic access to the remote knowledge graph
       type: object
@@ -394,7 +209,6 @@ components:
         password:
           type: string
           description: Password needed for programmatic access to the remote knowledge graph
-      additionalProperties: true
     QueryGraph:
       type: object
       description: >-
@@ -411,7 +225,6 @@ components:
           description: List of edges in the QueryGraph
           items:
             $ref: '#/components/schemas/QEdge'
-      additionalProperties: true
       required:
         - nodes
         - edges
@@ -419,279 +232,115 @@ components:
       type: object
       description: A node in the QueryGraph
       properties:
-        node_id:
+        id:
           type: string
-          example: n00
           description: >-
             QueryGraph internal identifier for this QNode. Recommended form: n00,
             n01, n02, etc.
+          example: n00
         curie:
-          type: string
-          example: 'OMIM:603903'
+          oneOf:
+            - type: string
+            - type: array
+              items:
+                type: string
           description: CURIE identifier for this node
+          example: 'OMIM:603903'
         type:
-          type: string
-          description: 'Entity type of this node (e.g., protein, disease, etc.)'
-          example: disease
-      additionalProperties: true
+          oneOf:
+            - $ref: '#/components/schemas/BiolinkEntity'
+            - type: array
+              items:
+                $ref: '#/components/schemas/BiolinkEntity'
+              description: 'Entity types of this node (e.g., protein, disease, etc.)'
+              example:
+                - disease
+                - genetic_condition
+      required:
+        - id
     QEdge:
       type: object
       description: An edge in the QueryGraph
       properties:
-        edge_id:
+        id:
           type: string
-          example: e00
           description: >-
             QueryGraph internal identifier for this QEdge. Recommended form: e00,
             e01, e02, etc.
+          example: e00
         type:
-          type: string
-          example: affects
-          description: Higher-level relationship type of this edge
-        relation:
-          type: string
-          example: upregulates
-          description: Lower-level relationship type of this edge
+          oneOf:
+            - $ref: '#/components/schemas/BiolinkRelation'
+            - type: array
+              items:
+                $ref: '#/components/schemas/BiolinkRelation'
         source_id:
           type: string
-          example: 'https://omim.org/entry/603903'
           description: Corresponds to the @id of source node of this edge
         target_id:
           type: string
-          example: 'https://www.uniprot.org/uniprot/P00738'
           description: Corresponds to the @id of target node of this edge
-        negated:
-          type: boolean
-          example: true
-          description: >-
-            Boolean that if set to true, indicates the edge statement is negated
-            i.e. is not true
-      additionalProperties: true
       required:
+        - id
         - source_id
         - target_id
-    Node:
+    KNode:
       type: object
       description: A node in the thought subgraph
       properties:
         id:
           type: string
-          example: 'OMIM:603903'
           description: CURIE identifier for this node
-        uri:
-          type: string
-          example: 'https://www.uniprot.org/uniprot/P00738'
-          description: URI identifier for this node"
+          example: 'OMIM:603903'
         name:
           type: string
-          example: Haptoglobin
           description: Formal name of the entity
+          example: Haptoglobin
         type:
           type: array
           description: 'Entity type of this node (e.g., protein, disease, etc.)'
-          example:
-            - protein
           items:
             type: string
-        description:
-          type: string
-          example: 'Haptoglobin captures, and combines with free plasma hemoglobin...'
-          description: One to three sentences of description/definition of this entity
-        symbol:
-          type: string
-          example: HP
-          description: Short abbreviation or symbol for this entity
-        node_attributes:
-          type: array
-          description: A list of arbitrary attributes for the node
-          items:
-            $ref: '#/components/schemas/NodeAttribute'
-      additionalProperties: true
+          example:
+            - protein
       required:
         - id
-    NodeAttribute:
-      type: object
-      description: A generic attribute for a node
-      properties:
-        type:
-          type: string
-          example: article
-          description: Entity type of this attribute
-        name:
-          type: string
-          example: Wikipedia article
-          description: Formal name of the attribute
-        value:
-          type: string
-          example: '7.23e-12'
-          description: Value of the attribute
-        url:
-          type: string
-          example: 'https://en.wikipedia.org/wiki/Malaria'
-          description: A URL corresponding to this attribute
-      additionalProperties: true
-    Edge:
+    KEdge:
       type: object
       description: An edge in the thought subgraph linking two nodes
       properties:
         id:
           type: string
-          example: '553903'
           description: >-
             Local identifier for this node which is unique within this
             KnowledgeGraph, and perhaps within the source reasoner's knowledge
             graph
+          example: '553903'
         type:
-          type: string
-          example: affects
-          description: Higher-level relationship type of this edge
-        relation:
-          type: string
-          example: upregulates
-          description: Lower-level relationship type of this edge
+          $ref: '#/components/schemas/BiolinkRelation'
         source_id:
           type: string
-          example: 'https://omim.org/entry/603903'
           description: Corresponds to the @id of source node of this edge
+          example: 'https://omim.org/entry/603903'
         target_id:
           type: string
-          example: 'https://www.uniprot.org/uniprot/P00738'
           description: Corresponds to the @id of target node of this edge
-        is_defined_by:
-          type: string
-          example: reasoner
-          description: A CURIE/URI for the translator group that made the KG
-        defined_datetime:
-          type: string
-          example: '2018-11-03 15:34:23'
-          description: >-
-            Datetime at which the KG builder/updater pulled the information from
-            the original source. Used as a freshness indicator.
-        provided_by:
-          type: string
-          example: OMIM
-          description: A CURIE/URI for the knowledge source that defined this edge
-        confidence:
-          type: number
-          format: float
-          example: 0.99
-          description: >-
-            Confidence metric for this edge, a value between (inclusive) 0.0 (no
-            confidence) and 1.0 (highest confidence)
-        weight:
-          type: number
-          format: float
-          example: 0.99
-          description: >-
-            Weight metric for this edge, with no upper bound. Perhaps useful when
-            formal confidence metrics are not available
-        publications:
-          type: array
-          description: List of CURIEs for publications associated with this edge
-          example:
-            - 'PMID:12345562'
-          items:
-            type: string
-        evidence_type:
-          type: string
-          example: 'ECO:0000220'
-          description: >-
-            A CURIE/URI for class of evidence supporting the statement made in an
-            edge - typically a class from the ECO ontology
-        qualifiers:
-          type: string
-          example: 'ECO:0000220'
-          description: >-
-            Terms representing qualifiers that modify or qualify the meaning of
-            the statement made in an edge
-        negated:
-          type: boolean
-          example: true
-          description: >-
-            Boolean that if set to true, indicates the edge statement is negated
-            i.e. is not true
-        edge_attributes:
-          type: array
-          description: A list of additional attributes for this edge
-          items:
-            $ref: '#/components/schemas/EdgeAttribute'
-      additionalProperties: true
+          example: 'https://www.uniprot.org/uniprot/P00738'
       required:
         - id
         - source_id
         - target_id
-    EdgeAttribute:
-      type: object
-      description: A generic additional attribute for an edge
-      properties:
-        type:
-          type: string
-          example: localization
-          description: Entity type of this attribute
-        name:
-          type: string
-          example: Cell type limitation
-          description: Formal name of the attribute
-        value:
-          type: string
-          example: MFC cells
-          description: >-
-            Value of the attribute. While all attributes should have a name, many
-            will not have a value
-        url:
-          type: string
-          example: 'https://www.ncbi.nlm.nih.gov/pubmed/29309293'
-          description: A URL corresponding to this attribute
-      additionalProperties: true
-info:
-  contact:
-    email: patrick@covar.com
-    url: www.covar.com
-  description: An API for answering biomedical questions
-  termsOfService: <url>
-  title: ROBOKOP Ranker
-  version: 0.0.1
-  x-reasoner_standard_version: 0.9.1
-tags:
-  - name: "0.9.1"
-  - name: translator
-  - name: reasoner
-paths:
-  /query:
-    post:
-      parameters:
-        - description: Maximum number of results to return. Provide -1 to indicate no maximum.
-          in: query
-          name: max_results
-          schema:
-            type: integer
-            default: 250
-        - description: 'Requested output format. DENSE, MESSAGE, CSV or ANSWERS'
-          in: query
-          name: output_format
-          schema:
-            type: string
-            default: MESSAGE
-        - description: 'Max connectivity of nodes considered in the answers, Use 0 for no restriction'
-          in: query
-          name: max_connectivity
-          schema:
-            type: integer
-            default: 0
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Query'
-        description: A message with question graph.
-        required: true
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Message'
-          description: A message with knowledge graph and answers.
-      summary: Get answers to a question
-      tags:
-        - "0.9.1"
+    BiolinkEntity:
+      description: A subclass of named_thing (snake_case)
+      type: string
+      externalDocs:
+        description: Biolink model entities
+        url: https://biolink.github.io/biolink-model/docs/NamedThing.html
+      example: disease
+    BiolinkRelation:
+      description: A relation, i.e. child of related_to (snake_case)
+      type: string
+      externalDocs:
+        description: Biolink model relations
+        url: https://biolink.github.io/biolink-model/docs/related_to.html
+      example: affects
