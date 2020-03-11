@@ -1,75 +1,97 @@
-openapi: '3.0.0'
+openapi: 3.0.0
 info:
-  version: '2.0'
-  title: DGIdb API
-  description: >-
-    Drug gene interaction database
-  termsOfService: http://dgidb.genome.wustl.edu/contact
   contact:
-    name: Malachi Griffith
-    x-role: responsible developer
     email: help@dgidb.org
-    x-id: 'https://github.com/malachig'
+    name: Malachi Griffith
+    x-id: https://github.com/malachig
+    x-role: responsible developer
+  description: Drug gene interaction database
+  termsOfService: http://dgidb.genome.wustl.edu/contact
+  title: DGIdb API
+  version: '2.0'
 servers:
-  - url: 'http://dgidb.genome.wustl.edu/api/v2'
-    description: 'Production server'
+- description: Production server
+  url: http://dgidb.genome.wustl.edu/api/v2
 tags:
-  - name: drug
-  - name: gene
-  - name: annotation
-  - name: translator
+- name: drug
+- name: gene
+- name: annotation
+- name: translator
 paths:
-  '/interactions.json?drugs={drugname}':
+  /interactions.json:
     get:
-      summary: 'return interactions for a drug with a gene'
       parameters:
-        - name: drugname
-          in: path
-          description: >-
-            Put gene names here, e.g. riluzole
-          required: true
-          x-valueType:
-            - 'http://biothings.io/terms/drugname/'
-          x-requestTemplate:
-            - valueType: 'http://identifiers.org/drugname/'
-              template: drugs={{input}}
-          schema:
-            type: string
+      - description: Put drug names here, e.g. riluzole
+        in: query
+        name: drugs
+        example: riluzole
+        schema:
+          type: string
+      - description: Put gene names here, e.g. CXCR4
+        in: query
+        name: genes
+        example: CXCR4
+        schema:
+          type: string
       responses:
         '200':
-          description: 'A query response object with "matchedTerm" property'
-          x-responseValueType:
-            - path: matchedTerms.interactions.genename
-              valueType: 'http://identifiers.org/hgnc.symbol/'
-            - path: matchedTerms.interactions.geneEntrezId
-              valueType: 'http://identifiers.org/ncbigene/'
-            - path: matchedTerms.interactions
-              valueType: 'http://biothings.io/concepts/drug_interaction/'
-          x-JSONLDContext:
-            'https://raw.githubusercontent.com/NCATS-Tangerine/translator-api-registry/master/dgidb/jsonld_context/dgidb_context.json'
-  '/interactions.json?genes={genesymbol}':
-    get:
-      summary: 'return interactions for a gene with a drug'
+          description: A query response object with "matchedTerm" property
+          x-bte-response-mapping:
+            - $ref: '#/components/x-bte-response-mapping/gene-drug'
+            - $ref: '#/components/x-bte-response-mapping/drug-gene'
+      summary: return interactions for a drug with a gene
+      x-bte-kgs-operations:
+        targetedBy:
+          $ref: '#/components/x-bte-kgs-operations/targetedBy'
+        target:
+          $ref: '#/components/x-bte-kgs-operations/target'
+components:
+  x-bte-kgs-operations:
+    targetedBy:
+      inputs:
+      - id: symbol
+        semantic: Gene
+      outputs:
+      - id: chembl
+        semantic: ChemicalSubstance
       parameters:
-        - name: genesymbol
-          in: path
-          description: >-
-            Put gene names here, e.g. FLT1, CXCR4
-          required: true
-          x-valueType:
-            - 'http://identifiers.org/hgnc.symbol/'
-          x-requestTemplate:
-            - valueType: 'http://identifiers.org/hgnc.symbol/'
-              template: genes={{input}}
-          schema:
-            type: string
-      responses:
-        '200':
-          description: 'A query response object with "matchedTerm" property'
-          x-responseValueType:
-            - path: matchedTerms.interactions.drugName
-              valueType: 'http://biothings.io/terms/drugname/'
-            - path: matchedTerms.interactions
-              valueType: 'http://biothings.io/concepts/drug_interaction/'
-          x-JSONLDContext:
-            'https://raw.githubusercontent.com/NCATS-Tangerine/translator-api-registry/master/dgidb/jsonld_context/dgidb_context.json'
+        genes: '{input1}'
+      supportBatch: false
+    target:
+      inputs:
+      - id: chembl
+        semantic: ChemicalSubstance
+      outputs:
+      - id: entrez
+        semantic: Gene
+      parameters:
+        drugs: '{input1}'
+      supportBatch: false
+  x-bte-response-mapping:
+    gene-drug:
+      "@context": http://schema.org
+      "@type": Gene
+      bts:entrez: matchedTerms.entrezId
+      bts:symbol: matchedTerms.geneName
+      bts:name: matchedTerms.geneLongName
+      bts:targetedBy:
+        "@type": ChemicalSubstance
+        bts:chembl: matchedTerms.interactions.drugChemblId
+        bts:name: matchedTerms.interactions.drugName
+        bts:source: matchedTerms.interactions.sources
+        bts:publication: matchedTerms.interactions.pmids
+        "$input": bts:symbol
+        "$source": dgidb
+    drug-gene:
+      "@context": http://schema.org
+      "@type": ChemicalSubstance
+      bts:chembl: matchedTerms.chemblId
+      bts:name: matchedTerms.drugName
+      bts:target:
+        "@type": Gene
+        bts:entrez: matchedTerms.interactions.geneEntrezId
+        bts:name: matchedTerms.interactions.geneLongName
+        bts:source: matchedTerms.interactions.sources
+        bts:publication: matchedTerms.interactions.pmids
+        "$input": bts:chembl
+        "$source": dgidb
