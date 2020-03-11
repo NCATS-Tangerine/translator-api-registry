@@ -1,182 +1,764 @@
-openapi: '3.0.0'
+openapi: 3.0.0
 info:
-  version: '0.1.1'
-  title: BioLink API
-  description: >-
-    API integration layer for linked biological objects.
-  termsOfService: https://github.com/monarch-initiative/biolink-api/
   contact:
-    name: Chris Mungall
-    x-role: responsible developer
     email: cjm@berkeleybop.org
-    x-id: 'https://github.com/cmungall'
+    name: Chris Mungall
+    x-id: https://github.com/cmungall
+    x-role: responsible developer
+  description: API integration layer for linked biological objects.
+  termsOfService: https://github.com/monarch-initiative/biolink-api/
+  title: BioLink API
+  version: 0.1.1
 servers:
-  - url: 'https://api.monarchinitiative.org/api'
-    description: 'Production server'
+- description: Production server
+  url: https://api.monarchinitiative.org/api
 tags:
-  - name: disease
-  - name: gene
-  - name: phenotype
-  - name: annotation
-  - name: query
-  - name: translator
+- name: anatomy
+- name: disease
+- name: gene
+- name: phenotype
+- name: pathway
+- name: annotation
+- name: query
+- name: translator
+- name: biolink
 paths:
-  '/bioentity/disease/{disease_id}/genes/':
+  /bioentity/anatomy/{anatomy_id}/genes:
     get:
-      summary: 'Returns genes associated with a disease'
       parameters:
-        - name: disease_id
-          in: path
-          description: >-
-            CURIE identifier of disease, e.g. OMIM:605543, DOID:678. Equivalent IDs can be used with same results
-          required: true
-          schema:
-            type: string
-          x-valueType:
-            - 'http://identifiers.org/omim/'
-            - 'http://identifiers.org/doid/'
-          x-requestTemplate:
-            - valueType: 'http://identifiers.org/omim/'
-              template: /bioentity/disease/OMIM:{{input}}/genes/
-            - valueType: 'http://identifiers.org/doid/'
-              template: /bioentity/disease/{{input}}/genes/
+      - description: CURIE identifier of anatomy
+          IDs can be used with same results
+        in: path
+        name: anatomy_id
+        required: true
+        schema:
+          type: string
+        example: "UBERON:0002037"
+      - description: number of rows
+        in: query
+        name: rows
+        required: false
+        example: 100
+        schema:
+          type: integer
       responses:
         '200':
-          description: 'A distinct set of association.objects (typically ontology terms). This appears at the top level of the results payload'
-          x-responseValueType:
-            - path: edge.obj
-              valueType: 'http://identifiers.org/ncbigene/'
-          x-JSONLDContext:
-            'https://raw.githubusercontent.com/NCATS-Tangerine/translator-api-registry/master/biolink/jsonld_context/biolinks_gene_context.json'
-  '/bioentity/disease/{disease_id}/phenotypes/':
+          description: A distinct set of association.objects (typically ontology terms).
+            This appears at the top level of the results payload
+          x-bte-response-mapping:
+            $ref: '#/components/x-bte-response-mapping/anatomy-gene'
+      summary: Returns genes associated with an anatomy
+      tags:
+        - anatomy
+      x-bte-kgs-operations:
+        - associatedWith:
+            $ref: '#/components/x-bte-kgs-operations/anatomy-gene/associatedWith'
+  /bioentity/disease/{disease_id}/genes:
     get:
-      summary: 'Returns phenotypes associated with a disease'
       parameters:
-        - name: disease_id
-          in: path
-          description: >-
-            CURIE identifier of disease, e.g. OMIM:605543, DOID:678. Equivalent IDs can be used with same results
-          required: true
-          schema:
-            type: string
-          x-valueType:
-            - 'http://identifiers.org/omim/'
-            - 'http://identifiers.org/doid/'
-          x-requestTemplate:
-            - valueType: 'http://identifiers.org/omim/'
-              template: /bioentity/disease/OMIM:{{input}}/phenotypes/
-            - valueType: 'http://identifiers.org/doid/'
-              template: /bioentity/disease/{{input}}/phenotypes/
+      - description: CURIE identifier of disease
+          IDs can be used with same results
+        in: path
+        name: disease_id
+        required: true
+        example: "MONDO:0016575"
+        schema:
+          type: string
+      - description: number of rows
+        in: query
+        name: rows
+        required: false
+        example: 100
+        schema:
+          type: integer
       responses:
         '200':
-          description: 'A distinct set of association.objects (typically ontology terms). This appears at the top level of the results payload'
-          x-responseValueType:
-            - path: edge.obj
-              valueType: 'http://identifiers.org/hp/'
-          x-JSONLDContext:
-            'https://raw.githubusercontent.com/NCATS-Tangerine/translator-api-registry/master/biolink/jsonld_context/biolinks_phenotype_context.json'
-  '/bioentity/gene/{gene_id}/diseases/':
+          description: A distinct set of association.objects (typically ontology terms).
+            This appears at the top level of the results payload
+          x-bte-response-mapping:
+            $ref: '#/components/x-bte-response-mapping/disease-gene'
+      summary: Returns genes associated with a disease
+      tags:
+        - disease
+      x-bte-kgs-operations:
+        - associatedWith:
+            $ref: '#/components/x-bte-kgs-operations/disease-gene/associatedWith'
+  /bioentity/disease/{disease_id}/pathways:
     get:
-      summary: 'Returns diseases associated with gene'
       parameters:
-        - name: gene_id
-          in: path
-          description: >-
-            CURIE identifier of gene, e.g. NCBIGene:4750, Orphanet:173505. Equivalent IDs can be used with same results
-          required: true
-          schema:
-            type: string
-          x-valueType:
-            - 'http://identifiers.org/ncbigene/'
-            - 'http://identifiers.org/orphanet/'
-          x-requestTemplate:
-            - valueType: 'http://identifiers.org/ncbigene/'
-              template: /bioentity/gene/NCBIGene:{{input}}/diseases/
-            - valueType: 'http://identifiers.org/orphanet/'
-              template: /bioentity/gene/Orphanet{{input}}/diseases/
+      - description: CURIE identifier of disease
+          IDs can be used with same results
+        in: path
+        name: disease_id
+        required: true
+        example: "MONDO:0016575"
+        schema:
+          type: string
+      - description: number of rows
+        in: query
+        name: rows
+        required: false
+        example: 100
+        schema:
+          type: integer
       responses:
         '200':
-          description: 'A distinct set of association.objects (typically ontology terms). This appears at the top level of the results payload'
-          x-responseValueType:
-            - path: edge.obj
-              valueType: 'http://identifiers.org/doid/'
-            - path: edge.obj
-              valueType: 'http://identifiers.org/omim/'
-          x-JSONLDContext:
-            'https://raw.githubusercontent.com/NCATS-Tangerine/translator-api-registry/master/biolink/jsonld_context/biolinks_disease_context.json'
-  '/bioentity/gene/{gene_id}/homologs/':
+          description: A distinct set of association.objects (typically ontology terms).
+            This appears at the top level of the results payload
+          x-bte-response-mapping:
+            $ref: '#/components/x-bte-response-mapping/disease-pathway'
+      summary: Returns pathways associated with a disease
+      tags:
+        - disease
+      x-bte-kgs-operations:
+        - associatedWith:
+            $ref: '#/components/x-bte-kgs-operations/disease-pathway/associatedWith'
+  /bioentity/disease/{disease_id}/phenotypes:
     get:
-      summary: 'Returns homologs for a gene'
       parameters:
-        - name: gene_id
-          in: path
-          description: >-
-            CURIE identifier of gene, e.g. NCBIGene:4750. Equivalent IDs can be used with same results
-          required: true
-          schema:
-            type: string
-          x-valueType:
-            - 'http://identifiers.org/ncbigene/'
-          x-requestTemplate:
-            - valueType: 'http://identifiers.org/ncbigene/'
-              template: /bioentity/gene/NCBIGene:{{input}}/homologs/
+      - description: CURIE identifier of disease
+          IDs can be used with same results
+        in: path
+        name: disease_id
+        required: true
+        example: "MONDO:0016575"
+        schema:
+          type: string
+      - description: number of rows
+        in: query
+        name: rows
+        required: false
+        example: 100
+        schema:
+          type: integer
       responses:
         '200':
-          description: 'A distinct set of association.objects (typically ontology terms). This appears at the top level of the results payload'
-          x-responseValueType:
-            - path: edge.obj
-              valueType: 'http://identifiers.org/mgi/'
-            - path: edge.obj
-              valueType: 'http://identifiers.org/zfin/'
-            - path: edge.obj
-              valueType: 'http://identifiers.org/ncbigene/'
-          x-JSONLDContext:
-            'https://raw.githubusercontent.com/NCATS-Tangerine/translator-api-registry/master/biolink/jsonld_context/biolinks_homolog_context.json'
-  '/bioentity/gene/{gene_id}/interactions/':
+          description: A distinct set of association.objects (typically ontology terms).
+            This appears at the top level of the results payload
+          x-bte-response-mapping:
+            $ref: '#/components/x-bte-response-mapping/disease-phenotype'
+      summary: Returns phenotypes associated with a disease
+      tags:
+        - disease
+      x-bte-kgs-operations:
+        - associatedWith:
+            $ref: '#/components/x-bte-kgs-operations/disease-phenotype/associatedWith'
+  /bioentity/gene/{gene_id}/anatomy:
     get:
-      summary: 'Returns interactions for a gene'
       parameters:
-        - name: gene_id
-          in: path
-          description: >-
-            CURIE identifier of gene, e.g. NCBIGene:4750. Equivalent IDs can be used with same results
-          required: true
-          schema:
-            type: string
-          x-valueType:
-            - 'http://identifiers.org/ncbigene/'
-          x-requestTemplate:
-            - valueType: 'http://identifiers.org/ncbigene/'
-              template: /bioentity/gene/NCBIGene:{{input}}/interactions/
+      - description: CURIE identifier of gene
+          IDs can be used with same results
+        in: path
+        name: gene_id
+        required: true
+        example: NCBIGene:1017
+        schema:
+          type: string
+      - description: number of rows
+        in: query
+        name: rows
+        required: false
+        example: 100
+        schema:
+          type: integer
       responses:
         '200':
-          description: 'A distinct set of association.objects (typically ontology terms). This appears at the top level of the results payload'
-          x-responseValueType:
-            - path: edge.obj
-              valueType: 'http://identifiers.org/ncbigene/'
-          x-JSONLDContext:
-            'https://raw.githubusercontent.com/NCATS-Tangerine/translator-api-registry/master/biolink/jsonld_context/biolinks_interaction_context.json'
-  '/bioentity/gene/{gene_id}/phenotypes/':
+          description: A distinct set of association.objects (typically ontology terms).
+            This appears at the top level of the results payload
+          x-bte-response-mapping:
+            $ref: '#/components/x-bte-response-mapping/gene-anatomy'
+      summary: Returns anatomies associated with a gene
+      tags:
+        - gene
+      x-bte-kgs-operations:
+        - associatedWith:
+            $ref: '#/components/x-bte-kgs-operations/gene-anatomy/associatedWith'
+  /bioentity/gene/{gene_id}/diseases:
     get:
-      summary: 'Returns phenotypes associated with gene'
       parameters:
-        - name: gene_id
-          in: path
-          description: >-
-            CURIE identifier of gene, e.g. NCBIGene:4750. Equivalent IDs can be used with same results
-          required: true
-          schema:
-            type: string
-          x-valueType:
-            - 'http://identifiers.org/ncbigene/'
-          x-requestTemplate:
-            - valueType: 'http://identifiers.org/ncbigene/'
-              template: /bioentity/gene/NCBIGene:{{input}}/phenotypes
+      - description: CURIE identifier of gene
+          IDs can be used with same results
+        in: path
+        name: gene_id
+        required: true
+        example: "NCBIGene:1017"
+        schema:
+          type: string
+      - description: number of rows
+        in: query
+        name: rows
+        required: false
+        example: 100
+        schema:
+          type: integer
       responses:
         '200':
-          description: 'A distinct set of association.objects (typically ontology terms). This appears at the top level of the results payload'
-          x-responseValueType:
-            - path: edge.obj
-              valueType: 'http://identifiers.org/hp/'
-          x-JSONLDContext:
-            'https://raw.githubusercontent.com/NCATS-Tangerine/translator-api-registry/master/biolink/jsonld_context/biolinks_phenotype_context.json'
+          description: A distinct set of association.objects (typically ontology terms).
+            This appears at the top level of the results payload
+          x-bte-response-mapping:
+            $ref: '#/components/x-bte-response-mapping/gene-disease'
+      summary: Returns diseases associated with a gene
+      tags:
+        - gene
+      x-bte-kgs-operations:
+        - associatedWith:
+            $ref: '#/components/x-bte-kgs-operations/gene-disease/associatedWith'
+  /bioentity/gene/{gene_id}/interactions:
+    get:
+      parameters:
+      - description: CURIE identifier of gene
+          IDs can be used with same results
+        in: path
+        name: gene_id
+        required: true
+        example: "NCBIGene:1017"
+        schema:
+          type: string
+      - description: number of rows
+        in: query
+        name: rows
+        required: false
+        example: 100
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: A distinct set of association.objects (typically ontology terms).
+            This appears at the top level of the results payload
+          x-bte-response-mapping:
+            $ref: '#/components/x-bte-response-mapping/gene-interaction'
+      summary: Returns gene interaction
+      tags:
+        - gene
+      x-bte-kgs-operations:
+        - associatedWith:
+            $ref: '#/components/x-bte-kgs-operations/gene-interaction/associatedWith'
+  /bioentity/gene/{gene_id}/phenotypes:
+    get:
+      parameters:
+      - description: CURIE identifier of gene
+          IDs can be used with same results
+        in: path
+        name: gene_id
+        required: true
+        example: "NCBIGene:1017"
+        schema:
+          type: string
+      - description: number of rows
+        in: query
+        name: rows
+        required: false
+        example: 100
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: A distinct set of association.objects (typically ontology terms).
+            This appears at the top level of the results payload
+          x-bte-response-mapping:
+            $ref: '#/components/x-bte-response-mapping/gene-phenotype'
+      summary: Returns phenotypes associated with a gene
+      tags:
+        - gene
+      x-bte-kgs-operations:
+        - associatedWith:
+            $ref: '#/components/x-bte-kgs-operations/gene-phenotype/associatedWith'
+  /bioentity/pathway/{pathway_id}/diseases:
+    get:
+      parameters:
+      - description: CURIE identifier of reactome pathway
+          IDs can be used with same results
+        in: path
+        name: pathway_id
+        required: true
+        example: "REACT:R-HSA-5387390"
+        schema:
+          type: string
+      - description: number of rows
+        in: query
+        name: rows
+        required: false
+        example: 100
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: A distinct set of association.objects (typically ontology terms).
+            This appears at the top level of the results payload
+          x-bte-response-mapping:
+            $ref: '#/components/x-bte-response-mapping/pathway-disease'
+      summary: Returns diseases associated with a pathway
+      tags:
+        - pathway
+      x-bte-kgs-operations:
+        - associatedWith:
+            $ref: '#/components/x-bte-kgs-operations/pathway-disease/associatedWith'
+  /bioentity/pathway/{pathway_id}/phenotypes:
+    get:
+      parameters:
+      - description: CURIE identifier of reactome pathway
+          IDs can be used with same results
+        in: path
+        name: pathway_id
+        example: "REACT:R-HSA-5387390"
+        required: true
+        schema:
+          type: string
+      - description: number of rows
+        in: query
+        name: rows
+        required: false
+        example: 100
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: A distinct set of association.objects (typically ontology terms).
+            This appears at the top level of the results payload
+          x-bte-response-mapping:
+            $ref: '#/components/x-bte-response-mapping/pathway-phenotype'
+      summary: Returns phenotypes associated with a pathway
+      tags:
+        - pathway
+      x-bte-kgs-operations:
+        - associatedWith:
+            $ref: '#/components/x-bte-kgs-operations/pathway-phenotype/associatedWith'
+  /bioentity/phenotype/{phenotype_id}/genes:
+    get:
+      parameters:
+      - description: CURIE identifier of phenotype
+          IDs can be used with same results
+        in: path
+        name: phenotype_id
+        required: true
+        example: "HP:0012265"
+        schema:
+          type: string
+      - description: number of rows
+        in: query
+        name: rows
+        required: false
+        example: 100
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: A distinct set of association.objects (typically ontology terms).
+            This appears at the top level of the results payload
+          x-bte-response-mapping:
+            $ref: '#/components/x-bte-response-mapping/phenotype-gene'
+      summary: Returns genes associated with a phenotype
+      tags:
+        - phenotype
+      x-bte-kgs-operations:
+        - associatedWith:
+            $ref: '#/components/x-bte-kgs-operations/phenotype-gene/associatedWith'
+  /bioentity/phenotype/{phenotype_id}/pathways:
+    get:
+      parameters:
+      - description: CURIE identifier of phenotype
+          IDs can be used with same results
+        in: path
+        name: phenotype_id
+        required: true
+        example: "HP:0012265"
+        schema:
+          type: string
+      - description: number of rows
+        in: query
+        name: rows
+        required: false
+        example: 100
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: A distinct set of association.objects (typically ontology terms).
+            This appears at the top level of the results payload
+          x-bte-response-mapping:
+            $ref: '#/components/x-bte-response-mapping/phenotype-pathway'
+      summary: Returns pathways associated with a phenotype
+      tags:
+        - phenotype
+      x-bte-kgs-operations:
+        - associatedWith:
+            $ref: '#/components/x-bte-kgs-operations/phenotype-pathway/associatedWith'
+  /bioentity/phenotype/{phenotype_id}/diseases:
+    get:
+      parameters:
+      - description: CURIE identifier of phenotype
+          IDs can be used with same results
+        in: path
+        name: phenotype_id
+        required: true
+        example: "HP:0012265"
+        schema:
+          type: string
+      - description: number of rows
+        in: query
+        name: rows
+        required: false
+        example: 100
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: A distinct set of association.objects (typically ontology terms).
+            This appears at the top level of the results payload
+          x-bte-response-mapping:
+            $ref: '#/components/x-bte-response-mapping/phenotype-disease'
+      summary: Returns diseases associated with a phenotype
+      tags:
+        - phenotype
+      x-bte-kgs-operations:
+        - associatedWith:
+            $ref: '#/components/x-bte-kgs-operations/phenotype-disease/associatedWith'
+components:
+  x-bte-response-mapping:
+    anatomy-gene:
+      "@context": http://schema.org
+      "@type": AnatomicalEntity
+      bts:uberon: associations.subject.id
+      bts:name: associations.subject.label
+      bts:associatedWith:
+        "@type": Gene
+        bts:hgnc: associations.object.HGNC
+        bts:entrez: associations.object.NCBIGene
+        bts:mgi: associations.object.MGI
+        bts:zfin: associations.object.ZFIN
+        bts:flybase: associations.object.FlyBase
+        bts:source: associations.provided_by
+        bts:relation: associations.relation.label
+        bts:pubmed: associations.publications.id
+        "$input": bts:uberon
+        "$source": biolink
+    disease-gene:
+      "@context": http://schema.org
+      "@type": DiseaseOrPhenotypicFeature
+      bts:mondo: associations.subject.id
+      bts:name: associations.subject.label
+      bts:associatedWith:
+        "@type": Gene
+        bts:hgnc: associations.object.HGNC
+        bts:entrez: associations.object.NCBIGene
+        bts:mgi: associations.object.MGI
+        bts:zfin: associations.object.ZFIN
+        bts:flybase: associations.object.FlyBase
+        bts:source: associations.provided_by
+        bts:relation: associations.relation.label
+        bts:pubmed: associations.publications.id
+        bts:taxid: associations.object.taxon.id
+        "$input": bts:mondo
+        "$source": biolink
+    disease-pathway:
+      "@context": http://schema.org
+      "@type": DiseaseOrPhenotypicFeature
+      bts:mondo: associations.subject.id
+      bts:name: associations.subject.label
+      bts:associatedWith:
+        "@type": Pathway
+        bts:reactome: associations.object.REACT
+        bts:name: associations.object.label
+        bts:source: associations.provided_by
+        bts:relation: associations.relation.label
+        bts:pubmed: associations.publications.id
+        "$input": bts:mondo
+        "$source": biolink
+    disease-phenotype:
+      "@context": http://schema.org
+      "@type": DiseaseOrPhenotypicFeature
+      bts:mondo: associations.subject.id
+      bts:name: associations.subject.label
+      bts:associatedWith:
+        "@type": PhenotypicFeature
+        bts:hp: associations.object.HP
+        bts:efo: associations.object.EFO
+        bts:mondo: associations.object.MONDO
+        bts:name: associations.object.label
+        bts:source: associations.provided_by
+        bts:pubmed: associations.publications.id
+        bts:relation: associations.relation.label
+        "$input": bts:mondo
+        "$source": biolink
+    gene-anatomy:
+      "@context": http://schema.org
+      "@type": Gene
+      bts:entrez: associations.subject.id
+      bts:symbol: associations.subject.label
+      bts:associatedWith:
+        "@type": AnatomicalEntity
+        bts:uberon: associations.object.UBERON
+        bts:cl: associations.object.CL
+        bts:fbbt: associations.object.FBbt
+        bts:source: associations.provided_by
+        bts:pubmed: associations.publications.id
+        bts:relation: associations.relation.label
+        "$input": bts:entrez
+        "$source": biolink
+    gene-disease:
+      "@context": http://schema.org
+      "@type": Gene
+      bts:entrez: associations.subject.id
+      bts:symbol: associations.subject.label
+      bts:associatedWith:
+        "@type": DiseaseOrPhenotypicFeature
+        bts:mondo: associations.object.MONDO
+        bts:name: associations.object.label
+        bts:source: associations.provided_by
+        bts:relation: associations.relation.label
+        bts:pubmed: associations.publications.id
+        "$input": bts:entrez
+        "$source": biolink
+    gene-phenotype:
+      "@context": http://schema.org
+      "@type": Gene
+      bts:entrez: associations.subject.id
+      bts:symbol: associations.subject.label
+      bts:associatedWith:
+        "@type": PhenotypicFeature
+        bts:hp: associations.object.HP
+        bts:efo: associations.object.EFO
+        bts:mondo: associations.object.MONDO
+        bts:name: associations.object.label
+        bts:source: associations.provided_by
+        bts:pubmed: associations.publications.id
+        bts:relation: associations.relation.label
+        "$input": bts:entrez
+        "$source": biolink
+    gene-interaction:
+      "@context": http://schema.org
+      "@type": Gene
+      bts:entrez: associations.subject.id
+      bts:symbol: associations.subject.label
+      bts:molecularlyInteractsWith:
+        "@type": Gene
+        bts:hgnc: associations.object.HGNC
+        bts:entrez: associations.object.NCBIGene
+        bts:mgi: associations.object.MGI
+        bts:zfin: associations.object.ZFIN
+        bts:flybase: associations.object.FlyBase
+        bts:source: associations.provided_by
+        bts:relation: associations.relation.label
+        bts:pubmed: associations.publications.id
+        bts:taxid: associations.object.taxon.id
+        "$input": bts:entrez
+        "$source": biolink
+    pathway-disease:
+      "@context": http://schema.org
+      "@type": Pathway
+      bts:reactome: associations.subject.id
+      bts:name: associations.subject.label
+      bts:associatedWith:
+        "@type": DiseaseOrPhenotypicFeature
+        bts:mondo: associations.object.MONDO
+        bts:name: associations.object.label
+        bts:source: associations.provided_by
+        bts:relation: associations.relation.label
+        bts:pubmed: associations.publications.id
+        "$input": bts:reactome
+        "$source": biolink
+    pathway-phenotype:
+      "@context": http://schema.org
+      "@type": Pathway
+      bts:reactome: associations.subject.id
+      bts:name: associations.subject.label
+      bts:associatedWith:
+        "@type": PhenotypicFeature
+        bts:hp: associations.object.HP
+        bts:efo: associations.object.EFO
+        bts:mondo: associations.object.MONDO
+        bts:name: associations.object.label
+        bts:source: associations.provided_by
+        bts:pubmed: associations.publications.id
+        bts:relation: associations.relation.label
+        "$input": bts:reactome
+        "$source": biolink
+    phenotype-disease:
+      "@context": http://schema.org
+      "@type": PhenotypicFeature
+      bts:hp: associations.subject.id
+      bts:name: associations.subject.label
+      bts:associatedWith:
+        "@type": DiseaseOrPhenotypicFeature
+        bts:mondo: associations.object.MONDO
+        bts:name: associations.object.label
+        bts:source: associations.provided_by
+        bts:relation: associations.relation.label
+        bts:pubmed: associations.publications.id
+        "$input": bts:hp
+        "$source": biolink
+    phenotype-gene:
+      "@context": http://schema.org
+      "@type": PhenotypicFeature
+      bts:hp: associations.subject.id
+      bts:name: associations.subject.label
+      bts:associatedWith:
+        "@type": Gene
+        bts:hgnc: associations.object.HGNC
+        bts:entrez: associations.object.NCBIGene
+        bts:mgi: associations.object.MGI
+        bts:zfin: associations.object.ZFIN
+        bts:flybase: associations.object.FlyBase
+        bts:source: associations.provided_by
+        bts:relation: associations.relation.label
+        bts:pubmed: associations.publications.id
+        "$input": bts:hp
+        "$source": biolink
+    phenotype-pathway:
+      "@context": http://schema.org
+      "@type": PhenotypicFeature
+      bts:hp: associations.subject.id
+      bts:name: associations.subject.label
+      bts:associatedWith:
+        "@type": Pathway
+        bts:reactome: associations.object.REACT
+        bts:name: associations.object.label
+        bts:source: associations.provided_by
+        bts:relation: associations.relation.label
+        bts:pubmed: associations.publications.id
+        "$input": bts:hp
+        "$source": biolink
+  x-bte-kgs-operations:
+    anatomy-gene:
+      associatedWith:
+        parameters:
+          anatomy_id: "{input1}"
+          rows: 200
+        inputs:
+          - id: uberon
+            semantic: AnatomicalEntity
+        outputs:
+          - id: hgnc
+            semantic: Gene
+    disease-gene:
+      associatedWith:
+        parameters:
+          disease_id: "{input1}"
+          rows: 200
+        inputs:
+          - id: mondo
+            semantic: DiseaseOrPhenotypicFeature
+        outputs:
+          - id: hgnc
+            semantic: Gene
+    disease-pathway:
+      associatedWith:
+        parameters:
+          disease_id: "{input1}"
+          rows: 200
+        inputs:
+          - id: mondo
+            semantic: DiseaseOrPhenotypicFeature
+        outputs:
+          - id: reactome
+            semantic: Pathway
+    disease-phenotype:
+      associatedWith:
+        parameters:
+          disease_id: "{input1}"
+          rows: 200
+        inputs:
+          - id: mondo
+            semantic: DiseaseOrPhenotypicFeature
+        outputs:
+          - id: hp
+            semantic: PhenotypicFeature
+    gene-anatomy:
+      associatedWith:
+        parameters:
+          gene_id: "NCBIGene:{input1}"
+          rows: 200
+        inputs:
+          - id: entrez
+            semantic: Gene
+        outputs:
+          - id: uberon
+            semantic: AnatomicalEntity
+    gene-disease:
+      associatedWith:
+        parameters:
+          gene_id: "NCBIGene:{input1}"
+          rows: 200
+        inputs:
+          - id: entrez
+            semantic: Gene
+        outputs:
+          - id: mondo
+            semantic: DiseaseOrPhenotypicFeature
+    gene-phenotype:
+      associatedWith:
+        parameters:
+          gene_id: "NCBIGene:{input1}"
+          rows: 200
+        inputs:
+          - id: entrez
+            semantic: Gene
+        outputs:
+          - id: hp
+            semantic: PhenotypicFeature
+    gene-interaction:
+      associatedWith:
+        parameters:
+          gene_id: "NCBIGene:{input1}"
+          rows: 200
+        inputs:
+          - id: entrez
+            semantic: Gene
+        outputs:
+          - id: hgnc
+            semantic: Gene
+    pathway-disease:
+      associatedWith:
+        parameters:
+          gene_id: "REACT:{input1}"
+          rows: 200
+        inputs:
+          - id: reactome
+            semantic: Pathway
+        outputs:
+          - id: mondo
+            semantic: DiseaseOrPhenotypicFeature
+    pathway-phenotype:
+      associatedWith:
+        parameters:
+          gene_id: "REACT:{input1}"
+          rows: 200
+        inputs:
+          - id: reactome
+            semantic: Pathway
+        outputs:
+          - id: hp
+            semantic: PhenotypicFeature
+    phenotype-disease:
+      associatedWith:
+        parameters:
+          gene_id: "{input1}"
+          rows: 200
+        inputs:
+          - id: hp
+            semantic: PhenotypicFeature
+        outputs:
+          - id: mondo
+            semantic: DiseaseOrPhenotypicFeature
+    phenotype-gene:
+      associatedWith:
+        parameters:
+          gene_id: "{input1}"
+          rows: 200
+        inputs:
+          - id: hp
+            semantic: PhenotypicFeature
+        outputs:
+          - id: hgnc
+            semantic: Gene
+    phenotype-pathway:
+      associatedWith:
+        parameters:
+          gene_id: "{input1}"
+          rows: 200
+        inputs:
+          - id: hp
+            semantic: PhenotypicFeature
+        outputs:
+          - id: reactome
+            semantic: Pathway

@@ -1,398 +1,523 @@
-openapi: '3.0.0'
+openapi: 3.0.0
 info:
-  version: '1.0'
-  title: MyVariant.info API
-  description: >-
-    Documentation of the MyVariant.info Variant Query web services. Learn more about
-    [MyVariant.info](http://myvariant.info/)
-  termsOfService: http://myvariant.info/terms/
   contact:
-    name: Chunlei Wu
-    x-role: responsible developer
     email: help@myvariant.info
+    name: Chunlei Wu
     x-id: https://github.com/newgene
+    x-role: responsible developer
+  description: Documentation of the MyVariant.info Variant Query web services. Learn
+    more about [MyVariant.info](http://myvariant.info/)
+  termsOfService: http://myvariant.info/terms/
+  title: MyVariant.info API
+  version: '1.0'
 servers:
-  - url: 'https://myvariant.info/v1'
-    description: 'Encrypted Production server'
-  - url: 'http://myvariant.info/v1'
-    description: 'Production server'
+- description: Encrypted Production server
+  url: https://myvariant.info/v1
+- description: Production server
+  url: http://myvariant.info/v1
 tags:
-  - name: variant
-  - name: query
-  - name: metadata
-  - name: translator
+- name: variant
+- name: query
+- name: metadata
+- name: translator
 paths:
-  /query:
+  /metadata:
     get:
-      tags:
-        - "query"
-      summary: 'Make variant query and return matching variant list. Support JSONP and CORS as well.'
       parameters:
-        - name: q
-          in: "query"
-          description: 'Query string. Examples "rs752396467", "possibly_damaging", "CDK7". The detailed query syntax can be found from our [docs](http://docs.myvariant.info/en/latest/doc/variant_query_service.html).'
-          required: true
-          example: CDK7
-          schema:
-            type: string
-          x-valueType:
-            - 'http://identifiers.org/hgnc.symbol/'
-            - 'http://identifiers.org/dbsnp/'
-            - 'http://identifiers.org/ensembl.gene/'
-            - 'http://identifiers.org/ensembl.transcript/'
-            - 'http://identifiers.org/ensembl.protein/'
-            - 'http://identifiers.org/ccds/'
-            - 'http://identifiers.org/uniprot/'
-            - 'http://identifiers.org/clinvar/'
-            - 'http://identifiers.org/omim/'
-            - 'http://identifiers.org/efo/'
-            - 'http://identifiers.org/orphanet/'
-            - 'http://identifiers.org/hgnc/'
-            - 'http://identifiers.org/pubmed/'
-            - 'http://identifiers.org/refseq/'
-            - 'http://identifiers.org/clinicalsignificance/'
-            - 'http://biothings.io/terms/drugname/'
-          x-requestTemplate:
-            - valueType: 'http://identifiers.org/hgnc.symbol/'
-              template: cadd.gene.genename:{{input}} OR cgi.gene:{{input}} OR clinvar.gene.symbol:{{input}} OR dbnsfp.genename:{{input}} OR dbsnp.gene.symbol:{{input}} OR docm.genename:{{input}} OR emv.gene:{{input}} OR evs.gene.symbol:{{input}} OR snpeff.ann.genename:{{input}}
-            - valueType: 'http://identifiers.org/dbsnp/'
-              template: clinvar.rsid:{{input}} OR dbnsfp.rsid:{{input}} OR dbsnp.rsid:{{input}} OR evs.rsid:{{input}}
-            - valueType: 'http://identifiers.org/ensembl.gene/'
-              template: dbnsfp.ensembl.geneid:{{input}} OR cadd.gene.gene_id:{{input}}
-            - valueType: 'http://identifiers.org/ensembl.transcript'
-              template: dbnsfp.ensembl.transcriptid:{{input}} OR cadd.gene.feature_id:{{input}}
-            - valueType: 'http://identifiers.org/ensembl.protein/'
-              template: dbnsfp.ensembl.proteinid:{{input}}
-            - valueType: 'http://identifiers.org/ccds/'
-              template: cadd.gene.ccds_id:{{input}}
-            - valueType: 'http://identifiers.org/uniprot/'
-              template: dbnsfp.uniprot.acc:{{input}}
-            - valueType: 'http://identifiers.org/omim/'
-              template: clinvar.omim:{{input}}
-            - valueType: 'http://identifiers.org/efo/'
-              template: clinvar.rcv.conditions.identifiers.efo:{{input}}
-            - valueType: 'http://identifiers.org/orphanet/'
-              template: clinvar.rcv.conditions.identifiers.orphanet:{{input}}
-            - valueType: 'http://identifiers.org/hgnc/'
-              template: clinvar.gene.id:{{input}} OR dbsnp.gene.geneid:{{input}}
-            - valueType: 'http://identifiers.org/pubmed/'
-              template: civic.evidence_items.source.pubmed_id:{{input}} OR docm.pubmed_id:{{input}} OR gwassnps.pubmed:{{input}}
-            - valueType: 'http://identifiers.org/clinicalsignificance/'
-              template: clinvar.rcv.clinical_significance:{{input}}
-            - valueType: 'http://biothings.io/terms/drugname/'
-              template: civic.evidence_items.drugs.name:{{input}}
-        - name: fields
-          in: "query"
-          $ref: '#/components/parameters/fields'
-        - name: size
-          in: "query"
-          $ref: '#/components/parameters/size'
-        - name: from
-          in: "query"
-          $ref: '#/components/parameters/from'
-        - name: sort
-          in: "query"
-          $ref: '#/components/parameters/sort'
-        - name: facets
-          in: "query"
-          description: 'a single field or comma-separated fields to return facets, for example, "facets=clinvar.gene.id", "facets=clinvar.gene.id,dbnsfp.uniprot.acc".'
-          schema:
-            type: string
-        - name: callback
-          in: "query"
-          $ref: '#/components/parameters/callback'
-        - name: dotfield
-          in: "query"
-          $ref: '#/components/parameters/dotfield'
-        - name: email
-          in: "query"
-          $ref: '#/components/parameters/email'
+      - $ref: '#/components/parameters/callback'
+        in: query
+        name: callback
       responses:
         '200':
-          description: 'A query response object with "hits" property'
+          description: MyVariant.info metadata object
+      summary: Get metadata about the data available from MyVariant.info.
+      tags:
+      - metadata
+  /metadata/fields:
+    get:
+      parameters:
+      - description: Pass a search term to filter the available fields, e.g. "search=clinvar".
+        in: query
+        name: search
+        schema:
+          type: string
+      - description: Pass a prefix string to filter the available fields, e.g. "prefix=refseq".
+        in: query
+        name: prefix
+        schema:
+          type: string
+      - $ref: '#/components/parameters/callback'
+        in: query
+        name: callback
+      responses:
+        '200':
+          description: MyVariant.info metadata fields object
+      summary: Get metadata about the data fields available from MyVariant.info.
+      tags:
+      - metadata
+  /query:
+    get:
+      parameters:
+      - description: Query string. Examples "rs752396467", "possibly_damaging", "CDK7".
+          The detailed query syntax can be found from our [docs](http://docs.myvariant.info/en/latest/doc/variant_query_service.html).
+        example: CDK7
+        in: query
+        name: q
+        required: true
+        schema:
+          type: string
+        x-requestTemplate:
+        - template: cadd.gene.genename:{{input}} OR cgi.gene:{{input}} OR clinvar.gene.symbol:{{input}}
+            OR dbnsfp.genename:{{input}} OR dbsnp.gene.symbol:{{input}} OR docm.genename:{{input}}
+            OR emv.gene:{{input}} OR evs.gene.symbol:{{input}} OR snpeff.ann.genename:{{input}}
+          valueType: http://identifiers.org/hgnc.symbol/
+        - template: clinvar.rsid:{{input}} OR dbnsfp.rsid:{{input}} OR dbsnp.rsid:{{input}}
+            OR evs.rsid:{{input}}
+          valueType: http://identifiers.org/dbsnp/
+        - template: dbnsfp.ensembl.geneid:{{input}} OR cadd.gene.gene_id:{{input}}
+          valueType: http://identifiers.org/ensembl.gene/
+        - template: dbnsfp.ensembl.transcriptid:{{input}} OR cadd.gene.feature_id:{{input}}
+          valueType: http://identifiers.org/ensembl.transcript
+        - template: dbnsfp.ensembl.proteinid:{{input}}
+          valueType: http://identifiers.org/ensembl.protein/
+        - template: cadd.gene.ccds_id:{{input}}
+          valueType: http://identifiers.org/ccds/
+        - template: dbnsfp.uniprot.acc:{{input}}
+          valueType: http://identifiers.org/uniprot/
+        - template: clinvar.omim:{{input}}
+          valueType: http://identifiers.org/omim/
+        - template: clinvar.rcv.conditions.identifiers.efo:{{input}}
+          valueType: http://identifiers.org/efo/
+        - template: clinvar.rcv.conditions.identifiers.orphanet:{{input}}
+          valueType: http://identifiers.org/orphanet/
+        - template: clinvar.gene.id:{{input}} OR dbsnp.gene.geneid:{{input}}
+          valueType: http://identifiers.org/hgnc/
+        - template: civic.evidence_items.source.pubmed_id:{{input}} OR docm.pubmed_id:{{input}}
+            OR gwassnps.pubmed:{{input}}
+          valueType: http://identifiers.org/pubmed/
+        - template: clinvar.rcv.clinical_significance:{{input}}
+          valueType: http://identifiers.org/clinicalsignificance/
+        - template: civic.evidence_items.drugs.name:{{input}}
+          valueType: http://biothings.io/terms/drugname/
+        x-valueType:
+        - http://identifiers.org/hgnc.symbol/
+        - http://identifiers.org/dbsnp/
+        - http://identifiers.org/ensembl.gene/
+        - http://identifiers.org/ensembl.transcript/
+        - http://identifiers.org/ensembl.protein/
+        - http://identifiers.org/ccds/
+        - http://identifiers.org/uniprot/
+        - http://identifiers.org/clinvar/
+        - http://identifiers.org/omim/
+        - http://identifiers.org/efo/
+        - http://identifiers.org/orphanet/
+        - http://identifiers.org/hgnc/
+        - http://identifiers.org/pubmed/
+        - http://identifiers.org/refseq/
+        - http://identifiers.org/clinicalsignificance/
+        - http://biothings.io/terms/drugname/
+      - $ref: '#/components/parameters/fields'
+        in: query
+        name: fields
+      - $ref: '#/components/parameters/size'
+        in: query
+        name: size
+      - $ref: '#/components/parameters/from'
+        in: query
+        name: from
+      - $ref: '#/components/parameters/sort'
+        in: query
+        name: sort
+      - description: a single field or comma-separated fields to return facets, for
+          example, "facets=clinvar.gene.id", "facets=clinvar.gene.id,dbnsfp.uniprot.acc".
+        in: query
+        name: facets
+        schema:
+          type: string
+      - $ref: '#/components/parameters/callback'
+        in: query
+        name: callback
+      - $ref: '#/components/parameters/dotfield'
+        in: query
+        name: dotfield
+      - $ref: '#/components/parameters/email'
+        in: query
+        name: email
+      responses:
+        '200':
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/QueryResult'
+          description: A query response object with "hits" property
+          x-JSONLDContext: https://raw.githubusercontent.com/NCATS-Tangerine/translator-api-registry/master/myvariant.info/jsonld_context/myvariant_query_1.1.json
           x-responseValueType:
-            - path: hits._id
-              valueType: 'http://identifiers.org/hgvs/'
-          x-JSONLDContext:
-            'https://raw.githubusercontent.com/NCATS-Tangerine/translator-api-registry/master/myvariant.info/jsonld_context/myvariant_query_1.1.json'
+          - path: hits._id
+            valueType: http://identifiers.org/hgvs/
         '400':
-          description: 'A response indicating an improperly formatted query'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResult'
-    post:
+          description: A response indicating an improperly formatted query
+      summary: Make variant query and return matching variant list. Support JSONP
+        and CORS as well.
       tags:
-        - "query"
-      summary: 'Make variant batch query and return matching variant hits'
+      - query
+    post:
+      parameters:
+      - $ref: '#/components/parameters/fields'
+        in: query
+        name: fields
+      - $ref: '#/components/parameters/dotfield'
+        in: query
+        name: dotfield
+      - $ref: '#/components/parameters/email'
+        in: query
+        name: email
       requestBody:
         content:
-          'application/x-www-form-urlencoded':
+          application/x-www-form-urlencoded:
             schema:
-             properties:
+              properties:
                 q:
-                  description: >-
-                    multiple query terms seperated by comma (also support "+" or white space), but no wildcard, e.g., "q=rs58991260,rs2500" or "q=rs58991260+rs2500"
+                  description: multiple query terms seperated by comma (also support
+                    "+" or white space), but no wildcard, e.g., "q=rs58991260,rs2500"
+                    or "q=rs58991260+rs2500"
                   type: string
                 scopes:
-                  description: 'Specify one or more fields (separated by comma) as the search "scopes", e.g., "scopes=dbsnp.rsid". The available "fields" that can be passed to "scopes" parameter are listed [here](http://docs.myvariant.info/en/latest/doc/data.html#available-fields). Default: "scopes=_id" (HGVS id).'
+                  description: 'Specify one or more fields (separated by comma) as
+                    the search "scopes", e.g., "scopes=dbsnp.rsid". The available
+                    "fields" that can be passed to "scopes" parameter are listed [here](http://docs.myvariant.info/en/latest/doc/data.html#available-fields).
+                    Default: "scopes=_id" (HGVS id).'
                   type: string
-             required:
-               - q
-      parameters:
-        - name: fields
-          in: "query"
-          $ref: '#/components/parameters/fields'
-        - name: dotfield
-          in: "query"
-          $ref: '#/components/parameters/dotfield'
-        - name: email
-          in: "query"
-          $ref: '#/components/parameters/email'
+              required:
+              - q
       responses:
         '200':
-          description: 'Query response objects with "hits" property'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/QueryPOSTResult'
+          description: Query response objects with "hits" property
+          x-JSONLDContext: https://raw.githubusercontent.com/NCATS-Tangerine/translator-api-registry/master/myvariant.info/jsonld_context/myvariant_query_1.1.json
           x-responseValueType:
-            - path: hits._id
-              valueType: 'http://identifiers.org/hgvs/'
-          x-JSONLDContext:
-            'https://raw.githubusercontent.com/NCATS-Tangerine/translator-api-registry/master/myvariant.info/jsonld_context/myvariant_query_1.1.json'
+          - path: hits._id
+            valueType: http://identifiers.org/hgvs/
+          x-bte-response-mapping:
+            $ref: '#/components/x-bte-response-mapping/query-post'
         '400':
-          description: 'A response indicating an improperly formatted query'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResult'
-  '/variant/{variantid}':
-    get:
+          description: A response indicating an improperly formatted query
+      summary: Make variant batch query and return matching variant hits
       tags:
-        - "variant"
-      summary: 'Retrieve variant annotation object based on HGVS or rsid, support JSONP and CORS as well.'
+      - query
+      x-bte-kgs-operations:
+        - variantAssociatedWithGene:
+            $ref: '#/components/x-bte-kgs-operations/variantAssociatedWithGene'
+        - variantAssociatedWithCondition:
+            $ref: '#/components/x-bte-kgs-operations/variantAssociatedWithCondition'
+  /variant:
+    post:
       parameters:
-        - name: variantid
-          in: path
-          description: >-
-            HGVS or rsid, e.g., chr6:g.152708291G>A, rs12190874
-          required: true
-          example: 'chr6:g.152708291G>A'
-          x-valueType:
-            - 'http://identifiers.org/hgvs/'
-            - 'http://identifiers.org/dbsnp/'
-          x-requestTemplate:
-            - valueType: 'http://identifiers.org/hgvs/'
-              template: /variant/{{input}}
-            - valueType: 'http://identifiers.org/dbsnp/'
-              template: /variant/{{input}}
-          schema:
-            type: string
-        - name: fields
-          in: "query"
-          $ref: '#/components/parameters/fields'
-        - name: dotfield
-          in: "query"
-          $ref: '#/components/parameters/dotfield'
-        - name: callback
-          in: "query"
-          $ref: '#/components/parameters/callback'
-        - name: email
-          in: "query"
-          $ref: '#/components/parameters/email'
+      - $ref: '#/components/parameters/fields'
+        in: query
+        name: fields
+      - $ref: '#/components/parameters/dotfield'
+        in: query
+        name: dotfield
+      - $ref: '#/components/parameters/email'
+        in: query
+        name: email
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              properties:
+                ids:
+                  description: multiple variant ids seperated by comma, e.g., "ids=chr6:g.152708291G>A,chr1:g.35367G>A"
+                    or "ids=rs5882,rs12190874". Note that currently we only take the
+                    input ids up to 1000 maximum, the rest will be omitted.
+                  type: string
+              required:
+              - ids
       responses:
         '200':
-          description: 'A matching variant object'
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/Variant'
+                type: array
+          description: a list of matching variant objects
+          x-JSONLDContext: https://raw.githubusercontent.com/NCATS-Tangerine/translator-api-registry/master/myvariant.info/jsonld_context/myvariant_variant_1.1.json
+          x-responseValueType:
+          - path: _id
+            valueType: http://identifiers.org/hgvs/
+      summary: For a list of variant ids, return the matching variant objects
+      tags:
+      - variant
+  /variant/{variantid}:
+    get:
+      parameters:
+      - description: HGVS or rsid, e.g., chr6:g.152708291G>A, rs12190874
+        example: chr6:g.152708291G>A
+        in: path
+        name: variantid
+        required: true
+        schema:
+          type: string
+        x-requestTemplate:
+        - template: /variant/{{input}}
+          valueType: http://identifiers.org/hgvs/
+        - template: /variant/{{input}}
+          valueType: http://identifiers.org/dbsnp/
+        x-valueType:
+        - http://identifiers.org/hgvs/
+        - http://identifiers.org/dbsnp/
+      - $ref: '#/components/parameters/fields'
+        in: query
+        name: fields
+      - $ref: '#/components/parameters/dotfield'
+        in: query
+        name: dotfield
+      - $ref: '#/components/parameters/callback'
+        in: query
+        name: callback
+      - $ref: '#/components/parameters/email'
+        in: query
+        name: email
+      responses:
+        '200':
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Variant'
+          description: A matching variant object
+          x-JSONLDContext: https://raw.githubusercontent.com/NCATS-Tangerine/translator-api-registry/master/myvariant.info/jsonld_context/myvariant_variant_1.1.json
           x-responseValueType:
-            - path: _id
-              valueType: 'http://identifiers.org/hgvs/'
-          x-JSONLDContext:
-            'https://raw.githubusercontent.com/NCATS-Tangerine/translator-api-registry/master/myvariant.info/jsonld_context/myvariant_variant_1.1.json'
+          - path: _id
+            valueType: http://identifiers.org/hgvs/
         '404':
-          description: 'A response indicating an unknown variant id'
-  '/variant':
-    post:
+          description: A response indicating an unknown variant id
+      summary: Retrieve variant annotation object based on HGVS or rsid, support JSONP
+        and CORS as well.
       tags:
-        - "variant"
-      summary: 'For a list of variant ids, return the matching variant objects'
-      requestBody:
-        content:
-          'application/x-www-form-urlencoded':
-            schema:
-             properties:
-                ids:
-                  description: 'multiple variant ids seperated by comma, e.g., "ids=chr6:g.152708291G>A,chr1:g.35367G>A" or "ids=rs5882,rs12190874". Note that currently we only take the input ids up to 1000 maximum, the rest will be omitted.'
-                  type: string
-             required:
-               - ids
-      parameters:
-        - name: fields
-          in: "query"
-          $ref: '#/components/parameters/fields'
-        - name: dotfield
-          in: "query"
-          $ref: '#/components/parameters/dotfield'
-        - name: email
-          in: "query"
-          $ref: '#/components/parameters/email'
-      responses:
-        '200':
-          description: 'a list of matching variant objects'
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Variant'
-          x-responseValueType:
-            - path: _id
-              valueType: 'http://identifiers.org/hgvs/'
-          x-JSONLDContext:
-            'https://raw.githubusercontent.com/NCATS-Tangerine/translator-api-registry/master/myvariant.info/jsonld_context/myvariant_variant_1.1.json'
-  '/metadata':
-    get:
-      tags:
-        - "metadata"
-      summary: 'Get metadata about the data available from MyVariant.info.'
-      parameters:
-        - name: callback
-          in: "query"
-          $ref: '#/components/parameters/callback'
-      responses:
-        '200':
-          description: 'MyVariant.info metadata object'
-  '/metadata/fields':
-    get:
-      tags:
-        - "metadata"
-      summary: 'Get metadata about the data fields available from MyVariant.info.'
-      parameters:
-        - name: search
-          in: "query"
-          description: 'Pass a search term to filter the available fields, e.g. "search=clinvar".'
-          schema:
-            type: string
-        - name: prefix
-          in: "query"
-          description: 'Pass a prefix string to filter the available fields, e.g. "prefix=refseq".'
-          schema:
-            type: string
-        - name: callback
-          in: "query"
-          $ref: '#/components/parameters/callback'
-      responses:
-        '200':
-          description: 'MyVariant.info metadata fields object'
+      - variant
 components:
   parameters:
-    fields:
-      name: fields
-      in: "query"
-      description:
-        'a comma-separated fields to limit the fields returned from the matching variant hits. The supported field names can be found from any variant object (e.g. http://myvariant.info/v1/variant/rs12190874). Note that it supports dot notation as well, e.g., you can pass "dbsnp.rsid". If "fields=all", all available fields will be returned. Default: "all".'
-      schema:
-        type: string
-    size:
-      name: size
-      in: "query"
-      description:
-          'the maximum number of matching variant hits to return (with a cap of 1000 at the moment). Default: 10.'
-      schema:
-        type: integer
-    from:
-      name: from
-      in: "query"
-      description:
-          'the number of matching variant hits to skip, starting from 0. Combining with "size" parameter, this can be useful for paging. Default: 0.'
-      schema:
-        type: integer
-    sort:
-      name: sort
-      in: "query"
-      description:
-          'the comma-separated fields to sort on. Prefix with "-" for descending order, otherwise in ascending order. Default: sort by matching scores in decending order.'
+    callback:
+      description: you can pass a "callback" parameter to make a JSONP call.
+      in: query
+      name: callback
       schema:
         type: string
     dotfield:
+      description: 'control the format of the returned variant object. If "true" or
+        "1", all fields will be collapsed into a single level deep structure (all
+        nested objects will be a single level deep, using dotfield notation to signify
+        the nested structure) Default: false.'
+      in: query
       name: dotfield
-      in: "query"
-      description: 'control the format of the returned variant object. If "true" or "1", all fields will be collapsed into a single level deep structure (all nested objects will be a single level deep, using dotfield notation to signify the nested structure) Default: false.'
       schema:
         type: boolean
-    callback:
-      name: callback
-      in: "query"
-      description: 'you can pass a "callback" parameter to make a JSONP call.'
+    email:
+      description: If you are regular users of our services, we encourage you to provide
+        us an email, so that we can better track the usage or follow up with you.
+      in: query
+      name: email
       schema:
         type: string
-    email:
-      name: email
-      in: "query"
-      description:
-          'If you are regular users of our services, we encourage you to provide us an email, so that we can better track the usage or follow up with you.'
+    fields:
+      description: 'a comma-separated fields to limit the fields returned from the
+        matching variant hits. The supported field names can be found from any variant
+        object (e.g. http://myvariant.info/v1/variant/rs12190874). Note that it supports
+        dot notation as well, e.g., you can pass "dbsnp.rsid". If "fields=all", all
+        available fields will be returned. Default: "all".'
+      in: query
+      name: fields
+      schema:
+        type: string
+    from:
+      description: 'the number of matching variant hits to skip, starting from 0.
+        Combining with "size" parameter, this can be useful for paging. Default: 0.'
+      in: query
+      name: from
+      schema:
+        type: integer
+    size:
+      description: 'the maximum number of matching variant hits to return (with a
+        cap of 1000 at the moment). Default: 10.'
+      in: query
+      name: size
+      schema:
+        type: integer
+    sort:
+      description: 'the comma-separated fields to sort on. Prefix with "-" for descending
+        order, otherwise in ascending order. Default: sort by matching scores in decending
+        order.'
+      in: query
+      name: sort
       schema:
         type: string
   schemas:
-    string_or_array:
-      oneOf:
-        - type: array
-          items:
-            type: string
-        - type: string
-    int64_or_array:
-      oneOf:
-        - type: array
-          items:
-            type: integer
-            format: int64
-        - type: integer
-          format: int64
-    QueryResult:
-      type: object
+    ErrorResult:
       properties:
+        message:
+          type: string
+        success:
+          type: boolean
+      type: object
+    QueryPOSTResult:
+      items:
+        allOf:
+        - $ref: '#/components/schemas/Variant'
+        - properties:
+            _score:
+              format: float
+              type: number
+            query:
+              type: string
+          type: object
+      type: array
+    QueryResult:
+      properties:
+        hits:
+          items:
+            $ref: '#/components/schemas/Variant'
+          type: array
         max_score:
-          type: number
           format: float
+          type: number
         took:
           type: integer
         total:
           type: integer
-        hits:
-          type: array
-          items:
-            $ref: '#/components/schemas/Variant'
-    QueryPOSTResult:
-      type: array
-      items:
-        allOf:
-          - $ref: '#/components/schemas/Variant'
-          - type: object
-            properties:
-              _score:
-                type: number
-                format: float
-              query:
-                type: string
-    ErrorResult:
       type: object
-      properties:
-        success:
-          type: boolean
-        message:
-          type: string
     Variant:
-      type: object
-      required:
-        - _id
       properties:
         _id:
           type: string
+      required:
+      - _id
+      type: object
+    int64_or_array:
+      oneOf:
+      - items:
+          format: int64
+          type: integer
+        type: array
+      - format: int64
+        type: integer
+    string_or_array:
+      oneOf:
+      - items:
+          type: string
+        type: array
+      - type: string
+  x-bte-response-mapping:
+    query-post:
+      "@context": http://schema.org
+      "@type": SequenceVariant
+      bts:dbsnp: dbsnp.rsid
+      bts:clinvar: clinvar.variant_id
+      bts:variantAssociatedWithGene:
+        "@type": Gene
+        bts:entrez: dbsnp.gene.geneid
+        "$input": bts:dbsnp
+        "$source": dbsnp
+      bts:variantAssociatedWithCondition:
+      - "@type": DiseaseOrPhenotypicFeature
+        bts:omim: clinvar.rcv.conditions.identifiers.omim
+        bts:name: clinvar.rcv.conditions.name
+        bts:clinicalsignificance: clinvar.rcv.clinical_significance
+        "$input": bts:dbsnp
+        "$source": clinvar
+      - "@type": DiseaseOrPhenotypicFeature
+        bts:orphanet: clinvar.rcv.conditions.identifiers.orphanet
+        bts:name: clinvar.rcv.conditions.name
+        bts:clinicalsignificance: clinvar.rcv.clinical_significance
+        "$input": bts:dbsnp
+        "$source": clinvar
+      - "@type": DiseaseOrPhenotypicFeature
+        bts:name: uniprot.humsavar.disease_name
+        "$input": bts:dbsnp
+        "$source": uniprot
+  x-bte-kgs-operations:
+    variantAssociatedWithGene:
+      path: '/query'
+      method: 'post'
+      supportBatch: true
+      inputSeparator: ','
+      parameters:
+        fields: dbsnp.gene.geneid
+        dotfield: false
+      requestBody:
+        body:
+          q: "{input1}"
+          scopes: dbsnp.rsid
+        header: "application/x-www-form-urlencoded"
+      inputs:
+        - id: dbsnp
+          semantic: SequenceVariant
+      outputs:
+        - id: entrez
+          semantic: Gene
+    variantAssociatedWithCondition:
+      - path: '/query'
+        method: 'post'
+        supportBatch: true
+        inputSeparator: ','
+        parameters:
+          fields: clinvar.rcv
+          dotfield: false
+        requestBody:
+          body:
+            q: "{input1}"
+            scopes: dbsnp.rsid
+          header: "application/x-www-form-urlencoded"
+        inputs:
+          - id: dbsnp
+            semantic: SequenceVariant
+        outputs:
+          - id: omim
+            semantic: DiseaseOrPhenotypicFeature
+      - path: '/query'
+        method: 'post'
+        supportBatch: true
+        inputSeparator: ','
+        parameters:
+          fields: clinvar.rcv
+          dotfield: false
+        requestBody:
+          body:
+            q: "{input1}"
+            scopes: dbsnp.rsid
+          header: "application/x-www-form-urlencoded"
+        inputs:
+          - id: dbsnp
+            semantic: SequenceVariant
+        outputs:
+          - id: orphanet
+            semantic: DiseaseOrPhenotypicFeature
+      - path: '/query'
+        method: 'post'
+        supportBatch: true
+        inputSeparator: ','
+        parameters:
+          fields: uniprot.humsavar.disease_name
+          dotfield: false
+        requestBody:
+          body:
+            q: "{input1}"
+            scopes: dbsnp.rsid
+          header: "application/x-www-form-urlencoded"
+        inputs:
+          - id: dbsnp
+            semantic: SequenceVariant
+        outputs:
+          - id: name
+            semantic: DiseaseOrPhenotypicFeature
