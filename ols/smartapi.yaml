@@ -1,0 +1,62 @@
+openapi: '3.0.0'
+info:
+  version: '1.0'
+  title: Ontology Lookup Service API
+  description: >-
+    The OLS REST API provides access to key biological data from OLS. The services provide a unified interface to query information about ontology terms from GO (the Gene Ontology) and ECO (the Evidence & Conclusion Ontology), Gene Ontology annotations from the EBI's GOA database, and gene products (proteins from UniProt, RNA from RNAcentral and complexes from ComplexPortal). 
+  termsOfService: https://www.ebi.ac.uk/OLS/services
+  contact:
+    name: pharmgkb help desk
+    x-role: responsible developer
+    email: help@pharmgkb.org
+servers:
+  - url: 'https://www.ebi.ac.uk/ols/api'
+    description: 'Production server'
+tags:
+  - name: publication
+  - name: translator
+paths:
+  '/ontologies/doid/children':
+    get:
+      summary: 'retrieve the children of specified ontology terms'
+      parameters:
+        - name: id
+          in: query
+          description: >-
+            Put Disease Ontology ID here, e.g. DOID:0110594
+          required: true
+          example: "DOID:0110594"
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 'A DISEASE ontolgoy annotation object'
+          x-bte-response-mapping:
+            $ref: '#/components/x-bte-response-mapping/hasChildren'
+      x-bte-kgs-operations:
+        associatedWith:
+          $ref: '#/components/x-bte-kgs-operations/hasChildren'
+components:
+  x-bte-kgs-operations:
+    hasChildren:
+      inputs:
+      - id: doid
+        semantic: DiseaseOrPhenotypicFeature
+      outputs:
+      - id: doid
+        semantic: DiseaseOrPhenotypicFeature
+      parameters:
+        goid: '{input1}'
+      supportBatch: false
+  x-bte-response-mapping:
+    hasChildren:
+      "@context": http://schema.org
+      "@type": DiseaseOrPhenotypicFeature
+      bts:doid: results.id
+      bts:hasChildren:
+        "@type": DiseaseOrPhenotypicFeature
+        bts:doid: _embedded.terms.obo_id
+        bts:name: _embedded.terms.label
+        bts:description: _embedded.terms.description
+        "$input": bts:doid
+        "$source": disease ontology
