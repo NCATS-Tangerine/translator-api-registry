@@ -1,0 +1,83 @@
+openapi: '3.0.0'
+info:
+  version: '1.0'
+  title: COHD API
+  description: >-
+    The COHD API
+  termsOfService: http://www.cohd.org
+  contact:
+    name: cohd help desk
+    x-role: responsible developer
+    email: help@cohd.org
+servers:
+  - url: 'http://cohd.io/api'
+    description: 'Production server'
+tags:
+  - name: translator
+  - name: gene
+  - name: chemical
+
+paths:
+  '/frequencies/associatedConceptDomainFreq':
+    get:
+      summary: 'retrieve associated concept data'
+      parameters:
+        - name: dataset_id
+          in: query
+          description: >-
+            the dataset id
+          required: true
+          example: 1
+          schema:
+            type: integer
+        - name: concept_id
+          in: query
+          description: >-
+            the COHD concept id
+          required: true
+          example: "441554"
+          schema:
+            type: string
+        - name: domain
+          in: query
+          description: >-
+            the input type
+          required: true
+          example: "Drug"
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 'A COHD concept object'
+          x-bte-response-mapping:
+            $ref: '#/components/x-bte-response-mapping/disease-drug'
+      x-bte-kgs-operations:
+        associatedWith:
+          $ref: '#/components/x-bte-kgs-operations/associatedWith'
+components:
+  x-bte-kgs-operations:
+    associatedWith:
+      inputs:
+      - id: cohd
+        semantic: DiseaseOrPhenotypicFeature
+      outputs:
+      - id: cohd
+        semantic: ChemicalSubstance
+      parameters:
+        concept_id: "{input1}"
+        dataset_id: 1
+        domain: Drug
+      supportBatch: false
+      response-mapping:
+        $ref: '#/components/x-bte-response-mapping/disease-drug'
+  x-bte-response-mapping:
+    disease-drug:
+      "@context": http://schema.org
+      "@type": DiseaseOrPhenotypicFeature
+      bts:cohd: results.id
+      bts:associatedWith:
+        "@type": ChemicalSubstance
+        bts:cohd: results.associated_concept_id
+        bts:name: results.concept.associated_concept_name
+        "$input": bts:cohd
+        "$source": cohd
