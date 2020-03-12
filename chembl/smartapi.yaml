@@ -1,0 +1,64 @@
+openapi: '3.0.0'
+info:
+  version: '1.0'
+  title: ChEMBL API
+  description: >-
+    The ChEMBL API
+  termsOfService: http://www.ebi.ac.uk/chembl
+  contact:
+    name: chembl help desk
+    x-role: responsible developer
+    email: help@chembl.org
+servers:
+  - url: 'http://www.ebi.ac.uk/chembl/api'
+    description: 'Production server'
+tags:
+  - name: publication
+  - name: translator
+paths:
+  '/data/mechanism.json':
+    get:
+      summary: 'retrieve drug mechanism'
+      parameters:
+        - name: molecule_chembl_id
+          in: query
+          description: >-
+            chembl id
+          required: true
+          example: "CHEMBL744"
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 'A drug mechanism object'
+          x-bte-response-mapping:
+            $ref: '#/components/x-bte-response-mapping/drug-mechanism'
+      x-bte-kgs-operations:
+        treats:
+          $ref: '#/components/x-bte-kgs-operations/target'
+components:
+  x-bte-kgs-operations:
+    target:
+      inputs:
+      - id: chembl
+        semantic: ChemicalSubstance
+      outputs:
+      - id: chembl
+        semantic: Gene
+      parameters:
+        molecule_chembl_id: "{input1}"
+      supportBatch: false
+      response-mapping:
+        $ref: '#/components/x-bte-response-mapping/drug-mechanism'
+  x-bte-response-mapping:
+    drug-mechanism:
+      "@context": http://schema.org
+      "@type": ChemicalSubstance
+      bts:chembl: chembl
+      bts:target:
+        "@type": Gene
+        bts:chembl: mechanisms.target_chembl_id
+        bts:action: mechanisms.action_type
+        bts:mechanism: mechanisms.mechanism_of_action
+        "$input": bts:chembl
+        "$source": chembl
