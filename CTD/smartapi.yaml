@@ -1,0 +1,117 @@
+openapi: '3.0.0'
+info:
+  version: '1.0'
+  title: CTD API
+  description: >-
+    The CTD API
+  termsOfService: http://ctdbase.org/help/linking.jsp#batchqueries
+  contact:
+    name: CTD help desk
+    x-role: responsible developer
+    email: help@ctd.org
+servers:
+  - url: 'http://ctdbase.org/tools'
+    description: 'Production server'
+tags:
+  - name: publication
+  - name: translator
+paths:
+  '/batchQuery.go':
+    get:
+      summary: 'retrieve relationship data'
+      parameters:
+        - name: inputType
+          in: query
+          description: >-
+            The Input type of query
+          required: true
+          example: "chem"
+          schema:
+            type: string
+        - name: inputTerms
+          in: query
+          description: >-
+            The Input value of query, usually a mesh ID
+          required: true
+          example: "D003634"
+          schema:
+            type: string
+        - name: report
+          in: query
+          description: >-
+            The Output of query
+          required: true
+          example: "genes_curated"
+          schema:
+            type: string
+        - name: format
+          in: query
+          description: >-
+            The output format
+          required: true
+          example: "json"
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 'A DISEASE ontolgoy annotation object'
+          x-bte-response-mapping:
+            - $ref: '#/components/x-bte-response-mapping/drug-gene'
+            - $ref: '#/components/x-bte-response-mapping/gene-disease'
+      x-bte-kgs-operations:
+        associatedWith:
+          $ref: '#/components/x-bte-kgs-operations/associatedWith'
+components:
+  x-bte-kgs-operations:
+    associatedWith:
+      - inputs:
+        - id: entrez
+          semantic: Gene
+        outputs:
+        - id: mesh
+          semantic: DiseaseOrPhenotypicFeature
+        parameters:
+          inputType: gene
+          report: diseases_curated
+          format: json
+          inputTerms: "{input1}"
+        supportBatch: false
+        response-mapping:
+          $ref: '#/components/x-bte-response-mapping/gene-disease'
+      - inputs:
+        - id: mesh
+          semantic: ChemicalSubstance
+        outputs:
+        - id: entrez
+          semantic: Gene
+        parameters:
+          inputType: chem
+          report: genes_curated
+          format: json
+          inputTerms: "{input1}"
+        supportBatch: false
+        response-mapping:
+          $ref: '#/components/x-bte-response-mapping/drug-gene'
+  x-bte-response-mapping:
+    gene-disease:
+      "@context": http://schema.org
+      "@type": Gene
+      bts:entrez: data.GeneID
+      bts:associatedWith:
+        "@type": DiseaseOrPhenotypicFeature
+        bts:mesh: data.DiseaseID
+        bts:name: data.DiseaseName
+        bts:pubmed: data.PubMedIDs
+        "$input": bts:entrez
+        "$source": CTD
+    drug-gene:
+      "@context": http://schema.org
+      "@type": ChemicalSubstance
+      bts:mesh: mesh
+      bts:associatedWith:
+        "@type": Gene
+        bts:entrez: data.GeneId
+        bts:pubmed: data.PubMedIds
+        bts:taxonomy: data.OrganismId
+        "$input": bts:mesh
+        "$source": ctd
