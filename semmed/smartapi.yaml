@@ -1,47 +1,46 @@
 openapi: 3.0.0
 info:
   contact:
-    email: help@mygene.info
-    name: JIWEN XIN
-    x-id: https://github.com/kevinxin90
+    email: help@biothings.io
+    name: Chunlei Wu
+    x-id: https://github.com/newgene
     x-role: responsible developer
-  description: Documentation of the SEMMED Query web services. Learn more
-    about [MyGene.info](http://pending.biothings.io/semmed/)
-  termsOfService: http://mygene.info/terms/
+  description: Documentation of the SEMMED disease query web services.  Learn more
+    about [mydisease.info](http://pending.biothings.io/semmed)
+  termsOfService: http://pending.biothings.io
   title: SEMMED API
   version: '1.0'
 servers:
-- description: Encrypted Production server
-  url: https://pending.biothings.io/semmed/
 - description: Production server
-  url: http://pending.biothings.io/semmed/
+  url: https://pending.biothings.io/semmed
 tags:
 - name: disease
 - name: annotation
 - name: query
 - name: translator
 - name: biothings
+- name: semmed
 paths:
   /disease:
     post:
       parameters:
-      - $ref: '#/components/parameters/fields'
-        name: fields
-      - $ref: '#/components/parameters/species'
-        name: species
       - $ref: '#/components/parameters/dotfield'
         name: dotfield
+      - $ref: '#/components/parameters/fields'
+        name: fields
       - $ref: '#/components/parameters/email'
         name: email
+      - $ref: '#/components/parameters/format'
+        name: format
       requestBody:
         content:
           application/x-www-form-urlencoded:
             schema:
               properties:
                 ids:
-                  description: multiple geneids seperated by comma, e.g., "ids=1017,1018"
-                    or "ids=695,ENSG00000123374". Note that currently we only take
-                    the input ids up to 1000 maximum, the rest will be omitted.
+                  description: 'multiple disease IDs separated by comma. Note that
+                    currently we only take the input ids up to 1000 maximum, the rest
+                    will be omitted. Type: string (list). Max: 1000.'
                   type: string
               required:
               - ids
@@ -51,424 +50,295 @@ paths:
             application/json:
               schema:
                 items:
-                  $ref: '#/components/schemas/Gene'
+                  $ref: '#/components/schemas/Disease'
                 type: array
-          description: a list of matching gene objects
-      summary: For a list of gene ids, return the matching gene objects
+          description: A list of matching disease objects
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResult'
+          description: A response indicating an improperly formatted query
+      summary: For a list of disease IDs, return the matching disease object
       tags:
-      - annotation
-  /gene/{geneid}:
+      - disease
+  /disease/{diseaseid}:
     get:
       parameters:
-      - description: Entrez or Ensembl gene id, e.g., 1017, ENSG00000170248. A retired
-          Entrez Gene id works too if it is replaced by a new one, e.g., 245794
-        example: '1017'
+      - description: 'Retrieve disease objects based on ID'
+        example: C0004096
         in: path
-        name: geneid
+        name: diseaseid
         required: true
         schema:
           type: string
-        x-requestTemplate:
-        - template: /gene/{{input}}
-          valueType: http://identifiers.org/ncbigene/
-        - template: /gene/{{input}}
-          valueType: http://identifiers.org/ensembl/
-        x-valueType:
-        - http://identifiers.org/ncbigene/
-        - http://identifiers.org/ensembl/
-      - $ref: '#/components/parameters/fields'
-        name: fields
       - $ref: '#/components/parameters/dotfield'
         name: dotfield
       - $ref: '#/components/parameters/callback'
         name: callback
+      - $ref: '#/components/parameters/fields'
+        name: fields
       - $ref: '#/components/parameters/email'
         name: email
+      - $ref: '#/components/parameters/format'
+        name: format
       responses:
         '200':
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Gene'
-          description: A matching gene object
-          x-JSONLDContext: https://raw.githubusercontent.com/NCATS-Tangerine/translator-api-registry/master/mygene.info/jsonld_context/mygene_gene_1.1.json
-          x-responseValueType:
-          - path: symbol
-            valueType: http://identifiers.org/hgnc.symbol/
-          - path: unigene
-            valueType: http://identifiers.org/unigene/
-          - path: uniprot.Swiss-Prot
-            valueType: http://identifiers.org/uniprot/
-          - path: pdb
-            valueType: http://identifiers.org/pdb/
-          - path: pathway.biocarta.id
-            valueType: http://identifiers.org/biocarta.pathway/
-          - path: pathway.kegg.id
-            valueType: http://identifiers.org/kegg.pathway/
-          - path: pathway.reactome.id
-            valueType: http://identifiers.org/reactome/
-          - path: pathway.wikipathways.id
-            valueType: http://identifiers.org/wikipathways/
-          - path: pathway.pharmgkb.id
-            valueType: http://identifiers.org/pharmgkb.pathways/
-      summary: Retrieve gene annotation object based on Entrez or Ensembl gene id,
-        support JSONP and CORS as well.
+                $ref: '#/components/schemas/Disease'
+          description: A matching disease object
+        '404':
+          description: A response indicating an unknown disease ID
+      summary: Retrieve disease objects based on ID
       tags:
-      - annotation
+      - disease
   /metadata:
     get:
       parameters:
       - $ref: '#/components/parameters/callback'
+        in: query
         name: callback
       responses:
         '200':
-          description: MyGene.info metadata object
-      summary: Get metadata about the data available from MyGene.info.
+          description: mydisease.info metadata object
+      summary: Get metadata about the data available from mydisease.info
+      tags:
+      - metadata
   /metadata/fields:
     get:
       parameters:
-      - description: Pass a search term to filter the available fields, e.g. "search=clinvar".
-        in: query
+      - $ref: '#/components/parameters/search'
         name: search
-        schema:
-          type: string
-      - description: Pass a prefix string to filter the available fields, e.g. "prefix=refseq".
-        in: query
-        name: prefix
-        schema:
-          type: string
       - $ref: '#/components/parameters/callback'
         name: callback
+      - $ref: '#/components/parameters/prefix'
+        name: prefix
+      - $ref: '#/components/parameters/format'
+        name: format
       responses:
         '200':
-          description: MyGene.info metadata fields object
-      summary: Get metadata about the data fields available from MyGene.info.
+          description: mydisease.info metadata fields object
+      summary: Get metadata about the data fields available from a mydisease.info chem
+        object
+      tags:
+      - metadata
   /query:
     get:
       parameters:
-      - description: Query string. Examples "CDK2", "NM_052827", "204639_at", "chr1:151,073,054-151,383,976",
-          "hg19.chr1:151073054-151383976". The detailed query syntax can be found
-          from our [docs](http://docs.mygene.info/en/latest/doc/query_service.html).
-        example: CDK2
+      - description: 'Query string.  The detailed query syntax can be found from our
+          [docs](http://mydisease.info).  Examples: "cancer", "primary ciliary dyskinesia", "DOID:9562"'
+        example: cancer
         in: query
         name: q
         required: true
         schema:
           type: string
+      - $ref: '#/components/parameters/dotfield'
+        name: dotfield
       - $ref: '#/components/parameters/fields'
         name: fields
-      - $ref: '#/components/parameters/species'
-        name: species
+      - $ref: '#/components/parameters/facet_size'
+        name: facet_size
+      - $ref: '#/components/parameters/sort'
+        name: sort
+      - $ref: '#/components/parameters/callback'
+        name: callback
+      - $ref: '#/components/parameters/email'
+        name: email
+      - $ref: '#/components/parameters/facets'
+        name: facets
       - $ref: '#/components/parameters/size'
         name: size
       - $ref: '#/components/parameters/from'
         name: from
-      - $ref: '#/components/parameters/sort'
-        name: sort
-      - description: a single field or comma-separated fields to return facets, for
-          example, "facets=taxid", "facets=taxid,type_of_gene".
-        in: query
-        name: facets
-        schema:
-          type: string
-      - description: "relevant when faceting on species (i.e., \u201Cfacets=taxid\u201D\
-          \ are passed). It\u2019s used to pass species filter without changing the\
-          \ scope of faceting, so that the returned facet counts won\u2019t change.\
-          \ Either species name or taxonomy id can be used, just like \u201Cspecies\u201D\
-          \ parameter."
-        in: query
-        name: species_facet_filter
-        schema:
-          type: string
-      - description: "when passed as \u201Ctrue\u201D or \u201C1\u201D, the query\
-          \ returns only the hits with valid Entrez gene ids. Default: false."
-        in: query
-        name: entrezonly
-        schema:
-          type: boolean
-      - description: "when passed as \u201Ctrue\u201D or \u201C1\u201D, the query\
-          \ returns only the hits with valid Ensembl gene ids. Default: false."
-        in: query
-        name: ensemblonly
-        schema:
-          type: boolean
-      - $ref: '#/components/parameters/callback'
-        name: callback
-      - $ref: '#/components/parameters/dotfield'
-        name: dotfield
-      - $ref: '#/components/parameters/email'
-        name: email
+      - $ref: '#/components/parameters/format'
+        name: format
       responses:
         '200':
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/QueryResult'
-          description: A query response object with "hits" property
-      summary: Make gene query and return matching gene list. Support JSONP and CORS
-        as well.
+          description: A query response with the "hits" property
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResult'
+          description: A response indicating an improperly formatted query
+      summary: Make disease queries and return matching disease hits. Supports JSONP
+        and CORS as well.
       tags:
       - query
     post:
       parameters:
-      - $ref: '#/components/parameters/fields'
-        name: fields
-      - $ref: '#/components/parameters/species'
-        name: species
       - $ref: '#/components/parameters/dotfield'
         name: dotfield
       - $ref: '#/components/parameters/email'
         name: email
+      - $ref: '#/components/parameters/fields'
+        name: fields
+      - $ref: '#/components/parameters/size'
+        name: size
+      - $ref: '#/components/parameters/format'
+        name: format
       requestBody:
         content:
           application/x-www-form-urlencoded:
             schema:
               properties:
                 q:
-                  description: multiple query terms seperated by comma (also support
-                    "+" or white space), but no wildcard, e.g., "q=1017,1018" or "q=CDK2+BTK"
+                  description: multiple query terms separated by comma (also "+" or
+                    whitespace).  Does not support wildcard queries
                   type: string
                 scopes:
-                  description: 'Specify one or more fields (separated by comma) as
-                    the search "scopes", e.g., "scopes=entrezgene", "scopes=entrezgene,ensemblgene".
-                    The available "fields" can be passed to "scopes" parameter are
-                    listed [here](http://mygene.info/doc/query_service.html#available-fields).
-                    Default: "scopes=entrezgene,ensemblgene,retired" (either Entrez
-                    or Ensembl gene ids).'
+                  description: 'a comma-separated list of fields as the search "scopes"
+                    (fields to search through for query term). The available "fields"
+                    that can be passed to the "scopes" parameter are listed in the
+                    **/metadata/fields** endpoint.string Default: "scopes=_id".'
                   type: string
-              required:
-              - q
       responses:
         '200':
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/QueryPOSTResult'
-          description: Query response objects with "hits" property
+          description: Query response objects with the "hits" property
           x-bte-response-mapping:
             $ref: '#/components/x-bte-response-mapping/query-post'
-      summary: Make gene batch query and return matching gene hits
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResult'
+          description: A response indicating an improperly formatted query
+      summary: Make batch disease queries and return matching disease hits
       tags:
       - query
       x-bte-kgs-operations:
-        - enablesMF:
-            $ref: '#/components/x-bte-kgs-operations/enablesMF'
-        - involvedInBP:
-            $ref: '#/components/x-bte-kgs-operations/involvedInBP'
-        - involvedInCC:
-            $ref: '#/components/x-bte-kgs-operations/involvedInCC'
-        - involvedInPathway:
-            $ref: '#/components/x-bte-kgs-operations/involvedInPathway'
-        - hasTranscript:
-            $ref: '#/components/x-bte-kgs-operations/hasTranscript'
-        - hasGeneProduct:
-            $ref: '#/components/x-bte-kgs-operations/hasGeneProduct'
-        - hasHomolog:
-            $ref: '#/components/x-bte-kgs-operations/hasHomolog'
+        treatedBy:
+          $ref: '#/components/x-bte-kgs-operations/treatedBy'
+        causedBy:
+          $ref: '#/components/x-bte-kgs-operations/causedBy'
+        associatedWith:
+          $ref: '#/components/x-bte-kgs-operations/associatedWith'
 components:
   parameters:
     callback:
-      description: you can pass a "callback" parameter to make a JSONP call.
+      description: 'you can pass a "callback" parameter to make a JSONP call. Type:
+        string.'
       in: query
       name: callback
       schema:
         type: string
     dotfield:
-      description: 'control the format of the returned fields when passed "fields"
-        parameter contains dot notation, e.g. "fields=refseq.rna". If "true" or "1",
-        the returned data object contains a single "refseq.rna" field, otherwise ("false"
-        or "0"), a single "refseq" field with a sub-field of "rna". Default: true.'
+      description: 'control the format of the returned disease object. If "true" or "1",
+        all fields will be collapsed into a single level deep object (all nested objects
+        will be a single level deep, using dotfield notation to signify the nested
+        structure) Type: boolean. Default: false.'
       in: query
       name: dotfield
       schema:
         type: boolean
     email:
       description: If you are regular users of our services, we encourage you to provide
-        us an email, so that we can better track the usage or follow up with you.
+        us with an email, so that we can better track the usage or follow up with
+        you.
       in: query
       name: email
       schema:
         type: string
+    facet_size:
+      description: 'the number of facet buckets to return in the response. Type: integer.
+        Default: 10. Max: 1000.'
+      in: query
+      name: facet_size
+      schema:
+        type: integer
+    facets:
+      description: 'a comma-separated list of fields to return facets on.  In addition
+        to query hits, the fields notated in "facets" will be aggregated by value
+        and bucklet counts will be displayed in the "facets" field of the response
+        object. Type: string (list). Default: None. Max: 1000.'
+      in: query
+      name: facets
+      schema:
+        type: string
     fields:
-      description: 'a comma-separated fields to limit the fields returned from the
-        matching gene hits. The supported field names can be found from any gene object
-        (e.g. http://mygene.info/v3/gene/1017). Note that it supports dot notation
-        as well, e.g., you can pass "refseq.rna". If "fields=all", all available fields
-        will be returned. Default: "symbol,name,taxid,entrezgene,ensemblgene".'
+      description: 'a comma-separated list of fields (in dotfield notation) used to
+        limit the fields returned from the matching disease hit(s). The supported field
+        names can be found from any disease object or from the /metadata/fields endpoint.
+        If "fields=all", all available fields will be returned. Type: string (list).
+        Default: all. Max: 1000.'
       in: query
       name: fields
       schema:
         type: string
+    format:
+      description: 'controls output format of server response, currently supports:
+        "json", "jsonld", "html". Type: string. Default: json.'
+      in: query
+      name: format
+      schema:
+        type: string
     from:
-      description: 'the number of matching gene hits to skip, starting from 0. Combining
-        with "size" parameter, this can be useful for paging. Default: 0.'
+      description: 'the number of matching disease hits to skip, starting from 0.  This
+        can be useful for paging in combination with the "size" parameter. Type: integer.
+        Default: None.'
       in: query
       name: from
       schema:
         type: integer
+    prefix:
+      description: 'Pass a prefix string to filter the available fields. Type: string.
+        Default: None.'
+      in: query
+      name: prefix
+      schema:
+        type: string
+    search:
+      description: 'Pass a search term to filter the available fields. Type: string.
+        Default: None.'
+      in: query
+      name: search
+      schema:
+        type: string
     size:
-      description: 'the maximum number of matching gene hits to return (with a cap
-        of 1000 at the moment). Default: 10.'
+      description: 'the maximum number of matching disease hits to return per batch.
+        Type: integer. Default: 10.'
       in: query
       name: size
       schema:
         type: integer
     sort:
-      description: 'the comma-separated fields to sort on. Prefix with "-" for descending
-        order, otherwise in ascending order. Default: sort by matching scores in decending
-        order.'
+      description: 'the comma-separated list of fields to sort on. Prefix each with
+        "-" for descending order, otherwise in ascending order. Default: sort by descending
+        score.'
       in: query
       name: sort
       schema:
         type: string
-    species:
-      description: 'can be used to limit the gene hits from given species. You can
-        use "common names" for nine common species (human, mouse, rat, fruitfly, nematode,
-        zebrafish, thale-cress, frog and pig). All other species, you can provide
-        their taxonomy ids. Multiple species can be passed using comma as a separator.
-        Default: human,mouse,rat.'
-      in: query
-      name: species
-      schema:
-        type: string
   schemas:
-    Gene:
+    Disease:
       properties:
-        AnimalQTLdb:
-          type: string
-        FLYBASE:
-          type: string
-        HGNC:
-          type: string
-        HPRD:
-          type: string
-        MGI:
-          type: string
-        MIM:
-          type: string
-        RATMAP:
-          type: string
-        RGD:
-          type: string
-        TAIR:
-          type: string
-        Vega:
-          type: string
-        WormBase:
-          type: string
-        Xenbase:
-          type: string
-        ZFIN:
-          type: string
         _id:
           type: string
-        accession:
-          type: object
-        aliase:
-          type: string
-        ec:
-          type: string
-        ensembl:
-          type: object
-        entrezgene:
-          format: int64
-          type: integer
-        generif:
-          properties:
-            pubmed:
-              $ref: '#/components/schemas/int64_or_array'
-            text:
-              type: string
-          type: object
-        genomic_pos:
-          type: object
-        go:
-          type: object
-        homologene:
-          type: object
-        interpro:
-          type: object
-        locus_tag:
-          type: string
-        map_location:
-          type: string
-        miRBase:
-          type: string
-        name:
-          type: string
-        other_names:
-          $ref: '#/components/schemas/string_or_array'
-        pathway:
-          type: object
-        pdb:
-          $ref: '#/components/schemas/string_or_array'
-        pfam:
-          type: string
-        pharmgkb:
-          type: string
-        pid:
-          type: string
-        pir:
-          type: string
-        prosite:
-          type: string
-        reagent:
-          type: object
-        refseq:
-          type: object
-        reporter:
-          type: object
-        summary:
-          type: string
-        symbol:
-          type: string
-        taxid:
-          format: int32
-          type: integer
-        type_of_gene:
-          type: string
-        umls:
-          type: object
-        unigene:
-          type: string
-        uniprot:
-          properties:
-            Swiss-Prot:
-              $ref: '#/components/schemas/string_or_array'
-            TrEMBL:
-              $ref: '#/components/schemas/string_or_array'
-          type: object
-        wikipedia:
-          properties:
-            url_stub:
-              type: string
-          type: object
       required:
       - _id
-      - taxid
       type: object
-    MinimalGene:
+    ErrorResult:
       properties:
-        _id:
+        message:
           type: string
-        entrezgene:
-          format: int64
-          type: integer
-        name:
-          type: string
-        symbol:
-          type: string
-        taxid:
-          format: int32
-          type: integer
-      required:
-      - _id
-      - taxid
+        success:
+          type: boolean
       type: object
     QueryPOSTResult:
       items:
         allOf:
-        - $ref: '#/components/schemas/MinimalGene'
+        - $ref: '#/components/schemas/Disease'
         - properties:
             _score:
               format: float
@@ -481,7 +351,7 @@ components:
       properties:
         hits:
           items:
-            $ref: '#/components/schemas/Gene'
+            $ref: '#/components/schemas/Disease'
           type: array
         max_score:
           format: float
@@ -508,230 +378,352 @@ components:
   x-bte-response-mapping:
     query-post:
       "@context": http://schema.org
-      "@type": Gene
-      bts:ensembl: ensembl.gene
-      bts:hgnc: HGNC
-      bts:omim: MIM
-      bts:entrez: entrezgene
-      bts:pharos: pahros.target_id
-      bts:umls: umls.cui
-      bts:unigene: unigene
-      bts:pharmgkb: pharmgkb
-      bts:name:
-      - name
-      - other_names
-      bts:symbol: symbol
-      bts:description: summary
-      bts:enablesMF:
-        "@type": MolecularActivity
-        bts:go: go.MF.id
-        bts:pubmed: go.MF.pubmed
-        bts:evidence: go.MF.evidence
-        bts:term: go.MF.term
-        "$input": bts:entrez
-        "$source": entrez
-      bts:involvedInBP:
-        "@type": BiologicalProcess
-        bts:go: go.BP.id
-        bts:pubmed: go.BP.pubmed
-        bts:evidence: go.BP.evidence
-        bts:term: go.BP.term
-        "$input": bts:entrez
-        "$source": entrez
-      bts:involvedInCC:
-        "@type": CellularComponent
-        bts:go: go.CC.id
-        bts:pubmed: go.CC.pubmed
-        bts:evidence: go.CC.evidence
-        bts:term: go.CC.term
-        "$input": bts:entrez
-        "$source": entrez
-      bts:involvedInPathway:
-      - "@type": Pathway
-        bts:wikipathways: pathway.wikipathways.id
-        bts:name: pathway.wikipathways.name
-        "$input": bts:entrez
-        "$source": cpdb
-      - "@type": Pathway
-        bts:reactome: pathway.reactome.id
-        bts:name: pathway.reactome.name
-        "$input": bts:entrez
-        "$source": cpdb
-      bts:hasTranscript:
-        "@type": Transcript
-        bts:ensembl: ensembl.transcript
-        "$input": bts:ensembl
-      bts:hasGeneProduct:
-        "@type": Protein
-        bts:ensembl: ensembl.protein
-        bts:uniprot: uniprot.Swiss-Prot
-        "$input": bts:ensembl
-      bts:hasHomolog:
+      "@type": DiseaseOrPhenotypicFeature
+      bts:umls: umls
+      bts:treatedBy:
+        "@type": ChemicalSubstance
+        bts:umls: TREATS_reverse.chemical_substance.umls
+        bts:pubmed: TREATS_reverse.chemical_substance.pmid
+        "$input": bts:umls
+        "$source": semmed
+      bts:causedBy:
         "@type": Gene
-        bts:mgi: pantherdb.ortholog.MGI
-        bts:inTaxon: pantherdb.ortholog.taxid
-        bts:rgd: pantherdb.ortholog.RGD
-        bts:ensembl: pantherdb.ortholog.Ensembl
-        bts:zfin: pantherdb.ortholog.ZFIN
-        bts:flybase: pantherdb.ortholog.FlyBase
-        bts:sgd: pantherdb.ortholog.SGD
-        bts:pombase: pantherdb.ortholog.PomBase
-        bts:dictybase: pantherdb.ortholog.dictyBase
-        bts:tair: pantherdb.ortholog.TAIR
-        bts:hgnc: pantherdb.ortholog.HGNC
-        "$input": bts:entrez
-      bts:hasProteinStructure: pdb
-      bts:inTaxon: taxid
+        bts:umls: CAUSES_reverse.gene.umls
+        bts:pubmed: CAUSES_reverse.gene.pmid
+        "$input": bts:umls
+        "$source": semmed
+      bts:associatedWith:
+      - "@type": AnatomicalEntity
+        bts:umls: AFFECTS.anatomical_entity.umls
+        bts:pubmed: AFFECTS.anatomical_entity.pmid
+        "$input": bts:umls
+        "$source": semmed
+      - "@type": AnatomicalEntity
+        bts:umls: AFFECTS_reverse.anatomical_entity.umls
+        bts:pubmed: AFFECTS_reverse.anatomical_entity.pmid
+        "$input": bts:umls
+        "$source": semmed
+      - "@type": AnatomicalEntity
+        bts:umls: ASSOCIATED_WITH.anatomical_entity.umls
+        bts:pubmed: ASSOCIATED_WITH.anatomical_entity.pmid
+        "$input": bts:umls
+        "$source": semmed
+      - "@type": AnatomicalEntity
+        bts:umls: ASSOCIATED_WITH_reverse.anatomical_entity.umls
+        bts:pubmed: ASSOCIATED_WITH_reverse.anatomical_entity.pmid
+        "$input": bts:umls
+        "$source": semmed
+      - "@type": BiologicalProcess
+        bts:umls: AFFECTS.biological_process_or_activity.umls
+        bts:pubmed: AFFECTS.biological_process_or_activity.pmid
+        "$input": bts:umls
+        "$source": semmed
+      - "@type": BiologicalProcess
+        bts:umls: ASSOCIATED_WITH.biological_process_or_activity.umls
+        bts:pubmed: ASSOCIATED_WITH.biological_process_or_activity.pmid
+        "$input": bts:umls
+        "$source": semmed
+      - "@type": BiologicalProcess
+        bts:umls: ASSOCIATED_WITH_reverse.biological_process_or_activity.umls
+        bts:pubmed: ASSOCIATED_WITH_reverse.biological_process_or_activity.pmid
+        "$input": bts:umls
+        "$source": semmed
+      - "@type": BiologicalProcess
+        bts:umls: AFFECTS_reverse.biological_process_or_activity.umls
+        bts:pubmed: AFFECTS_reverse.biological_process_or_activity.pmid
+        "$input": bts:umls
+        "$source": semmed
+      - "@type": Cell
+        bts:umls: AFFECTS.cell.umls
+        bts:pubmed: AFFECTS.cell.pmid
+        "$input": bts:umls
+        "$source": semmed
+      - "@type": Cell
+        bts:umls: AFFECTS_reverse.cell.umls
+        bts:pubmed: AFFECTS_reverse.cell.pmid
+        "$input": bts:umls
+        "$source": semmed
+      - "@type": Cell
+        bts:umls: ASSOCIATED_WITH.cell.umls
+        bts:pubmed: ASSOCIATED_WITH.cell.pmid
+        "$input": bts:umls
+        "$source": semmed
+      - "@type": CellularComponent
+        bts:umls: AFFECTS.cell_component.umls
+        bts:pubmed: AFFECTS.cell_component.pmid
+        "$input": bts:umls
+        "$source": semmed
+      - "@type": CellularComponent
+        bts:umls: AFFECTS_reverse.cell_component.umls
+        bts:pubmed: AFFECTS_reverse.cell_component.pmid
+        "$input": bts:umls
+        "$source": semmed
+      - "@type": ChemicalSubstance
+        bts:umls: AFFECTS.chemical_substance.umls
+        bts:pubmed: AFFECTS.chemical_substance.pmid
+        "$input": bts:umls
+        "$source": semmed
+      - "@type": ChemicalSubstance
+        bts:umls: AFFECTS_reverse.chemical_substance.umls
+        bts:pubmed: AFFECTS_reverse.chemical_substance.pmid
+        "$input": bts:umls
+        "$source": semmed
+      - "@type": ChemicalSubstance
+        bts:umls: ASSOCIATED_WITH.chemical_substance.umls
+        bts:pubmed: ASSOCIATED_WITH.chemical_substance.pmid
+        "$input": bts:umls
+        "$source": semmed
+      - "@type": ChemicalSubstance
+        bts:umls: ASSOCIATED_WITH_reverse.chemical_substance.umls
+        bts:pubmed: ASSOCIATED_WITH_reverse.chemical_substance.pmid
+        "$input": bts:umls
+        "$source": semmed
+      - "@type": Gene
+        bts:umls: AFFECTS.gene.umls
+        bts:pubmed: AFFECTS.gene.pmid
+        "$input": bts:umls
+        "$source": semmed
+      - "@type": Gene
+        bts:umls: AFFECTS_reverse.gene.umls
+        bts:pubmed: AFFECTS_reverse.gene.pmid
+        "$input": bts:umls
+        "$source": semmed
+      - "@type": Gene
+        bts:umls: AFFECTS.protein.umls
+        bts:pubmed: AFFECTS.protein.pmid
+        "$input": bts:umls
+        "$source": semmed
+      - "@type": Gene
+        bts:umls: AFFECTS_reverse.protein.umls
+        bts:pubmed: AFFECTS_reverse.protein.pmid
+        "$input": bts:umls
+        "$source": semmed
+      - "@type": Gene
+        bts:umls: ASSOCIATED_WITH.gene.umls
+        bts:pubmed: ASSOCIATED_WITH.gene.pmid
+        "$input": bts:umls
+        "$source": semmed
+      - "@type": Disease
+        bts:umls: AFFECTS.disease_or_phenotypic_feature.umls
+        bts:pubmed: AFFECTS.disease_or_phenotypic_feature.pmid
+        "$input": bts:umls
+        "$source": semmed
+      - "@type": PhenotypicFeature
+        bts:umls: AFFECTS.phenotypic_feature.umls
+        bts:pubmed: AFFECTS.phenotypic_feature.pmid
+        "$input": bts:umls
+        "$source": semmed
+      - "@type": PhenotypicFeature
+        bts:umls: AFFECTS_reverse.phenotypic_feature.umls
+        bts:pubmed: AFFECTS_reverse.phenotypic_feature.pmid
+        "$input": bts:umls
+        "$source": semmed
+      - "@type": PhenotypicFeature
+        bts:umls: ASSOCIATED_WITH.phenotypic_feature.umls
+        bts:pubmed: ASSOCIATED_WITH.phenotypic_feature.pmid
+        "$input": bts:umls
+        "$source": semmed
   x-bte-kgs-operations:
-    enablesMF:
+    treatedBy:
       path: '/query'
       method: 'post'
       supportBatch: true
       inputSeparator: ','
       parameters:
-        fields: go.MF
+        fields: TREATS_reverse.chemical_substance
         dotfield: false
       requestBody:
         body:
           q: "{input1}"
-          scopes: entrezgene
+          scopes: umls
         header: "application/x-www-form-urlencoded"
       inputs:
-        - id: entrez
-          semantic: Gene
+        - id: umls
+          semantic: DiseaseOrPhenotypicFeature
       outputs:
-        - id: go
-          semantic: MolecularActivity
-    involvedInBP:
+        - id: umls
+          semantic: ChemicalSubstance
+      response-mapping:
+        $ref: '#/components/x-bte-response-mapping/query-post'
+    causedBy:
       path: '/query'
       method: 'post'
       supportBatch: true
-      separator: ','
+      inputSeparator: ','
       parameters:
-        fields: go.BP
+        fields: CAUSES_reverse.gene
         dotfield: false
       requestBody:
         body:
           q: "{input1}"
-          scopes: entrezgene
+          scopes: umls
         header: "application/x-www-form-urlencoded"
       inputs:
-        - id: entrez
-          semantic: Gene
+        - id: umls
+          semantic: DiseaseOrPhenotypicFeature
       outputs:
-        - id: go
-          semantic: BiologicalProcess
-    involvedInCC:
-      path: '/query'
-      method: 'post'
-      supportBatch: true
-      separator: ','
-      parameters:
-        fields: go.CC
-        dotfield: false
-      requestBody:
-        body:
-          q: "{input1}"
-          scopes: entrezgene
-        header: "application/x-www-form-urlencoded"
-      inputs:
-        - id: entrez
-          semantic: Gene
-      outputs:
-        - id: go
-          semantic: CellularComponent
-    involvedInPathway:
+        - id: umls
+          semantic: ChemicalSubstance
+      response-mapping:
+        $ref: '#/components/x-bte-response-mapping/query-post'
+    associatedWith:
       - path: '/query'
         method: 'post'
         supportBatch: true
-        separator: ','
+        inputSeparator: ','
         parameters:
-          fields: pathway.wikipathways
+          fields: AFFECTS.anatomical_entity
           dotfield: false
         requestBody:
           body:
             q: "{input1}"
-            scopes: entrezgene
+            scopes: umls
           header: "application/x-www-form-urlencoded"
         inputs:
-          - id: entrez
-            semantic: Gene
+          - id: umls
+            semantic: DiseaseOrPhenotypicFeature
         outputs:
-          - id: wikipathways
-            semantic: Pathway
+          - id: umls
+            semantic: AnatomicalEntity
+        response-mapping:
+          $ref: '#/components/x-bte-response-mapping/query-post'
       - path: '/query'
         method: 'post'
         supportBatch: true
-        separator: ','
+        inputSeparator: ','
         parameters:
-          fields: pathway.reactome
-          species: human
+          fields: AFFECTS_reverse.anatomical_entity
           dotfield: false
         requestBody:
           body:
             q: "{input1}"
-            scopes: entrezgene
+            scopes: umls
           header: "application/x-www-form-urlencoded"
         inputs:
-          - id: entrez
-            semantic: Gene
+          - id: umls
+            semantic: DiseaseOrPhenotypicFeature
         outputs:
-          - id: reactome
-            semantic: Pathway
-    hasTranscript:
-      path: '/query'
-      method: 'post'
-      supportBatch: true
-      separator: ','
-      parameters:
-        fields: ensembl.transcript
-        dotfield: false
-      requestBody:
-        body:
-          q: "{input1}"
-          scopes: ensembl.gene
-        header: "application/x-www-form-urlencoded"
-      inputs:
-        - id: ensembl
-          semantic: Gene
-      outputs:
-        - id: ensembl
-        - semantic: Transcript
-    hasGeneProduct:
-      path: '/query'
-      method: 'post'
-      supportBatch: true
-      separator: ','
-      parameters:
-        fields: ensembl.protein
-        dotfield: false
-      requestBody:
-        body:
-          q: "{input1}"
-          scopes: ensembl.gene
-        header: "application/x-www-form-urlencoded"
-      inputs:
-        - id: ensembl
-          semantic: Gene
-      outputs:
-        - id: ensembl
-          semantic: Protein
-    hasHomolog:
-      path: '/query'
-      method: 'post'
-      supportBatch: true
-      separator: ','
-      parameters:
-        fields: pantherdb.ortholog
-        dotfield: false
-      requestBody:
-        body:
-          q: "{input1}"
-          scopes: entrezgene
-        header: "application/x-www-form-urlencoded"
-      inputs:
-        - id: entrez
-          semantic: Gene
-      outputs:
-        - id: mgi
-          semantic: Gene
+          - id: umls
+            semantic: AnatomicalEntity
+        response-mapping:
+          $ref: '#/components/x-bte-response-mapping/query-post'
+      - path: '/query'
+        method: 'post'
+        supportBatch: true
+        inputSeparator: ','
+        parameters:
+          fields: ASSOCIATED_WITH.anatomical_entity
+          dotfield: false
+        requestBody:
+          body:
+            q: "{input1}"
+            scopes: umls
+          header: "application/x-www-form-urlencoded"
+        inputs:
+          - id: umls
+            semantic: DiseaseOrPhenotypicFeature
+        outputs:
+          - id: umls
+            semantic: AnatomicalEntity
+        response-mapping:
+          $ref: '#/components/x-bte-response-mapping/query-post'
+      - path: '/query'
+        method: 'post'
+        supportBatch: true
+        inputSeparator: ','
+        parameters:
+          fields: ASSOCIATED_WITH_reverse.anatomical_entity
+          dotfield: false
+        requestBody:
+          body:
+            q: "{input1}"
+            scopes: umls
+          header: "application/x-www-form-urlencoded"
+        inputs:
+          - id: umls
+            semantic: DiseaseOrPhenotypicFeature
+        outputs:
+          - id: umls
+            semantic: AnatomicalEntity
+        response-mapping:
+          $ref: '#/components/x-bte-response-mapping/query-post'
+      - path: '/query'
+        method: 'post'
+        supportBatch: true
+        inputSeparator: ','
+        parameters:
+          fields: AFFECTS.biological_process_or_activity
+          dotfield: false
+        requestBody:
+          body:
+            q: "{input1}"
+            scopes: umls
+          header: "application/x-www-form-urlencoded"
+        inputs:
+          - id: umls
+            semantic: DiseaseOrPhenotypicFeature
+        outputs:
+          - id: umls
+            semantic: BiologicalProcess
+        response-mapping:
+          $ref: '#/components/x-bte-response-mapping/query-post'
+      - path: '/query'
+        method: 'post'
+        supportBatch: true
+        inputSeparator: ','
+        parameters:
+          fields: ASSOCIATED_WITH.biological_process_or_activity
+          dotfield: false
+        requestBody:
+          body:
+            q: "{input1}"
+            scopes: umls
+          header: "application/x-www-form-urlencoded"
+        inputs:
+          - id: umls
+            semantic: DiseaseOrPhenotypicFeature
+        outputs:
+          - id: umls
+            semantic: BiologicalProcess
+        response-mapping:
+          $ref: '#/components/x-bte-response-mapping/query-post'
+      - path: '/query'
+        method: 'post'
+        supportBatch: true
+        inputSeparator: ','
+        parameters:
+          fields: AFFECTS_reverse.biological_process_or_activity
+          dotfield: false
+        requestBody:
+          body:
+            q: "{input1}"
+            scopes: umls
+          header: "application/x-www-form-urlencoded"
+        inputs:
+          - id: umls
+            semantic: DiseaseOrPhenotypicFeature
+        outputs:
+          - id: umls
+            semantic: BiologicalProcess
+        response-mapping:
+          $ref: '#/components/x-bte-response-mapping/query-post'
+      - path: '/query'
+        method: 'post'
+        supportBatch: true
+        inputSeparator: ','
+        parameters:
+          fields: ASSOCIATED_WITH_reverse.biological_process_or_activity
+          dotfield: false
+        requestBody:
+          body:
+            q: "{input1}"
+            scopes: umls
+          header: "application/x-www-form-urlencoded"
+        inputs:
+          - id: umls
+            semantic: DiseaseOrPhenotypicFeature
+        outputs:
+          - id: umls
+            semantic: BiologicalProcess
+        response-mapping:
+          $ref: '#/components/x-bte-response-mapping/query-post'
