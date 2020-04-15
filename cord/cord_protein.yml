@@ -1,0 +1,369 @@
+openapi: 3.0.0
+info:
+  contact:
+    email: help@biothinigs.io
+    name: JIWEN XIN
+    x-id: https://github.com/kevinxin90
+    x-role: responsible developer
+  description: Documentation of the CORD Query web services. Learn more about [CORD](http://biothings.ncats.io/cord_protein)
+  termsOfService: http://myprotein.info/terms/
+  title: CORD Protein API
+  version: '1.0'
+servers:
+- description: Encrypted Production server
+  url: https://biothings.ncats.io/cord_protein/
+- description: Production server
+  url: http://biothings.ncats.io/cord_protein/
+tags:
+- name: protein
+- name: annotation
+- name: query
+- name: translator
+- name: biothings
+paths:
+  /protein:
+    post:
+      parameters:
+      - $ref: '#/components/parameters/fields'
+        name: fields
+      - $ref: '#/components/parameters/dotfield'
+        name: dotfield
+      - $ref: '#/components/parameters/email'
+        name: email
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              properties:
+                ids:
+                  description: multiple PROTEIN ONTOLOGY proteinids seperated by comma, e.g., "ids=387,388" Note that currently we only take the input ids up to 1000 maximum, the rest will be omitted.
+                  type: string
+              required:
+              - ids
+      responses:
+        '200':
+          description: A query response object with "hits" property
+      summary: For a list of protein ids, return the matching protein objects
+      tags:
+      - annotation
+  /protein/{proteinid}:
+    get:
+      parameters:
+      - description: PROTEIN ONTOLOGY Protein ID, e.g. 387
+        example: '387'
+        in: path
+        name: proteinid
+        required: true
+        schema:
+          type: string
+      - $ref: '#/components/parameters/fields'
+        name: fields
+      - $ref: '#/components/parameters/dotfield'
+        name: dotfield
+      - $ref: '#/components/parameters/callback'
+        name: callback
+      - $ref: '#/components/parameters/email'
+        name: email
+      responses:
+        '200':
+          description: A matching protein object
+      summary: Retrieve protein annotation object based on pr protein id,
+        support JSONP and CORS as well.
+      tags:
+      - annotation
+  /metadata:
+    get:
+      parameters:
+      - $ref: '#/components/parameters/callback'
+        name: callback
+      responses:
+        '200':
+          description: CORD API metadata object
+      summary: Get metadata about the data available from CORD API.
+  /metadata/fields:
+    get:
+      parameters:
+      - description: Pass a search term to filter the available fields, e.g. "search=associated_with".
+        in: query
+        name: search
+        schema:
+          type: string
+      - description: Pass a prefix string to filter the available fields, e.g. "prefix=refseq".
+        in: query
+        name: prefix
+        schema:
+          type: string
+      - $ref: '#/components/parameters/callback'
+        name: callback
+      responses:
+        '200':
+          description: MyProtein.info metadata fields object
+      summary: Get metadata about the data fields available from MyProtein.info.
+  /query:
+    get:
+      parameters:
+      - description: Query string. Examples "PMC6836328", "31045", "PR:000001978".
+        example: "PR:000001978"
+        in: query
+        name: q
+        required: true
+        schema:
+          type: string
+      - $ref: '#/components/parameters/fields'
+        name: fields
+      - $ref: '#/components/parameters/size'
+        name: size
+      - $ref: '#/components/parameters/sort'
+        name: sort
+      - description: a single field or comma-separated fields to return facets, for
+          example, "facets=pr"
+        in: query
+        name: facets
+        schema:
+          type: string
+      - $ref: '#/components/parameters/callback'
+        name: callback
+      - $ref: '#/components/parameters/dotfield'
+        name: dotfield
+      - $ref: '#/components/parameters/email'
+        name: email
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QueryResult'
+          description: A query response object with "hits" property
+      summary: Make protein query and return matching protein list. Support JSONP and CORS
+        as well.
+      tags:
+      - query
+    post:
+      parameters:
+      - $ref: '#/components/parameters/fields'
+        name: fields
+      - $ref: '#/components/parameters/dotfield'
+        name: dotfield
+      - $ref: '#/components/parameters/email'
+        name: email
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              properties:
+                q:
+                  description: multiple query terms seperated by comma (also support
+                    "+" or white space), but no wildcard, e.g., "q=1017,1018" or "q=CDK2+BTK"
+                  type: string
+                scopes:
+                  description: 'Specify one or more fields (separated by comma) as
+                    the search "scopes", e.g., "scopes=entrezprotein", "scopes=entrezprotein,ensemblprotein".
+                    The available "fields" can be passed to "scopes" parameter are
+                    listed [here](http://myprotein.info/doc/query_service.html#available-fields).
+                    Default: "scopes=entrezprotein,ensemblprotein,retired" (either Entrez
+                    or Ensembl protein ids).'
+                  type: string
+              required:
+              - q
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QueryPOSTResult'
+          description: Query response objects with "hits" property
+          x-bte-response-mapping:
+            $ref: '#/components/x-bte-response-mapping/query-post'
+      summary: Make protein batch query and return matching protein hits
+      tags:
+      - query
+      x-bte-kgs-operations:
+      - associated_with:
+          $ref: '#/components/x-bte-kgs-operations/associated_with'
+components:
+  parameters:
+    callback:
+      description: you can pass a "callback" parameter to make a JSONP call.
+      in: query
+      name: callback
+      schema:
+        type: string
+    dotfield:
+      description: 'control the format of the returned fields when passed "fields"
+        parameter contains dot notation, e.g. "fields=assoicated_with.pmd". If "true" or "1",
+        the returned data object contains a single "associated_with" field, otherwise ("false"
+        or "0"), a single "refseq" field with a sub-field of "rna". Default: true.'
+      in: query
+      name: dotfield
+      schema:
+        type: boolean
+    email:
+      description: If you are regular users of our services, we encourage you to provide
+        us an email, so that we can better track the usage or follow up with you.
+      in: query
+      name: email
+      schema:
+        type: string
+    fields:
+      description: 'a comma-separated fields to limit the fields returned from the matching protein hits.'
+      in: query
+      name: fields
+      schema:
+        type: string
+    from:
+      description: 'the number of matching protein hits to skip, starting from 0. Combining with "size" parameter, this can be useful for paging. Default: 0.'
+      in: query
+      name: from
+      schema:
+        type: integer
+    size:
+      description: 'the maximum number of matching protein hits to return (with a cap
+        of 1000 at the moment). Default: 10.'
+      in: query
+      name: size
+      schema:
+        type: integer
+    sort:
+      description: 'the comma-separated fields to sort on. Prefix with "-" for descending
+        order, otherwise in ascending order. Default: sort by matching scores in decending
+        order.'
+      in: query
+      name: sort
+      schema:
+        type: string
+  schemas:
+    QueryPOSTResult:
+      items:
+        allOf:
+        - properties:
+            _score:
+              format: float
+              type: number
+            query:
+              type: string
+          type: object
+      type: array
+    QueryResult:
+      properties:
+        max_score:
+          format: float
+          type: number
+        took:
+          type: integer
+        total:
+          type: integer
+      type: object
+    int64_or_array:
+      oneOf:
+      - items:
+          format: int64
+          type: integer
+        type: array
+      - format: int64
+        type: integer
+    string_or_array:
+      oneOf:
+      - items:
+          type: string
+        type: array
+      - type: string
+  x-bte-kgs-operations:
+    associated_with:
+      inputSeparator: ','
+      inputs:
+      - id: pr
+        semantic: Protein
+      method: post
+      outputs:
+      - id: go
+        semantic: MolecularActivity
+      - id: go
+        semantic: BiologicalProcess
+      - id: go
+        semantic: CellularComponent
+      - id: pr
+        semantic: Protein
+      - id: chebi
+        semantic: ChemicalSubstance
+      - id: hgnc
+        semantic: Gene
+      - id: so
+        semantic: GenomicEntity
+      - id: mop
+        semantic: MolecularActivity
+      - id: doid
+        semantic: DiseaseOrPhenotypicFeature
+      - id: uberon
+        semantic: AnatomicalEntity
+      - id: cl
+        semantic: Cell
+      parameters:
+        dotfield: false
+        fields: associated_with
+      path: /query
+      requestBody:
+        body:
+          q: '{input1}'
+          scopes: pr
+        header: application/x-www-form-urlencoded
+      supportBatch: true
+      response-mapping:
+        $ref: '#/components/x-bte-response-mapping/query-post'
+  x-bte-response-mapping:
+    query-post:
+      "@context": http://schema.org
+      "@type": Protein
+      pr: pr
+      associated_with:
+        - "@type": ChemicalSubstance
+          "$source": CORD
+          pmd: associated_with.pmc
+          chebi: associated_with.chebi
+          "$input": pr
+        - "@type": Cell
+          "$source": CORD
+          pmd: associated_with.pmc
+          cl: associated_with.cl
+          "$input": pr
+        - "@type": DiseaseOrPhenotypicFeature
+          "$source": CORD
+          pmd: associated_with.pmc
+          doid: associated_with.doid
+          "$input": pr
+        - "@type": MolecularActivity
+          "$source": CORD
+          pmd: associated_with.pmc
+          mop: associated_with.mop
+          go: associated_with.go
+          "$input": pr
+        - "@type": Protein
+          "$source": CORD
+          pmd: associated_with.pmc
+          pr: associated_with.pr
+          "$input": pr
+        - "@type": GenomicEntity
+          "$source": CORD
+          pmd: associated_with.pmc
+          so: associated_with.so
+          "$input": pr
+        - "@type": Gene
+          "$source": CORD
+          pmd: associated_with.pmc
+          hgnc: associated_with.hgnc
+          "$input": pr
+        - "@type": AnatomicalEntity
+          "$source": CORD
+          pmd: associated_with.pmc
+          uberon: associated_with.uberon
+          "$input": pr
+        - "@type": BiologicalProcess
+          "$source": CORD
+          pmd: associated_with.pmc
+          go: associated_with.go
+          "$input": pr
+        - "@type": CellularComponent
+          "$source": CORD
+          pmd: associated_with.pmc
+          go: associated_with.go
+          "$input": pr
+          
