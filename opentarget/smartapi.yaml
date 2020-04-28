@@ -1,86 +1,75 @@
-openapi: '3.0.0'
+openapi: 3.0.0
 info:
   version: '1.0'
   title: OpenTarget API
-  description: >-
-    The Opentarget API
+  description: The Opentarget API
   termsOfService: http://www.opentarget.org
   contact:
     name: opentarget help desk
     x-role: responsible developer
     email: help@opentarget.org
 servers:
-  - url: 'https://platform-api.opentargets.io/v3'
-    description: 'Production server'
+- url: https://platform-api.opentargets.io/v3
+  description: Production server
 tags:
-  - name: translator
-  - name: opentarget
-
+- name: translator
+- name: opentarget
 paths:
-  '/platform/public/evidence/filter':
+  "/platform/public/evidence/filter":
     get:
-      summary: 'retrieve evidence'
+      summary: retrieve evidence
       parameters:
-        - name: target
-          in: query
-          description: >-
-            ensembl gene id
-          required: true
-          example: "ENSG00000088832"
-          schema:
-            type: string
-        - name: size
-          in: query
-          description: size of the output
-          example: 100
-          schema:
-            type: integer
-        - name: fields
-          in: query
-          description: the output field
-          example: drug
-          schema:
-            type: string
-        - name: datasource
-          in: query
-          description: the data source
-          example: chembl
-          schema:
-            type: string
+      - name: target
+        in: query
+        description: ensembl gene id
+        required: true
+        example: ENSG00000088832
+        schema:
+          type: string
+      - name: size
+        in: query
+        description: size of the output
+        example: 100
+        schema:
+          type: integer
+      - name: fields
+        in: query
+        description: the output field
+        example: drug
+        schema:
+          type: string
+      - name: datasource
+        in: query
+        description: the data source
+        example: chembl
+        schema:
+          type: string
       responses:
         '200':
-          description: 'A biosample object'
-          x-bte-response-mapping:
-            $ref: '#/components/x-bte-response-mapping/gene-drug'
+          description: A biosample object
       x-bte-kgs-operations:
-        associatedWith:
-          $ref: '#/components/x-bte-kgs-operations/associatedWith'
+      - "$ref": "#/components/x-bte-kgs-operations/gene_related_to_chemical"
 components:
   x-bte-kgs-operations:
-    associatedWith:
-      inputs:
-      - id: ensembl
-        semantic: Gene
+    gene_related_to_chemical:
+    - inputs:
+      - id: biolink:ENSEMBL
+        semantic: biolink:Gene
       outputs:
-      - id: chembl
-        semantic: ChemicalSubstance
+      - id: biolink:CHEMBL.COMPOUND
+        semantic: biolink:ChemicalSubstance
+      predicate: biolink:related_to
+      source: CHEMBL
       parameters:
-        target: "{input1}"
+        target: "{inputs[0]}"
         datasource: chembl
         size: 100
         fields: drug
       supportBatch: false
-      response-mapping:
-        $ref: '#/components/x-bte-response-mapping/gene-drug'
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/gene_related_to_chemical"
   x-bte-response-mapping:
-    gene-drug:
-      "@context": http://schema.org
-      "@type": Gene
-      bts:ensembl: ensembl
-      bts:associatedWith:
-        "@type": ChemicalSubstance
-        bts:chembl: data.drug.id
-        bts:moleculeType: data.drug.molecule_type
-        bts:name: data.drug.molecule_name
-        "$input": bts:ensembl
-        "$source": CHEMBL
+    gene_related_to_chemical:
+      biolink:CHEMBL.COMPOUND: data.drug.id
+      moleculeType: data.drug.molecule_type
+      name: data.drug.molecule_name
