@@ -1,0 +1,211 @@
+---
+openapi: 3.0.0
+info:
+  contact:
+    email: help@renci.org
+    name: Chris B.
+  description: Scibite
+  termsOfService: https://automat.renci.org
+  title: Automat Hetio API
+  version: '2.0'
+servers:
+- description: Production server
+  url: https://automat.renci.org/hetio
+tags:
+- name: drug
+- name: gene
+- name: disease
+- name: automat
+- name: translator
+paths:
+  "/gene/disease/{geneid}":
+    get:
+      summary: gene2disease
+      parameters:
+      - description: Put NCBIGene ID here, e.g. 1017
+        example: NCBIGene:1017
+        in: path
+        name: geneid
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: An association object
+      x-bte-kgs-operations:
+      - "$ref": "#/components/x-bte-kgs-operations/gene2disease"
+  "/disease/gene/{mondo}":
+    get:
+      summary: disease2gene
+      parameters:
+      - description: Put DOID ID here, e.g. "DOID:123"
+        example: DOID:123
+        in: path
+        name: mondo
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: An association object
+      x-bte-kgs-operations:
+      - "$ref": "#/components/x-bte-kgs-operations/disease2gene"
+components:
+  x-bte-kgs-operations:
+    gene2chemical:
+    - inputs:
+      - id: NCBIGene
+        semantic: Gene
+      outputs:
+      - id: CHEMBL.COMPOUND
+        semantic: ChemicalSubstance
+      predicate: related_to
+      source: hetio
+      parameters:
+        geneid: NCBIGene:{inputs[0]}
+      supportBatch: false
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/gene2chemical-chembl"
+    - inputs:
+      - id: NCBIGene
+        semantic: Gene
+      outputs:
+      - id: CHEBI
+        semantic: ChemicalSubstance
+      predicate: related_to
+      source: hetio
+      parameters:
+        geneid: NCBIGene:{inputs[0]}
+      supportBatch: false
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/gene2chemical-chebi"
+    gene2disease:
+    - inputs:
+      - id: NCBIGene
+        semantic: Gene
+      outputs:
+      - id: DOID
+        semantic: Disease
+      predicate: related_to
+      source: hetio
+      parameters:
+        geneid: NCBIGene:{inputs[0]}
+      supportBatch: false
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/gene2disease-doid"
+    - inputs:
+      - id: NCBIGene
+        semantic: Gene
+      outputs:
+      - id: MONDO
+        semantic: Disease
+      predicate: related_to
+      source: hetio
+      parameters:
+        geneid: NCBIGene:{inputs[0]}
+      supportBatch: false
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/gene2disease-mondo"
+    chemical2gene:
+    - inputs:
+      - id: CHEBI
+        semantic: ChemicalSubstance
+      outputs:
+      - id: NCBIGene
+        semantic: Gene
+      predicate: related_to
+      source: hetio
+      parameters:
+        chebi: "{inputs[0]}"
+      supportBatch: false
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/chemical2gene"
+    chemical2disease:
+    - inputs:
+      - id: CHEBI
+        semantic: ChemicalSubstance
+      outputs:
+      - id: DOID
+        semantic: Disease
+      predicate: related_to
+      source: hetio
+      parameters:
+        chebi: "{inputs[0]}"
+      supportBatch: false
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/chemical2disease-doid"
+    - inputs:
+      - id: CHEBI
+        semantic: ChemicalSubstance
+      outputs:
+      - id: MONDO
+        semantic: Disease
+      predicate: related_to
+      source: hetio
+      parameters:
+        chebi: "{inputs[0]}"
+      supportBatch: false
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/chemical2disease-mondo"
+    disease2gene:
+    - inputs:
+      - id: MONDO
+        semantic: Disease
+      outputs:
+      - id: NCBIGene
+        semantic: Gene
+      predicate: related_to
+      source: hetio
+      parameters:
+        mondo: "{inputs[0]}"
+      supportBatch: false
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/disease2gene"
+    disease2chemical:
+    - inputs:
+      - id: MONDO
+        semantic: Disease
+      outputs:
+      - id: CHEMBL.COMPOUND
+        semantic: ChemicalSubstance
+      predicate: related_to
+      source: hetio
+      parameters:
+        mondo: "{inputs[0]}"
+      supportBatch: false
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/disease2chemical-chembl"
+    - inputs:
+      - id: MONDO
+        semantic: Disease
+      outputs:
+      - id: CHEBI
+        semantic: ChemicalSubstance
+      predicate: related_to
+      source: hetio
+      parameters:
+        mondo: "{inputs[0]}"
+      supportBatch: false
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/disease2chemical-chebi"
+  x-bte-response-mapping:
+    gene2chemical-chebi:
+      CHEBI: associated_with.chebi
+    gene2chemical-chembl:
+      CHEMBL.COMPOUND: associated_with.chembl
+    gene2disease-mondo:
+      MONDO: associated_with.mondo
+    gene2disease-doid:
+      DOID: associated_with.doid
+    chemical2disease-mondo:
+      MONDO: associated_with.mondo
+    chemical2disease-doid:
+      DOID: associated_with.doid
+    chemical2gene:
+      NCBIGene: associated_with.ncbigene
+    disease2gene:
+      NCBIGene: associated_with.ncbigene
+    disease2chemical-chembl:
+      CHEMBL.COMPOUND: associated_with.chembl
+    disease2chemical-chebi:
+      CHEBI: associated_with.chebi

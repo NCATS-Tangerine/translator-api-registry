@@ -18,7 +18,7 @@ tags:
 - name: annotation
 - name: translator
 paths:
-  /interactions.json:
+  "/interactions.json":
     get:
       parameters:
       - description: Put drug names here, e.g. riluzole
@@ -36,62 +36,46 @@ paths:
       responses:
         '200':
           description: A query response object with "matchedTerm" property
-          x-bte-response-mapping:
-            - $ref: '#/components/x-bte-response-mapping/gene-drug'
-            - $ref: '#/components/x-bte-response-mapping/drug-gene'
       summary: return interactions for a drug with a gene
       x-bte-kgs-operations:
-        targetedBy:
-          $ref: '#/components/x-bte-kgs-operations/targetedBy'
-        target:
-          $ref: '#/components/x-bte-kgs-operations/target'
+      - "$ref": "#/components/x-bte-kgs-operations/targetedBy"
+      - "$ref": "#/components/x-bte-kgs-operations/target"
 components:
   x-bte-kgs-operations:
     targetedBy:
-      inputs:
-      - id: symbol
+    - inputs:
+      - id: SYMBOL
         semantic: Gene
       outputs:
-      - id: chembl
+      - id: CHEMBL.COMPOUND
         semantic: ChemicalSubstance
       parameters:
-        genes: '{input1}'
+        genes: "{inputs[0]}"
       supportBatch: false
+      predicate: physically_interacts_with
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/gene-drug"
     target:
-      inputs:
-      - id: chembl
+    - inputs:
+      - id: CHEMBL.COMPOUND
         semantic: ChemicalSubstance
       outputs:
-      - id: entrez
+      - id: NCBIGene
         semantic: Gene
       parameters:
-        drugs: '{input1}'
+        drugs: "{inputs[0]}"
       supportBatch: false
+      predicate: physically_interacts_with
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/drug-gene"
   x-bte-response-mapping:
     gene-drug:
-      "@context": http://schema.org
-      "@type": Gene
-      bts:entrez: matchedTerms.entrezId
-      bts:symbol: matchedTerms.geneName
-      bts:name: matchedTerms.geneLongName
-      bts:targetedBy:
-        "@type": ChemicalSubstance
-        bts:chembl: matchedTerms.interactions.drugChemblId
-        bts:name: matchedTerms.interactions.drugName
-        bts:source: matchedTerms.interactions.sources
-        bts:publication: matchedTerms.interactions.pmids
-        "$input": bts:symbol
-        "$source": dgidb
+      CHEMBL.COMPOUND: matchedTerms.interactions.drugChemblId
+      name: matchedTerms.interactions.drugName
+      source: matchedTerms.interactions.sources
+      publication: matchedTerms.interactions.pmids
     drug-gene:
-      "@context": http://schema.org
-      "@type": ChemicalSubstance
-      bts:chembl: matchedTerms.chemblId
-      bts:name: matchedTerms.drugName
-      bts:target:
-        "@type": Gene
-        bts:entrez: matchedTerms.interactions.geneEntrezId
-        bts:name: matchedTerms.interactions.geneLongName
-        bts:source: matchedTerms.interactions.sources
-        bts:publication: matchedTerms.interactions.pmids
-        "$input": bts:chembl
-        "$source": dgidb
+      NCBIGene: matchedTerms.interactions.geneEntrezId
+      name: matchedTerms.interactions.geneLongName
+      source: matchedTerms.interactions.sources
+      publication: matchedTerms.interactions.pmids

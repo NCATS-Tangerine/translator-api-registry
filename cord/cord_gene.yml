@@ -11,9 +11,9 @@ info:
   version: '1.0'
 servers:
 - description: Encrypted Production server
-  url: https://biothings.ncats.io/cord_gene/
+  url: https://biothings.ncats.io/cord_gene
 - description: Production server
-  url: http://biothings.ncats.io/cord_gene/
+  url: http://biothings.ncats.io/cord_gene
 tags:
 - name: gene
 - name: annotation
@@ -21,14 +21,14 @@ tags:
 - name: translator
 - name: biothings
 paths:
-  /gene:
+  "/gene":
     post:
       parameters:
-      - $ref: '#/components/parameters/fields'
+      - "$ref": "#/components/parameters/fields"
         name: fields
-      - $ref: '#/components/parameters/dotfield'
+      - "$ref": "#/components/parameters/dotfield"
         name: dotfield
-      - $ref: '#/components/parameters/email'
+      - "$ref": "#/components/parameters/email"
         name: email
       requestBody:
         content:
@@ -36,7 +36,9 @@ paths:
             schema:
               properties:
                 ids:
-                  description: multiple HGNC geneids seperated by comma, e.g., "ids=387,388" Note that currently we only take the input ids up to 1000 maximum, the rest will be omitted.
+                  description: multiple HGNC geneids seperated by comma, e.g., "ids=387,388"
+                    Note that currently we only take the input ids up to 1000 maximum,
+                    the rest will be omitted.
                   type: string
               required:
               - ids
@@ -46,7 +48,7 @@ paths:
       summary: For a list of gene ids, return the matching gene objects
       tags:
       - annotation
-  /gene/{geneid}:
+  "/gene/{geneid}":
     get:
       parameters:
       - description: HGNC Gene ID, e.g. 387
@@ -56,31 +58,31 @@ paths:
         required: true
         schema:
           type: string
-      - $ref: '#/components/parameters/fields'
+      - "$ref": "#/components/parameters/fields"
         name: fields
-      - $ref: '#/components/parameters/dotfield'
+      - "$ref": "#/components/parameters/dotfield"
         name: dotfield
-      - $ref: '#/components/parameters/callback'
+      - "$ref": "#/components/parameters/callback"
         name: callback
-      - $ref: '#/components/parameters/email'
+      - "$ref": "#/components/parameters/email"
         name: email
       responses:
         '200':
           description: A matching gene object
-      summary: Retrieve gene annotation object based on hgnc gene id,
-        support JSONP and CORS as well.
+      summary: Retrieve gene annotation object based on hgnc gene id, support JSONP
+        and CORS as well.
       tags:
       - annotation
-  /metadata:
+  "/metadata":
     get:
       parameters:
-      - $ref: '#/components/parameters/callback'
+      - "$ref": "#/components/parameters/callback"
         name: callback
       responses:
         '200':
           description: CORD API metadata object
       summary: Get metadata about the data available from CORD API.
-  /metadata/fields:
+  "/metadata/fields":
     get:
       parameters:
       - description: Pass a search term to filter the available fields, e.g. "search=associated_with".
@@ -93,27 +95,27 @@ paths:
         name: prefix
         schema:
           type: string
-      - $ref: '#/components/parameters/callback'
+      - "$ref": "#/components/parameters/callback"
         name: callback
       responses:
         '200':
           description: MyGene.info metadata fields object
       summary: Get metadata about the data fields available from MyGene.info.
-  /query:
+  "/query":
     get:
       parameters:
       - description: Query string. Examples "PMC6836328", "31045", "PR:000001978".
-        example: "hgnc:238"
+        example: hgnc:238
         in: query
         name: q
         required: true
         schema:
           type: string
-      - $ref: '#/components/parameters/fields'
+      - "$ref": "#/components/parameters/fields"
         name: fields
-      - $ref: '#/components/parameters/size'
+      - "$ref": "#/components/parameters/size"
         name: size
-      - $ref: '#/components/parameters/sort'
+      - "$ref": "#/components/parameters/sort"
         name: sort
       - description: a single field or comma-separated fields to return facets, for
           example, "facets=hgnc"
@@ -121,18 +123,18 @@ paths:
         name: facets
         schema:
           type: string
-      - $ref: '#/components/parameters/callback'
+      - "$ref": "#/components/parameters/callback"
         name: callback
-      - $ref: '#/components/parameters/dotfield'
+      - "$ref": "#/components/parameters/dotfield"
         name: dotfield
-      - $ref: '#/components/parameters/email'
+      - "$ref": "#/components/parameters/email"
         name: email
       responses:
         '200':
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/QueryResult'
+                "$ref": "#/components/schemas/QueryResult"
           description: A query response object with "hits" property
       summary: Make gene query and return matching gene list. Support JSONP and CORS
         as well.
@@ -140,11 +142,11 @@ paths:
       - query
     post:
       parameters:
-      - $ref: '#/components/parameters/fields'
+      - "$ref": "#/components/parameters/fields"
         name: fields
-      - $ref: '#/components/parameters/dotfield'
+      - "$ref": "#/components/parameters/dotfield"
         name: dotfield
-      - $ref: '#/components/parameters/email'
+      - "$ref": "#/components/parameters/email"
         name: email
       requestBody:
         content:
@@ -170,16 +172,24 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/QueryPOSTResult'
+                "$ref": "#/components/schemas/QueryPOSTResult"
           description: Query response objects with "hits" property
           x-bte-response-mapping:
-            $ref: '#/components/x-bte-response-mapping/query-post'
+            "$ref": "#/components/x-bte-response-mapping/query-post"
       summary: Make gene batch query and return matching gene hits
       tags:
       - query
       x-bte-kgs-operations:
-      - associated_with:
-          $ref: '#/components/x-bte-kgs-operations/associated_with'
+      - "$ref": "#/components/x-bte-kgs-operations/gene2gene"
+      - "$ref": "#/components/x-bte-kgs-operations/gene2protein"
+      - "$ref": "#/components/x-bte-kgs-operations/gene2cell"
+      - "$ref": "#/components/x-bte-kgs-operations/gene2cc"
+      - "$ref": "#/components/x-bte-kgs-operations/gene2ma"
+      - "$ref": "#/components/x-bte-kgs-operations/gene2bp"
+      - "$ref": "#/components/x-bte-kgs-operations/gene2genomicentity"
+      - "$ref": "#/components/x-bte-kgs-operations/gene2chemical"
+      - "$ref": "#/components/x-bte-kgs-operations/gene2disease"
+      - "$ref": "#/components/x-bte-kgs-operations/gene2anatomy"
 components:
   parameters:
     callback:
@@ -190,9 +200,10 @@ components:
         type: string
     dotfield:
       description: 'control the format of the returned fields when passed "fields"
-        parameter contains dot notation, e.g. "fields=assoicated_with.pmd". If "true" or "1",
-        the returned data object contains a single "associated_with" field, otherwise ("false"
-        or "0"), a single "refseq" field with a sub-field of "rna". Default: true.'
+        parameter contains dot notation, e.g. "fields=assoicated_with.pmd". If "true"
+        or "1", the returned data object contains a single "associated_with" field,
+        otherwise ("false" or "0"), a single "refseq" field with a sub-field of "rna".
+        Default: true.'
       in: query
       name: dotfield
       schema:
@@ -205,13 +216,15 @@ components:
       schema:
         type: string
     fields:
-      description: 'a comma-separated fields to limit the fields returned from the matching gene hits.'
+      description: a comma-separated fields to limit the fields returned from the
+        matching gene hits.
       in: query
       name: fields
       schema:
         type: string
     from:
-      description: 'the number of matching gene hits to skip, starting from 0. Combining with "size" parameter, this can be useful for paging. Default: 0.'
+      description: 'the number of matching gene hits to skip, starting from 0. Combining
+        with "size" parameter, this can be useful for paging. Default: 0.'
       in: query
       name: from
       schema:
@@ -268,101 +281,257 @@ components:
         type: array
       - type: string
   x-bte-kgs-operations:
-    associated_with:
-      inputSeparator: ','
+    gene2ma:
+    - inputSeparator: ","
       inputs:
-      - id: hgnc
+      - id: HGNC
         semantic: Gene
       method: post
+      predicate: related_to
+      source: Translator Text Mining Provider
       outputs:
-      - id: go
+      - id: GO
         semantic: MolecularActivity
-      - id: go
-        semantic: BiologicalProcess
-      - id: go
-        semantic: CellularComponent
-      - id: hgnc
-        semantic: Gene
-      - id: chebi
-        semantic: ChemicalSubstance
-      - id: pr
-        semantic: Protein
-      - id: so
-        semantic: GenomicEntity
-      - id: mop
+      - id: MOP
         semantic: MolecularActivity
-      - id: doid
-        semantic: DiseaseOrPhenotypicFeature
-      - id: uberon
-        semantic: AnatomicalEntity
-      - id: cl
-        semantic: Cell
       parameters:
-        dotfield: false
         fields: associated_with
-      path: /query
+      path: "/query"
       requestBody:
         body:
-          q: '{input1}'
+          q: "{inputs[0]}"
           scopes: hgnc
         header: application/x-www-form-urlencoded
       supportBatch: true
-      response-mapping:
-        $ref: '#/components/x-bte-response-mapping/query-post'
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/gene2ma"
+    gene2cc:
+    - inputSeparator: ","
+      inputs:
+      - id: HGNC
+        semantic: Gene
+      method: post
+      predicate: related_to
+      source: Translator Text Mining Provider
+      outputs:
+      - id: GO
+        semantic: CellularComponent
+      parameters:
+        fields: associated_with
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: hgnc
+        header: application/x-www-form-urlencoded
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/gene2cc"
+    gene2bp:
+    - inputSeparator: ","
+      inputs:
+      - id: HGNC
+        semantic: Gene
+      method: post
+      predicate: related_to
+      source: Translator Text Mining Provider
+      outputs:
+      - id: GO
+        semantic: BiologicalProcess
+      parameters:
+        fields: associated_with
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: hgnc
+        header: application/x-www-form-urlencoded
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/gene2bp"
+    gene2anatomy:
+    - inputSeparator: ","
+      inputs:
+      - id: HGNC
+        semantic: Gene
+      method: post
+      predicate: related_to
+      source: Translator Text Mining Provider
+      outputs:
+      - id: UBERON
+        semantic: AnatomicalEntity
+      parameters:
+        fields: associated_with
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: hgnc
+        header: application/x-www-form-urlencoded
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/gene2anatomy"
+    gene2gene:
+    - inputSeparator: ","
+      inputs:
+      - id: HGNC
+        semantic: Gene
+      method: post
+      predicate: related_to
+      source: Translator Text Mining Provider
+      outputs:
+      - id: HGNC
+        semantic: Gene
+      parameters:
+        fields: associated_with
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: hgnc
+        header: application/x-www-form-urlencoded
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/gene2gene"
+    gene2genomicentity:
+    - inputSeparator: ","
+      inputs:
+      - id: HGNC
+        semantic: Gene
+      method: post
+      predicate: related_to
+      source: Translator Text Mining Provider
+      outputs:
+      - id: SO
+        semantic: GenomicEntity
+      parameters:
+        fields: associated_with
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: hgnc
+        header: application/x-www-form-urlencoded
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/gene2genomicentity"
+    gene2protein:
+    - inputSeparator: ","
+      inputs:
+      - id: HGNC
+        semantic: Gene
+      method: post
+      predicate: related_to
+      source: Translator Text Mining Provider
+      outputs:
+      - id: PR
+        semantic: Protein
+      parameters:
+        fields: associated_with
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: hgnc
+        header: application/x-www-form-urlencoded
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/gene2protein"
+    gene2cell:
+    - inputSeparator: ","
+      inputs:
+      - id: HGNC
+        semantic: Gene
+      method: post
+      predicate: related_to
+      source: Translator Text Mining Provider
+      outputs:
+      - id: CL
+        semantic: Cell
+      parameters:
+        fields: associated_with
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: hgnc
+        header: application/x-www-form-urlencoded
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/gene2cell"
+    gene2disease:
+    - inputSeparator: ","
+      inputs:
+      - id: HGNC
+        semantic: Gene
+      method: post
+      predicate: related_to
+      source: Translator Text Mining Provider
+      outputs:
+      - id: DOID
+        semantic: Disease
+      parameters:
+        fields: associated_with
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: hgnc
+        header: application/x-www-form-urlencoded
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/gene2disease"
+    gene2chemical:
+    - inputSeparator: ","
+      inputs:
+      - id: HGNC
+        semantic: Gene
+      method: post
+      predicate: related_to
+      source: Translator Text Mining Provider
+      outputs:
+      - id: CHEBI
+        semantic: ChemicalSubstance
+      parameters:
+        fields: associated_with
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: hgnc
+        header: application/x-www-form-urlencoded
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/gene2chemical"
   x-bte-response-mapping:
-    query-post:
-      "@context": http://schema.org
-      "@type": Gene
-      hgnc: hgnc
-      associated_with:
-        - "@type": ChemicalSubstance
-          "$source": CORD
-          pmd: associated_with.pmc
-          chebi: associated_with.chebi
-          "$input": hgnc
-        - "@type": Cell
-          "$source": CORD
-          pmd: associated_with.pmc
-          cl: associated_with.cl
-          "$input": hgnc
-        - "@type": DiseaseOrPhenotypicFeature
-          "$source": CORD
-          pmd: associated_with.pmc
-          doid: associated_with.doid
-          "$input": hgnc
-        - "@type": MolecularActivity
-          "$source": CORD
-          pmd: associated_with.pmc
-          mop: associated_with.mop
-          go: associated_with.go
-          "$input": hgnc
-        - "@type": Protein
-          "$source": CORD
-          pmd: associated_with.pmc
-          pr: associated_with.pr
-          "$input": hgnc
-        - "@type": GenomicEntity
-          "$source": CORD
-          pmd: associated_with.pmc
-          so: associated_with.so
-          "$input": hgnc
-        - "@type": Gene
-          "$source": CORD
-          pmd: associated_with.pmc
-          hgnc: associated_with.hgnc
-          "$input": hgnc
-        - "@type": AnatomicalEntity
-          "$source": CORD
-          pmd: associated_with.pmc
-          uberon: associated_with.uberon
-          "$input": hgnc
-        - "@type": BiologicalProcess
-          "$source": CORD
-          pmd: associated_with.pmc
-          go: associated_with.go
-          "$input": hgnc
-        - "@type": CellularComponent
-          "$source": CORD
-          pmd: associated_with.pmc
-          go: associated_with.go
-          "$input": hgnc
+    gene2ma:
+      pmc: associated_with.pmc
+      MOP: associated_with.mop
+      GO: associated_with.go
+    gene2cc:
+      pmc: associated_with.pmc
+      GO: associated_with.go
+    gene2bp:
+      pmc: associated_with.pmc
+      GO: associated_with.go
+    gene2anatomy:
+      pmc: associated_with.pmc
+      UBERON: associated_with.uberon
+    gene2gene:
+      pmc: associated_with.pmc
+      HGNC: associated_with.hgnc
+    gene2genomicentity:
+      pmc: associated_with.pmc
+      SO: associated_with.so
+    gene2protein:
+      pmc: associated_with.pmc
+      PR: associated_with.pr
+    gene2cell:
+      pmc: associated_with.pmc
+      CL: associated_with.cl
+    gene2disease:
+      pmc: associated_with.pmc
+      DOID: associated_with.doid
+    gene2chemical:
+      pmc: associated_with.pmc
+      CHEBI: associated_with.chebi

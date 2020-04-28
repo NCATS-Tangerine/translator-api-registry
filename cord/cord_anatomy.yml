@@ -21,14 +21,14 @@ tags:
 - name: translator
 - name: biothings
 paths:
-  /anatomy:
+  "/anatomy":
     post:
       parameters:
-      - $ref: '#/components/parameters/fields'
+      - "$ref": "#/components/parameters/fields"
         name: fields
-      - $ref: '#/components/parameters/dotfield'
+      - "$ref": "#/components/parameters/dotfield"
         name: dotfield
-      - $ref: '#/components/parameters/email'
+      - "$ref": "#/components/parameters/email"
         name: email
       requestBody:
         content:
@@ -36,7 +36,9 @@ paths:
             schema:
               properties:
                 ids:
-                  description: multiple UBERON anatomyids seperated by comma, e.g., "ids=387,388" Note that currently we only take the input ids up to 1000 maximum, the rest will be omitted.
+                  description: multiple UBERON anatomyids seperated by comma, e.g.,
+                    "ids=387,388" Note that currently we only take the input ids up
+                    to 1000 maximum, the rest will be omitted.
                   type: string
               required:
               - ids
@@ -46,41 +48,41 @@ paths:
       summary: For a list of anatomy ids, return the matching anatomy objects
       tags:
       - annotation
-  /anatomy/{anatomyid}:
+  "/anatomy/{anatomyid}":
     get:
       parameters:
       - description: UBERON Anatomy ID, e.g. UBERON:0009552
-        example: 'UBERON:0009552'
+        example: UBERON:0009552
         in: path
         name: anatomyid
         required: true
         schema:
           type: string
-      - $ref: '#/components/parameters/fields'
+      - "$ref": "#/components/parameters/fields"
         name: fields
-      - $ref: '#/components/parameters/dotfield'
+      - "$ref": "#/components/parameters/dotfield"
         name: dotfield
-      - $ref: '#/components/parameters/callback'
+      - "$ref": "#/components/parameters/callback"
         name: callback
-      - $ref: '#/components/parameters/email'
+      - "$ref": "#/components/parameters/email"
         name: email
       responses:
         '200':
           description: A matching anatomy object
-      summary: Retrieve anatomy annotation object based on pr anatomy id,
-        support JSONP and CORS as well.
+      summary: Retrieve anatomy annotation object based on pr anatomy id, support
+        JSONP and CORS as well.
       tags:
       - annotation
-  /metadata:
+  "/metadata":
     get:
       parameters:
-      - $ref: '#/components/parameters/callback'
+      - "$ref": "#/components/parameters/callback"
         name: callback
       responses:
         '200':
           description: CORD API metadata object
       summary: Get metadata about the data available from CORD API.
-  /metadata/fields:
+  "/metadata/fields":
     get:
       parameters:
       - description: Pass a search term to filter the available fields, e.g. "search=associated_with".
@@ -93,27 +95,27 @@ paths:
         name: prefix
         schema:
           type: string
-      - $ref: '#/components/parameters/callback'
+      - "$ref": "#/components/parameters/callback"
         name: callback
       responses:
         '200':
           description: MyAnatomy.info metadata fields object
       summary: Get metadata about the data fields available from MyAnatomy.info.
-  /query:
+  "/query":
     get:
       parameters:
       - description: Query string. Examples "PMC6836328", "31045", "PR:000001978".
-        example: "associated_with.pmc:PMC6525145"
+        example: associated_with.pmc:PMC6525145
         in: query
         name: q
         required: true
         schema:
           type: string
-      - $ref: '#/components/parameters/fields'
+      - "$ref": "#/components/parameters/fields"
         name: fields
-      - $ref: '#/components/parameters/size'
+      - "$ref": "#/components/parameters/size"
         name: size
-      - $ref: '#/components/parameters/sort'
+      - "$ref": "#/components/parameters/sort"
         name: sort
       - description: a single field or comma-separated fields to return facets, for
           example, "facets=pr"
@@ -121,30 +123,30 @@ paths:
         name: facets
         schema:
           type: string
-      - $ref: '#/components/parameters/callback'
+      - "$ref": "#/components/parameters/callback"
         name: callback
-      - $ref: '#/components/parameters/dotfield'
+      - "$ref": "#/components/parameters/dotfield"
         name: dotfield
-      - $ref: '#/components/parameters/email'
+      - "$ref": "#/components/parameters/email"
         name: email
       responses:
         '200':
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/QueryResult'
+                "$ref": "#/components/schemas/QueryResult"
           description: A query response object with "hits" property
-      summary: Make anatomy query and return matching anatomy list. Support JSONP and CORS
-        as well.
+      summary: Make anatomy query and return matching anatomy list. Support JSONP
+        and CORS as well.
       tags:
       - query
     post:
       parameters:
-      - $ref: '#/components/parameters/fields'
+      - "$ref": "#/components/parameters/fields"
         name: fields
-      - $ref: '#/components/parameters/dotfield'
+      - "$ref": "#/components/parameters/dotfield"
         name: dotfield
-      - $ref: '#/components/parameters/email'
+      - "$ref": "#/components/parameters/email"
         name: email
       requestBody:
         content:
@@ -160,8 +162,8 @@ paths:
                     the search "scopes", e.g., "scopes=entrezanatomy", "scopes=entrezanatomy,ensemblanatomy".
                     The available "fields" can be passed to "scopes" parameter are
                     listed [here](http://myanatomy.info/doc/query_service.html#available-fields).
-                    Default: "scopes=entrezanatomy,ensemblanatomy,retired" (either Entrez
-                    or Ensembl anatomy ids).'
+                    Default: "scopes=entrezanatomy,ensemblanatomy,retired" (either
+                    Entrez or Ensembl anatomy ids).'
                   type: string
               required:
               - q
@@ -170,16 +172,22 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/QueryPOSTResult'
+                "$ref": "#/components/schemas/QueryPOSTResult"
           description: Query response objects with "hits" property
-          x-bte-response-mapping:
-            $ref: '#/components/x-bte-response-mapping/query-post'
       summary: Make anatomy batch query and return matching anatomy hits
       tags:
       - query
       x-bte-kgs-operations:
-      - associated_with:
-          $ref: '#/components/x-bte-kgs-operations/associated_with'
+      - "$ref": "#/components/x-bte-kgs-operations/anatomy2gene"
+      - "$ref": "#/components/x-bte-kgs-operations/anatomy2protein"
+      - "$ref": "#/components/x-bte-kgs-operations/anatomy2cell"
+      - "$ref": "#/components/x-bte-kgs-operations/anatomy2cc"
+      - "$ref": "#/components/x-bte-kgs-operations/anatomy2ma"
+      - "$ref": "#/components/x-bte-kgs-operations/anatomy2bp"
+      - "$ref": "#/components/x-bte-kgs-operations/anatomy2genomicentity"
+      - "$ref": "#/components/x-bte-kgs-operations/anatomy2chemical"
+      - "$ref": "#/components/x-bte-kgs-operations/anatomy2disease"
+      - "$ref": "#/components/x-bte-kgs-operations/anatomy2anatomy"
 components:
   parameters:
     callback:
@@ -190,9 +198,10 @@ components:
         type: string
     dotfield:
       description: 'control the format of the returned fields when passed "fields"
-        parameter contains dot notation, e.g. "fields=assoicated_with.pmd". If "true" or "1",
-        the returned data object contains a single "associated_with" field, otherwise ("false"
-        or "0"), a single "refseq" field with a sub-field of "rna". Default: true.'
+        parameter contains dot notation, e.g. "fields=assoicated_with.pmd". If "true"
+        or "1", the returned data object contains a single "associated_with" field,
+        otherwise ("false" or "0"), a single "refseq" field with a sub-field of "rna".
+        Default: true.'
       in: query
       name: dotfield
       schema:
@@ -205,20 +214,22 @@ components:
       schema:
         type: string
     fields:
-      description: 'a comma-separated fields to limit the fields returned from the matching anatomy hits.'
+      description: a comma-separated fields to limit the fields returned from the
+        matching anatomy hits.
       in: query
       name: fields
       schema:
         type: string
     from:
-      description: 'the number of matching anatomy hits to skip, starting from 0. Combining with "size" parameter, this can be useful for paging. Default: 0.'
+      description: 'the number of matching anatomy hits to skip, starting from 0.
+        Combining with "size" parameter, this can be useful for paging. Default: 0.'
       in: query
       name: from
       schema:
         type: integer
     size:
-      description: 'the maximum number of matching anatomy hits to return (with a cap
-        of 1000 at the moment). Default: 10.'
+      description: 'the maximum number of matching anatomy hits to return (with a
+        cap of 1000 at the moment). Default: 10.'
       in: query
       name: size
       schema:
@@ -268,102 +279,257 @@ components:
         type: array
       - type: string
   x-bte-kgs-operations:
-    associated_with:
-      inputSeparator: ','
+    anatomy2ma:
+    - inputSeparator: ","
       inputs:
-      - id: uberon
+      - id: UBERON
         semantic: AnatomicalEntity
       method: post
+      predicate: related_to
+      source: Translator Text Mining Provider
       outputs:
-      - id: go
+      - id: GO
         semantic: MolecularActivity
-      - id: go
-        semantic: BiologicalProcess
-      - id: go
-        semantic: CellularComponent
-      - id: pr
-        semantic: Anatomy
-      - id: chebi
-        semantic: ChemicalSubstance
-      - id: hgnc
-        semantic: Gene
-      - id: so
-        semantic: GenomicEntity
-      - id: mop
+      - id: MOP
         semantic: MolecularActivity
-      - id: doid
-        semantic: DiseaseOrPhenotypicFeature
-      - id: uberon
-        semantic: AnatomicalEntity
-      - id: cl
-        semantic: Cell
       parameters:
-        dotfield: false
         fields: associated_with
-      path: /query
+      path: "/query"
       requestBody:
         body:
-          q: '{input1}'
+          q: "{inputs[0]}"
           scopes: uberon
         header: application/x-www-form-urlencoded
       supportBatch: true
-      response-mapping:
-        $ref: '#/components/x-bte-response-mapping/query-post'
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/anatomy2ma"
+    anatomy2cc:
+    - inputSeparator: ","
+      inputs:
+      - id: UBERON
+        semantic: AnatomicalEntity
+      method: post
+      predicate: related_to
+      source: Translator Text Mining Provider
+      outputs:
+      - id: GO
+        semantic: CellularComponent
+      parameters:
+        fields: associated_with
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: uberon
+        header: application/x-www-form-urlencoded
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/anatomy2cc"
+    anatomy2bp:
+    - inputSeparator: ","
+      inputs:
+      - id: UBERON
+        semantic: AnatomicalEntity
+      method: post
+      predicate: related_to
+      source: Translator Text Mining Provider
+      outputs:
+      - id: GO
+        semantic: BiologicalProcess
+      parameters:
+        fields: associated_with
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: uberon
+        header: application/x-www-form-urlencoded
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/anatomy2bp"
+    anatomy2anatomy:
+    - inputSeparator: ","
+      inputs:
+      - id: UBERON
+        semantic: AnatomicalEntity
+      method: post
+      predicate: related_to
+      source: Translator Text Mining Provider
+      outputs:
+      - id: UBERON
+        semantic: AnatomicalEntity
+      parameters:
+        fields: associated_with
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: uberon
+        header: application/x-www-form-urlencoded
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/anatomy2anatomy"
+    anatomy2gene:
+    - inputSeparator: ","
+      inputs:
+      - id: UBERON
+        semantic: AnatomicalEntity
+      method: post
+      predicate: related_to
+      source: Translator Text Mining Provider
+      outputs:
+      - id: HGNC
+        semantic: Gene
+      parameters:
+        fields: associated_with
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: uberon
+        header: application/x-www-form-urlencoded
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/anatomy2gene"
+    anatomy2genomicentity:
+    - inputSeparator: ","
+      inputs:
+      - id: UBERON
+        semantic: AnatomicalEntity
+      method: post
+      predicate: related_to
+      source: Translator Text Mining Provider
+      outputs:
+      - id: SO
+        semantic: GenomicEntity
+      parameters:
+        fields: associated_with
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: uberon
+        header: application/x-www-form-urlencoded
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/anatomy2genomicentity"
+    anatomy2protein:
+    - inputSeparator: ","
+      inputs:
+      - id: UBERON
+        semantic: AnatomicalEntity
+      method: post
+      predicate: related_to
+      source: Translator Text Mining Provider
+      outputs:
+      - id: PR
+        semantic: Protein
+      parameters:
+        fields: associated_with
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: uberon
+        header: application/x-www-form-urlencoded
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/anatomy2protein"
+    anatomy2cell:
+    - inputSeparator: ","
+      inputs:
+      - id: UBERON
+        semantic: AnatomicalEntity
+      method: post
+      predicate: related_to
+      source: Translator Text Mining Provider
+      outputs:
+      - id: CL
+        semantic: Cell
+      parameters:
+        fields: associated_with
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: uberon
+        header: application/x-www-form-urlencoded
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/anatomy2cell"
+    anatomy2disease:
+    - inputSeparator: ","
+      inputs:
+      - id: UBERON
+        semantic: AnatomicalEntity
+      method: post
+      predicate: related_to
+      source: Translator Text Mining Provider
+      outputs:
+      - id: DOID
+        semantic: Disease
+      parameters:
+        fields: associated_with
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: uberon
+        header: application/x-www-form-urlencoded
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/anatomy2disease"
+    anatomy2chemical:
+    - inputSeparator: ","
+      inputs:
+      - id: UBERON
+        semantic: AnatomicalEntity
+      method: post
+      predicate: related_to
+      source: Translator Text Mining Provider
+      outputs:
+      - id: CHEBI
+        semantic: ChemicalSubstance
+      parameters:
+        fields: associated_with
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: uberon
+        header: application/x-www-form-urlencoded
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/anatomy2chemical"
   x-bte-response-mapping:
-    query-post:
-      "@context": http://schema.org
-      "@type": AnatomicalEntity
-      uberon: uberon
-      associated_with:
-        - "@type": ChemicalSubstance
-          "$source": CORD
-          pmd: associated_with.pmc
-          chebi: associated_with.chebi
-          "$input": uberon
-        - "@type": Cell
-          "$source": CORD
-          pmd: associated_with.pmc
-          cl: associated_with.cl
-          "$input": uberon
-        - "@type": DiseaseOrPhenotypicFeature
-          "$source": CORD
-          pmd: associated_with.pmc
-          doid: associated_with.doid
-          "$input": uberon
-        - "@type": MolecularActivity
-          "$source": CORD
-          pmd: associated_with.pmc
-          mop: associated_with.mop
-          go: associated_with.go
-          "$input": uberon
-        - "@type": Protein
-          "$source": CORD
-          pmd: associated_with.pmc
-          pr: associated_with.pr
-          "$input": uberon
-        - "@type": GenomicEntity
-          "$source": CORD
-          pmd: associated_with.pmc
-          so: associated_with.so
-          "$input": uberon
-        - "@type": Gene
-          "$source": CORD
-          pmd: associated_with.pmc
-          hgnc: associated_with.hgnc
-          "$input": uberon
-        - "@type": AnatomicalEntity
-          "$source": CORD
-          pmd: associated_with.pmc
-          uberon: associated_with.uberon
-          "$input": uberon
-        - "@type": BiologicalProcess
-          "$source": CORD
-          pmd: associated_with.pmc
-          go: associated_with.go
-          "$input": uberon
-        - "@type": CellularComponent
-          "$source": CORD
-          pmd: associated_with.pmc
-          go: associated_with.go
-          "$input": uberon
-          
+    anatomy2ma:
+      pmc: associated_with.pmc
+      MOP: associated_with.mop
+      GO: associated_with.go
+    anatomy2cc:
+      pmc: associated_with.pmc
+      GO: associated_with.go
+    anatomy2bp:
+      pmc: associated_with.pmc
+      GO: associated_with.go
+    anatomy2anatomy:
+      pmc: associated_with.pmc
+      UBERON: associated_with.uberon
+    anatomy2gene:
+      pmc: associated_with.pmc
+      HGNC: associated_with.hgnc
+    anatomy2genomicentity:
+      pmc: associated_with.pmc
+      SO: associated_with.so
+    anatomy2protein:
+      pmc: associated_with.pmc
+      PR: associated_with.pr
+    anatomy2cell:
+      pmc: associated_with.pmc
+      CL: associated_with.cl
+    anatomy2disease:
+      pmc: associated_with.pmc
+      DOID: associated_with.doid
+    anatomy2chemical:
+      pmc: associated_with.pmc
+      CHEBI: associated_with.chebi
