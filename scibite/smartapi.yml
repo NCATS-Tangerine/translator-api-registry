@@ -1,3 +1,4 @@
+---
 openapi: 3.0.0
 info:
   contact:
@@ -14,17 +15,17 @@ tags:
 - name: drug
 - name: gene
 - name: disease
-- name: annotation
+- name: automat
 - name: translator
 paths:
-  /gene/chemical_substance/NCBIGene:{entrez}:
+  "/gene/chemical_substance/{geneid}":
     get:
-      summary: "gene2chemical"
+      summary: gene2chemical
       parameters:
       - description: Put NCBIGene ID here, e.g. 1017
-        example: 1017
+        example: NCBIGene:1017
         in: path
-        name: entrez
+        name: geneid
         required: true
         schema:
           type: string
@@ -32,16 +33,15 @@ paths:
         '200':
           description: An association object
       x-bte-kgs-operations:
-        associatedWith:
-          $ref: '#/components/x-bte-kgs-operations/gene2chemical'
-  /gene/disease/NCBIGene:{entrez}:
+      - "$ref": "#/components/x-bte-kgs-operations/gene2chemical"
+  "/gene/disease/{geneid}":
     get:
-      summary: "gene2disease"
+      summary: gene2disease
       parameters:
       - description: Put NCBIGene ID here, e.g. 1017
-        example: 1017
+        example: NCBIGene:1017
         in: path
-        name: entrez
+        name: geneid
         required: true
         schema:
           type: string
@@ -49,14 +49,13 @@ paths:
         '200':
           description: An association object
       x-bte-kgs-operations:
-        associatedWith:
-          $ref: '#/components/x-bte-kgs-operations/gene2disease'
-  /chemical_substance/disease/{chebi}:
+      - "$ref": "#/components/x-bte-kgs-operations/gene2disease"
+  "/chemical_substance/disease/{chebi}":
     get:
-      summary: "chemical2disease"
+      summary: chemical2disease
       parameters:
       - description: Put CHEBI ID here, e.g. "CHEBI:661"
-        example: "CHEBI:661"
+        example: CHEBI:661
         in: path
         name: chebi
         required: true
@@ -66,14 +65,13 @@ paths:
         '200':
           description: An association object
       x-bte-kgs-operations:
-        associatedWith:
-          $ref: '#/components/x-bte-kgs-operations/chemical2disease'
-  /chemical_substance/gene/{chebi}:
+      - "$ref": "#/components/x-bte-kgs-operations/chemical2disease"
+  "/chemical_substance/gene/{chebi}":
     get:
-      summary: "chemical2gene"
+      summary: chemical2gene
       parameters:
       - description: Put CHEBI ID here, e.g. "CHEBI:661"
-        example: "CHEBI:661"
+        example: CHEBI:661
         in: path
         name: chebi
         required: true
@@ -83,16 +81,15 @@ paths:
         '200':
           description: An association object
       x-bte-kgs-operations:
-        associatedWith:
-          $ref: '#/components/x-bte-kgs-operations/chemical2gene'
-  /disease/gene/{doid}:
+      - "$ref": "#/components/x-bte-kgs-operations/chemical2gene"
+  "/disease/gene/{mondo}":
     get:
-      summary: "disease2gene"
+      summary: disease2gene
       parameters:
       - description: Put DOID ID here, e.g. "DOID:123"
-        example: "DOID:123"
+        example: DOID:123
         in: path
-        name: doid
+        name: mondo
         required: true
         schema:
           type: string
@@ -100,16 +97,15 @@ paths:
         '200':
           description: An association object
       x-bte-kgs-operations:
-        associatedWith:
-          $ref: '#/components/x-bte-kgs-operations/disease2gene'
-  /disease/chemical_substance/{doid}:
+      - "$ref": "#/components/x-bte-kgs-operations/disease2gene"
+  "/disease/chemical_substance/{mondo}":
     get:
-      summary: "disease2chemical"
+      summary: disease2chemical
       parameters:
       - description: Put DOID ID here, e.g. "DOID:123"
-        example: "DOID:123"
+        example: DOID:123
         in: path
-        name: doid
+        name: mondo
         required: true
         schema:
           type: string
@@ -117,129 +113,163 @@ paths:
         '200':
           description: An association object
       x-bte-kgs-operations:
-        associatedWith:
-          $ref: '#/components/x-bte-kgs-operations/disease2chemical'
+      - "$ref": "#/components/x-bte-kgs-operations/disease2chemical"
 components:
   x-bte-kgs-operations:
     gene2chemical:
-      inputs:
-      - id: entrez
+    - inputs:
+      - id: NCBIGene
         semantic: Gene
       outputs:
-      - id: chembl
+      - id: CHEMBL.COMPOUND
         semantic: ChemicalSubstance
+      predicate: related_to
+      source: scibite
       parameters:
-        entrez: '{input1}'
+        geneid: NCBIGene:{inputs[0]}
       supportBatch: false
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/gene2chemical-chembl"
+    - inputs:
+      - id: NCBIGene
+        semantic: Gene
+      outputs:
+      - id: CHEBI
+        semantic: ChemicalSubstance
+      predicate: related_to
+      source: scibite
+      parameters:
+        geneid: NCBIGene:{inputs[0]}
+      supportBatch: false
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/gene2chemical-chebi"
     gene2disease:
-      inputs:
-      - id: entrez
+    - inputs:
+      - id: NCBIGene
         semantic: Gene
       outputs:
-      - id: doid
-        semantic: DiseaseOrPhenotypicFeature
+      - id: DOID
+        semantic: Disease
+      predicate: related_to
+      source: scibite
       parameters:
-        entrez: '{input1}'
+        geneid: NCBIGene:{inputs[0]}
       supportBatch: false
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/gene2disease-doid"
+    - inputs:
+      - id: NCBIGene
+        semantic: Gene
+      outputs:
+      - id: MONDO
+        semantic: Disease
+      predicate: related_to
+      source: scibite
+      parameters:
+        geneid: NCBIGene:{inputs[0]}
+      supportBatch: false
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/gene2disease-mondo"
     chemical2gene:
-      inputs:
-      - id: chembl
+    - inputs:
+      - id: CHEBI
         semantic: ChemicalSubstance
       outputs:
-      - id: entrez
+      - id: NCBIGene
         semantic: Gene
+      predicate: related_to
+      source: scibite
       parameters:
-        chembl: '{input1}'
+        chebi: "{inputs[0]}"
       supportBatch: false
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/chemical2gene"
     chemical2disease:
-      inputs:
-      - id: chembl
+    - inputs:
+      - id: CHEBI
         semantic: ChemicalSubstance
       outputs:
-      - id: doid
-        semantic: DiseaseOrPhenotypicFeature
+      - id: DOID
+        semantic: Disease
+      predicate: related_to
+      source: scibite
       parameters:
-        entrez: '{input1}'
+        chebi: "{inputs[0]}"
       supportBatch: false
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/chemical2disease-doid"
+    - inputs:
+      - id: CHEBI
+        semantic: ChemicalSubstance
+      outputs:
+      - id: MONDO
+        semantic: Disease
+      predicate: related_to
+      source: scibite
+      parameters:
+        chebi: "{inputs[0]}"
+      supportBatch: false
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/chemical2disease-mondo"
     disease2gene:
-      inputs:
-      - id: doid
-        semantic: DiseaseOrPhenotypicFeature
+    - inputs:
+      - id: MONDO
+        semantic: Disease
       outputs:
-      - id: entrez
+      - id: NCBIGene
         semantic: Gene
+      predicate: related_to
+      source: scibite
       parameters:
-        doid: '{input1}'
+        mondo: "{inputs[0]}"
       supportBatch: false
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/disease2gene"
     disease2chemical:
-      inputs:
-      - id: doid
-        semantic: DiseaseOrPhenotypicFeature
+    - inputs:
+      - id: MONDO
+        semantic: Disease
       outputs:
-      - id: chembl
+      - id: CHEMBL.COMPOUND
         semantic: ChemicalSubstance
+      predicate: related_to
+      source: scibite
       parameters:
-        doid: '{input1}'
+        mondo: "{inputs[0]}"
       supportBatch: false
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/disease2chemical-chembl"
+    - inputs:
+      - id: MONDO
+        semantic: Disease
+      outputs:
+      - id: CHEBI
+        semantic: ChemicalSubstance
+      predicate: related_to
+      source: scibite
+      parameters:
+        mondo: "{inputs[0]}"
+      supportBatch: false
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/disease2chemical-chebi"
   x-bte-response-mapping:
-    gene2chemical:
-      "@context": http://schema.org
-      "@type": Gene
-      bts:entrez: entrez
-      bts:associatedWith:
-        "@type": ChemicalSubstance
-        bts:chebi: associated_with.chebi
-        bts:chembl: associated_with.chembl
-        "$input": bts:entrez
-        "$source": scibite
-    gene2disease:
-      "@context": http://schema.org
-      "@type": Gene
-      bts:entrez: entrez
-      bts:associatedWith:
-        "@type": DiseaseOrPhenotypicFeature
-        bts:mondo: associated_with.mondo
-        bts:doid: associated_with.doid
-        "$input": bts:entrez
-        "$source": scibite
-    chemical2disease:
-      "@context": http://schema.org
-      "@type": ChemicalSubstance
-      bts:chebi: chebi
-      bts:associatedWith:
-        "@type": DiseaseOrPhenotypicFeature
-        bts:mondo: associated_with.mondo
-        bts:doid: associated_with.doid
-        "$input": bts:chebi
-        "$source": scibite
+    gene2chemical-chebi:
+      CHEBI: associated_with.chebi
+    gene2chemical-chembl:
+      CHEMBL.COMPOUND: associated_with.chembl
+    gene2disease-mondo:
+      MONDO: associated_with.mondo
+    gene2disease-doid:
+      DOID: associated_with.doid
+    chemical2disease-mondo:
+      MONDO: associated_with.mondo
+    chemical2disease-doid:
+      DOID: associated_with.doid
     chemical2gene:
-      "@context": http://schema.org
-      "@type": ChemicalSubstance
-      bts:chebi: chebi
-      bts:associatedWith:
-        "@type": Gene
-        bts:entrez: associated_with.ncbigene
-        bts:ensembl: associated_with.ensembl
-        "$input": bts:chebi
-        "$source": scibite
+      NCBIGene: associated_with.ncbigene
     disease2gene:
-      "@context": http://schema.org
-      "@type": DiseaseOrPhenotypicFeature
-      bts:mondo: mondo
-      bts:associatedWith:
-        "@type": Gene
-        bts:entrez: associated_with.ncbigene
-        bts:ensembl: associated_with.ensembl
-        "$input": bts:mondo
-        "$source": scibite
-    disease2chemical:
-      "@context": http://schema.org
-      "@type": DiseaseOrPhenotypicFeature
-      bts:mondo: mondo
-      bts:associatedWith:
-        "@type": ChemicalSubstance
-        bts:chembl: associated_with.chembl
-        bts:chebi: associated_with.chebi
-        "$input": bts:mondo
-        "$source": scibite
-
+      NCBIGene: associated_with.ncbigene
+    disease2chemical-chembl:
+      CHEMBL.COMPOUND: associated_with.chembl
+    disease2chemical-chebi:
+      CHEBI: associated_with.chebi
