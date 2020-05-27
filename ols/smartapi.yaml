@@ -1,62 +1,60 @@
-openapi: '3.0.0'
+openapi: 3.0.0
 info:
   version: '1.0'
   title: Ontology Lookup Service API
-  description: >-
-    The OLS REST API provides access to key biological data from OLS. The services provide a unified interface to query information about ontology terms from GO (the Gene Ontology) and ECO (the Evidence & Conclusion Ontology), Gene Ontology annotations from the EBI's GOA database, and gene products (proteins from UniProt, RNA from RNAcentral and complexes from ComplexPortal). 
+  description: 'The OLS REST API provides access to key biological data from OLS.
+    The services provide a unified interface to query information about ontology terms
+    from GO (the Gene Ontology) and ECO (the Evidence & Conclusion Ontology), Gene
+    Ontology annotations from the EBI''s GOA database, and gene products (proteins
+    from UniProt, RNA from RNAcentral and complexes from ComplexPortal). '
   termsOfService: https://www.ebi.ac.uk/OLS/services
   contact:
     name: pharmgkb help desk
     x-role: responsible developer
     email: help@pharmgkb.org
 servers:
-  - url: 'https://www.ebi.ac.uk/ols/api'
-    description: 'Production server'
+- url: https://www.ebi.ac.uk/ols/api
+  description: Production server
 tags:
-  - name: publication
-  - name: translator
+- name: ontology
+- name: translator
 paths:
-  '/ontologies/doid/children':
+  "/ontologies/doid/children":
     get:
-      summary: 'retrieve the children of specified ontology terms'
+      summary: retrieve the children of specified ontology terms
       parameters:
-        - name: id
-          in: query
-          description: >-
-            Put Disease Ontology ID here, e.g. DOID:0110594
-          required: true
-          example: "DOID:0110594"
-          schema:
-            type: string
+      - name: id
+        in: query
+        description: Put Disease Ontology ID here, e.g. DOID:0050686
+        required: true
+        example: DOID:0050686
+        schema:
+          type: string
       responses:
         '200':
-          description: 'A DISEASE ontolgoy annotation object'
+          description: A DISEASE ontolgoy annotation object
           x-bte-response-mapping:
-            $ref: '#/components/x-bte-response-mapping/hasChildren'
+            "$ref": "#/components/x-bte-response-mapping/hasChildren"
       x-bte-kgs-operations:
-        associatedWith:
-          $ref: '#/components/x-bte-kgs-operations/hasChildren'
+      - "$ref": "#/components/x-bte-kgs-operations/disease_has_subclass_disease"
 components:
   x-bte-kgs-operations:
-    hasChildren:
-      inputs:
-      - id: doid
-        semantic: DiseaseOrPhenotypicFeature
+    disease_has_subclass_disease:
+    - inputs:
+      - id: DOID
+        semantic: Disease
+      predicate: has_subclass
+      source: disease ontology
       outputs:
-      - id: doid
-        semantic: DiseaseOrPhenotypicFeature
+      - id: DOID
+        semantic: Disease
       parameters:
-        goid: '{input1}'
+        id: "{inputs[0]}"
       supportBatch: false
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/disease_has_subclass_disease"
   x-bte-response-mapping:
-    hasChildren:
-      "@context": http://schema.org
-      "@type": DiseaseOrPhenotypicFeature
-      bts:doid: results.id
-      bts:hasChildren:
-        "@type": DiseaseOrPhenotypicFeature
-        bts:doid: _embedded.terms.obo_id
-        bts:name: _embedded.terms.label
-        bts:description: _embedded.terms.description
-        "$input": bts:doid
-        "$source": disease ontology
+    disease_has_subclass_disease:
+      DOID: _embedded.terms.obo_id
+      name: _embedded.terms.label
+      description: _embedded.terms.description
