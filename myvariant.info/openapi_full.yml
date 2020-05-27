@@ -22,10 +22,10 @@ tags:
 - name: translator
 - name: biothings
 paths:
-  /metadata:
+  "/metadata":
     get:
       parameters:
-      - $ref: '#/components/parameters/callback'
+      - "$ref": "#/components/parameters/callback"
         in: query
         name: callback
       responses:
@@ -34,7 +34,7 @@ paths:
       summary: Get metadata about the data available from MyVariant.info.
       tags:
       - metadata
-  /metadata/fields:
+  "/metadata/fields":
     get:
       parameters:
       - description: Pass a search term to filter the available fields, e.g. "search=clinvar".
@@ -47,7 +47,7 @@ paths:
         name: prefix
         schema:
           type: string
-      - $ref: '#/components/parameters/callback'
+      - "$ref": "#/components/parameters/callback"
         in: query
         name: callback
       responses:
@@ -56,7 +56,7 @@ paths:
       summary: Get metadata about the data fields available from MyVariant.info.
       tags:
       - metadata
-  /query:
+  "/query":
     get:
       parameters:
       - description: Query string. Examples "rs752396467", "possibly_damaging", "CDK7".
@@ -67,66 +67,16 @@ paths:
         required: true
         schema:
           type: string
-        x-requestTemplate:
-        - template: cadd.gene.genename:{{input}} OR cgi.gene:{{input}} OR clinvar.gene.symbol:{{input}}
-            OR dbnsfp.genename:{{input}} OR dbsnp.gene.symbol:{{input}} OR docm.genename:{{input}}
-            OR emv.gene:{{input}} OR evs.gene.symbol:{{input}} OR snpeff.ann.genename:{{input}}
-          valueType: http://identifiers.org/hgnc.symbol/
-        - template: clinvar.rsid:{{input}} OR dbnsfp.rsid:{{input}} OR dbsnp.rsid:{{input}}
-            OR evs.rsid:{{input}}
-          valueType: http://identifiers.org/dbsnp/
-        - template: dbnsfp.ensembl.geneid:{{input}} OR cadd.gene.gene_id:{{input}}
-          valueType: http://identifiers.org/ensembl.gene/
-        - template: dbnsfp.ensembl.transcriptid:{{input}} OR cadd.gene.feature_id:{{input}}
-          valueType: http://identifiers.org/ensembl.transcript
-        - template: dbnsfp.ensembl.proteinid:{{input}}
-          valueType: http://identifiers.org/ensembl.protein/
-        - template: cadd.gene.ccds_id:{{input}}
-          valueType: http://identifiers.org/ccds/
-        - template: dbnsfp.uniprot.acc:{{input}}
-          valueType: http://identifiers.org/uniprot/
-        - template: clinvar.omim:{{input}}
-          valueType: http://identifiers.org/omim/
-        - template: clinvar.rcv.conditions.identifiers.efo:{{input}}
-          valueType: http://identifiers.org/efo/
-        - template: clinvar.rcv.conditions.identifiers.orphanet:{{input}}
-          valueType: http://identifiers.org/orphanet/
-        - template: clinvar.gene.id:{{input}} OR dbsnp.gene.geneid:{{input}}
-          valueType: http://identifiers.org/hgnc/
-        - template: civic.evidence_items.source.pubmed_id:{{input}} OR docm.pubmed_id:{{input}}
-            OR gwassnps.pubmed:{{input}}
-          valueType: http://identifiers.org/pubmed/
-        - template: clinvar.rcv.clinical_significance:{{input}}
-          valueType: http://identifiers.org/clinicalsignificance/
-        - template: civic.evidence_items.drugs.name:{{input}}
-          valueType: http://biothings.io/terms/drugname/
-        x-valueType:
-        - http://identifiers.org/hgnc.symbol/
-        - http://identifiers.org/dbsnp/
-        - http://identifiers.org/ensembl.gene/
-        - http://identifiers.org/ensembl.transcript/
-        - http://identifiers.org/ensembl.protein/
-        - http://identifiers.org/ccds/
-        - http://identifiers.org/uniprot/
-        - http://identifiers.org/clinvar/
-        - http://identifiers.org/omim/
-        - http://identifiers.org/efo/
-        - http://identifiers.org/orphanet/
-        - http://identifiers.org/hgnc/
-        - http://identifiers.org/pubmed/
-        - http://identifiers.org/refseq/
-        - http://identifiers.org/clinicalsignificance/
-        - http://biothings.io/terms/drugname/
-      - $ref: '#/components/parameters/fields'
-        in: query
+      - '1': query
+        "$ref": "#/components/parameters/fields"
         name: fields
-      - $ref: '#/components/parameters/size'
+      - "$ref": "#/components/parameters/size"
         in: query
         name: size
-      - $ref: '#/components/parameters/from'
+      - "$ref": "#/components/parameters/from"
         in: query
         name: from
-      - $ref: '#/components/parameters/sort'
+      - "$ref": "#/components/parameters/sort"
         in: query
         name: sort
       - description: a single field or comma-separated fields to return facets, for
@@ -135,13 +85,13 @@ paths:
         name: facets
         schema:
           type: string
-      - $ref: '#/components/parameters/callback'
+      - "$ref": "#/components/parameters/callback"
         in: query
         name: callback
-      - $ref: '#/components/parameters/dotfield'
+      - "$ref": "#/components/parameters/dotfield"
         in: query
         name: dotfield
-      - $ref: '#/components/parameters/email'
+      - "$ref": "#/components/parameters/email"
         in: query
         name: email
       responses:
@@ -149,17 +99,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/QueryResult'
+                "$ref": "#/components/schemas/QueryResult"
           description: A query response object with "hits" property
-          x-JSONLDContext: https://raw.githubusercontent.com/NCATS-Tangerine/translator-api-registry/master/myvariant.info/jsonld_context/myvariant_query_1.1.json
-          x-responseValueType:
-          - path: hits._id
-            valueType: http://identifiers.org/hgvs/
         '400':
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResult'
+                "$ref": "#/components/schemas/ErrorResult"
           description: A response indicating an improperly formatted query
       summary: Make variant query and return matching variant list. Support JSONP
         and CORS as well.
@@ -167,13 +113,13 @@ paths:
       - query
     post:
       parameters:
-      - $ref: '#/components/parameters/fields'
+      - "$ref": "#/components/parameters/fields"
         in: query
         name: fields
-      - $ref: '#/components/parameters/dotfield'
+      - "$ref": "#/components/parameters/dotfield"
         in: query
         name: dotfield
-      - $ref: '#/components/parameters/email'
+      - "$ref": "#/components/parameters/email"
         in: query
         name: email
       requestBody:
@@ -199,38 +145,31 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/QueryPOSTResult'
+                "$ref": "#/components/schemas/QueryPOSTResult"
           description: Query response objects with "hits" property
-          x-JSONLDContext: https://raw.githubusercontent.com/NCATS-Tangerine/translator-api-registry/master/myvariant.info/jsonld_context/myvariant_query_1.1.json
-          x-responseValueType:
-          - path: hits._id
-            valueType: http://identifiers.org/hgvs/
-          x-bte-response-mapping:
-            $ref: '#/components/x-bte-response-mapping/query-post'
         '400':
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResult'
+                "$ref": "#/components/schemas/ErrorResult"
           description: A response indicating an improperly formatted query
       summary: Make variant batch query and return matching variant hits
       tags:
       - query
       x-bte-kgs-operations:
-        - variantAssociatedWithGene:
-            $ref: '#/components/x-bte-kgs-operations/variantAssociatedWithGene'
-        - variantAssociatedWithCondition:
-            $ref: '#/components/x-bte-kgs-operations/variantAssociatedWithCondition'
-  /variant:
+      - "$ref": "#/components/x-bte-kgs-operations/variantAssociatedWithGene"
+      - "$ref": "#/components/x-bte-kgs-operations/variantAssociatedWithCondition"
+      - "$ref": "#/components/x-bte-kgs-operations/conditionAssociatedWithVariant"
+  "/variant":
     post:
       parameters:
-      - $ref: '#/components/parameters/fields'
+      - "$ref": "#/components/parameters/fields"
         in: query
         name: fields
-      - $ref: '#/components/parameters/dotfield'
+      - "$ref": "#/components/parameters/dotfield"
         in: query
         name: dotfield
-      - $ref: '#/components/parameters/email'
+      - "$ref": "#/components/parameters/email"
         in: query
         name: email
       requestBody:
@@ -251,17 +190,13 @@ paths:
             application/json:
               schema:
                 items:
-                  $ref: '#/components/schemas/Variant'
+                  "$ref": "#/components/schemas/Variant"
                 type: array
           description: a list of matching variant objects
-          x-JSONLDContext: https://raw.githubusercontent.com/NCATS-Tangerine/translator-api-registry/master/myvariant.info/jsonld_context/myvariant_variant_1.1.json
-          x-responseValueType:
-          - path: _id
-            valueType: http://identifiers.org/hgvs/
       summary: For a list of variant ids, return the matching variant objects
       tags:
       - variant
-  /variant/{variantid}:
+  "/variant/{variantid}":
     get:
       parameters:
       - description: HGVS or rsid, e.g., chr6:g.152708291G>A, rs12190874
@@ -271,24 +206,16 @@ paths:
         required: true
         schema:
           type: string
-        x-requestTemplate:
-        - template: /variant/{{input}}
-          valueType: http://identifiers.org/hgvs/
-        - template: /variant/{{input}}
-          valueType: http://identifiers.org/dbsnp/
-        x-valueType:
-        - http://identifiers.org/hgvs/
-        - http://identifiers.org/dbsnp/
-      - $ref: '#/components/parameters/fields'
+      - "$ref": "#/components/parameters/fields"
         in: query
         name: fields
-      - $ref: '#/components/parameters/dotfield'
+      - "$ref": "#/components/parameters/dotfield"
         in: query
         name: dotfield
-      - $ref: '#/components/parameters/callback'
+      - "$ref": "#/components/parameters/callback"
         in: query
         name: callback
-      - $ref: '#/components/parameters/email'
+      - "$ref": "#/components/parameters/email"
         in: query
         name: email
       responses:
@@ -296,12 +223,8 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Variant'
+                "$ref": "#/components/schemas/Variant"
           description: A matching variant object
-          x-JSONLDContext: https://raw.githubusercontent.com/NCATS-Tangerine/translator-api-registry/master/myvariant.info/jsonld_context/myvariant_variant_1.1.json
-          x-responseValueType:
-          - path: _id
-            valueType: http://identifiers.org/hgvs/
         '404':
           description: A response indicating an unknown variant id
       summary: Retrieve variant annotation object based on HGVS or rsid, support JSONP
@@ -375,7 +298,7 @@ components:
     QueryPOSTResult:
       items:
         allOf:
-        - $ref: '#/components/schemas/Variant'
+        - "$ref": "#/components/schemas/Variant"
         - properties:
             _score:
               format: float
@@ -388,7 +311,7 @@ components:
       properties:
         hits:
           items:
-            $ref: '#/components/schemas/Variant'
+            "$ref": "#/components/schemas/Variant"
           type: array
         max_score:
           format: float
@@ -420,105 +343,73 @@ components:
         type: array
       - type: string
   x-bte-response-mapping:
-    query-post:
-      "@context": http://schema.org
-      "@type": SequenceVariant
-      bts:dbsnp: dbsnp.rsid
-      bts:clinvar: clinvar.variant_id
-      bts:variantAssociatedWithGene:
-        "@type": Gene
-        bts:entrez: dbsnp.gene.geneid
-        "$input": bts:dbsnp
-        "$source": dbsnp
-      bts:variantAssociatedWithCondition:
-      - "@type": DiseaseOrPhenotypicFeature
-        bts:omim: clinvar.rcv.conditions.identifiers.omim
-        bts:name: clinvar.rcv.conditions.name
-        bts:clinicalsignificance: clinvar.rcv.clinical_significance
-        "$input": bts:dbsnp
-        "$source": clinvar
-      - "@type": DiseaseOrPhenotypicFeature
-        bts:orphanet: clinvar.rcv.conditions.identifiers.orphanet
-        bts:name: clinvar.rcv.conditions.name
-        bts:clinicalsignificance: clinvar.rcv.clinical_significance
-        "$input": bts:dbsnp
-        "$source": clinvar
-      - "@type": DiseaseOrPhenotypicFeature
-        bts:name: uniprot.humsavar.disease_name
-        "$input": bts:dbsnp
-        "$source": uniprot
+    variant-gene:
+      NCBIGene: dbsnp.gene.geneid
+    variant-disease-omim:
+      OMIM: clinvar.rcv.conditions.identifiers.omim
+      name: clinvar.rcv.conditions.name
+      clinicalsignificance: clinvar.rcv.clinical_significance
+    dbsnp:
+      DBSNP: dbsnp.rsid
   x-bte-kgs-operations:
     variantAssociatedWithGene:
-      path: '/query'
-      method: 'post'
-      supportBatch: true
-      inputSeparator: ','
+    - supportBatch: true
+      inputSeparator: ","
       parameters:
         fields: dbsnp.gene.geneid
-        dotfield: false
+      predicate: located_in
+      source: dbsnp
       requestBody:
         body:
-          q: "{input1}"
+          q: "{inputs[0]}"
           scopes: dbsnp.rsid
-        header: "application/x-www-form-urlencoded"
+        header: application/x-www-form-urlencoded
       inputs:
-        - id: dbsnp
-          semantic: SequenceVariant
+      - id: DBSNP
+        semantic: SequenceVariant
       outputs:
-        - id: entrez
-          semantic: Gene
+      - id: NCBIGene
+        semantic: Gene
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/variant-gene"
     variantAssociatedWithCondition:
-      - path: '/query'
-        method: 'post'
-        supportBatch: true
-        inputSeparator: ','
-        parameters:
-          fields: clinvar.rcv
-          dotfield: false
-        requestBody:
-          body:
-            q: "{input1}"
-            scopes: dbsnp.rsid
-          header: "application/x-www-form-urlencoded"
-        inputs:
-          - id: dbsnp
-            semantic: SequenceVariant
-        outputs:
-          - id: omim
-            semantic: DiseaseOrPhenotypicFeature
-      - path: '/query'
-        method: 'post'
-        supportBatch: true
-        inputSeparator: ','
-        parameters:
-          fields: clinvar.rcv
-          dotfield: false
-        requestBody:
-          body:
-            q: "{input1}"
-            scopes: dbsnp.rsid
-          header: "application/x-www-form-urlencoded"
-        inputs:
-          - id: dbsnp
-            semantic: SequenceVariant
-        outputs:
-          - id: orphanet
-            semantic: DiseaseOrPhenotypicFeature
-      - path: '/query'
-        method: 'post'
-        supportBatch: true
-        inputSeparator: ','
-        parameters:
-          fields: uniprot.humsavar.disease_name
-          dotfield: false
-        requestBody:
-          body:
-            q: "{input1}"
-            scopes: dbsnp.rsid
-          header: "application/x-www-form-urlencoded"
-        inputs:
-          - id: dbsnp
-            semantic: SequenceVariant
-        outputs:
-          - id: name
-            semantic: DiseaseOrPhenotypicFeature
+    - supportBatch: true
+      inputSeparator: ","
+      parameters:
+        fields: clinvar.rcv
+      predicate: related_to
+      source: clinvar
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: dbsnp.rsid
+        header: application/x-www-form-urlencoded
+      inputs:
+      - id: DBSNP
+        semantic: SequenceVariant
+      outputs:
+      - id: OMIM
+        semantic: Disease
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/variant-disease-omim"
+    conditionAssociatedWithVariant:
+    - supportBatch: true
+      inputSeparator: ","
+      parameters:
+        fields: dbsnp.rsid
+        size: '250'
+      predicate: related_to
+      source: clinvar
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: clinvar.rcv.conditions.identifiers.omim
+        header: application/x-www-form-urlencoded
+      outputs:
+      - id: DBSNP
+        semantic: SequenceVariant
+      inputs:
+      - id: OMIM
+        semantic: Disease
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/dbsnp"
