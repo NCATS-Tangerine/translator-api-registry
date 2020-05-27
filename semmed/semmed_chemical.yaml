@@ -1,0 +1,2698 @@
+---
+openapi: 3.0.0
+info:
+  contact:
+    email: help@biothings.io
+    name: Chunlei Wu
+    x-id: https://github.com/newgene
+    x-role: responsible developer
+  description: Documentation of the SEMMED disease query web services.  Learn more
+    about [mydisease.info](http://pending.biothings.io/semmed)
+  termsOfService: http://biothings.ncats.io
+  title: SEMMED Chemical API
+  version: '1.0'
+servers:
+- description: Production server
+  url: https://biothings.ncats.io/semmedchemical
+tags:
+- name: chemical
+- name: annotation
+- name: query
+- name: translator
+- name: biothings
+- name: semmed
+paths:
+  "/chemical":
+    post:
+      parameters:
+      - "$ref": "#/components/parameters/dotfield"
+        name: dotfield
+      - "$ref": "#/components/parameters/fields"
+        name: fields
+      - "$ref": "#/components/parameters/email"
+        name: email
+      - "$ref": "#/components/parameters/format"
+        name: format
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              properties:
+                ids:
+                  description: 'multiple disease IDs separated by comma. Note that
+                    currently we only take the input ids up to 1000 maximum, the rest
+                    will be omitted. Type: string (list). Max: 1000.'
+                  type: string
+              required:
+              - ids
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  "$ref": "#/components/schemas/Disease"
+                type: array
+          description: A list of matching disease objects
+        '400':
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResult"
+          description: A response indicating an improperly formatted query
+      summary: For a list of disease IDs, return the matching disease object
+      tags:
+      - gene
+  "/chemical/{chemicalid}":
+    get:
+      parameters:
+      - description: Retrieve disease objects based on ID
+        example: C0004096
+        in: path
+        name: chemicalid
+        required: true
+        schema:
+          type: string
+      - "$ref": "#/components/parameters/dotfield"
+        name: dotfield
+      - "$ref": "#/components/parameters/callback"
+        name: callback
+      - "$ref": "#/components/parameters/fields"
+        name: fields
+      - "$ref": "#/components/parameters/email"
+        name: email
+      - "$ref": "#/components/parameters/format"
+        name: format
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Disease"
+          description: A matching disease object
+        '404':
+          description: A response indicating an unknown disease ID
+      summary: Retrieve disease objects based on ID
+      tags:
+      - disease
+  "/metadata":
+    get:
+      parameters:
+      - "$ref": "#/components/parameters/callback"
+        in: query
+        name: callback
+      responses:
+        '200':
+          description: mydisease.info metadata object
+      summary: Get metadata about the data available from mydisease.info
+      tags:
+      - metadata
+  "/metadata/fields":
+    get:
+      parameters:
+      - "$ref": "#/components/parameters/search"
+        name: search
+      - "$ref": "#/components/parameters/callback"
+        name: callback
+      - "$ref": "#/components/parameters/prefix"
+        name: prefix
+      - "$ref": "#/components/parameters/format"
+        name: format
+      responses:
+        '200':
+          description: mydisease.info metadata fields object
+      summary: Get metadata about the data fields available from a mydisease.info
+        chem object
+      tags:
+      - metadata
+  "/query":
+    get:
+      parameters:
+      - description: 'Query string.  The detailed query syntax can be found from our
+          [docs](http://mydisease.info).  Examples: "cancer", "primary ciliary dyskinesia",
+          "DOID:9562"'
+        example: cancer
+        in: query
+        name: q
+        required: true
+        schema:
+          type: string
+      - "$ref": "#/components/parameters/dotfield"
+        name: dotfield
+      - "$ref": "#/components/parameters/fields"
+        name: fields
+      - "$ref": "#/components/parameters/facet_size"
+        name: facet_size
+      - "$ref": "#/components/parameters/sort"
+        name: sort
+      - "$ref": "#/components/parameters/callback"
+        name: callback
+      - "$ref": "#/components/parameters/email"
+        name: email
+      - "$ref": "#/components/parameters/facets"
+        name: facets
+      - "$ref": "#/components/parameters/size"
+        name: size
+      - "$ref": "#/components/parameters/from"
+        name: from
+      - "$ref": "#/components/parameters/format"
+        name: format
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/QueryResult"
+          description: A query response with the "hits" property
+        '400':
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResult"
+          description: A response indicating an improperly formatted query
+      summary: Make disease queries and return matching disease hits. Supports JSONP
+        and CORS as well.
+      tags:
+      - query
+    post:
+      parameters:
+      - "$ref": "#/components/parameters/dotfield"
+        name: dotfield
+      - "$ref": "#/components/parameters/email"
+        name: email
+      - "$ref": "#/components/parameters/fields"
+        name: fields
+      - "$ref": "#/components/parameters/size"
+        name: size
+      - "$ref": "#/components/parameters/format"
+        name: format
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              properties:
+                q:
+                  description: multiple query terms separated by comma (also "+" or
+                    whitespace).  Does not support wildcard queries
+                  type: string
+                scopes:
+                  description: 'a comma-separated list of fields as the search "scopes"
+                    (fields to search through for query term). The available "fields"
+                    that can be passed to the "scopes" parameter are listed in the
+                    **/metadata/fields** endpoint.string Default: "scopes=_id".'
+                  type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/QueryPOSTResult"
+          description: Query response objects with the "hits" property
+        '400':
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResult"
+          description: A response indicating an improperly formatted query
+      summary: Make batch disease queries and return matching disease hits
+      tags:
+      - query
+      x-bte-kgs-operations:
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-affected_by-ChemicalSubstance"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-affected_by-Disease"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-affected_by-BiologicalProcess"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-affected_by-Gene"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-affects-AnatomicalEntity"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-affects-Cell"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-affects-ChemicalSubstance"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-affects-BiologicalProcess"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-affects-Disease"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-affects-PhenotypicFeature"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-affects-Gene"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-affects-CellularComponent"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-causes-Disease"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-causes-BiologicalProcess"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-coexists_with-AnatomicalEntity"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-coexists_with-Cell"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-coexists_with-ChemicalSubstance"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-coexists_with-BiologicalProcess"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-coexists_with-Disease"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-coexists_with-PhenotypicFeature"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-coexists_with-Gene"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-coexists_with-CellularComponent"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-disrupted_by-ChemicalSubstance"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-disrupted_by-Gene"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-disrupts-AnatomicalEntity"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-disrupts-Cell"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-disrupts-ChemicalSubstance"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-disrupts-BiologicalProcess"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-disrupts-Disease"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-disrupts-PhenotypicFeature"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-disrupts-Gene"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-disrupts-CellularComponent"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-negatively_regulated_by-AnatomicalEntity"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-negatively_regulated_by-Cell"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-negatively_regulated_by-ChemicalSubstance"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-negatively_regulated_by-BiologicalProcess"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-negatively_regulated_by-Disease"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-negatively_regulated_by-PhenotypicFeature"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-negatively_regulated_by-Gene"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-negatively_regulated_by-CellularComponent"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-negatively_regulates-AnatomicalEntity"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-negatively_regulates-Cell"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-negatively_regulates-ChemicalSubstance"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-negatively_regulates-BiologicalProcess"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-negatively_regulates-Disease"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-negatively_regulates-PhenotypicFeature"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-negatively_regulates-Gene"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-negatively_regulates-CellularComponent"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-physically_interacts_with-AnatomicalEntity"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-physically_interacts_with-Cell"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-physically_interacts_with-ChemicalSubstance"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-physically_interacts_with-BiologicalProcess"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-physically_interacts_with-Disease"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-physically_interacts_with-PhenotypicFeature"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-physically_interacts_with-Gene"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-physically_interacts_with-CellularComponent"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-positively_regulated_by-AnatomicalEntity"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-positively_regulated_by-Cell"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-positively_regulated_by-ChemicalSubstance"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-positively_regulated_by-BiologicalProcess"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-positively_regulated_by-Disease"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-positively_regulated_by-PhenotypicFeature"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-positively_regulated_by-Gene"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-positively_regulated_by-CellularComponent"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-positively_regulates-AnatomicalEntity"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-positively_regulates-Cell"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-positively_regulates-ChemicalSubstance"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-positively_regulates-BiologicalProcess"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-positively_regulates-Disease"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-positively_regulates-PhenotypicFeature"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-positively_regulates-Gene"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-positively_regulates-CellularComponent"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-prevents-Disease"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-produced_by-AnatomicalEntity"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-produced_by-Cell"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-produced_by-ChemicalSubstance"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-produced_by-BiologicalProcess"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-produced_by-Disease"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-produced_by-PhenotypicFeature"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-produced_by-Gene"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-produced_by-CellularComponent"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-produces-AnatomicalEntity"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-produces-Cell"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-produces-ChemicalSubstance"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-produces-PhenotypicFeature"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-produces-Gene"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-related_to-AnatomicalEntity"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-related_to-ChemicalSubstance"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-related_to-BiologicalProcess"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-related_to-Disease"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-related_to-PhenotypicFeature"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-related_to-Gene"
+      - "$ref": "#/components/x-bte-kgs-operations/ChemicalSubstance-treats-Disease"
+components:
+  parameters:
+    callback:
+      description: 'you can pass a "callback" parameter to make a JSONP call. Type:
+        string.'
+      in: query
+      name: callback
+      schema:
+        type: string
+    dotfield:
+      description: 'control the format of the returned disease object. If "true" or
+        "1", all fields will be collapsed into a single level deep object (all nested
+        objects will be a single level deep, using dotfield notation to signify the
+        nested structure) Type: boolean. Default: false.'
+      in: query
+      name: dotfield
+      schema:
+        type: boolean
+    email:
+      description: If you are regular users of our services, we encourage you to provide
+        us with an email, so that we can better track the usage or follow up with
+        you.
+      in: query
+      name: email
+      schema:
+        type: string
+    facet_size:
+      description: 'the number of facet buckets to return in the response. Type: integer.
+        Default: 10. Max: 1000.'
+      in: query
+      name: facet_size
+      schema:
+        type: integer
+    facets:
+      description: 'a comma-separated list of fields to return facets on.  In addition
+        to query hits, the fields notated in "facets" will be aggregated by value
+        and bucklet counts will be displayed in the "facets" field of the response
+        object. Type: string (list). Default: None. Max: 1000.'
+      in: query
+      name: facets
+      schema:
+        type: string
+    fields:
+      description: 'a comma-separated list of fields (in dotfield notation) used to
+        limit the fields returned from the matching disease hit(s). The supported
+        field names can be found from any disease object or from the /metadata/fields
+        endpoint. If "fields=all", all available fields will be returned. Type: string
+        (list). Default: all. Max: 1000.'
+      in: query
+      name: fields
+      schema:
+        type: string
+    format:
+      description: 'controls output format of server response, currently supports:
+        "json", "jsonld", "html". Type: string. Default: json.'
+      in: query
+      name: format
+      schema:
+        type: string
+    from:
+      description: 'the number of matching disease hits to skip, starting from 0.  This
+        can be useful for paging in combination with the "size" parameter. Type: integer.
+        Default: None.'
+      in: query
+      name: from
+      schema:
+        type: integer
+    prefix:
+      description: 'Pass a prefix string to filter the available fields. Type: string.
+        Default: None.'
+      in: query
+      name: prefix
+      schema:
+        type: string
+    search:
+      description: 'Pass a search term to filter the available fields. Type: string.
+        Default: None.'
+      in: query
+      name: search
+      schema:
+        type: string
+    size:
+      description: 'the maximum number of matching disease hits to return per batch.
+        Type: integer. Default: 10.'
+      in: query
+      name: size
+      schema:
+        type: integer
+    sort:
+      description: 'the comma-separated list of fields to sort on. Prefix each with
+        "-" for descending order, otherwise in ascending order. Default: sort by descending
+        score.'
+      in: query
+      name: sort
+      schema:
+        type: string
+  schemas:
+    Disease:
+      properties:
+        _id:
+          type: string
+      required:
+      - _id
+      type: object
+    ErrorResult:
+      properties:
+        message:
+          type: string
+        success:
+          type: boolean
+      type: object
+    QueryPOSTResult:
+      items:
+        allOf:
+        - "$ref": "#/components/schemas/Disease"
+        - properties:
+            _score:
+              format: float
+              type: number
+            query:
+              type: string
+          type: object
+      type: array
+    QueryResult:
+      properties:
+        hits:
+          items:
+            "$ref": "#/components/schemas/Disease"
+          type: array
+        max_score:
+          format: float
+          type: number
+        took:
+          type: integer
+        total:
+          type: integer
+      type: object
+    int64_or_array:
+      oneOf:
+      - items:
+          format: int64
+          type: integer
+        type: array
+      - format: int64
+        type: integer
+    string_or_array:
+      oneOf:
+      - items:
+          type: string
+        type: array
+      - type: string
+  x-bte-kgs-operations:
+    ChemicalSubstance-affected_by-ChemicalSubstance:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      parameters:
+        fields: affected_by
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-affected_by-ChemicalSubstance"
+      predicate: affected_by
+    ChemicalSubstance-affected_by-Disease:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: Disease
+      parameters:
+        fields: affected_by
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-affected_by-Disease"
+      predicate: affected_by
+    ChemicalSubstance-affected_by-BiologicalProcess:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      parameters:
+        fields: affected_by
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-affected_by-BiologicalProcess"
+      predicate: affected_by
+    ChemicalSubstance-affected_by-Gene:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: Gene
+      parameters:
+        fields: affected_by
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-affected_by-Gene"
+      predicate: affected_by
+    ChemicalSubstance-affects-AnatomicalEntity:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: AnatomicalEntity
+      parameters:
+        fields: affects
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-affects-AnatomicalEntity"
+      predicate: affects
+    ChemicalSubstance-affects-Cell:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: Cell
+      parameters:
+        fields: affects
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-affects-Cell"
+      predicate: affects
+    ChemicalSubstance-affects-ChemicalSubstance:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      parameters:
+        fields: affects
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-affects-ChemicalSubstance"
+      predicate: affects
+    ChemicalSubstance-affects-BiologicalProcess:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      parameters:
+        fields: affects
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-affects-BiologicalProcess"
+      predicate: affects
+    ChemicalSubstance-affects-Disease:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: Disease
+      parameters:
+        fields: affects
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-affects-Disease"
+      predicate: affects
+    ChemicalSubstance-affects-PhenotypicFeature:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: PhenotypicFeature
+      parameters:
+        fields: affects
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-affects-PhenotypicFeature"
+      predicate: affects
+    ChemicalSubstance-affects-Gene:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: Gene
+      parameters:
+        fields: affects
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-affects-Gene"
+      predicate: affects
+    ChemicalSubstance-affects-CellularComponent:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: CellularComponent
+      parameters:
+        fields: affects
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-affects-CellularComponent"
+      predicate: affects
+    ChemicalSubstance-causes-Disease:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: Disease
+      parameters:
+        fields: causes
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-causes-Disease"
+      predicate: causes
+    ChemicalSubstance-causes-BiologicalProcess:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      parameters:
+        fields: causes
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-causes-BiologicalProcess"
+      predicate: causes
+    ChemicalSubstance-coexists_with-AnatomicalEntity:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: AnatomicalEntity
+      parameters:
+        fields: coexists_with
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-coexists_with-AnatomicalEntity"
+      predicate: coexists_with
+    ChemicalSubstance-coexists_with-Cell:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: Cell
+      parameters:
+        fields: coexists_with
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-coexists_with-Cell"
+      predicate: coexists_with
+    ChemicalSubstance-coexists_with-ChemicalSubstance:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      parameters:
+        fields: coexists_with
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-coexists_with-ChemicalSubstance"
+      predicate: coexists_with
+    ChemicalSubstance-coexists_with-BiologicalProcess:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      parameters:
+        fields: coexists_with
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-coexists_with-BiologicalProcess"
+      predicate: coexists_with
+    ChemicalSubstance-coexists_with-Disease:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: Disease
+      parameters:
+        fields: coexists_with
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-coexists_with-Disease"
+      predicate: coexists_with
+    ChemicalSubstance-coexists_with-PhenotypicFeature:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: PhenotypicFeature
+      parameters:
+        fields: coexists_with
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-coexists_with-PhenotypicFeature"
+      predicate: coexists_with
+    ChemicalSubstance-coexists_with-Gene:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: Gene
+      parameters:
+        fields: coexists_with
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-coexists_with-Gene"
+      predicate: coexists_with
+    ChemicalSubstance-coexists_with-CellularComponent:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: CellularComponent
+      parameters:
+        fields: coexists_with
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-coexists_with-CellularComponent"
+      predicate: coexists_with
+    ChemicalSubstance-disrupted_by-ChemicalSubstance:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      parameters:
+        fields: disrupted_by
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-disrupted_by-ChemicalSubstance"
+      predicate: disrupted_by
+    ChemicalSubstance-disrupted_by-Gene:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: Gene
+      parameters:
+        fields: disrupted_by
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-disrupted_by-Gene"
+      predicate: disrupted_by
+    ChemicalSubstance-disrupts-AnatomicalEntity:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: AnatomicalEntity
+      parameters:
+        fields: disrupts
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-disrupts-AnatomicalEntity"
+      predicate: disrupts
+    ChemicalSubstance-disrupts-Cell:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: Cell
+      parameters:
+        fields: disrupts
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-disrupts-Cell"
+      predicate: disrupts
+    ChemicalSubstance-disrupts-ChemicalSubstance:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      parameters:
+        fields: disrupts
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-disrupts-ChemicalSubstance"
+      predicate: disrupts
+    ChemicalSubstance-disrupts-BiologicalProcess:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      parameters:
+        fields: disrupts
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-disrupts-BiologicalProcess"
+      predicate: disrupts
+    ChemicalSubstance-disrupts-Disease:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: Disease
+      parameters:
+        fields: disrupts
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-disrupts-Disease"
+      predicate: disrupts
+    ChemicalSubstance-disrupts-PhenotypicFeature:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: PhenotypicFeature
+      parameters:
+        fields: disrupts
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-disrupts-PhenotypicFeature"
+      predicate: disrupts
+    ChemicalSubstance-disrupts-Gene:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: Gene
+      parameters:
+        fields: disrupts
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-disrupts-Gene"
+      predicate: disrupts
+    ChemicalSubstance-disrupts-CellularComponent:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: CellularComponent
+      parameters:
+        fields: disrupts
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-disrupts-CellularComponent"
+      predicate: disrupts
+    ChemicalSubstance-negatively_regulated_by-AnatomicalEntity:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: AnatomicalEntity
+      parameters:
+        fields: negatively_regulated_by
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-negatively_regulated_by-AnatomicalEntity"
+      predicate: negatively_regulated_by
+    ChemicalSubstance-negatively_regulated_by-Cell:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: Cell
+      parameters:
+        fields: negatively_regulated_by
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-negatively_regulated_by-Cell"
+      predicate: negatively_regulated_by
+    ChemicalSubstance-negatively_regulated_by-ChemicalSubstance:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      parameters:
+        fields: negatively_regulated_by
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-negatively_regulated_by-ChemicalSubstance"
+      predicate: negatively_regulated_by
+    ChemicalSubstance-negatively_regulated_by-BiologicalProcess:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      parameters:
+        fields: negatively_regulated_by
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-negatively_regulated_by-BiologicalProcess"
+      predicate: negatively_regulated_by
+    ChemicalSubstance-negatively_regulated_by-Disease:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: Disease
+      parameters:
+        fields: negatively_regulated_by
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-negatively_regulated_by-Disease"
+      predicate: negatively_regulated_by
+    ChemicalSubstance-negatively_regulated_by-PhenotypicFeature:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: PhenotypicFeature
+      parameters:
+        fields: negatively_regulated_by
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-negatively_regulated_by-PhenotypicFeature"
+      predicate: negatively_regulated_by
+    ChemicalSubstance-negatively_regulated_by-Gene:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: Gene
+      parameters:
+        fields: negatively_regulated_by
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-negatively_regulated_by-Gene"
+      predicate: negatively_regulated_by
+    ChemicalSubstance-negatively_regulated_by-CellularComponent:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: CellularComponent
+      parameters:
+        fields: negatively_regulated_by
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-negatively_regulated_by-CellularComponent"
+      predicate: negatively_regulated_by
+    ChemicalSubstance-negatively_regulates-AnatomicalEntity:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: AnatomicalEntity
+      parameters:
+        fields: negatively_regulates
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-negatively_regulates-AnatomicalEntity"
+      predicate: negatively_regulates
+    ChemicalSubstance-negatively_regulates-Cell:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: Cell
+      parameters:
+        fields: negatively_regulates
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-negatively_regulates-Cell"
+      predicate: negatively_regulates
+    ChemicalSubstance-negatively_regulates-ChemicalSubstance:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      parameters:
+        fields: negatively_regulates
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-negatively_regulates-ChemicalSubstance"
+      predicate: negatively_regulates
+    ChemicalSubstance-negatively_regulates-BiologicalProcess:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      parameters:
+        fields: negatively_regulates
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-negatively_regulates-BiologicalProcess"
+      predicate: negatively_regulates
+    ChemicalSubstance-negatively_regulates-Disease:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: Disease
+      parameters:
+        fields: negatively_regulates
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-negatively_regulates-Disease"
+      predicate: negatively_regulates
+    ChemicalSubstance-negatively_regulates-PhenotypicFeature:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: PhenotypicFeature
+      parameters:
+        fields: negatively_regulates
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-negatively_regulates-PhenotypicFeature"
+      predicate: negatively_regulates
+    ChemicalSubstance-negatively_regulates-Gene:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: Gene
+      parameters:
+        fields: negatively_regulates
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-negatively_regulates-Gene"
+      predicate: negatively_regulates
+    ChemicalSubstance-negatively_regulates-CellularComponent:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: CellularComponent
+      parameters:
+        fields: negatively_regulates
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-negatively_regulates-CellularComponent"
+      predicate: negatively_regulates
+    ChemicalSubstance-physically_interacts_with-AnatomicalEntity:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: AnatomicalEntity
+      parameters:
+        fields: physically_interacts_with
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-physically_interacts_with-AnatomicalEntity"
+      predicate: physically_interacts_with
+    ChemicalSubstance-physically_interacts_with-Cell:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: Cell
+      parameters:
+        fields: physically_interacts_with
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-physically_interacts_with-Cell"
+      predicate: physically_interacts_with
+    ChemicalSubstance-physically_interacts_with-ChemicalSubstance:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      parameters:
+        fields: physically_interacts_with
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-physically_interacts_with-ChemicalSubstance"
+      predicate: physically_interacts_with
+    ChemicalSubstance-physically_interacts_with-BiologicalProcess:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      parameters:
+        fields: physically_interacts_with
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-physically_interacts_with-BiologicalProcess"
+      predicate: physically_interacts_with
+    ChemicalSubstance-physically_interacts_with-Disease:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: Disease
+      parameters:
+        fields: physically_interacts_with
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-physically_interacts_with-Disease"
+      predicate: physically_interacts_with
+    ChemicalSubstance-physically_interacts_with-PhenotypicFeature:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: PhenotypicFeature
+      parameters:
+        fields: physically_interacts_with
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-physically_interacts_with-PhenotypicFeature"
+      predicate: physically_interacts_with
+    ChemicalSubstance-physically_interacts_with-Gene:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: Gene
+      parameters:
+        fields: physically_interacts_with
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-physically_interacts_with-Gene"
+      predicate: physically_interacts_with
+    ChemicalSubstance-physically_interacts_with-CellularComponent:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: CellularComponent
+      parameters:
+        fields: physically_interacts_with
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-physically_interacts_with-CellularComponent"
+      predicate: physically_interacts_with
+    ChemicalSubstance-positively_regulated_by-AnatomicalEntity:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: AnatomicalEntity
+      parameters:
+        fields: positively_regulated_by
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-positively_regulated_by-AnatomicalEntity"
+      predicate: positively_regulated_by
+    ChemicalSubstance-positively_regulated_by-Cell:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: Cell
+      parameters:
+        fields: positively_regulated_by
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-positively_regulated_by-Cell"
+      predicate: positively_regulated_by
+    ChemicalSubstance-positively_regulated_by-ChemicalSubstance:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      parameters:
+        fields: positively_regulated_by
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-positively_regulated_by-ChemicalSubstance"
+      predicate: positively_regulated_by
+    ChemicalSubstance-positively_regulated_by-BiologicalProcess:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      parameters:
+        fields: positively_regulated_by
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-positively_regulated_by-BiologicalProcess"
+      predicate: positively_regulated_by
+    ChemicalSubstance-positively_regulated_by-Disease:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: Disease
+      parameters:
+        fields: positively_regulated_by
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-positively_regulated_by-Disease"
+      predicate: positively_regulated_by
+    ChemicalSubstance-positively_regulated_by-PhenotypicFeature:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: PhenotypicFeature
+      parameters:
+        fields: positively_regulated_by
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-positively_regulated_by-PhenotypicFeature"
+      predicate: positively_regulated_by
+    ChemicalSubstance-positively_regulated_by-Gene:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: Gene
+      parameters:
+        fields: positively_regulated_by
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-positively_regulated_by-Gene"
+      predicate: positively_regulated_by
+    ChemicalSubstance-positively_regulated_by-CellularComponent:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: CellularComponent
+      parameters:
+        fields: positively_regulated_by
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-positively_regulated_by-CellularComponent"
+      predicate: positively_regulated_by
+    ChemicalSubstance-positively_regulates-AnatomicalEntity:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: AnatomicalEntity
+      parameters:
+        fields: positively_regulates
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-positively_regulates-AnatomicalEntity"
+      predicate: positively_regulates
+    ChemicalSubstance-positively_regulates-Cell:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: Cell
+      parameters:
+        fields: positively_regulates
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-positively_regulates-Cell"
+      predicate: positively_regulates
+    ChemicalSubstance-positively_regulates-ChemicalSubstance:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      parameters:
+        fields: positively_regulates
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-positively_regulates-ChemicalSubstance"
+      predicate: positively_regulates
+    ChemicalSubstance-positively_regulates-BiologicalProcess:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      parameters:
+        fields: positively_regulates
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-positively_regulates-BiologicalProcess"
+      predicate: positively_regulates
+    ChemicalSubstance-positively_regulates-Disease:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: Disease
+      parameters:
+        fields: positively_regulates
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-positively_regulates-Disease"
+      predicate: positively_regulates
+    ChemicalSubstance-positively_regulates-PhenotypicFeature:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: PhenotypicFeature
+      parameters:
+        fields: positively_regulates
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-positively_regulates-PhenotypicFeature"
+      predicate: positively_regulates
+    ChemicalSubstance-positively_regulates-Gene:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: Gene
+      parameters:
+        fields: positively_regulates
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-positively_regulates-Gene"
+      predicate: positively_regulates
+    ChemicalSubstance-positively_regulates-CellularComponent:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: CellularComponent
+      parameters:
+        fields: positively_regulates
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-positively_regulates-CellularComponent"
+      predicate: positively_regulates
+    ChemicalSubstance-prevents-Disease:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: Disease
+      parameters:
+        fields: prevents
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-prevents-Disease"
+      predicate: prevents
+    ChemicalSubstance-produced_by-AnatomicalEntity:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: AnatomicalEntity
+      parameters:
+        fields: produced_by
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-produced_by-AnatomicalEntity"
+      predicate: produced_by
+    ChemicalSubstance-produced_by-Cell:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: Cell
+      parameters:
+        fields: produced_by
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-produced_by-Cell"
+      predicate: produced_by
+    ChemicalSubstance-produced_by-ChemicalSubstance:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      parameters:
+        fields: produced_by
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-produced_by-ChemicalSubstance"
+      predicate: produced_by
+    ChemicalSubstance-produced_by-BiologicalProcess:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      parameters:
+        fields: produced_by
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-produced_by-BiologicalProcess"
+      predicate: produced_by
+    ChemicalSubstance-produced_by-Disease:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: Disease
+      parameters:
+        fields: produced_by
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-produced_by-Disease"
+      predicate: produced_by
+    ChemicalSubstance-produced_by-PhenotypicFeature:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: PhenotypicFeature
+      parameters:
+        fields: produced_by
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-produced_by-PhenotypicFeature"
+      predicate: produced_by
+    ChemicalSubstance-produced_by-Gene:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: Gene
+      parameters:
+        fields: produced_by
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-produced_by-Gene"
+      predicate: produced_by
+    ChemicalSubstance-produced_by-CellularComponent:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: CellularComponent
+      parameters:
+        fields: produced_by
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-produced_by-CellularComponent"
+      predicate: produced_by
+    ChemicalSubstance-produces-AnatomicalEntity:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: AnatomicalEntity
+      parameters:
+        fields: produces
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-produces-AnatomicalEntity"
+      predicate: produces
+    ChemicalSubstance-produces-Cell:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: Cell
+      parameters:
+        fields: produces
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-produces-Cell"
+      predicate: produces
+    ChemicalSubstance-produces-ChemicalSubstance:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      parameters:
+        fields: produces
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-produces-ChemicalSubstance"
+      predicate: produces
+    ChemicalSubstance-produces-PhenotypicFeature:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: PhenotypicFeature
+      parameters:
+        fields: produces
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-produces-PhenotypicFeature"
+      predicate: produces
+    ChemicalSubstance-produces-Gene:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: Gene
+      parameters:
+        fields: produces
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-produces-Gene"
+      predicate: produces
+    ChemicalSubstance-related_to-AnatomicalEntity:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: AnatomicalEntity
+      parameters:
+        fields: related_to
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-related_to-AnatomicalEntity"
+      predicate: related_to
+    ChemicalSubstance-related_to-ChemicalSubstance:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      parameters:
+        fields: related_to
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-related_to-ChemicalSubstance"
+      predicate: related_to
+    ChemicalSubstance-related_to-BiologicalProcess:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      parameters:
+        fields: related_to
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-related_to-BiologicalProcess"
+      predicate: related_to
+    ChemicalSubstance-related_to-Disease:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: Disease
+      parameters:
+        fields: related_to
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-related_to-Disease"
+      predicate: related_to
+    ChemicalSubstance-related_to-PhenotypicFeature:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: PhenotypicFeature
+      parameters:
+        fields: related_to
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-related_to-PhenotypicFeature"
+      predicate: related_to
+    ChemicalSubstance-related_to-Gene:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: Gene
+      parameters:
+        fields: related_to
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-related_to-Gene"
+      predicate: related_to
+    ChemicalSubstance-treats-Disease:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: Disease
+      parameters:
+        fields: treats
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/ChemicalSubstance-treats-Disease"
+      predicate: treats
+  x-bte-response-mapping:
+    ChemicalSubstance-affected_by-ChemicalSubstance:
+      umls: affected_by.umls
+      pmid: affected_by.pmid
+    ChemicalSubstance-affected_by-Disease:
+      umls: affected_by.umls
+      pmid: affected_by.pmid
+    ChemicalSubstance-affected_by-BiologicalProcess:
+      umls: affected_by.umls
+      pmid: affected_by.pmid
+    ChemicalSubstance-affected_by-Gene:
+      umls: affected_by.umls
+      pmid: affected_by.pmid
+    ChemicalSubstance-affects-AnatomicalEntity:
+      umls: affects.umls
+      pmid: affects.pmid
+    ChemicalSubstance-affects-Cell:
+      umls: affects.umls
+      pmid: affects.pmid
+    ChemicalSubstance-affects-ChemicalSubstance:
+      umls: affects.umls
+      pmid: affects.pmid
+    ChemicalSubstance-affects-BiologicalProcess:
+      umls: affects.umls
+      pmid: affects.pmid
+    ChemicalSubstance-affects-Disease:
+      umls: affects.umls
+      pmid: affects.pmid
+    ChemicalSubstance-affects-PhenotypicFeature:
+      umls: affects.umls
+      pmid: affects.pmid
+    ChemicalSubstance-affects-Gene:
+      umls: affects.umls
+      pmid: affects.pmid
+    ChemicalSubstance-affects-CellularComponent:
+      umls: affects.umls
+      pmid: affects.pmid
+    ChemicalSubstance-causes-Disease:
+      umls: causes.umls
+      pmid: causes.pmid
+    ChemicalSubstance-causes-BiologicalProcess:
+      umls: causes.umls
+      pmid: causes.pmid
+    ChemicalSubstance-coexists_with-AnatomicalEntity:
+      umls: coexists_with.umls
+      pmid: coexists_with.pmid
+    ChemicalSubstance-coexists_with-Cell:
+      umls: coexists_with.umls
+      pmid: coexists_with.pmid
+    ChemicalSubstance-coexists_with-ChemicalSubstance:
+      umls: coexists_with.umls
+      pmid: coexists_with.pmid
+    ChemicalSubstance-coexists_with-BiologicalProcess:
+      umls: coexists_with.umls
+      pmid: coexists_with.pmid
+    ChemicalSubstance-coexists_with-Disease:
+      umls: coexists_with.umls
+      pmid: coexists_with.pmid
+    ChemicalSubstance-coexists_with-PhenotypicFeature:
+      umls: coexists_with.umls
+      pmid: coexists_with.pmid
+    ChemicalSubstance-coexists_with-Gene:
+      umls: coexists_with.umls
+      pmid: coexists_with.pmid
+    ChemicalSubstance-coexists_with-CellularComponent:
+      umls: coexists_with.umls
+      pmid: coexists_with.pmid
+    ChemicalSubstance-disrupted_by-ChemicalSubstance:
+      umls: disrupted_by.umls
+      pmid: disrupted_by.pmid
+    ChemicalSubstance-disrupted_by-Gene:
+      umls: disrupted_by.umls
+      pmid: disrupted_by.pmid
+    ChemicalSubstance-disrupts-AnatomicalEntity:
+      umls: disrupts.umls
+      pmid: disrupts.pmid
+    ChemicalSubstance-disrupts-Cell:
+      umls: disrupts.umls
+      pmid: disrupts.pmid
+    ChemicalSubstance-disrupts-ChemicalSubstance:
+      umls: disrupts.umls
+      pmid: disrupts.pmid
+    ChemicalSubstance-disrupts-BiologicalProcess:
+      umls: disrupts.umls
+      pmid: disrupts.pmid
+    ChemicalSubstance-disrupts-Disease:
+      umls: disrupts.umls
+      pmid: disrupts.pmid
+    ChemicalSubstance-disrupts-PhenotypicFeature:
+      umls: disrupts.umls
+      pmid: disrupts.pmid
+    ChemicalSubstance-disrupts-Gene:
+      umls: disrupts.umls
+      pmid: disrupts.pmid
+    ChemicalSubstance-disrupts-CellularComponent:
+      umls: disrupts.umls
+      pmid: disrupts.pmid
+    ChemicalSubstance-negatively_regulated_by-AnatomicalEntity:
+      umls: negatively_regulated_by.umls
+      pmid: negatively_regulated_by.pmid
+    ChemicalSubstance-negatively_regulated_by-Cell:
+      umls: negatively_regulated_by.umls
+      pmid: negatively_regulated_by.pmid
+    ChemicalSubstance-negatively_regulated_by-ChemicalSubstance:
+      umls: negatively_regulated_by.umls
+      pmid: negatively_regulated_by.pmid
+    ChemicalSubstance-negatively_regulated_by-BiologicalProcess:
+      umls: negatively_regulated_by.umls
+      pmid: negatively_regulated_by.pmid
+    ChemicalSubstance-negatively_regulated_by-Disease:
+      umls: negatively_regulated_by.umls
+      pmid: negatively_regulated_by.pmid
+    ChemicalSubstance-negatively_regulated_by-PhenotypicFeature:
+      umls: negatively_regulated_by.umls
+      pmid: negatively_regulated_by.pmid
+    ChemicalSubstance-negatively_regulated_by-Gene:
+      umls: negatively_regulated_by.umls
+      pmid: negatively_regulated_by.pmid
+    ChemicalSubstance-negatively_regulated_by-CellularComponent:
+      umls: negatively_regulated_by.umls
+      pmid: negatively_regulated_by.pmid
+    ChemicalSubstance-negatively_regulates-AnatomicalEntity:
+      umls: negatively_regulates.umls
+      pmid: negatively_regulates.pmid
+    ChemicalSubstance-negatively_regulates-Cell:
+      umls: negatively_regulates.umls
+      pmid: negatively_regulates.pmid
+    ChemicalSubstance-negatively_regulates-ChemicalSubstance:
+      umls: negatively_regulates.umls
+      pmid: negatively_regulates.pmid
+    ChemicalSubstance-negatively_regulates-BiologicalProcess:
+      umls: negatively_regulates.umls
+      pmid: negatively_regulates.pmid
+    ChemicalSubstance-negatively_regulates-Disease:
+      umls: negatively_regulates.umls
+      pmid: negatively_regulates.pmid
+    ChemicalSubstance-negatively_regulates-PhenotypicFeature:
+      umls: negatively_regulates.umls
+      pmid: negatively_regulates.pmid
+    ChemicalSubstance-negatively_regulates-Gene:
+      umls: negatively_regulates.umls
+      pmid: negatively_regulates.pmid
+    ChemicalSubstance-negatively_regulates-CellularComponent:
+      umls: negatively_regulates.umls
+      pmid: negatively_regulates.pmid
+    ChemicalSubstance-physically_interacts_with-AnatomicalEntity:
+      umls: physically_interacts_with.umls
+      pmid: physically_interacts_with.pmid
+    ChemicalSubstance-physically_interacts_with-Cell:
+      umls: physically_interacts_with.umls
+      pmid: physically_interacts_with.pmid
+    ChemicalSubstance-physically_interacts_with-ChemicalSubstance:
+      umls: physically_interacts_with.umls
+      pmid: physically_interacts_with.pmid
+    ChemicalSubstance-physically_interacts_with-BiologicalProcess:
+      umls: physically_interacts_with.umls
+      pmid: physically_interacts_with.pmid
+    ChemicalSubstance-physically_interacts_with-Disease:
+      umls: physically_interacts_with.umls
+      pmid: physically_interacts_with.pmid
+    ChemicalSubstance-physically_interacts_with-PhenotypicFeature:
+      umls: physically_interacts_with.umls
+      pmid: physically_interacts_with.pmid
+    ChemicalSubstance-physically_interacts_with-Gene:
+      umls: physically_interacts_with.umls
+      pmid: physically_interacts_with.pmid
+    ChemicalSubstance-physically_interacts_with-CellularComponent:
+      umls: physically_interacts_with.umls
+      pmid: physically_interacts_with.pmid
+    ChemicalSubstance-positively_regulated_by-AnatomicalEntity:
+      umls: positively_regulated_by.umls
+      pmid: positively_regulated_by.pmid
+    ChemicalSubstance-positively_regulated_by-Cell:
+      umls: positively_regulated_by.umls
+      pmid: positively_regulated_by.pmid
+    ChemicalSubstance-positively_regulated_by-ChemicalSubstance:
+      umls: positively_regulated_by.umls
+      pmid: positively_regulated_by.pmid
+    ChemicalSubstance-positively_regulated_by-BiologicalProcess:
+      umls: positively_regulated_by.umls
+      pmid: positively_regulated_by.pmid
+    ChemicalSubstance-positively_regulated_by-Disease:
+      umls: positively_regulated_by.umls
+      pmid: positively_regulated_by.pmid
+    ChemicalSubstance-positively_regulated_by-PhenotypicFeature:
+      umls: positively_regulated_by.umls
+      pmid: positively_regulated_by.pmid
+    ChemicalSubstance-positively_regulated_by-Gene:
+      umls: positively_regulated_by.umls
+      pmid: positively_regulated_by.pmid
+    ChemicalSubstance-positively_regulated_by-CellularComponent:
+      umls: positively_regulated_by.umls
+      pmid: positively_regulated_by.pmid
+    ChemicalSubstance-positively_regulates-AnatomicalEntity:
+      umls: positively_regulates.umls
+      pmid: positively_regulates.pmid
+    ChemicalSubstance-positively_regulates-Cell:
+      umls: positively_regulates.umls
+      pmid: positively_regulates.pmid
+    ChemicalSubstance-positively_regulates-ChemicalSubstance:
+      umls: positively_regulates.umls
+      pmid: positively_regulates.pmid
+    ChemicalSubstance-positively_regulates-BiologicalProcess:
+      umls: positively_regulates.umls
+      pmid: positively_regulates.pmid
+    ChemicalSubstance-positively_regulates-Disease:
+      umls: positively_regulates.umls
+      pmid: positively_regulates.pmid
+    ChemicalSubstance-positively_regulates-PhenotypicFeature:
+      umls: positively_regulates.umls
+      pmid: positively_regulates.pmid
+    ChemicalSubstance-positively_regulates-Gene:
+      umls: positively_regulates.umls
+      pmid: positively_regulates.pmid
+    ChemicalSubstance-positively_regulates-CellularComponent:
+      umls: positively_regulates.umls
+      pmid: positively_regulates.pmid
+    ChemicalSubstance-prevents-Disease:
+      umls: prevents.umls
+      pmid: prevents.pmid
+    ChemicalSubstance-produced_by-AnatomicalEntity:
+      umls: produced_by.umls
+      pmid: produced_by.pmid
+    ChemicalSubstance-produced_by-Cell:
+      umls: produced_by.umls
+      pmid: produced_by.pmid
+    ChemicalSubstance-produced_by-ChemicalSubstance:
+      umls: produced_by.umls
+      pmid: produced_by.pmid
+    ChemicalSubstance-produced_by-BiologicalProcess:
+      umls: produced_by.umls
+      pmid: produced_by.pmid
+    ChemicalSubstance-produced_by-Disease:
+      umls: produced_by.umls
+      pmid: produced_by.pmid
+    ChemicalSubstance-produced_by-PhenotypicFeature:
+      umls: produced_by.umls
+      pmid: produced_by.pmid
+    ChemicalSubstance-produced_by-Gene:
+      umls: produced_by.umls
+      pmid: produced_by.pmid
+    ChemicalSubstance-produced_by-CellularComponent:
+      umls: produced_by.umls
+      pmid: produced_by.pmid
+    ChemicalSubstance-produces-AnatomicalEntity:
+      umls: produces.umls
+      pmid: produces.pmid
+    ChemicalSubstance-produces-Cell:
+      umls: produces.umls
+      pmid: produces.pmid
+    ChemicalSubstance-produces-ChemicalSubstance:
+      umls: produces.umls
+      pmid: produces.pmid
+    ChemicalSubstance-produces-PhenotypicFeature:
+      umls: produces.umls
+      pmid: produces.pmid
+    ChemicalSubstance-produces-Gene:
+      umls: produces.umls
+      pmid: produces.pmid
+    ChemicalSubstance-related_to-AnatomicalEntity:
+      umls: related_to.umls
+      pmid: related_to.pmid
+    ChemicalSubstance-related_to-ChemicalSubstance:
+      umls: related_to.umls
+      pmid: related_to.pmid
+    ChemicalSubstance-related_to-BiologicalProcess:
+      umls: related_to.umls
+      pmid: related_to.pmid
+    ChemicalSubstance-related_to-Disease:
+      umls: related_to.umls
+      pmid: related_to.pmid
+    ChemicalSubstance-related_to-PhenotypicFeature:
+      umls: related_to.umls
+      pmid: related_to.pmid
+    ChemicalSubstance-related_to-Gene:
+      umls: related_to.umls
+      pmid: related_to.pmid
+    ChemicalSubstance-treats-Disease:
+      umls: treats.umls
+      pmid: treats.pmid

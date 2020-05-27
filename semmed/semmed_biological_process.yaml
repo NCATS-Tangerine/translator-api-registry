@@ -1,0 +1,2048 @@
+---
+openapi: 3.0.0
+info:
+  contact:
+    email: help@biothings.io
+    name: Chunlei Wu
+    x-id: https://github.com/newgene
+    x-role: responsible developer
+  description: Documentation of the SEMMED disease query web services.  Learn more
+    about [mydisease.info](http://pending.biothings.io/semmed)
+  termsOfService: http://biothings.ncats.io
+  title: SEMMED Biological Process API
+  version: '1.0'
+servers:
+- description: Production server
+  url: https://biothings.ncats.io/semmedbp
+tags:
+- name: chemical
+- name: annotation
+- name: query
+- name: translator
+- name: biothings
+- name: semmed
+paths:
+  "/geneset":
+    post:
+      parameters:
+      - "$ref": "#/components/parameters/dotfield"
+        name: dotfield
+      - "$ref": "#/components/parameters/fields"
+        name: fields
+      - "$ref": "#/components/parameters/email"
+        name: email
+      - "$ref": "#/components/parameters/format"
+        name: format
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              properties:
+                ids:
+                  description: 'multiple disease IDs separated by comma. Note that
+                    currently we only take the input ids up to 1000 maximum, the rest
+                    will be omitted. Type: string (list). Max: 1000.'
+                  type: string
+              required:
+              - ids
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  "$ref": "#/components/schemas/Disease"
+                type: array
+          description: A list of matching disease objects
+        '400':
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResult"
+          description: A response indicating an improperly formatted query
+      summary: For a list of disease IDs, return the matching disease object
+      tags:
+      - gene
+  "/geneset/{genesetid}":
+    get:
+      parameters:
+      - description: Retrieve disease objects based on ID
+        example: C0004096
+        in: path
+        name: genesetid
+        required: true
+        schema:
+          type: string
+      - "$ref": "#/components/parameters/dotfield"
+        name: dotfield
+      - "$ref": "#/components/parameters/callback"
+        name: callback
+      - "$ref": "#/components/parameters/fields"
+        name: fields
+      - "$ref": "#/components/parameters/email"
+        name: email
+      - "$ref": "#/components/parameters/format"
+        name: format
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Disease"
+          description: A matching disease object
+        '404':
+          description: A response indicating an unknown disease ID
+      summary: Retrieve disease objects based on ID
+      tags:
+      - disease
+  "/metadata":
+    get:
+      parameters:
+      - "$ref": "#/components/parameters/callback"
+        in: query
+        name: callback
+      responses:
+        '200':
+          description: mydisease.info metadata object
+      summary: Get metadata about the data available from mydisease.info
+      tags:
+      - metadata
+  "/metadata/fields":
+    get:
+      parameters:
+      - "$ref": "#/components/parameters/search"
+        name: search
+      - "$ref": "#/components/parameters/callback"
+        name: callback
+      - "$ref": "#/components/parameters/prefix"
+        name: prefix
+      - "$ref": "#/components/parameters/format"
+        name: format
+      responses:
+        '200':
+          description: mydisease.info metadata fields object
+      summary: Get metadata about the data fields available from a mydisease.info
+        chem object
+      tags:
+      - metadata
+  "/query":
+    get:
+      parameters:
+      - description: 'Query string.  The detailed query syntax can be found from our
+          [docs](http://mydisease.info).  Examples: "cancer", "primary ciliary dyskinesia",
+          "DOID:9562"'
+        example: cancer
+        in: query
+        name: q
+        required: true
+        schema:
+          type: string
+      - "$ref": "#/components/parameters/dotfield"
+        name: dotfield
+      - "$ref": "#/components/parameters/fields"
+        name: fields
+      - "$ref": "#/components/parameters/facet_size"
+        name: facet_size
+      - "$ref": "#/components/parameters/sort"
+        name: sort
+      - "$ref": "#/components/parameters/callback"
+        name: callback
+      - "$ref": "#/components/parameters/email"
+        name: email
+      - "$ref": "#/components/parameters/facets"
+        name: facets
+      - "$ref": "#/components/parameters/size"
+        name: size
+      - "$ref": "#/components/parameters/from"
+        name: from
+      - "$ref": "#/components/parameters/format"
+        name: format
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/QueryResult"
+          description: A query response with the "hits" property
+        '400':
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResult"
+          description: A response indicating an improperly formatted query
+      summary: Make disease queries and return matching disease hits. Supports JSONP
+        and CORS as well.
+      tags:
+      - query
+    post:
+      parameters:
+      - "$ref": "#/components/parameters/dotfield"
+        name: dotfield
+      - "$ref": "#/components/parameters/email"
+        name: email
+      - "$ref": "#/components/parameters/fields"
+        name: fields
+      - "$ref": "#/components/parameters/size"
+        name: size
+      - "$ref": "#/components/parameters/format"
+        name: format
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              properties:
+                q:
+                  description: multiple query terms separated by comma (also "+" or
+                    whitespace).  Does not support wildcard queries
+                  type: string
+                scopes:
+                  description: 'a comma-separated list of fields as the search "scopes"
+                    (fields to search through for query term). The available "fields"
+                    that can be passed to the "scopes" parameter are listed in the
+                    **/metadata/fields** endpoint.string Default: "scopes=_id".'
+                  type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/QueryPOSTResult"
+          description: Query response objects with the "hits" property
+        '400':
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResult"
+          description: A response indicating an improperly formatted query
+      summary: Make batch disease queries and return matching disease hits
+      tags:
+      - query
+      x-bte-kgs-operations:
+      - "$ref": "#/components/x-bte-kgs-operations/BiologicalProcess-affected_by-AnatomicalEntity"
+      - "$ref": "#/components/x-bte-kgs-operations/BiologicalProcess-affected_by-ChemicalSubstance"
+      - "$ref": "#/components/x-bte-kgs-operations/BiologicalProcess-affected_by-BiologicalProcess"
+      - "$ref": "#/components/x-bte-kgs-operations/BiologicalProcess-affected_by-Disease"
+      - "$ref": "#/components/x-bte-kgs-operations/BiologicalProcess-affected_by-PhenotypicFeature"
+      - "$ref": "#/components/x-bte-kgs-operations/BiologicalProcess-affected_by-Gene"
+      - "$ref": "#/components/x-bte-kgs-operations/BiologicalProcess-affected_by-CellularComponent"
+      - "$ref": "#/components/x-bte-kgs-operations/BiologicalProcess-affects-AnatomicalEntity"
+      - "$ref": "#/components/x-bte-kgs-operations/BiologicalProcess-affects-Cell"
+      - "$ref": "#/components/x-bte-kgs-operations/BiologicalProcess-affects-ChemicalSubstance"
+      - "$ref": "#/components/x-bte-kgs-operations/BiologicalProcess-affects-BiologicalProcess"
+      - "$ref": "#/components/x-bte-kgs-operations/BiologicalProcess-affects-Disease"
+      - "$ref": "#/components/x-bte-kgs-operations/BiologicalProcess-affects-PhenotypicFeature"
+      - "$ref": "#/components/x-bte-kgs-operations/BiologicalProcess-affects-Gene"
+      - "$ref": "#/components/x-bte-kgs-operations/BiologicalProcess-affects-CellularComponent"
+      - "$ref": "#/components/x-bte-kgs-operations/BiologicalProcess-caused_by-AnatomicalEntity"
+      - "$ref": "#/components/x-bte-kgs-operations/BiologicalProcess-caused_by-Cell"
+      - "$ref": "#/components/x-bte-kgs-operations/BiologicalProcess-caused_by-ChemicalSubstance"
+      - "$ref": "#/components/x-bte-kgs-operations/BiologicalProcess-caused_by-BiologicalProcess"
+      - "$ref": "#/components/x-bte-kgs-operations/BiologicalProcess-caused_by-Disease"
+      - "$ref": "#/components/x-bte-kgs-operations/BiologicalProcess-caused_by-PhenotypicFeature"
+      - "$ref": "#/components/x-bte-kgs-operations/BiologicalProcess-caused_by-Gene"
+      - "$ref": "#/components/x-bte-kgs-operations/BiologicalProcess-caused_by-CellularComponent"
+      - "$ref": "#/components/x-bte-kgs-operations/BiologicalProcess-causes-Disease"
+      - "$ref": "#/components/x-bte-kgs-operations/BiologicalProcess-causes-BiologicalProcess"
+      - "$ref": "#/components/x-bte-kgs-operations/BiologicalProcess-disrupted_by-Cell"
+      - "$ref": "#/components/x-bte-kgs-operations/BiologicalProcess-disrupted_by-ChemicalSubstance"
+      - "$ref": "#/components/x-bte-kgs-operations/BiologicalProcess-disrupted_by-BiologicalProcess"
+      - "$ref": "#/components/x-bte-kgs-operations/BiologicalProcess-disrupted_by-Disease"
+      - "$ref": "#/components/x-bte-kgs-operations/BiologicalProcess-disrupted_by-PhenotypicFeature"
+      - "$ref": "#/components/x-bte-kgs-operations/BiologicalProcess-disrupted_by-Gene"
+      - "$ref": "#/components/x-bte-kgs-operations/BiologicalProcess-disrupted_by-CellularComponent"
+      - "$ref": "#/components/x-bte-kgs-operations/BiologicalProcess-disrupts-AnatomicalEntity"
+      - "$ref": "#/components/x-bte-kgs-operations/BiologicalProcess-disrupts-Cell"
+      - "$ref": "#/components/x-bte-kgs-operations/BiologicalProcess-disrupts-BiologicalProcess"
+      - "$ref": "#/components/x-bte-kgs-operations/BiologicalProcess-disrupts-Disease"
+      - "$ref": "#/components/x-bte-kgs-operations/BiologicalProcess-disrupts-Gene"
+      - "$ref": "#/components/x-bte-kgs-operations/BiologicalProcess-disrupts-CellularComponent"
+      - "$ref": "#/components/x-bte-kgs-operations/BiologicalProcess-negatively_regulated_by-ChemicalSubstance"
+      - "$ref": "#/components/x-bte-kgs-operations/BiologicalProcess-negatively_regulated_by-BiologicalProcess"
+      - "$ref": "#/components/x-bte-kgs-operations/BiologicalProcess-negatively_regulated_by-Disease"
+      - "$ref": "#/components/x-bte-kgs-operations/BiologicalProcess-negatively_regulated_by-PhenotypicFeature"
+      - "$ref": "#/components/x-bte-kgs-operations/BiologicalProcess-negatively_regulated_by-Gene"
+      - "$ref": "#/components/x-bte-kgs-operations/BiologicalProcess-negatively_regulates-ChemicalSubstance"
+      - "$ref": "#/components/x-bte-kgs-operations/BiologicalProcess-negatively_regulates-BiologicalProcess"
+      - "$ref": "#/components/x-bte-kgs-operations/BiologicalProcess-negatively_regulates-Disease"
+      - "$ref": "#/components/x-bte-kgs-operations/BiologicalProcess-negatively_regulates-Gene"
+      - "$ref": "#/components/x-bte-kgs-operations/BiologicalProcess-physically_interacts_with-ChemicalSubstance"
+      - "$ref": "#/components/x-bte-kgs-operations/BiologicalProcess-physically_interacts_with-Disease"
+      - "$ref": "#/components/x-bte-kgs-operations/BiologicalProcess-physically_interacts_with-BiologicalProcess"
+      - "$ref": "#/components/x-bte-kgs-operations/BiologicalProcess-physically_interacts_with-Gene"
+      - "$ref": "#/components/x-bte-kgs-operations/BiologicalProcess-positively_regulated_by-ChemicalSubstance"
+      - "$ref": "#/components/x-bte-kgs-operations/BiologicalProcess-positively_regulated_by-BiologicalProcess"
+      - "$ref": "#/components/x-bte-kgs-operations/BiologicalProcess-positively_regulated_by-Disease"
+      - "$ref": "#/components/x-bte-kgs-operations/BiologicalProcess-positively_regulated_by-Gene"
+      - "$ref": "#/components/x-bte-kgs-operations/BiologicalProcess-positively_regulates-ChemicalSubstance"
+      - "$ref": "#/components/x-bte-kgs-operations/BiologicalProcess-positively_regulates-BiologicalProcess"
+      - "$ref": "#/components/x-bte-kgs-operations/BiologicalProcess-positively_regulates-Gene"
+      - "$ref": "#/components/x-bte-kgs-operations/BiologicalProcess-prevents-Disease"
+      - "$ref": "#/components/x-bte-kgs-operations/BiologicalProcess-related_to-AnatomicalEntity"
+      - "$ref": "#/components/x-bte-kgs-operations/BiologicalProcess-related_to-ChemicalSubstance"
+      - "$ref": "#/components/x-bte-kgs-operations/BiologicalProcess-related_to-BiologicalProcess"
+      - "$ref": "#/components/x-bte-kgs-operations/BiologicalProcess-related_to-Disease"
+      - "$ref": "#/components/x-bte-kgs-operations/BiologicalProcess-related_to-PhenotypicFeature"
+      - "$ref": "#/components/x-bte-kgs-operations/BiologicalProcess-related_to-Gene"
+      - "$ref": "#/components/x-bte-kgs-operations/BiologicalProcess-related_to-CellularComponent"
+      - "$ref": "#/components/x-bte-kgs-operations/BiologicalProcess-treats-Disease"
+components:
+  parameters:
+    callback:
+      description: 'you can pass a "callback" parameter to make a JSONP call. Type:
+        string.'
+      in: query
+      name: callback
+      schema:
+        type: string
+    dotfield:
+      description: 'control the format of the returned disease object. If "true" or
+        "1", all fields will be collapsed into a single level deep object (all nested
+        objects will be a single level deep, using dotfield notation to signify the
+        nested structure) Type: boolean. Default: false.'
+      in: query
+      name: dotfield
+      schema:
+        type: boolean
+    email:
+      description: If you are regular users of our services, we encourage you to provide
+        us with an email, so that we can better track the usage or follow up with
+        you.
+      in: query
+      name: email
+      schema:
+        type: string
+    facet_size:
+      description: 'the number of facet buckets to return in the response. Type: integer.
+        Default: 10. Max: 1000.'
+      in: query
+      name: facet_size
+      schema:
+        type: integer
+    facets:
+      description: 'a comma-separated list of fields to return facets on.  In addition
+        to query hits, the fields notated in "facets" will be aggregated by value
+        and bucklet counts will be displayed in the "facets" field of the response
+        object. Type: string (list). Default: None. Max: 1000.'
+      in: query
+      name: facets
+      schema:
+        type: string
+    fields:
+      description: 'a comma-separated list of fields (in dotfield notation) used to
+        limit the fields returned from the matching disease hit(s). The supported
+        field names can be found from any disease object or from the /metadata/fields
+        endpoint. If "fields=all", all available fields will be returned. Type: string
+        (list). Default: all. Max: 1000.'
+      in: query
+      name: fields
+      schema:
+        type: string
+    format:
+      description: 'controls output format of server response, currently supports:
+        "json", "jsonld", "html". Type: string. Default: json.'
+      in: query
+      name: format
+      schema:
+        type: string
+    from:
+      description: 'the number of matching disease hits to skip, starting from 0.  This
+        can be useful for paging in combination with the "size" parameter. Type: integer.
+        Default: None.'
+      in: query
+      name: from
+      schema:
+        type: integer
+    prefix:
+      description: 'Pass a prefix string to filter the available fields. Type: string.
+        Default: None.'
+      in: query
+      name: prefix
+      schema:
+        type: string
+    search:
+      description: 'Pass a search term to filter the available fields. Type: string.
+        Default: None.'
+      in: query
+      name: search
+      schema:
+        type: string
+    size:
+      description: 'the maximum number of matching disease hits to return per batch.
+        Type: integer. Default: 10.'
+      in: query
+      name: size
+      schema:
+        type: integer
+    sort:
+      description: 'the comma-separated list of fields to sort on. Prefix each with
+        "-" for descending order, otherwise in ascending order. Default: sort by descending
+        score.'
+      in: query
+      name: sort
+      schema:
+        type: string
+  schemas:
+    Disease:
+      properties:
+        _id:
+          type: string
+      required:
+      - _id
+      type: object
+    ErrorResult:
+      properties:
+        message:
+          type: string
+        success:
+          type: boolean
+      type: object
+    QueryPOSTResult:
+      items:
+        allOf:
+        - "$ref": "#/components/schemas/Disease"
+        - properties:
+            _score:
+              format: float
+              type: number
+            query:
+              type: string
+          type: object
+      type: array
+    QueryResult:
+      properties:
+        hits:
+          items:
+            "$ref": "#/components/schemas/Disease"
+          type: array
+        max_score:
+          format: float
+          type: number
+        took:
+          type: integer
+        total:
+          type: integer
+      type: object
+    int64_or_array:
+      oneOf:
+      - items:
+          format: int64
+          type: integer
+        type: array
+      - format: int64
+        type: integer
+    string_or_array:
+      oneOf:
+      - items:
+          type: string
+        type: array
+      - type: string
+  x-bte-kgs-operations:
+    BiologicalProcess-affected_by-AnatomicalEntity:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: AnatomicalEntity
+      parameters:
+        fields: affected_by
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/BiologicalProcess-affected_by-AnatomicalEntity"
+      predicate: affected_by
+    BiologicalProcess-affected_by-ChemicalSubstance:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      parameters:
+        fields: affected_by
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/BiologicalProcess-affected_by-ChemicalSubstance"
+      predicate: affected_by
+    BiologicalProcess-affected_by-BiologicalProcess:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      parameters:
+        fields: affected_by
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/BiologicalProcess-affected_by-BiologicalProcess"
+      predicate: affected_by
+    BiologicalProcess-affected_by-Disease:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: Disease
+      parameters:
+        fields: affected_by
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/BiologicalProcess-affected_by-Disease"
+      predicate: affected_by
+    BiologicalProcess-affected_by-PhenotypicFeature:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: PhenotypicFeature
+      parameters:
+        fields: affected_by
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/BiologicalProcess-affected_by-PhenotypicFeature"
+      predicate: affected_by
+    BiologicalProcess-affected_by-Gene:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: Gene
+      parameters:
+        fields: affected_by
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/BiologicalProcess-affected_by-Gene"
+      predicate: affected_by
+    BiologicalProcess-affected_by-CellularComponent:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: CellularComponent
+      parameters:
+        fields: affected_by
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/BiologicalProcess-affected_by-CellularComponent"
+      predicate: affected_by
+    BiologicalProcess-affects-AnatomicalEntity:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: AnatomicalEntity
+      parameters:
+        fields: affects
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/BiologicalProcess-affects-AnatomicalEntity"
+      predicate: affects
+    BiologicalProcess-affects-Cell:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: Cell
+      parameters:
+        fields: affects
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/BiologicalProcess-affects-Cell"
+      predicate: affects
+    BiologicalProcess-affects-ChemicalSubstance:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      parameters:
+        fields: affects
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/BiologicalProcess-affects-ChemicalSubstance"
+      predicate: affects
+    BiologicalProcess-affects-BiologicalProcess:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      parameters:
+        fields: affects
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/BiologicalProcess-affects-BiologicalProcess"
+      predicate: affects
+    BiologicalProcess-affects-Disease:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: Disease
+      parameters:
+        fields: affects
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/BiologicalProcess-affects-Disease"
+      predicate: affects
+    BiologicalProcess-affects-PhenotypicFeature:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: PhenotypicFeature
+      parameters:
+        fields: affects
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/BiologicalProcess-affects-PhenotypicFeature"
+      predicate: affects
+    BiologicalProcess-affects-Gene:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: Gene
+      parameters:
+        fields: affects
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/BiologicalProcess-affects-Gene"
+      predicate: affects
+    BiologicalProcess-affects-CellularComponent:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: CellularComponent
+      parameters:
+        fields: affects
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/BiologicalProcess-affects-CellularComponent"
+      predicate: affects
+    BiologicalProcess-caused_by-AnatomicalEntity:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: AnatomicalEntity
+      parameters:
+        fields: caused_by
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/BiologicalProcess-caused_by-AnatomicalEntity"
+      predicate: caused_by
+    BiologicalProcess-caused_by-Cell:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: Cell
+      parameters:
+        fields: caused_by
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/BiologicalProcess-caused_by-Cell"
+      predicate: caused_by
+    BiologicalProcess-caused_by-ChemicalSubstance:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      parameters:
+        fields: caused_by
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/BiologicalProcess-caused_by-ChemicalSubstance"
+      predicate: caused_by
+    BiologicalProcess-caused_by-BiologicalProcess:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      parameters:
+        fields: caused_by
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/BiologicalProcess-caused_by-BiologicalProcess"
+      predicate: caused_by
+    BiologicalProcess-caused_by-Disease:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: Disease
+      parameters:
+        fields: caused_by
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/BiologicalProcess-caused_by-Disease"
+      predicate: caused_by
+    BiologicalProcess-caused_by-PhenotypicFeature:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: PhenotypicFeature
+      parameters:
+        fields: caused_by
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/BiologicalProcess-caused_by-PhenotypicFeature"
+      predicate: caused_by
+    BiologicalProcess-caused_by-Gene:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: Gene
+      parameters:
+        fields: caused_by
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/BiologicalProcess-caused_by-Gene"
+      predicate: caused_by
+    BiologicalProcess-caused_by-CellularComponent:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: CellularComponent
+      parameters:
+        fields: caused_by
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/BiologicalProcess-caused_by-CellularComponent"
+      predicate: caused_by
+    BiologicalProcess-causes-Disease:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: Disease
+      parameters:
+        fields: causes
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/BiologicalProcess-causes-Disease"
+      predicate: causes
+    BiologicalProcess-causes-BiologicalProcess:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      parameters:
+        fields: causes
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/BiologicalProcess-causes-BiologicalProcess"
+      predicate: causes
+    BiologicalProcess-disrupted_by-Cell:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: Cell
+      parameters:
+        fields: disrupted_by
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/BiologicalProcess-disrupted_by-Cell"
+      predicate: disrupted_by
+    BiologicalProcess-disrupted_by-ChemicalSubstance:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      parameters:
+        fields: disrupted_by
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/BiologicalProcess-disrupted_by-ChemicalSubstance"
+      predicate: disrupted_by
+    BiologicalProcess-disrupted_by-BiologicalProcess:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      parameters:
+        fields: disrupted_by
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/BiologicalProcess-disrupted_by-BiologicalProcess"
+      predicate: disrupted_by
+    BiologicalProcess-disrupted_by-Disease:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: Disease
+      parameters:
+        fields: disrupted_by
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/BiologicalProcess-disrupted_by-Disease"
+      predicate: disrupted_by
+    BiologicalProcess-disrupted_by-PhenotypicFeature:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: PhenotypicFeature
+      parameters:
+        fields: disrupted_by
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/BiologicalProcess-disrupted_by-PhenotypicFeature"
+      predicate: disrupted_by
+    BiologicalProcess-disrupted_by-Gene:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: Gene
+      parameters:
+        fields: disrupted_by
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/BiologicalProcess-disrupted_by-Gene"
+      predicate: disrupted_by
+    BiologicalProcess-disrupted_by-CellularComponent:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: CellularComponent
+      parameters:
+        fields: disrupted_by
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/BiologicalProcess-disrupted_by-CellularComponent"
+      predicate: disrupted_by
+    BiologicalProcess-disrupts-AnatomicalEntity:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: AnatomicalEntity
+      parameters:
+        fields: disrupts
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/BiologicalProcess-disrupts-AnatomicalEntity"
+      predicate: disrupts
+    BiologicalProcess-disrupts-Cell:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: Cell
+      parameters:
+        fields: disrupts
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/BiologicalProcess-disrupts-Cell"
+      predicate: disrupts
+    BiologicalProcess-disrupts-BiologicalProcess:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      parameters:
+        fields: disrupts
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/BiologicalProcess-disrupts-BiologicalProcess"
+      predicate: disrupts
+    BiologicalProcess-disrupts-Disease:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: Disease
+      parameters:
+        fields: disrupts
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/BiologicalProcess-disrupts-Disease"
+      predicate: disrupts
+    BiologicalProcess-disrupts-Gene:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: Gene
+      parameters:
+        fields: disrupts
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/BiologicalProcess-disrupts-Gene"
+      predicate: disrupts
+    BiologicalProcess-disrupts-CellularComponent:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: CellularComponent
+      parameters:
+        fields: disrupts
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/BiologicalProcess-disrupts-CellularComponent"
+      predicate: disrupts
+    BiologicalProcess-negatively_regulated_by-ChemicalSubstance:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      parameters:
+        fields: negatively_regulated_by
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/BiologicalProcess-negatively_regulated_by-ChemicalSubstance"
+      predicate: negatively_regulated_by
+    BiologicalProcess-negatively_regulated_by-BiologicalProcess:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      parameters:
+        fields: negatively_regulated_by
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/BiologicalProcess-negatively_regulated_by-BiologicalProcess"
+      predicate: negatively_regulated_by
+    BiologicalProcess-negatively_regulated_by-Disease:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: Disease
+      parameters:
+        fields: negatively_regulated_by
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/BiologicalProcess-negatively_regulated_by-Disease"
+      predicate: negatively_regulated_by
+    BiologicalProcess-negatively_regulated_by-PhenotypicFeature:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: PhenotypicFeature
+      parameters:
+        fields: negatively_regulated_by
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/BiologicalProcess-negatively_regulated_by-PhenotypicFeature"
+      predicate: negatively_regulated_by
+    BiologicalProcess-negatively_regulated_by-Gene:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: Gene
+      parameters:
+        fields: negatively_regulated_by
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/BiologicalProcess-negatively_regulated_by-Gene"
+      predicate: negatively_regulated_by
+    BiologicalProcess-negatively_regulates-ChemicalSubstance:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      parameters:
+        fields: negatively_regulates
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/BiologicalProcess-negatively_regulates-ChemicalSubstance"
+      predicate: negatively_regulates
+    BiologicalProcess-negatively_regulates-BiologicalProcess:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      parameters:
+        fields: negatively_regulates
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/BiologicalProcess-negatively_regulates-BiologicalProcess"
+      predicate: negatively_regulates
+    BiologicalProcess-negatively_regulates-Disease:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: Disease
+      parameters:
+        fields: negatively_regulates
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/BiologicalProcess-negatively_regulates-Disease"
+      predicate: negatively_regulates
+    BiologicalProcess-negatively_regulates-Gene:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: Gene
+      parameters:
+        fields: negatively_regulates
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/BiologicalProcess-negatively_regulates-Gene"
+      predicate: negatively_regulates
+    BiologicalProcess-physically_interacts_with-ChemicalSubstance:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      parameters:
+        fields: physically_interacts_with
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/BiologicalProcess-physically_interacts_with-ChemicalSubstance"
+      predicate: physically_interacts_with
+    BiologicalProcess-physically_interacts_with-Disease:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: Disease
+      parameters:
+        fields: physically_interacts_with
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/BiologicalProcess-physically_interacts_with-Disease"
+      predicate: physically_interacts_with
+    BiologicalProcess-physically_interacts_with-BiologicalProcess:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      parameters:
+        fields: physically_interacts_with
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/BiologicalProcess-physically_interacts_with-BiologicalProcess"
+      predicate: physically_interacts_with
+    BiologicalProcess-physically_interacts_with-Gene:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: Gene
+      parameters:
+        fields: physically_interacts_with
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/BiologicalProcess-physically_interacts_with-Gene"
+      predicate: physically_interacts_with
+    BiologicalProcess-positively_regulated_by-ChemicalSubstance:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      parameters:
+        fields: positively_regulated_by
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/BiologicalProcess-positively_regulated_by-ChemicalSubstance"
+      predicate: positively_regulated_by
+    BiologicalProcess-positively_regulated_by-BiologicalProcess:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      parameters:
+        fields: positively_regulated_by
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/BiologicalProcess-positively_regulated_by-BiologicalProcess"
+      predicate: positively_regulated_by
+    BiologicalProcess-positively_regulated_by-Disease:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: Disease
+      parameters:
+        fields: positively_regulated_by
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/BiologicalProcess-positively_regulated_by-Disease"
+      predicate: positively_regulated_by
+    BiologicalProcess-positively_regulated_by-Gene:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: Gene
+      parameters:
+        fields: positively_regulated_by
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/BiologicalProcess-positively_regulated_by-Gene"
+      predicate: positively_regulated_by
+    BiologicalProcess-positively_regulates-ChemicalSubstance:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      parameters:
+        fields: positively_regulates
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/BiologicalProcess-positively_regulates-ChemicalSubstance"
+      predicate: positively_regulates
+    BiologicalProcess-positively_regulates-BiologicalProcess:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      parameters:
+        fields: positively_regulates
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/BiologicalProcess-positively_regulates-BiologicalProcess"
+      predicate: positively_regulates
+    BiologicalProcess-positively_regulates-Gene:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: Gene
+      parameters:
+        fields: positively_regulates
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/BiologicalProcess-positively_regulates-Gene"
+      predicate: positively_regulates
+    BiologicalProcess-prevents-Disease:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: Disease
+      parameters:
+        fields: prevents
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/BiologicalProcess-prevents-Disease"
+      predicate: prevents
+    BiologicalProcess-related_to-AnatomicalEntity:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: AnatomicalEntity
+      parameters:
+        fields: related_to
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/BiologicalProcess-related_to-AnatomicalEntity"
+      predicate: related_to
+    BiologicalProcess-related_to-ChemicalSubstance:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      parameters:
+        fields: related_to
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/BiologicalProcess-related_to-ChemicalSubstance"
+      predicate: related_to
+    BiologicalProcess-related_to-BiologicalProcess:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      parameters:
+        fields: related_to
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/BiologicalProcess-related_to-BiologicalProcess"
+      predicate: related_to
+    BiologicalProcess-related_to-Disease:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: Disease
+      parameters:
+        fields: related_to
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/BiologicalProcess-related_to-Disease"
+      predicate: related_to
+    BiologicalProcess-related_to-PhenotypicFeature:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: PhenotypicFeature
+      parameters:
+        fields: related_to
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/BiologicalProcess-related_to-PhenotypicFeature"
+      predicate: related_to
+    BiologicalProcess-related_to-Gene:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: Gene
+      parameters:
+        fields: related_to
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/BiologicalProcess-related_to-Gene"
+      predicate: related_to
+    BiologicalProcess-related_to-CellularComponent:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: CellularComponent
+      parameters:
+        fields: related_to
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/BiologicalProcess-related_to-CellularComponent"
+      predicate: related_to
+    BiologicalProcess-treats-Disease:
+    - inputSeparator: ","
+      inputs:
+      - id: UMLS
+        semantic: BiologicalProcess
+      method: post
+      source: SEMMED
+      outputs:
+      - id: UMLS
+        semantic: Disease
+      parameters:
+        fields: treats
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: umls
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/BiologicalProcess-treats-Disease"
+      predicate: treats
+  x-bte-response-mapping:
+    BiologicalProcess-affected_by-AnatomicalEntity:
+      umls: affected_by.umls
+      pmid: affected_by.pmid
+    BiologicalProcess-affected_by-ChemicalSubstance:
+      umls: affected_by.umls
+      pmid: affected_by.pmid
+    BiologicalProcess-affected_by-BiologicalProcess:
+      umls: affected_by.umls
+      pmid: affected_by.pmid
+    BiologicalProcess-affected_by-Disease:
+      umls: affected_by.umls
+      pmid: affected_by.pmid
+    BiologicalProcess-affected_by-PhenotypicFeature:
+      umls: affected_by.umls
+      pmid: affected_by.pmid
+    BiologicalProcess-affected_by-Gene:
+      umls: affected_by.umls
+      pmid: affected_by.pmid
+    BiologicalProcess-affected_by-CellularComponent:
+      umls: affected_by.umls
+      pmid: affected_by.pmid
+    BiologicalProcess-affects-AnatomicalEntity:
+      umls: affects.umls
+      pmid: affects.pmid
+    BiologicalProcess-affects-Cell:
+      umls: affects.umls
+      pmid: affects.pmid
+    BiologicalProcess-affects-ChemicalSubstance:
+      umls: affects.umls
+      pmid: affects.pmid
+    BiologicalProcess-affects-BiologicalProcess:
+      umls: affects.umls
+      pmid: affects.pmid
+    BiologicalProcess-affects-Disease:
+      umls: affects.umls
+      pmid: affects.pmid
+    BiologicalProcess-affects-PhenotypicFeature:
+      umls: affects.umls
+      pmid: affects.pmid
+    BiologicalProcess-affects-Gene:
+      umls: affects.umls
+      pmid: affects.pmid
+    BiologicalProcess-affects-CellularComponent:
+      umls: affects.umls
+      pmid: affects.pmid
+    BiologicalProcess-caused_by-AnatomicalEntity:
+      umls: caused_by.umls
+      pmid: caused_by.pmid
+    BiologicalProcess-caused_by-Cell:
+      umls: caused_by.umls
+      pmid: caused_by.pmid
+    BiologicalProcess-caused_by-ChemicalSubstance:
+      umls: caused_by.umls
+      pmid: caused_by.pmid
+    BiologicalProcess-caused_by-BiologicalProcess:
+      umls: caused_by.umls
+      pmid: caused_by.pmid
+    BiologicalProcess-caused_by-Disease:
+      umls: caused_by.umls
+      pmid: caused_by.pmid
+    BiologicalProcess-caused_by-PhenotypicFeature:
+      umls: caused_by.umls
+      pmid: caused_by.pmid
+    BiologicalProcess-caused_by-Gene:
+      umls: caused_by.umls
+      pmid: caused_by.pmid
+    BiologicalProcess-caused_by-CellularComponent:
+      umls: caused_by.umls
+      pmid: caused_by.pmid
+    BiologicalProcess-causes-Disease:
+      umls: causes.umls
+      pmid: causes.pmid
+    BiologicalProcess-causes-BiologicalProcess:
+      umls: causes.umls
+      pmid: causes.pmid
+    BiologicalProcess-disrupted_by-Cell:
+      umls: disrupted_by.umls
+      pmid: disrupted_by.pmid
+    BiologicalProcess-disrupted_by-ChemicalSubstance:
+      umls: disrupted_by.umls
+      pmid: disrupted_by.pmid
+    BiologicalProcess-disrupted_by-BiologicalProcess:
+      umls: disrupted_by.umls
+      pmid: disrupted_by.pmid
+    BiologicalProcess-disrupted_by-Disease:
+      umls: disrupted_by.umls
+      pmid: disrupted_by.pmid
+    BiologicalProcess-disrupted_by-PhenotypicFeature:
+      umls: disrupted_by.umls
+      pmid: disrupted_by.pmid
+    BiologicalProcess-disrupted_by-Gene:
+      umls: disrupted_by.umls
+      pmid: disrupted_by.pmid
+    BiologicalProcess-disrupted_by-CellularComponent:
+      umls: disrupted_by.umls
+      pmid: disrupted_by.pmid
+    BiologicalProcess-disrupts-AnatomicalEntity:
+      umls: disrupts.umls
+      pmid: disrupts.pmid
+    BiologicalProcess-disrupts-Cell:
+      umls: disrupts.umls
+      pmid: disrupts.pmid
+    BiologicalProcess-disrupts-BiologicalProcess:
+      umls: disrupts.umls
+      pmid: disrupts.pmid
+    BiologicalProcess-disrupts-Disease:
+      umls: disrupts.umls
+      pmid: disrupts.pmid
+    BiologicalProcess-disrupts-Gene:
+      umls: disrupts.umls
+      pmid: disrupts.pmid
+    BiologicalProcess-disrupts-CellularComponent:
+      umls: disrupts.umls
+      pmid: disrupts.pmid
+    BiologicalProcess-negatively_regulated_by-ChemicalSubstance:
+      umls: negatively_regulated_by.umls
+      pmid: negatively_regulated_by.pmid
+    BiologicalProcess-negatively_regulated_by-BiologicalProcess:
+      umls: negatively_regulated_by.umls
+      pmid: negatively_regulated_by.pmid
+    BiologicalProcess-negatively_regulated_by-Disease:
+      umls: negatively_regulated_by.umls
+      pmid: negatively_regulated_by.pmid
+    BiologicalProcess-negatively_regulated_by-PhenotypicFeature:
+      umls: negatively_regulated_by.umls
+      pmid: negatively_regulated_by.pmid
+    BiologicalProcess-negatively_regulated_by-Gene:
+      umls: negatively_regulated_by.umls
+      pmid: negatively_regulated_by.pmid
+    BiologicalProcess-negatively_regulates-ChemicalSubstance:
+      umls: negatively_regulates.umls
+      pmid: negatively_regulates.pmid
+    BiologicalProcess-negatively_regulates-BiologicalProcess:
+      umls: negatively_regulates.umls
+      pmid: negatively_regulates.pmid
+    BiologicalProcess-negatively_regulates-Disease:
+      umls: negatively_regulates.umls
+      pmid: negatively_regulates.pmid
+    BiologicalProcess-negatively_regulates-Gene:
+      umls: negatively_regulates.umls
+      pmid: negatively_regulates.pmid
+    BiologicalProcess-physically_interacts_with-ChemicalSubstance:
+      umls: physically_interacts_with.umls
+      pmid: physically_interacts_with.pmid
+    BiologicalProcess-physically_interacts_with-Disease:
+      umls: physically_interacts_with.umls
+      pmid: physically_interacts_with.pmid
+    BiologicalProcess-physically_interacts_with-BiologicalProcess:
+      umls: physically_interacts_with.umls
+      pmid: physically_interacts_with.pmid
+    BiologicalProcess-physically_interacts_with-Gene:
+      umls: physically_interacts_with.umls
+      pmid: physically_interacts_with.pmid
+    BiologicalProcess-positively_regulated_by-ChemicalSubstance:
+      umls: positively_regulated_by.umls
+      pmid: positively_regulated_by.pmid
+    BiologicalProcess-positively_regulated_by-BiologicalProcess:
+      umls: positively_regulated_by.umls
+      pmid: positively_regulated_by.pmid
+    BiologicalProcess-positively_regulated_by-Disease:
+      umls: positively_regulated_by.umls
+      pmid: positively_regulated_by.pmid
+    BiologicalProcess-positively_regulated_by-Gene:
+      umls: positively_regulated_by.umls
+      pmid: positively_regulated_by.pmid
+    BiologicalProcess-positively_regulates-ChemicalSubstance:
+      umls: positively_regulates.umls
+      pmid: positively_regulates.pmid
+    BiologicalProcess-positively_regulates-BiologicalProcess:
+      umls: positively_regulates.umls
+      pmid: positively_regulates.pmid
+    BiologicalProcess-positively_regulates-Gene:
+      umls: positively_regulates.umls
+      pmid: positively_regulates.pmid
+    BiologicalProcess-prevents-Disease:
+      umls: prevents.umls
+      pmid: prevents.pmid
+    BiologicalProcess-related_to-AnatomicalEntity:
+      umls: related_to.umls
+      pmid: related_to.pmid
+    BiologicalProcess-related_to-ChemicalSubstance:
+      umls: related_to.umls
+      pmid: related_to.pmid
+    BiologicalProcess-related_to-BiologicalProcess:
+      umls: related_to.umls
+      pmid: related_to.pmid
+    BiologicalProcess-related_to-Disease:
+      umls: related_to.umls
+      pmid: related_to.pmid
+    BiologicalProcess-related_to-PhenotypicFeature:
+      umls: related_to.umls
+      pmid: related_to.pmid
+    BiologicalProcess-related_to-Gene:
+      umls: related_to.umls
+      pmid: related_to.pmid
+    BiologicalProcess-related_to-CellularComponent:
+      umls: related_to.umls
+      pmid: related_to.pmid
+    BiologicalProcess-treats-Disease:
+      umls: treats.umls
+      pmid: treats.pmid
