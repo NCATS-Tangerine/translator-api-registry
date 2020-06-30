@@ -1,0 +1,351 @@
+openapi: 3.0.1
+info:
+  contact:
+    email: mvon@broadinstitute.org
+    name: Marcin von Grotthuss
+  description: A ReasonerStdAPI for Genetics Provider
+  title: Genetics Provider API
+  version: 1.0.0
+  x-reasoner_standard_version: 0.9.1
+servers:
+- url: https://translator.broadinstitute.org/genetics_data_provider/
+tags:
+- name: 0.9.2
+- name: translator
+- name: reasoner
+paths:
+  /predicates:
+    get:
+      summary: Get supported relationships by source and target
+      responses:
+        '200':
+          description: Predicates by source and target
+          content:
+            application/json:
+              schema:
+                description: Source map
+                type: object
+                additionalProperties:
+                  description: Target map
+                  type: object
+                  additionalProperties:
+                    description: Array of predicates
+                    type: array
+                    items:
+                      type: string
+                example:
+                  disease:
+                    gene:
+                      - associated
+  /query:
+    post:
+      requestBody:
+        content:
+          application/json:
+            example:
+              message:
+                query_graph:
+                  edges:
+                  - id: e00
+                    source_id: n00
+                    target_id: n03
+                    type: associated
+                  - id: e00
+                    source_id: n01
+                    target_id: n03
+                    type: associated
+                  - id: e00
+                    source_id: n02
+                    target_id: n03
+                    type: associated
+                  nodes:
+                  - curie: NCBIGene:5468
+                    id: n00
+                    type: gene
+                  - curie: NCBIGene:5469
+                    id: n01
+                    type: gene
+                  - curie: NCBIGene:5470
+                    id: n02
+                    type: gene
+                  - id: n03
+                    type: disease
+            schema:
+              $ref: '#/components/schemas/Query'
+        description: A message with question graph.
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+          description: A message with knowledge graph and answers.
+      summary: Get answers to a question
+      tags:
+      - 0.9.2
+components:
+  schemas:
+    BiolinkEntity:
+      description: A subclass of named_thing (snake_case)
+      example: disease
+      externalDocs:
+        description: Biolink model entities
+        url: https://biolink.github.io/biolink-model/docs/NamedThing.html
+      type: string
+    BiolinkRelation:
+      description: A relation, i.e. child of related_to (snake_case)
+      example: affects
+      externalDocs:
+        description: Biolink model relations
+        url: https://biolink.github.io/biolink-model/docs/related_to.html
+      type: string
+    Credentials:
+      description: Credentials needed for programmatic access to the remote knowledge
+        graph
+      properties:
+        password:
+          description: Password needed for programmatic access to the remote knowledge
+            graph
+          type: string
+        username:
+          description: Username needed for programmatic access to the remote knowledge
+            graph
+          type: string
+      required:
+      - username
+      - password
+      type: object
+    EdgeBinding:
+      properties:
+        kg_id:
+          oneOf:
+          - type: string
+          - items:
+              type: string
+            type: array
+        qg_id:
+          type: string
+      required:
+      - qg_id
+      - kg_id
+      type: object
+    KEdge:
+      description: An edge in the thought subgraph linking two nodes
+      properties:
+        id:
+          description: Local identifier for this node which is unique within this
+            KnowledgeGraph, and perhaps within the source reasoner's knowledge graph
+          example: '553903'
+          type: string
+        source_id:
+          description: Corresponds to the @id of source node of this edge
+          example: https://omim.org/entry/603903
+          type: string
+        target_id:
+          description: Corresponds to the @id of target node of this edge
+          example: https://www.uniprot.org/uniprot/P00738
+          type: string
+        type:
+          $ref: '#/components/schemas/BiolinkRelation'
+      required:
+      - id
+      - source_id
+      - target_id
+      type: object
+    KNode:
+      description: A node in the thought subgraph
+      properties:
+        id:
+          description: CURIE identifier for this node
+          example: OMIM:603903
+          type: string
+        name:
+          description: Formal name of the entity
+          example: Haptoglobin
+          type: string
+        type:
+          description: Entity type of this node (e.g., protein, disease, etc.)
+          example:
+          - protein
+          items:
+            type: string
+          type: array
+      required:
+      - id
+      type: object
+    KnowledgeGraph:
+      description: A thought graph associated with this result. This will commonly
+        be a linear path subgraph from one concept to another, but related items aside
+        of the path may be included.
+      properties:
+        edges:
+          description: List of edges in the KnowledgeGraph
+          items:
+            $ref: '#/components/schemas/KEdge'
+          type: array
+        nodes:
+          description: List of nodes in the KnowledgeGraph
+          items:
+            $ref: '#/components/schemas/KNode'
+          type: array
+      required:
+      - nodes
+      - edges
+      type: object
+    Message:
+      properties:
+        knowledge_graph:
+          description: KnowledgeGraph object that contains all the nodes and edges
+            referenced in any of the possible answers to the query OR connection information
+            for a remote knowledge graph
+          oneOf:
+          - $ref: '#/components/schemas/KnowledgeGraph'
+          - $ref: '#/components/schemas/RemoteKnowledgeGraph'
+          type: object
+        query_graph:
+          $ref: '#/components/schemas/QueryGraph'
+          description: QueryGraph object that contains a serialization of a query
+            in the form of a graph
+          type: object
+        results:
+          description: List of all returned potential answers for the query posed
+          items:
+            $ref: '#/components/schemas/Result'
+          type: array
+      type: object
+    NodeBinding:
+      properties:
+        kg_id:
+          oneOf:
+          - type: string
+          - items:
+              type: string
+            type: array
+        qg_id:
+          type: string
+      required:
+      - qg_id
+      - kg_id
+      type: object
+    QEdge:
+      description: An edge in the QueryGraph
+      properties:
+        id:
+          description: 'QueryGraph internal identifier for this QEdge. Recommended
+            form: e00, e01, e02, etc.'
+          example: e00
+          type: string
+        source_id:
+          description: Corresponds to the @id of source node of this edge
+          type: string
+        target_id:
+          description: Corresponds to the @id of target node of this edge
+          type: string
+        type:
+          oneOf:
+          - $ref: '#/components/schemas/BiolinkRelation'
+          - items:
+              $ref: '#/components/schemas/BiolinkRelation'
+            type: array
+      required:
+      - id
+      - source_id
+      - target_id
+      type: object
+    QNode:
+      description: A node in the QueryGraph
+      properties:
+        curie:
+          description: CURIE identifier for this node
+          example: OMIM:603903
+          oneOf:
+          - type: string
+          - items:
+              type: string
+            type: array
+        id:
+          description: 'QueryGraph internal identifier for this QNode. Recommended
+            form: n00, n01, n02, etc.'
+          example: n00
+          type: string
+        type:
+          oneOf:
+          - $ref: '#/components/schemas/BiolinkEntity'
+          - description: Entity types of this node (e.g., protein, disease, etc.)
+            example:
+            - disease
+            - genetic_condition
+            items:
+              $ref: '#/components/schemas/BiolinkEntity'
+            type: array
+      required:
+      - id
+      type: object
+    Query:
+      properties:
+        message:
+          $ref: '#/components/schemas/Message'
+      required:
+      - message
+      type: object
+      x-body-name: request_body
+    QueryGraph:
+      description: A graph intended to be the thought path to be followed by a reasoner
+        to answer the question. This graph is a representation of a question.
+      properties:
+        edges:
+          description: List of edges in the QueryGraph
+          items:
+            $ref: '#/components/schemas/QEdge'
+          type: array
+        nodes:
+          description: List of nodes in the QueryGraph
+          items:
+            $ref: '#/components/schemas/QNode'
+          type: array
+      required:
+      - nodes
+      - edges
+      type: object
+    RemoteKnowledgeGraph:
+      description: A thought graph associated with this result that is not repeated
+        here, but stored elsewhere in a way that can be remotely accessed by the reader
+        of this Message
+      properties:
+        credentials:
+          $ref: '#/components/schemas/Credentials'
+          description: Credentials needed for programmatic access to the remote knowledge
+            graph
+          type: object
+        url:
+          description: URL that provides programmatic access to the remote knowledge
+            graph
+          example: http://robokop.renci.org/api/kg
+          type: string
+      required:
+      - url
+      - credentials
+      type: object
+    Result:
+      description: One of potentially several results or answers for a query
+      properties:
+        edge_bindings:
+          description: List of QEdge-KEdge bindings.
+          items:
+            $ref: '#/components/schemas/EdgeBinding'
+          type: array
+        node_bindings:
+          description: List of QNode-KNode bindings.
+          items:
+            $ref: '#/components/schemas/NodeBinding'
+          type: array
+        score:
+          description: Any type of score associated with this result
+          example: 163.233
+          format: float
+          type: number
+      required:
+      - node_bindings
+      - edge_bindings
+      type: object
