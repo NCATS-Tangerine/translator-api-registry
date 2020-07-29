@@ -420,7 +420,7 @@ components:
       - id: GO
         semantic: BiologicalProcess
       parameters:
-        fields: negatively_regulates
+        fields: negatively_regulates.go
       predicate: negatively_regulates
       requestBody:
         body:
@@ -440,7 +440,7 @@ components:
       - id: GO
         semantic: BiologicalProcess
       parameters:
-        fields: positively_regulates
+        fields: positively_regulates.go
       predicate: positively_regulates
       requestBody:
         body:
@@ -460,7 +460,7 @@ components:
       - id: GO
         semantic: BiologicalProcess
       parameters:
-        fields: regulates
+        fields: regulates.go
       predicate: regulates
       requestBody:
         body:
@@ -469,6 +469,66 @@ components:
         header: application/x-www-form-urlencoded
       response_mapping:
         $ref: '#/components/x-bte-response-mapping/regulates'
+      source: Gene Ontology
+      supportBatch: true
+    negatively_regulated_by:
+      - inputSeparator: ','
+        inputs:
+        - id: GO
+          semantic: BiologicalProcess
+        outputs:
+        - id: GO
+          semantic: BiologicalProcess
+        parameters:
+          fields: _id
+        predicate: negatively_regulated_by
+        requestBody:
+          body:
+            q: '{inputs[0]}'
+            scopes: negatively_regulates.go
+          header: application/x-www-form-urlencoded
+        response_mapping:
+          $ref: '#/components/x-bte-response-mapping/negatively_regulated_by'
+        source: Gene Ontology
+        supportBatch: true
+    positively_regulated_by:
+    - inputSeparator: ','
+      inputs:
+      - id: GO
+        semantic: BiologicalProcess
+      outputs:
+      - id: GO
+        semantic: BiologicalProcess
+      parameters:
+        fields: _id
+      predicate: positively_regulated_by
+      requestBody:
+        body:
+          q: '{inputs[0]}'
+          scopes: positively_regulates.go
+        header: application/x-www-form-urlencoded
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/positively_regulated_by'
+      source: Gene Ontology
+      supportBatch: true
+    regulated_by:
+    - inputSeparator: ','
+      inputs:
+      - id: GO
+        semantic: BiologicalProcess
+      outputs:
+      - id: GO
+        semantic: BiologicalProcess
+      parameters:
+        fields: _id
+      predicate: regulated_by
+      requestBody:
+        body:
+          q: '{inputs[0]}'
+          scopes: regulates.go
+        header: application/x-www-form-urlencoded
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/regulated_by'
       source: Gene Ontology
       supportBatch: true
     part_of:
@@ -480,7 +540,7 @@ components:
       - id: GO
         semantic: BiologicalProcess
       parameters:
-        fields: part_of
+        fields: part_of.go
       predicate: part_of
       requestBody:
         body:
@@ -489,6 +549,26 @@ components:
         header: application/x-www-form-urlencoded
       response_mapping:
         $ref: '#/components/x-bte-response-mapping/part_of'
+      source: Gene Ontology
+      supportBatch: true
+    has_part:
+    - inputSeparator: ','
+      inputs:
+      - id: GO
+        semantic: BiologicalProcess
+      outputs:
+      - id: GO
+        semantic: BiologicalProcess
+      parameters:
+        fields: _id
+      predicate: has_part
+      requestBody:
+        body:
+          q: '{inputs[0]}'
+          scopes: part_of.go
+        header: application/x-www-form-urlencoded
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/has_part'
       source: Gene Ontology
       supportBatch: true
   x-bte-response-mapping:
@@ -502,5 +582,13 @@ components:
       GO: positively_regulates.go
     regulates:
       GO: regulates.go
+    negatively_regulated_by:
+      GO: _id
+    positively_regulated_by:
+      GO: _id
+    regulated_by:
+      GO: _id
     part_of:
       GO: part_of.go
+    has_part:
+      GO: _id
