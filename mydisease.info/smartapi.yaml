@@ -226,6 +226,8 @@ paths:
       - "$ref": "#/components/x-bte-kgs-operations/phenotype-disease"
       - "$ref": "#/components/x-bte-kgs-operations/chemical-disease"
       - "$ref": "#/components/x-bte-kgs-operations/bp-disease"
+      - "$ref": "#/components/x-bte-kgs-operations/has_subclass"
+      - "$ref": "#/components/x-bte-kgs-operations/subclass_of"
 components:
   parameters:
     callback:
@@ -400,6 +402,10 @@ components:
       MESH: disgenet.xrefs.mesh
     bp-disease:
       MESH: ctd.mesh
+    has_subclass:
+      MONDO: mondo.children
+    subclass_of:
+      MONDO: mondo.parents
   x-bte-kgs-operations:
     disease-gene:
     - supportBatch: true
@@ -614,3 +620,47 @@ components:
       source: ctd
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/bp-disease"
+    has_subclass:
+    - path: "/query"
+      method: post
+      supportBatch: true
+      inputSeparator: ","
+      parameters:
+        fields: mondo.children
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: mondo.mondo
+        header: application/x-www-form-urlencoded
+      outputs:
+      - id: MONDO
+        semantic: Disease
+      inputs:
+      - id: MONDO
+        semantic: Disease
+      predicate: has_subclass
+      source: mondo
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/has_subclass"
+    subclass_of:
+    - path: "/query"
+      method: post
+      supportBatch: true
+      inputSeparator: ","
+      parameters:
+        fields: mondo.parents
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: mondo.mondo
+        header: application/x-www-form-urlencoded
+      outputs:
+      - id: MONDO
+        semantic: Disease
+      inputs:
+      - id: MONDO
+        semantic: Disease
+      predicate: subclass_of
+      source: mondo
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/subclass_of"
