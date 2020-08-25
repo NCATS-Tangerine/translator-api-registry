@@ -16,6 +16,83 @@ tags:
 - name: translator
 - name: biothings
 paths:
+  /metakg:
+    get:
+      summary: retrieve associations within smartapi, if no parameters provided, will return all associations
+      parameters:
+        - in: query
+          name: subject
+          schema:
+            type: string
+          description: The subject type of the association, e.g. Gene
+          example: Gene
+        - in: query
+          name: object
+          schema:
+            type: string
+          description: The object type of the association, e.g. ChemicalSubstance
+          example: ChemicalSubstance
+        - in: query
+          name: predicate
+          schema:
+            type: string
+          description: The predicate of the association, e.g. Gene
+          example: physically_interacts_with
+        - in: query
+          name: api
+          schema:
+            type: string
+          description: The API providing the association, e.g. MyChem.info API
+          example: MyChem.info API
+      responses:
+        '200':
+          description: Association information including subject, object, predicate, api, provided_by and smartapi info.
+          content:
+            application/json:
+              schema:
+                description: Source map
+                type: array
+                items:
+                  type: object
+                  properties:
+                    subject:
+                      type: string
+                      description: The subject type of the association, e.g. Gene
+                      example: Gene
+                    object:
+                      type: string
+                      description: The object type of the association, e.g. ChemicalSubstance
+                      example: ChemicalSubstance
+                    predicate:
+                      type: string
+                      description: The predicate of the association, e.g. physically_interacts_with
+                      example: physically_interacts_with
+                    api:
+                      type: object
+                      description: The api providing the association, e.g. MyChem.info
+                      properties:
+                        name:
+                          type: string
+                          description: The api providing the association, e.g. MyChem.info
+                          example: MyChem.info API
+                        smartapi_spec_url:
+                          type: uri
+                          description: the url for smartapi specification
+                          example: https://raw.githubusercontent.com/NCATS-Tangerine/translator-api-registry/master/mychem.info/openapi_full.yml
+                        smartapi_ui_url:
+                          type: uri
+                          description: the web UI url for the API
+                          example: https://smart-api.info/ui/8f08d1446e0bb9c2b323713ce83e2bd3
+                        smartapi_id:
+                          type: string
+                          description: unique smartapi id for the api
+                          example: 8f08d1446e0bb9c2b323713ce83e2bd3
+                        
+                    provided_by:
+                      type: string
+                      description: The data source providing the association, e.g. ChEMBL
+                      example: ChEMBL
+                    
   /predicates:
     get:
       summary: Get supported relationships by source and target
