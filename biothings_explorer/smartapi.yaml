@@ -48,7 +48,7 @@ paths:
           name: provided_by
           schema:
             type: string
-          description: The data source providing the association, e.g. MyChem.info API
+          description: The data source providing the association, e.g. drugbank
           example: drugbank
       responses:
         '200':
@@ -56,7 +56,7 @@ paths:
           content:
             application/json:
               schema:
-                description: Source map
+                description: Array of all associations
                 type: array
                 items:
                   type: object
@@ -73,6 +73,10 @@ paths:
                       type: string
                       description: The predicate of the association, e.g. physically_interacts_with
                       example: physically_interacts_with
+                    provided_by:
+                      type: string
+                      description: The data source providing the association, e.g. ChEMBL
+                      example: ChEMBL
                     api:
                       type: object
                       description: The api providing the association, e.g. MyChem.info
@@ -81,24 +85,22 @@ paths:
                           type: string
                           description: The api providing the association, e.g. MyChem.info
                           example: MyChem.info API
-                        smartapi_spec_url:
-                          type: uri
-                          description: the url for smartapi specification
-                          example: https://raw.githubusercontent.com/NCATS-Tangerine/translator-api-registry/master/mychem.info/openapi_full.yml
-                        smartapi_ui_url:
-                          type: uri
-                          description: the web UI url for the API
-                          example: https://smart-api.info/ui/8f08d1446e0bb9c2b323713ce83e2bd3
-                        smartapi_id:
-                          type: string
-                          description: unique smartapi id for the api
-                          example: 8f08d1446e0bb9c2b323713ce83e2bd3
-                        
-                    provided_by:
-                      type: string
-                      description: The data source providing the association, e.g. ChEMBL
-                      example: ChEMBL
-                    
+                        smartapi:
+                          type: object
+                          description: smartapi related data
+                          properties:
+                            metadata:
+                              type: string
+                              description: the url for smartapi specification
+                              example: https://raw.githubusercontent.com/NCATS-Tangerine/translator-api-registry/master/mychem.info/openapi_full.yml
+                            ui:
+                              type: string
+                              description: the web UI url for the API
+                              example: https://smart-api.info/ui/8f08d1446e0bb9c2b323713ce83e2bd3
+                            id:
+                              type: string
+                              description: unique smartapi id for the api
+                              example: 8f08d1446e0bb9c2b323713ce83e2bd3
   /predicates:
     get:
       summary: Get supported relationships by source and target
