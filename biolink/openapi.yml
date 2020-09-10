@@ -339,6 +339,32 @@ paths:
       - phenotype
       x-bte-kgs-operations:
       - "$ref": "#/components/x-bte-kgs-operations/phenotype-pathway"
+  "/bioentity/phenotype/{phenotype_id}/variants":
+    get:
+      parameters:
+      - description: CURIE identifier of phenotype IDs can be used with same results
+        in: path
+        name: phenotype_id
+        required: true
+        example: HP:0012265
+        schema:
+          type: string
+      - description: number of rows
+        in: query
+        name: rows
+        required: false
+        example: 100
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: A distinct set of association.objects (typically ontology terms).
+            This appears at the top level of the results payload
+      summary: Returns pathways associated with a phenotype
+      tags:
+      - phenotype
+      x-bte-kgs-operations:
+      - "$ref": "#/components/x-bte-kgs-operations/phenotype-variant"
   "/bioentity/phenotype/{phenotype_id}/diseases":
     get:
       parameters:
@@ -460,6 +486,12 @@ components:
       pubmed: associations.publications.id
     phenotype-pathway:
       REACT: associations.object.REACT
+      name: associations.object.label
+      source: associations.provided_by
+      relation: associations.relation.label
+      pubmed: associations.publications.id
+    phenotype-variant:
+      DBSNP: associations.object.DBSNP
       name: associations.object.label
       source: associations.provided_by
       relation: associations.relation.label
@@ -733,3 +765,19 @@ components:
       supportBatch: false
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/phenotype-pathway"
+    phenotype-variant:
+    - parameters:
+        phenotype_id: "{inputs[0]}"
+        rows: 200
+        direct: true
+        unselect_evidence: true
+      inputs:
+      - id: HP
+        semantic: PhenotypicFeature
+      outputs:
+      - id: DBSNP
+        semantic: SequenceVariant
+      predicate: related_to
+      supportBatch: false
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/phenotype-variant"
