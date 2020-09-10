@@ -227,6 +227,7 @@ paths:
       - "$ref": "#/components/x-bte-kgs-operations/hasTranscript"
       - "$ref": "#/components/x-bte-kgs-operations/hasGeneProduct"
       - "$ref": "#/components/x-bte-kgs-operations/hasHomolog"
+      - "$ref": "#/components/x-bte-kgs-operations/PathwayHasGene"
 components:
   parameters:
     callback:
@@ -624,27 +625,50 @@ components:
       supportBatch: true
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/functional_association_wikipathways"
-    - inputs:
+    PathwayHasGene:
+    - outputs:
       - id: NCBIGene
         semantic: Gene
       method: post
-      outputs:
+      inputs:
       - id: REACT
         semantic: Pathway
       predicate: functional_association
       source: CPDB
       parameters:
-        fields: pathway.reactome
+        fields: entrezgene
         species: human
+        size: 1000
       requestBody:
         body:
           q: "{inputs[0]}"
-          scopes: entrezgene
+          scopes: pathway.reactome.id
         header: application/x-www-form-urlencoded
       inputSeparator: ","
       supportBatch: true
       response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/functional_association_reactome"
+        "$ref": "#/components/x-bte-response-mapping/functional_association_reactome_gene"
+        - inputs:
+          - id: NCBIGene
+            semantic: Gene
+          method: post
+          outputs:
+          - id: REACT
+            semantic: Pathway
+          predicate: functional_association
+          source: CPDB
+          parameters:
+            fields: pathway.reactome
+            species: human
+          requestBody:
+            body:
+              q: "{inputs[0]}"
+              scopes: entrezgene
+            header: application/x-www-form-urlencoded
+          inputSeparator: ","
+          supportBatch: true
+          response_mapping:
+            "$ref": "#/components/x-bte-response-mapping/functional_association_reactome"
   x-bte-response-mapping:
     description: summary
     name:
@@ -682,6 +706,8 @@ components:
     functional_association_reactome:
       name: pathway.reactome.name
       REACT: pathway.reactome.id
+    functional_association_reactome:
+      NCBIGene: entrezgene
     functional_association_cc:
       evidence: go.CC.evidence
       GO: go.CC.id
