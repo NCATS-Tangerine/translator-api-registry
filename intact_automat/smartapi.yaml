@@ -1,0 +1,240 @@
+openapi: 3.0.0
+info:
+  contact:
+    email: help@renci.org
+    name: Yaphet K
+    x-id: https://github.com/yaphetKG
+    x-role: responsible developer
+  description: IntAct provides a freely available, open source database system and analysis tools for molecular interaction data.
+  termsOfService: https://automat.renci.org
+  title: Automat Intact API
+  version: '2.0'
+servers:
+- description: Production server
+  url: https://automat.renci.org/intact
+tags:
+- name: gene
+- name: organismTaxon
+- name: translator
+- name: biothings
+paths:
+  /gene/organism_taxon/{NCBIGene}:
+    get:
+      parameters:
+      - description: Put NCBIGene ID here, e.g. "NCBIGene:273"
+        example: "NCBIGene:273"
+        in: path
+        name: NCBIGene
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: An association object
+      summary:
+        gene to organism taxon
+      x-bte-kgs-operations:
+        - $ref: '#/components/x-bte-kgs-operations/gene2organismTaxon'
+      tags:
+        - gene
+        - organismTaxon
+  /organism_taxon/gene/{NCBITaxon}:
+    get:
+      parameters:
+        - description: Put NCBIGene ID here, e.g. "NCBITaxon:9606"
+          example: "NCBITaxon:9606"
+          in: path
+          name: NCBITaxon
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: An association object
+      summary:
+        organism taxon to gene
+      x-bte-kgs-operations:
+        - $ref: '#/components/x-bte-kgs-operations/organismTaxon2gene'
+      tags:
+        - gene
+        - organismTaxon
+  /gene/gene/{NCBIGene}:
+    get:
+      parameters:
+        - description: Put NCBIGene ID here, e.g. "NCBIGene:273"
+          example: "NCBIGene:273"
+          in: path
+          name: NCBIGene
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: An association object
+      summary:
+        gene to gene
+      x-bte-kgs-operations:
+        - $ref: '#/components/x-bte-kgs-operations/gene2gene'
+      tags:
+        - gene
+  /predicates:
+    get:
+      description: Returns an object where outer keys represent source types with second
+        level keys as targets. And the values of the second level keys is the
+        type of possible edge typesthat connect these concepts.
+      operationId: get_predicates
+      parameters: []
+      summary: List of available concepts with thier relating predicates.
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  chemical_substance:
+                    gene:
+                      - directly_interacts_with
+      tags:
+        - translator
+
+  /reasonerapi:
+    get:
+      description: Returns a list of question templates that can be used to query this
+        plater instance/
+      operationId: get_question_templates
+      parameters: []
+      summary: returns TRAPI query messages possible to run in the server.
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  - query_graph:
+                      nodes:
+                        - id: n1
+                          type: gene
+                        - id: n2
+                          type: chemical_substance
+                      edges:
+                        - id: e0
+                          source_id: n1
+                          target_id: n2
+                          type: is_affected_by
+      tags:
+        - translator
+    post:
+      description: Given a question graph return question graph plus answers.
+      operationId: post_question
+      summary: Post a TRAPI query and get answers back.
+      requestBody:
+        description: Reasoner api question.
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                query_graph:
+                  nodes:
+                    - id: n1
+                      type: gene
+                    - id: n2
+                      type: chemical_substance
+                  edges:
+                    - id: e0
+                      source_id: n1
+                      target_id: n2
+                      type: is_affected_by
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  query_graph:
+                    nodes:
+                      - id: n1
+                        type: gene
+                      - id: n2
+                        type: chemical_substance
+                    edges:
+                      - id: e0
+                        source_id: n1
+                        target_id: n2
+                        type: is_affected_by
+                  results:
+                    - edge_bindings: []
+                      node_bindings: []
+                  knowledge_graph:
+                    nodes:
+                      - id: n1's DB ID
+                        name: n1 has name
+                      - id: n2's DB ID
+                        name: n2 has name
+                    edges:
+                      - id: e0's DB ID
+                        name: e0 has name
+      tags:
+        - translator
+components:
+  x-bte-kgs-operations:
+    gene2organismTaxon:
+    - inputs:
+      - id: NCBIGene
+        semantic: Gene
+      outputs:
+      - id: NCBITaxon
+        semantic: OrganismTaxon
+      parameters:
+        ncbigene: '{inputs[0]}'
+      predicate: in_taxon
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/gene2organismTaxon'
+      source: inact
+      supportBatch: false
+    gene2gene:
+      - inputs:
+        - id: NCBIGene
+          semantic: Gene
+        outputs:
+        - id: NCBIGene
+          semantic: Gene
+        parameters:
+          ncbigene: '{inputs[0]}'
+        predicate: directly_interacts_with
+        response_mapping:
+          $ref: '#/components/x-bte-response-mapping/gene2gene'
+        source: inact
+        supportBatch: false
+    organismTaxon2gene:
+      - inputs:
+        - id: NCBITaxon
+          semantic: organismTaxon
+        outputs:
+        - id: NCBIGene
+          semantic: gene
+        parameters:
+          ncbitaxon: '{inputs[0]}'
+        predicate: in_taxon
+        response_mapping:
+          $ref: '#/components/x-bte-response-mapping/organismTaxon2gene'
+        source: inact
+        supportBatch: false
+
+  x-bte-response-mapping:
+    gene2organismTaxon:
+      NCBITaxon:
+        in_taxon.ncbitaxon
+    organismTaxon2gene:
+      NCBIGene:
+        in_taxon.ncbitaxon
+    gene2gene:
+      NCBIGene:
+        directly_interacts_with.ncbigene

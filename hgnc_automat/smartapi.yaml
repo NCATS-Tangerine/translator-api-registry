@@ -1,0 +1,205 @@
+openapi: 3.0.0
+info:
+  contact:
+    email: help@renci.org
+    name: Yaphet K
+    x-id: https://github.com/yaphetKG
+    x-role: responsible developer
+  description: HGNC gene family and gene relationships
+  termsOfService: https://automat.renci.org
+  title: Automat HGNC API
+  version: '2.0'
+servers:
+- description: Production server
+  url: https://automat.renci.org/hgnc
+tags:
+- name: gene
+- name: geneFamily
+- name: translator
+- name: biothings
+paths:
+  /gene/gene_family/{NCBIGene}:
+    get:
+      parameters:
+      - description: Put NCBIGene ID here, e.g. "NCBIGene:3539"
+        example: "NCBIGene:3539"
+        in: path
+        name: NCBIGene
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: An association object
+      summary:
+        gene to gene family
+      x-bte-kgs-operations:
+        - $ref: '#/components/x-bte-kgs-operations/gene2geneFamily'
+      tags:
+        - gene
+        - geneFamily
+  /gene_family/gene/{HGNC.FAMILY}:
+    get:
+      parameters:
+        - description: Put HGNC.FAMILY ID here, e.g. "HGNC.FAMILY:353"
+          example: "HGNC.FAMILY:353"
+          in: path
+          name: HGNC.FAMILY
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: An association object
+      summary:
+        organism taxon to gene
+      x-bte-kgs-operations:
+        - $ref: '#/components/x-bte-kgs-operations/geneFamily2gene'
+      tags:
+        - gene
+        - geneFamily
+  /predicates:
+    get:
+      description: Returns an object where outer keys represent source types with second
+        level keys as targets. And the values of the second level keys is the
+        type of possible edge typesthat connect these concepts.
+      summary: List of available concepts with thier relating predicates.
+      operationId: get_predicates
+      parameters: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  chemical_substance:
+                    gene:
+                      - directly_interacts_with
+      tags:
+        - translator
+
+  /reasonerapi:
+    get:
+      description: Returns a list of question templates that can be used to query this
+        plater instance/
+      operationId: get_question_templates
+      summary: returns TRAPI query messages possible to run in the server.
+      parameters: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  - query_graph:
+                      nodes:
+                        - id: n1
+                          type: gene
+                        - id: n2
+                          type: chemical_substance
+                      edges:
+                        - id: e0
+                          source_id: n1
+                          target_id: n2
+                          type: is_affected_by
+      tags:
+        - translator
+    post:
+      description: Given a question graph return question graph plus answers.
+      operationId: post_question
+      summary: Post a TRAPI query and get answers back.
+      requestBody:
+        description: Reasoner api question.
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                query_graph:
+                  nodes:
+                    - id: n1
+                      type: gene
+                    - id: n2
+                      type: chemical_substance
+                  edges:
+                    - id: e0
+                      source_id: n1
+                      target_id: n2
+                      type: is_affected_by
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  query_graph:
+                    nodes:
+                      - id: n1
+                        type: gene
+                      - id: n2
+                        type: chemical_substance
+                    edges:
+                      - id: e0
+                        source_id: n1
+                        target_id: n2
+                        type: is_affected_by
+                  results:
+                    - edge_bindings: []
+                      node_bindings: []
+                  knowledge_graph:
+                    nodes:
+                      - id: n1's DB ID
+                        name: n1 has name
+                      - id: n2's DB ID
+                        name: n2 has name
+                    edges:
+                      - id: e0's DB ID
+                        name: e0 has name
+      tags:
+        - translator
+components:
+  x-bte-kgs-operations:
+    gene2geneFamily:
+    - inputs:
+      - id: NCBIGene
+        semantic: Gene
+      outputs:
+      - id: HGNC.FAMILY
+        semantic: GeneFamily
+      parameters:
+        ncbigene: '{inputs[0]}'
+      predicate: in_taxon
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/gene2geneFamily'
+      source: hgnc
+      supportBatch: false
+    geneFamily2gene:
+      - inputs:
+        - id: HGNC.FAMILY
+          semantic: GeneFamily
+        outputs:
+        - id: NCBIGene
+          semantic: gene
+        parameters:
+          ncbitaxon: '{inputs[0]}'
+        predicate: part_of
+        response_mapping:
+          $ref: '#/components/x-bte-response-mapping/geneFamily2gene'
+        source: hgnc
+        supportBatch: false
+
+  x-bte-response-mapping:
+    gene2geneFamily:
+      HGNC.FAMILY:
+        part_of.hgnc.family
+    geneFamily2gene:
+      NCBIGene:
+        part_of.ncbigene
+
