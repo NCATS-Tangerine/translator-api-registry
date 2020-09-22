@@ -10,15 +10,15 @@ info:
     x-role: responsible developer
     email: help@cohd.org
 servers:
-  - url: 'http://cohd.io/api'
+  - url: 'http://tr-kp-clinical.ncats.io/api'
     description: 'Production server'
 tags:
-  - name: translator
-  - name: gene
+  - name: translator1
+  - name: disease
   - name: chemical
 
 paths:
-  '/frequencies/associatedConceptDomainFreq':
+  '/association/chiSquare':
     get:
       summary: 'retrieve associated concept data'
       parameters:
@@ -30,7 +30,7 @@ paths:
           example: 1
           schema:
             type: integer
-        - name: concept_id
+        - name: concept_id_1
           in: query
           description: >-
             the COHD concept id
@@ -49,35 +49,58 @@ paths:
       responses:
         '200':
           description: 'A COHD concept object'
-          x-bte-response-mapping:
-            $ref: '#/components/x-bte-response-mapping/disease-drug'
       x-bte-kgs-operations:
-        associatedWith:
-          $ref: '#/components/x-bte-kgs-operations/associatedWith'
+      - $ref: '#/components/x-bte-kgs-operations/disease-disease'
+      - $ref: '#/components/x-bte-kgs-operations/disease-chemical'    
+      - $ref: '#/components/x-bte-kgs-operations/chemical-disease'  
 components:
   x-bte-kgs-operations:
-    associatedWith:
-      inputs:
-      - id: cohd
-        semantic: DiseaseOrPhenotypicFeature
+    disease-disease:
+    - inputs:
+      - id: OMOP
+        semantic: Disease
       outputs:
-      - id: cohd
-        semantic: ChemicalSubstance
+      - id: OMOP
+        semantic: Disease
+      predicate: correlated_with
       parameters:
-        concept_id: "{input1}"
-        dataset_id: 1
+        dataset_id: 3
+        concept_id_1: "{inputs[0]}"
+        domain: Condition
+      supportBatch: false
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/omop'
+    disease-chemical:
+    - inputs:
+      - id: OMOP
+        semantic: Disease
+      outputs:
+      - id: OMOP
+        semantic: ChemicalSubstance
+      predicate: correlated_with
+      parameters:
+        dataset_id: 3
+        concept_id_1: "{inputs[0]}"
         domain: Drug
       supportBatch: false
-      response-mapping:
-        $ref: '#/components/x-bte-response-mapping/disease-drug'
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/omop'
+    chemical-disease:
+    - outputs:
+      - id: OMOP
+        semantic: Disease
+      inputs:
+      - id: OMOP
+        semantic: ChemicalSubstance
+      predicate: correlated_with
+      parameters:
+        dataset_id: 3
+        concept_id_1: "{inputs[0]}"
+        domain: Condition
+      supportBatch: false
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/omop'
   x-bte-response-mapping:
-    disease-drug:
-      "@context": http://schema.org
-      "@type": DiseaseOrPhenotypicFeature
-      bts:cohd: results.id
-      bts:associatedWith:
-        "@type": ChemicalSubstance
-        bts:cohd: results.associated_concept_id
-        bts:name: results.concept.associated_concept_name
-        "$input": bts:cohd
-        "$source": cohd
+    omop:
+      OMOP: results.concept_id_2
+      adj_pvalue: results.adj_p-value
