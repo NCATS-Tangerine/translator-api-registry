@@ -390,6 +390,8 @@ components:
       HP: hpo.phenotype_related_to_disease.hpo_id
       evidence: hpo.phenotype_related_to_disease.evidence
       frequency: hpo.phenotype_related_to_disease.frequency
+    disease-phenotype2:
+      HP: covid_phenotypes.hp
     disease-chemical:
       MESH: ctd.chemical_related_to_disease.mesh_chemical_id
       pubmed: ctd.chemical_related_to_disease.pubmed
@@ -489,6 +491,26 @@ components:
         source: hpoa
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/disease-phenotype"
+    disease-phenotype3:
+      - supportBatch: true
+        inputSeparator: ","
+        parameters:
+          fields: covid_phenotypes.hp
+        requestBody:
+          body:
+            q: "{inputs[0]}"
+            scopes: mondo.mondo
+          header: application/x-www-form-urlencoded
+        inputs:
+        - id: MONDO
+          semantic: Disease
+        outputs:
+        - id: HP
+          semantic: PhenotypicFeature
+        predicate: related_to
+        source: covid_phenotypes
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/disease-phenotype2"
     disease-chemical:
     - path: "/query"
       method: post
