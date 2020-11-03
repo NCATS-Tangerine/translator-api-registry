@@ -15,6 +15,8 @@ tags:
 - name: 0.9.2
 - name: translator
 - name: biothings
+- name: metadata
+- name: query
 paths:
   /metakg:
     get:
@@ -101,6 +103,8 @@ paths:
                               type: string
                               description: unique smartapi id for the api
                               example: 8f08d1446e0bb9c2b323713ce83e2bd3
+      tags:
+        - metadata
   /predicates:
     get:
       summary: Get supported relationships by source and target
@@ -124,6 +128,8 @@ paths:
                   chemical_substance:
                     chemical_substance:
                       - correlated_with
+      tags:
+        - metadata
   /query/:
     post:
       requestBody:
@@ -162,6 +168,48 @@ paths:
       summary: Get answers to a question
       tags:
       - 0.9.2
+      - query
+  /smartapi/{smartapi_id}/query/:
+    post:
+      parameters:
+        - description: SmartAPI ID of an API, you can get it from https://smart-api.info/registry
+          example: 978fe380a147a8641caf72320862697b
+          in: path
+          name: smartapi_id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            example:
+              message:
+                query_graph:
+                  edges:
+                  - id: e00
+                    source_id: n00
+                    target_id: n01
+                  nodes:
+                  - curie: NCBIGene:1017
+                    id: n00
+                    type: gene
+                  - id: n01
+                    type: chemical_substance
+            schema:
+              $ref: '#/components/schemas/Query'
+        description: A message with question graph.
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+          description: A message with knowledge graph and answers.
+      summary: Get answers to a question using a specific API
+      tags:
+      - 0.9.2
+      - query
 components:
   schemas:
     BiolinkEntity:
