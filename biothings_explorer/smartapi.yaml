@@ -210,6 +210,86 @@ paths:
       tags:
       - 0.9.2
       - query
+      /query/:
+        post:
+          requestBody:
+            content:
+              application/json:
+                example:
+                  message:
+                    query_graph:
+                      edges:
+                      - id: e00
+                        source_id: n00
+                        target_id: n01
+                      - id: e01
+                        source_id: n01
+                        target_id: n02
+                      nodes:
+                      - curie: MONDO:0005737
+                        id: n00
+                        type: disease
+                      - id: n01
+                        set: true
+                        type: gene
+                      - id: n02
+                        type: chemical_substance
+                schema:
+                  $ref: '#/components/schemas/Query'
+            description: A message with question graph.
+            required: true
+          responses:
+            '200':
+              content:
+                application/json:
+                  schema:
+                    $ref: '#/components/schemas/Message'
+              description: A message with knowledge graph and answers.
+          summary: Get answers to a question
+          tags:
+          - 0.9.2
+          - query
+  /source/{source_name}/query/:
+    post:
+      parameters:
+        - description: The name of the data source
+          example: drugbank
+          in: path
+          name: source_name
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            example:
+              message:
+                query_graph:
+                  edges:
+                  - id: e00
+                    source_id: n00
+                    target_id: n01
+                  nodes:
+                  - curie: NCBIGene:1017
+                    id: n00
+                    type: gene
+                  - id: n01
+                    type: chemical_substance
+            schema:
+              $ref: '#/components/schemas/Query'
+        description: A message with question graph.
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+          description: A message with knowledge graph and answers.
+      summary: Get answers to a question using a specific data source.
+      tags:
+      - 0.9.2
+      - query
 components:
   schemas:
     BiolinkEntity:
