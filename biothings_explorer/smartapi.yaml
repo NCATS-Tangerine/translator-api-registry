@@ -12,6 +12,7 @@ info:
 servers:
 - url: https://api.bte.ncats.io
 tags:
+- name: 1.0.0
 - name: 0.9.2
 - name: translator
 - name: biothings
@@ -20,116 +21,181 @@ tags:
 paths:
   /metakg:
     get:
-      summary: retrieve associations within smartapi, if no parameters provided, will return all associations
       parameters:
-        - in: query
-          name: subject
-          schema:
-            type: string
-          description: The subject type of the association, e.g. Gene
-          example: Gene
-        - in: query
-          name: object
-          schema:
-            type: string
-          description: The object type of the association, e.g. ChemicalSubstance
-          example: ChemicalSubstance
-        - in: query
-          name: predicate
-          schema:
-            type: string
-          description: The predicate of the association, e.g. Gene
-          example: physically_interacts_with
-        - in: query
-          name: api
-          schema:
-            type: string
-          description: The API providing the association, e.g. MyChem.info API
-          example: MyChem.info API
-        - in: query
-          name: provided_by
-          schema:
-            type: string
-          description: The data source providing the association, e.g. drugbank
-          example: drugbank
+      - description: The subject type of the association, e.g. Gene
+        example: Gene
+        in: query
+        name: subject
+        schema:
+          type: string
+      - description: The object type of the association, e.g. ChemicalSubstance
+        example: ChemicalSubstance
+        in: query
+        name: object
+        schema:
+          type: string
+      - description: The predicate of the association, e.g. Gene
+        example: physically_interacts_with
+        in: query
+        name: predicate
+        schema:
+          type: string
+      - description: The API providing the association, e.g. MyChem.info API
+        example: MyChem.info API
+        in: query
+        name: api
+        schema:
+          type: string
+      - description: The data source providing the association, e.g. drugbank
+        example: drugbank
+        in: query
+        name: provided_by
+        schema:
+          type: string
       responses:
         '200':
-          description: Association information including subject, object, predicate, api, provided_by and smartapi info.
           content:
             application/json:
               schema:
                 description: Array of all associations
-                type: array
                 items:
-                  type: object
                   properties:
-                    subject:
-                      type: string
-                      description: The subject type of the association, e.g. Gene
-                      example: Gene
-                    object:
-                      type: string
-                      description: The object type of the association, e.g. ChemicalSubstance
-                      example: ChemicalSubstance
-                    predicate:
-                      type: string
-                      description: The predicate of the association, e.g. physically_interacts_with
-                      example: physically_interacts_with
-                    provided_by:
-                      type: string
-                      description: The data source providing the association, e.g. ChEMBL
-                      example: ChEMBL
                     api:
-                      type: object
                       description: The api providing the association, e.g. MyChem.info
                       properties:
                         name:
-                          type: string
                           description: The api providing the association, e.g. MyChem.info
                           example: MyChem.info API
+                          type: string
                         smartapi:
-                          type: object
                           description: smartapi related data
                           properties:
-                            metadata:
-                              type: string
-                              description: the url for smartapi specification
-                              example: https://raw.githubusercontent.com/NCATS-Tangerine/translator-api-registry/master/mychem.info/openapi_full.yml
-                            ui:
-                              type: string
-                              description: the web UI url for the API
-                              example: https://smart-api.info/ui/8f08d1446e0bb9c2b323713ce83e2bd3
                             id:
-                              type: string
                               description: unique smartapi id for the api
                               example: 8f08d1446e0bb9c2b323713ce83e2bd3
+                              type: string
+                            metadata:
+                              description: the url for smartapi specification
+                              example: https://raw.githubusercontent.com/NCATS-Tangerine/translator-api-registry/master/mychem.info/openapi_full.yml
+                              type: string
+                            ui:
+                              description: the web UI url for the API
+                              example: https://smart-api.info/ui/8f08d1446e0bb9c2b323713ce83e2bd3
+                              type: string
+                          type: object
+                      type: object
+                    object:
+                      description: The object type of the association, e.g. ChemicalSubstance
+                      example: ChemicalSubstance
+                      type: string
+                    predicate:
+                      description: The predicate of the association, e.g. physically_interacts_with
+                      example: physically_interacts_with
+                      type: string
+                    provided_by:
+                      description: The data source providing the association, e.g.
+                        ChEMBL
+                      example: ChEMBL
+                      type: string
+                    subject:
+                      description: The subject type of the association, e.g. Gene
+                      example: Gene
+                      type: string
+                  type: object
+                type: array
+          description: Association information including subject, object, predicate,
+            api, provided_by and smartapi info.
+      summary: retrieve associations within smartapi, if no parameters provided, will
+        return all associations
       tags:
-        - metadata
+      - metadata
   /predicates:
     get:
-      summary: Get supported relationships by source and target
       responses:
         '200':
-          description: Predicates by source and target
           content:
             application/json:
               schema:
-                description: Source map
-                type: object
                 additionalProperties:
-                  description: Target map
-                  type: object
                   additionalProperties:
                     description: Array of predicates
-                    type: array
                     items:
                       type: string
+                    type: array
+                  description: Target map
+                  type: object
+                description: Source map
                 example:
                   chemical_substance:
                     chemical_substance:
-                      - correlated_with
+                    - correlated_with
+                type: object
+          description: Predicates by source and target
+      summary: Get supported relationships by source and target
       tags:
-        - metadata
+      - metadata
+  /v1/query:
+    post:
+      tags:
+        - query
+        - 1.0.0
+      summary: Query reasoner via one of several inputs
+      description: ''
+      operationId: query
+      requestBody:
+        description: Query information to be submitted
+        required: true
+        content:
+          application/json:
+            example:
+              message:
+                query_graph:
+                  edges:
+                    e00:
+                      subject: n00
+                      object: n01
+                  nodes:
+                    n00:
+                      category: "biolink:Disease"
+                      id: "MONDO:0005737"
+                    n01:
+                      category: "biolink:ChemicalSubstance"
+            schema:
+              $ref: '#/components/schemas/Query'
+      responses:
+        '200':
+          description: >-
+            OK. There may or may not be results. Note that some of the provided
+            identifiers may not have been recognized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+        '400':
+          description: >-
+            Bad request. The request is invalid according to this OpenAPI
+            schema OR a specific identifier is believed to be invalid somehow
+            (not just unrecognized).
+          content:
+            application/json:
+              schema:
+                type: string
+        '500':
+          description: >-
+            Internal server error.
+          content:
+            application/json:
+              schema:
+                type: string
+        '501':
+          description: >-
+            Not implemented.
+          content:
+            application/json:
+              schema:
+                type: string
+      x-swagger-router-controller: swagger_server.controllers.query_controller
+
   /query/:
     post:
       requestBody:
@@ -172,13 +238,13 @@ paths:
   /smartapi/{smartapi_id}/query/:
     post:
       parameters:
-        - description: SmartAPI ID of an API, you can get it from https://smart-api.info/registry
-          example: 978fe380a147a8641caf72320862697b
-          in: path
-          name: smartapi_id
-          required: true
-          schema:
-            type: string
+      - description: SmartAPI ID of an API, you can get it from https://smart-api.info/registry
+        example: 978fe380a147a8641caf72320862697b
+        in: path
+        name: smartapi_id
+        required: true
+        schema:
+          type: string
       requestBody:
         content:
           application/json:
@@ -213,13 +279,13 @@ paths:
   /source/{source_name}/query/:
     post:
       parameters:
-        - description: The name of the data source
-          example: drugbank
-          in: path
-          name: source_name
-          required: true
-          schema:
-            type: string
+      - description: The name of the data source
+        example: drugbank
+        in: path
+        name: source_name
+        required: true
+        schema:
+          type: string
       requestBody:
         content:
           application/json:
@@ -516,3 +582,60 @@ components:
       - node_bindings
       - edge_bindings
       type: object
+    Response:
+      type: object
+      description: >-
+        The Response object contains the main payload when a TRAPI query
+        endpoint interprets and responds to the submitted query successfully
+        (i.e., HTTP Status Code 200). The message property contains the
+        knowledge of the response (query graph, knowledge graph, and results).
+        The status, description, and logs properties provide additional details
+        about the response.
+      properties:
+        message:
+          description: >-
+            Contains the knowledge of the response (query graph, knowledge
+            graph, and results).
+          $ref: '#/components/schemas/Message'
+        status:
+          description: >-
+            One of a standardized set of short codes,
+            e.g. Success, QueryNotTraversable, KPsNotAvailable
+          type: string
+          example: Success
+        description:
+          description: A brief human-readable description of the outcome
+          type: string
+          example: Success. 42 results found.
+        logs:
+          description: >-
+            Log entries containing errors, warnings, debugging information, etc
+          type: array
+          items:
+            $ref: '#/components/schemas/LogEntry'
+      required:
+        - message
+    LogEntry:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          description: Timestamp in ISO 8601 format
+          example: '2020-09-03T18:13:49+00:00'
+        level:
+          type: string
+          description: Logging level
+          enum:
+            - ERROR
+            - WARNING
+            - INFO
+            - DEBUG
+        code:
+          type: string
+          description: >-
+            One of a standardized set of short codes
+            e.g. QueryNotTraversable, KPNotAvailable, KPResponseMalformed
+        message:
+          type: string
+          description: A human-readable log message
