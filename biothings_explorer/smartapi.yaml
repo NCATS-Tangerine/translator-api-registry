@@ -134,6 +134,69 @@ paths:
       summary: Get supported relationships by source and target
       tags:
       - metadata
+      - 0.9.2
+  /v1/predicates:
+    get:
+      tags:
+        - predicates
+        - 1.0.0
+      summary: Get supported relationships by source and target
+      responses:
+        '200':
+          description: Predicates by source and target
+          content:
+            application/json:
+              schema:
+                description: Source map
+                type: object
+                additionalProperties:
+                  description: Target map
+                  type: object
+                  additionalProperties:
+                    description: Array of predicates
+                    type: array
+                    items:
+                      type: string
+                example:
+                  'biolink:ChemicalSubstance':
+                    'biolink:Gene':
+                      - biolink:directly_interacts_with
+                      - biolink:decreases_activity_of
+  /v1/smartapi/{smartapi_id}/predicates:
+    get:
+      tags:
+        - predicates
+        - 1.0.0
+      summary: Get supported relationships by source and target for individual smartAPI
+      parameters:
+        - description: SmartAPI ID of an API, you can get it from https://smart-api.info/registry
+          example: 978fe380a147a8641caf72320862697b
+          in: path
+          name: smartapi_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Predicates by source and target
+          content:
+            application/json:
+              schema:
+                description: Source map
+                type: object
+                additionalProperties:
+                  description: Target map
+                  type: object
+                  additionalProperties:
+                    description: Array of predicates
+                    type: array
+                    items:
+                      type: string
+                example:
+                  'biolink:ChemicalSubstance':
+                    'biolink:Gene':
+                      - biolink:directly_interacts_with
+                      - biolink:decreases_activity_of
   /v1/query:
     post:
       tags:
@@ -195,7 +258,75 @@ paths:
               schema:
                 type: string
       x-swagger-router-controller: swagger_server.controllers.query_controller
-
+  /v1/smartapi/{smartapi_id}/query:
+    post:
+      tags:
+        - query
+        - 1.0.0
+      summary: Query reasoner via one of several inputs
+      description: ''
+      operationId: querySmartAPI
+      parameters:
+        - description: SmartAPI ID of an API, you can get it from https://smart-api.info/registry
+          example: 978fe380a147a8641caf72320862697b
+          in: path
+          name: smartapi_id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: Query information to be submitted
+        required: true
+        content:
+          application/json:
+            example:
+              message:
+                query_graph:
+                  edges:
+                    e00:
+                      subject: n00
+                      object: n01
+                  nodes:
+                    n00:
+                      category: "biolink:Disease"
+                      id: "MONDO:0005737"
+                    n01:
+                      category: "biolink:ChemicalSubstance"
+            schema:
+              $ref: '#/components/schemas/Query'
+      responses:
+        '200':
+          description: >-
+            OK. There may or may not be results. Note that some of the provided
+            identifiers may not have been recognized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+        '400':
+          description: >-
+            Bad request. The request is invalid according to this OpenAPI
+            schema OR a specific identifier is believed to be invalid somehow
+            (not just unrecognized).
+          content:
+            application/json:
+              schema:
+                type: string
+        '500':
+          description: >-
+            Internal server error.
+          content:
+            application/json:
+              schema:
+                type: string
+        '501':
+          description: >-
+            Not implemented.
+          content:
+            application/json:
+              schema:
+                type: string
+      x-swagger-router-controller: swagger_server.controllers.query_controller
   /query/:
     post:
       requestBody:
