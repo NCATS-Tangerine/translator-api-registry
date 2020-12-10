@@ -1,0 +1,502 @@
+openapi: 3.0.0
+info:
+  contact:
+    email: help@biothings.io
+    name: JIWEN XIN
+    x-id: https://github.com/kevinxin90
+    x-role: responsible developer
+  description: Documentation of the Clinical Risk KP query web services.
+  termsOfService: https://biothings.io/about
+  title: Clinical Risk KP API
+  version: '1.0'
+  x-translator:
+    component: KP
+    team:
+    - Multiomics Provider
+    - Service Provider
+servers:
+- description: Encrypted Production server
+  url: https://biothings.ncats.io/clinical_risk_kp
+- description: Production server
+  url: http://biothings.ncats.io/clinical_risk_kp
+tags:
+- name: disease
+- name: association
+- name: annotation
+- name: query
+- name: translator
+- name: biothings
+- name: biothings_graph
+paths:
+  /association:
+    post:
+      parameters:
+      - $ref: '#/components/parameters/dotfield'
+        name: dotfield
+      - $ref: '#/components/parameters/fields'
+        name: fields
+      - $ref: '#/components/parameters/email'
+        name: email
+      - $ref: '#/components/parameters/format'
+        name: format
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              properties:
+                ids:
+                  description: 'multiple association IDs separated by comma. Note
+                    that currently we only take the input ids up to 1000 maximum,
+                    the rest will be omitted. Type: string (list). Max: 1000.'
+                  type: string
+              required:
+              - ids
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/Association'
+                type: array
+          description: A list of matching association objects
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResult'
+          description: A response indicating an improperly formatted query
+      summary: For a list of association IDs, return the matching disease object
+      tags:
+      - association
+  /association/{associationid}:
+    get:
+      parameters:
+      - description: Retrieve association objects based on Association ID  Supports
+          JSONP and CORS as well.
+        example: NCIT:C25150-Age-diabetes mellitus (disease)-Gradient Boosting-34.87
+        in: path
+        name: associationid
+        required: true
+        schema:
+          type: string
+      - $ref: '#/components/parameters/dotfield'
+        name: dotfield
+      - $ref: '#/components/parameters/callback'
+        name: callback
+      - $ref: '#/components/parameters/fields'
+        name: fields
+      - $ref: '#/components/parameters/email'
+        name: email
+      - $ref: '#/components/parameters/format'
+        name: format
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Association'
+          description: A matching association object
+        '404':
+          description: A response indicating an unknown association ID
+      summary: Retrieve association objects based on ID
+      tags:
+      - association
+  /metadata:
+    get:
+      parameters:
+      - $ref: '#/components/parameters/callback'
+        in: query
+        name: callback
+      responses:
+        '200':
+          description: KP metadata object
+      summary: Get metadata about the data available from the API
+      tags:
+      - metadata
+  /metadata/fields:
+    get:
+      parameters:
+      - $ref: '#/components/parameters/search'
+        name: search
+      - $ref: '#/components/parameters/callback'
+        name: callback
+      - $ref: '#/components/parameters/prefix'
+        name: prefix
+      - $ref: '#/components/parameters/format'
+        name: format
+      responses:
+        '200':
+          description: metadata fields object
+      summary: Get metadata about the data fields available
+      tags:
+      - metadata
+  /query:
+    get:
+      parameters:
+      - description: Query string.
+        example: subject.id:NCIT\:C28421
+        in: query
+        name: q
+        required: true
+        schema:
+          type: string
+      - $ref: '#/components/parameters/dotfield'
+        name: dotfield
+      - $ref: '#/components/parameters/fields'
+        name: fields
+      - $ref: '#/components/parameters/facet_size'
+        name: facet_size
+      - $ref: '#/components/parameters/sort'
+        name: sort
+      - $ref: '#/components/parameters/callback'
+        name: callback
+      - $ref: '#/components/parameters/email'
+        name: email
+      - $ref: '#/components/parameters/facets'
+        name: facets
+      - $ref: '#/components/parameters/size'
+        name: size
+      - $ref: '#/components/parameters/from'
+        name: from
+      - $ref: '#/components/parameters/format'
+        name: format
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QueryResult'
+          description: A query response with the "hits" property
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResult'
+          description: A response indicating an improperly formatted query
+      summary: Make queries and return matching association hits. Supports JSONP and
+        CORS as well.
+      tags:
+      - query
+      x-bte-kgs-operations:
+      - $ref: '#/components/x-bte-kgs-operations/attribute-disease'
+      - $ref: '#/components/x-bte-kgs-operations/drug_exposure-disease1'
+      - $ref: '#/components/x-bte-kgs-operations/drug_exposure-disease2'
+      - $ref: '#/components/x-bte-kgs-operations/observation-disease'
+      - $ref: '#/components/x-bte-kgs-operations/symptom-disease'
+      - $ref: '#/components/x-bte-kgs-operations/disease-disease1'
+      - $ref: '#/components/x-bte-kgs-operations/disease-disease2'
+    post:
+      parameters:
+      - $ref: '#/components/parameters/dotfield'
+        name: dotfield
+      - $ref: '#/components/parameters/email'
+        name: email
+      - $ref: '#/components/parameters/fields'
+        name: fields
+      - $ref: '#/components/parameters/size'
+        name: size
+      - $ref: '#/components/parameters/format'
+        name: format
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              properties:
+                q:
+                  description: multiple query terms separated by comma (also "+" or
+                    whitespace).  Does not support wildcard queries
+                  type: string
+                scopes:
+                  description: 'a comma-separated list of fields as the search "scopes"
+                    (fields to search through for query term). The available "fields"
+                    that can be passed to the "scopes" parameter are listed in the
+                    **/metadata/fields** endpoint.string Default: "scopes=_id".'
+                  type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QueryPOSTResult'
+          description: Query response objects with the "hits" property
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResult'
+          description: A response indicating an improperly formatted query
+      summary: Make batch disease queries and return matching disease hits
+      tags:
+      - query
+components:
+  parameters:
+    callback:
+      description: 'you can pass a "callback" parameter to make a JSONP call. Type:
+        string.'
+      in: query
+      name: callback
+      schema:
+        type: string
+    dotfield:
+      description: 'control the format of the returned chem object. If "true" or "1",
+        all fields will be collapsed into a single level deep object (all nested objects
+        will be a single level deep, using dotfield notation to signify the nested
+        structure) Type: boolean. Default: false.'
+      in: query
+      name: dotfield
+      schema:
+        type: boolean
+    email:
+      description: If you are regular users of our services, we encourage you to provide
+        us with an email, so that we can better track the usage or follow up with
+        you.
+      in: query
+      name: email
+      schema:
+        type: string
+    facet_size:
+      description: 'the number of facet buckets to return in the response. Type: integer.
+        Default: 10. Max: 1000.'
+      in: query
+      name: facet_size
+      schema:
+        type: integer
+    facets:
+      description: 'a comma-separated list of fields to return facets on.  In addition
+        to query hits, the fields notated in "facets" will be aggregated by value
+        and bucklet counts will be displayed in the "facets" field of the response
+        object. Type: string (list). Default: None. Max: 1000.'
+      in: query
+      name: facets
+      schema:
+        type: string
+    fields:
+      description: 'a comma-separated list of fields (in dotfield notation) used to
+        limit the fields returned from the matching chem hit(s). The supported field
+        names can be found from any chem object or from the /metadata/fields endpoint.
+        If "fields=all", all available fields will be returned. Type: string (list).
+        Default: all. Max: 1000.'
+      in: query
+      name: fields
+      schema:
+        type: string
+    format:
+      description: 'controls output format of server response, currently supports:
+        "json", "jsonld", "html". Type: string. Default: json.'
+      in: query
+      name: format
+      schema:
+        type: string
+    from:
+      description: 'the number of matching chem hits to skip, starting from 0.  This
+        can be useful for paging in combination with the "size" parameter. Type: integer.
+        Default: None.'
+      in: query
+      name: from
+      schema:
+        type: integer
+    prefix:
+      description: 'Pass a prefix string to filter the available fields. Type: string.
+        Default: None.'
+      in: query
+      name: prefix
+      schema:
+        type: string
+    search:
+      description: 'Pass a search term to filter the available fields. Type: string.
+        Default: None.'
+      in: query
+      name: search
+      schema:
+        type: string
+    size:
+      description: 'the maximum number of matching chem hits to return per batch.
+        Type: integer. Default: 10.'
+      in: query
+      name: size
+      schema:
+        type: integer
+    sort:
+      description: 'the comma-separated list of fields to sort on. Prefix each with
+        "-" for descending order, otherwise in ascending order. Default: sort by descending
+        score.'
+      in: query
+      name: sort
+      schema:
+        type: string
+  schemas:
+    Association:
+      properties:
+        _id:
+          type: string
+      required:
+      - _id
+      type: object
+    ErrorResult:
+      properties:
+        message:
+          type: string
+        success:
+          type: boolean
+      type: object
+    QueryPOSTResult:
+      items:
+        allOf:
+        - $ref: '#/components/schemas/Association'
+        - properties:
+            _score:
+              format: float
+              type: number
+            query:
+              type: string
+          type: object
+      type: array
+    QueryResult:
+      properties:
+        hits:
+          items:
+            $ref: '#/components/schemas/Association'
+          type: array
+        max_score:
+          format: float
+          type: number
+        took:
+          type: integer
+        total:
+          type: integer
+      type: object
+    int64_or_array:
+      oneOf:
+      - items:
+          format: int64
+          type: integer
+        type: array
+      - format: int64
+        type: integer
+    string_or_array:
+      oneOf:
+      - items:
+          type: string
+        type: array
+      - type: string
+  x-bte-kgs-operations:
+    disease-disease1:
+    - inputs:
+      - id: MONDO
+        semantic: Disease
+      outputs:
+      - id: MONDO
+        semantic: Disease
+      parameters:
+        fields: association,object.MONDO
+        q: subject.id:{inputs[0]}
+        size: '1000'
+      predicate: affects_risk_for
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/disease'
+      source: Multiomics Provider
+      supportBatch: false
+    disease-disease2:
+    - inputs:
+      - id: MONDO
+        semantic: Disease
+      outputs:
+      - id: MONDO
+        semantic: Disease
+      parameters:
+        fields: association,object.MONDO
+        q: subject.id:{inputs[0]}
+        size: '1000'
+      predicate: affects_risk_for
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/disease'
+      source: Multiomics Provider
+      supportBatch: false
+    attribute-disease:
+    - inputs:
+      - id: NCIT
+        semantic: Attribute
+      outputs:
+      - id: MONDO
+        semantic: Disease
+      parameters:
+        fields: association,object.MONDO
+        q: subject.id:{inputs[0]}
+        size: '1000'
+      predicate: affects_risk_for
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/disease'
+      source: Multiomics Provider
+      supportBatch: false
+    drug_exposure-disease1:
+    - inputs:
+      - id: NCIT
+        semantic: DrugExposure
+      outputs:
+      - id: MONDO
+        semantic: Disease
+      parameters:
+        fields: association,object.MONDO
+        q: subject.id:{inputs[0]}
+        size: '1000'
+      predicate: affects_risk_for
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/disease'
+      source: Multiomics Provider
+      supportBatch: false
+    drug_exposure-disease2:
+    - inputs:
+      - id: CHEBI
+        semantic: DrugExposure
+      outputs:
+      - id: MONDO
+        semantic: Disease
+      parameters:
+        fields: association,object.MONDO
+        q: subject.id:{inputs[0]}
+        size: '1000'
+      predicate: affects_risk_for
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/disease'
+      source: Multiomics Provider
+      supportBatch: false
+    symptom-disease:
+    - inputs:
+      - id: NCIT
+        semantic: DrugExposure
+      outputs:
+      - id: MONDO
+        semantic: Disease
+      parameters:
+        fields: association,object.MONDO
+        q: subject.id:{inputs[0]}
+        size: '1000'
+      predicate: affects_risk_for
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/disease'
+      source: Multiomics Provider
+      supportBatch: false
+    observation-disease:
+    - inputs:
+      - id: NCIT
+        semantic: Observation
+      outputs:
+      - id: MONDO
+        semantic: Disease
+      parameters:
+        fields: association,object.MONDO
+        q: subject.id:{inputs[0]}
+        size: '1000'
+      predicate: affects_risk_for
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/disease'
+      source: Multiomics Provider
+      supportBatch: false
+  x-bte-response-mapping:
+    disease:
+      mondo: object.MONDO
+      has_auc_roc: association.has_auc_roc
+      has_feature_importance: association.has_feature_importance
+      relation: association.relation
+      uses_classifier: associatioin.uses_classifier
