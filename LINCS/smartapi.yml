@@ -1,0 +1,375 @@
+openapi: 3.0.0
+info:
+  version: '1.0'
+  title: LINCS Data Portal API
+  description: >-
+    Documentation of the LINCS Data Portal web services. Learn more about [LINCS
+    Data Portal](http://lincsportal.ccs.miami.edu/dcic-portal/)
+  termsOfService: 'http://lincsportal.ccs.miami.edu/dcic-portal/#/terms'
+  contact:
+    name: UM BD2K-LINCS DCIC
+    x-role: responsible organization
+    email: akoleti@med.miami.edu
+    x-id: 'http://lincsportal.ccs.miami.edu/'
+  x-translator:
+    component: KP
+    team:
+    - Service Provider
+servers:
+  - url: 'http://lincsportal.ccs.miami.edu/dcic/api/'
+    description: Production server
+tags:
+  - name: small molecule
+  - name: query
+  - name: cells
+  - name: gene
+  - name: diseases
+  - name: LINCS
+  - name: SchuererLab
+  - name: signature
+  - name: translator
+paths:
+  /fetchmolecules:
+    get:
+      tags:
+        - small molecule
+        - query
+        - LINCS
+        - SchuererLab
+      summary: >-
+        Get LINCS small molecule records, which contain both LINCS-based and
+        general metadata about the small molecules tested in the NIH LINCS
+        program. Parameter 'searchTerm' allows querying by specific metadata
+        fields within small molecule records.
+      parameters:
+        - name: searchTerm
+          in: query
+          description: >-
+            Parameter used for searching small molecule metadata fields. Syntax
+            is "field name:"value"" Do Not include outer quotes. Example;
+            Name:"Imatinib", lincsidentifier:"LSM-1028", etc. Setting search
+            term equal to the wildcard charachter, "*", will query for all
+            fields of all records up to the specified limit.
+          required: true
+          x-valueType:
+            - 'http://identifiers.org/lincs.smallmolecule'
+          schema:
+            type: string
+        - name: limit
+          in: query
+          description: 'limit the number of records returned, default is 10'
+          required: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: >-
+            A query response object with 'documents' property, each document
+            corresponds to a small molecule that matched the query criteria.
+          x-responseValueType:
+            - path: lincs.smallmolecule
+              valueType: ' http://identifiers.org/'
+  /fetchcells:
+    get:
+      tags:
+        - diseases
+        - cells
+        - query
+        - LINCS
+        - SchuererLab
+      summary: >-
+        Get LINCS cell lines records, which contain both LINCS-based and general
+        metadata about the cell lines tested in the NIH LINCS program. Parameter
+        'searchTerm' allows querying by specific metadata fields within the cell
+        line records.
+      parameters:
+        - name: searchTerm
+          in: query
+          description: >-
+            Parameter used for searching cell line metadata fields. Syntax is
+            "field name:"value"" Do Not include outer quotes. Example;
+            Name:"MCF7", lincsidentifier:"LSM-1028", etc. Setting search term
+            equal to the wildcard charachter, "*", will query for all fields of
+            all records up to the specified limit.
+          required: true
+          x-valueType:
+            - ' http://identifiers.org/lincs.cell'
+          schema:
+            type: string
+        - name: limit
+          in: query
+          description: 'limit the number of records returned, default is 10'
+          required: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: >-
+            A query response object with 'documents' property, each document
+            corresponds to a cell line that matched the query criteria.
+          x-responseValueType:
+            - path: lincs.cell
+              valueType: 'http://identifiers.org/'''
+  /fetchdata:
+    get:
+      tags:
+        - signature
+        - query
+        - LINCS
+        - SchuererLab
+      summary: >-
+        Get metadata for LINCS assay data sets (DOES NOT RETURN ASSAY ENDPOINT
+        DATA). Parameter 'searchTerm' allows querying by specific metadata
+        fields within the assay metadata records.
+      parameters:
+        - name: searchTerm
+          in: query
+          description: >-
+            Parameter used for searching data set metadata fields. Syntax is
+            "field name:"value"" Do Not include outer quotes. Example;
+            centerfullname:"HMS LINCS (Harvard Medical School)",
+            technologies:"Fluorescence imaging", etc. Setting search term equal
+            to the wildcard charachter, "*", will query for all fields of all
+            records up to the specified limit.
+          required: true
+          x-valueType:
+            - 'http://identifiers.org/lincs.data'
+          schema:
+            type: string
+        - name: limit
+          in: query
+          description: 'limit the number of records returned, default is 10'
+          required: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: >-
+            A query response object with 'documents' property, each document
+            corresponds to a dataset that matched the query criteria.
+          x-responseValueType:
+            - path: lincs.data
+              valueType: 'http://identifiers.org/'
+  /mechanismOfAction:
+    get:
+      tags:
+        - query
+        - LINCS
+        - SchuererLab
+        - small molecule
+      summary: Get known mechanisms of action for LINCS small molecules.
+      parameters:
+        - name: id
+          in: query
+          description: >-
+            Parameter used to search by LINCS small molecule identifier. Syntax
+            is "id=LSM-#" Do Not use quotes. Example; id=LSM-1008.
+          required: false
+          x-valueType:
+            - 'http://identifiers.org/lincs.smallmolecule'
+          schema:
+            type: string
+        - name: moa
+          in: query
+          description: >-
+            Parameter used to search by the full name of the mechanism of
+            action. Syntax is "moa=Mechanism name" Do Not use quotes. Example;
+            moa=Stem cell growth factor receptor inhibitor.
+          required: false
+          schema:
+            type: string
+        - name: limit
+          in: query
+          description: 'limit the number of records returned, default is 10'
+          required: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: >-
+            A query response object with 'documents' property, each document
+            corresponds to a mechanism of action that matched the query
+            criteria.
+          x-responseValueType:
+            - path: lincs.smallmolecule
+              valueType: 'http://identifiers.org/'
+  /bioactivity:
+    get:
+      tags:
+        - signature
+        - query
+        - LINCS
+        - SchuererLab
+        - small molecule
+      summary: >-
+        Get known bioactivities for LINCS small molecules, these data are
+        aggregated values resourced from the ChEMBL ver 23 database
+        <https://www.ebi.ac.uk/chembl/>. The ChEMBL values were mined from
+        numerous sources.
+      parameters:
+        - name: id
+          in: query
+          description: >-
+            Parameter used to search by LINCS small molecule identifier. Syntax
+            is "id=LSM-#" Do Not use quotes. Example; id=LSM-1008.
+          required: false
+          x-valueType:
+            - 'http://identifiers.org/lincs.smallmolecule'
+          schema:
+            type: string
+        - name: target
+          in: query
+          description: >-
+            Parameter used to search by the biochemical assay target using the
+            target's preferred gene symbol from UniProt. Syntax is "target=GENE
+            SYMBOL" Do Not use quotes. Examples; target=BRAF; target=MAPK13;
+            etc..
+          required: false
+          schema:
+            type: string
+        - name: uniprot
+          in: query
+          description: >-
+            Parameter used to search by the biochemical assay target using the
+            target's UniProt accession number. Syntax is "uniprot=accession
+            number" Do Not use quotes. Examples; uniprto=O15264; uniprot=P15056;
+            etc..
+          required: false
+          schema:
+            type: string
+        - name: limit
+          in: query
+          description: 'limit the number of records returned, default is 10'
+          required: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: >-
+            A query response object with 'documents' property, each document
+            corresponds to a bioactivity that matched the query criteria.
+          x-responseValueType:
+            - path: lincs.smallmolecule
+              valueType: 'http://identifiers.org/'
+  /drugindication:
+    get:
+      tags:
+        - signature
+        - query
+        - LINCS
+        - SchuererLab
+        - small molecule
+      summary: >-
+        Get known drug indications for LINCS small molecules, the indications
+        are captured from both the Experimental Factor Ontology (EFO) and the
+        Medical Subject Headings (MeSH) vocabularies.
+      parameters:
+        - name: id
+          in: query
+          description: >-
+            Parameter used to search by LINCS small molecule identifier. Syntax
+            is "id=LSM-#" Do Not use quotes. Example; id=LSM-1008.
+          required: false
+          x-valueType:
+            - 'http://identifiers.org/lincs.smallmolecule'
+          schema:
+            type: string
+        - name: efo
+          in: query
+          description: >-
+            Parameter used to search by the EFO drug indication. Syntax is
+            "efo=Drug Indication" Do Not use quotes. Example; efo=renal
+            carcinoma
+          required: false
+          schema:
+            type: string
+        - name: mesh
+          in: query
+          description: >-
+            Parameter used to search by the MeSH drug indication. Syntax is
+            "efo=Drug Indication" Do Not use quotes. Example; mesh=carcinoma,
+            renal cell
+          required: false
+          schema:
+            type: string
+        - name: limit
+          in: query
+          description: 'limit the number of records returned, default is 10'
+          required: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: >-
+            A query response object with 'documents' property, each document
+            corresponds to a drug indication that matched the query criteria.
+          x-responseValueType:
+          - path: lincs.smallmolecule
+            valueType: 'http://identifiers.org/'
+      x-bte-kgs-operations:
+      - $ref: '#/components/x-bte-kgs-operations/drug-indication'
+  /disease:
+    get:
+      tags:
+        - diseases
+        - query
+        - LINCS
+        - SchuererLab
+        - cells
+      summary: >-
+        Query for LINCS cell line identifiers by disease, the diseases are
+        captured from the Disease Ontology (DO) vocabulary.
+      parameters:
+        - name: disease
+          in: query
+          description: >-
+            Parameter used to search by the DO disease name. Syntax is
+            "disease=disease name" Do Not use quotes. Example; disease=breast
+            carcinoma
+          required: false
+          schema:
+            type: string
+        - name: doid
+          in: query
+          description: >-
+            Parameter used to search by the DO identifier. Syntax is
+            "doid=DOID:#" Do Not use quotes. Example; doid=DOID:3459
+          required: false
+          schema:
+            type: string
+        - name: limit
+          in: query
+          description: 'limit the number of records returned, default is 10'
+          required: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: >-
+            A query response object with 'documents' property, each document
+            corresponds to a disease that matched the query criteria.
+          x-responseValueType:
+            - path: lincs.cell
+              valueType: 'http://identifiers.org/'
+components:
+  x-bte-kgs-operations:
+    drug-indication:
+    - inputs:
+      - id: LINCS
+        semantic: ChemicalSubstance
+      method: get
+      outputs:
+      - id: MESH
+        semantic: Disease
+      parameters:
+        id: '{inputs[0]}'
+      path: /query
+      predicate: treats
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/drug-indication'
+      source: LINCS
+      supportBatch: false
+  x-bte-response-mapping:
+    drug-indication:
+      MESH: documents.mesh_id
+      name: documents.mesh_heading
