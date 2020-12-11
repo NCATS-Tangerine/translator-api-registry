@@ -1,0 +1,399 @@
+openapi: 3.0.1
+info:
+  title: Connections Hypothesis Provider API
+  description: A Translator Reasoner API for the Connections Hypothesis Provider
+  contact:
+    email: luke.j.veenhuis@dartmouth.edu
+    name: Luke Veenhuis
+    x-role: responsible developer
+    x-id: LukeVeenhuis
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: https://github.com/di2ag/chp_api/blob/master/terms%20of%20service
+  version: 1.1.0
+  x-reasoner_standard_version: 1.0
+  
+servers:
+  - url: http://chp.thayer.dartmouth.edu/
+    description: Production Server
+
+tags:
+  - name: bayesian
+  - name: translator
+paths:
+  /predicates:
+    get:
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  additionalProperties:
+                    description: Array of predicates
+                    items:
+                      type: string
+                    type: array
+                  description: Target map
+                  type: object
+                description: Source map
+                example:
+                  biolink:Gene:
+                    biolink:Disease:
+                      - "biolink:GeneToDiseaseAssociation"
+                  biolink:Drug:
+                    biolink:Disease:
+                      - "biolink:ChemicalToDiseaseOrPhenotypicFeatureAssociation"
+                type: object
+          description: Predicates by source and target
+      summary: Get supported relationships by source and target
+      tags:
+        - "Predicates"
+      x-accessRestriction: none
+  /versions:
+    get:
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  additionalProperties:
+                    description: object of service versions
+                    items:
+                      type: string
+                    type: object
+                example:
+                  chp: "1.1.0"
+                  chp_client: "0.2.1"
+                  chp_data: "0.1.1"
+                  pybkb: "1.1.0"
+                type: object
+          description: versions of our service
+      summary: Get a list of versions of our service repositories
+      tags:
+        - "Versions"
+  /query:
+    post:
+      requestBody:
+        content:
+          application/json:
+            example:
+              message:
+                query_graph:
+                  edges:
+                    e0:
+                      predicate: biolink:GeneToDiseaseAssociation
+                      subject: n0
+                      object: n2
+                    e1:
+                      predicate: biolink:ChemicalToDiseaseOrPhenotypicFeatureAssociation
+                      subject: n1
+                      object: n2
+                    e2:
+                      predicate: biolink:DiseaseToPhenotypicFeatureAssociation
+                      subject: n2
+                      object: n3
+                      properties:
+                        qualifier: ">="
+                        days: 500
+                  nodes:
+                    n0:
+                      category: biolink:Gene
+                      id: ENSEMBL:ENSG00000132155
+                    n1:
+                      category: biolink:Drug
+                      id: CHEMBL:CHEMBL1201585
+                    n2:
+                      category: biolink:Disease
+                      id: MONDO:0007254
+                    n3:
+                      category: biolink:PhenotypicFeature
+                      id: EFO:0000714
+
+            schema:
+              $ref: '#/components/schemas/Query'
+        description: A message with question graph.
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+          description: A message with knowledge graph and answers.
+      summary: Get answers to a question
+      tags:
+      - "Query"
+      x-accessRestriction: none
+      externalDocs:
+        url: https://github.com/di2ag/chp_client
+  /curies:
+    get:
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  additionalProperties:
+                    description: object of supported curies
+                    items:
+                      type: string
+                    type: object
+                example:
+                  biolink:Gene:
+                    - name: "CLIP2"
+                      id: "ENSEMBL:ENSG00000106665"
+                  biolink:Drug:
+                    - name: "ZOLADEX"
+                      id: "CHEMBL:CHEMBL1201247"
+                  biolink:PhenotypicFeature:
+                    - name: "survival_time"
+                      id: "EFO:0000714"
+                  biolink:Disease:
+                    - name: "breast_cancer"
+                      id: "MONDO:0007254"
+                type: object
+          description: versions of our service
+      summary: Get a list of versions of our service repositories
+      tags:
+        - "Curies"
+      x-accessRestriction: none
+      externalDocs:
+        url: https://github.com/di2ag/chp_client
+
+components:
+  schemas:
+    BiolinkEntity:
+      description: A subclass of named_thing (snake_case)
+      example: disease
+      externalDocs:
+        description: Biolink model entities
+        url: https://biolink.github.io/biolink-model/docs/NamedThing.html
+      type: string
+    BiolinkRelation:
+      description: A relation, i.e. child of related_to (snake_case)
+      example: affects
+      externalDocs:
+        description: Biolink model relations
+        url: https://biolink.github.io/biolink-model/docs/related_to.html
+      type: string
+    EdgeBinding:
+      properties:
+        kg_id:
+          oneOf:
+          - type: string
+          - items:
+              type: string
+            type: array
+        qg_id:
+          type: string
+      required:
+      - qg_id
+      - kg_id
+      type: object
+    KEdge:
+      description: An edge in the thought subgraph linking two nodes
+      properties:
+        object:
+          description: Local identifier for this node which is unique within this
+            KnowledgeGraph, and perhaps within the source reasoner's knowledge graph
+          example: '553903'
+          type: string
+        predicate:
+          description: Corresponds to the @id of source node of this edge
+          example: https://omim.org/entry/603903
+          type: string
+        subject:
+          description: Corresponds to the @id of target node of this edge
+          example: https://www.uniprot.org/uniprot/P00738
+          type: string
+        type:
+          $ref: '#/components/schemas/BiolinkRelation'
+      required:
+      - object
+      - predicate
+      - subject
+      type: object
+    KNode:
+      description: A node in the thought subgraph
+      properties:
+        id:
+          description: CURIE identifier for this node
+          example: OMIM:603903
+          type: string
+        name:
+          description: Formal name of the entity
+          example: Haptoglobin
+          type: string
+        category:
+          description: Entity type of this node (e.g., protein, disease, etc.)
+          example:
+          - protein
+          items:
+            type: string
+          type: array
+      required:
+      - id
+      type: object
+    KnowledgeGraph:
+      description: A thought graph associated with this result. This will commonly
+        be a linear path subgraph from one concept to another, but related items aside
+        of the path may be included.
+      properties:
+        edges:
+          description: List of edges in the KnowledgeGraph
+          items:
+            $ref: '#/components/schemas/KEdge'
+          type: array
+        nodes:
+          description: List of nodes in the KnowledgeGraph
+          items:
+            $ref: '#/components/schemas/KNode'
+          type: array
+      required:
+      - nodes
+      - edges
+      type: object
+    Message:
+      properties:
+        knowledge_graph:
+          description: KnowledgeGraph object that contains all the nodes and edges
+            referenced in any of the possible answers to the query OR connection information
+            for a remote knowledge graph
+          oneOf:
+          - $ref: '#/components/schemas/KnowledgeGraph'
+          type: object
+        query_graph:
+          $ref: '#/components/schemas/QueryGraph'
+          description: QueryGraph object that contains a serialization of a query
+            in the form of a graph
+          type: object
+        results:
+          description: List of all returned potential answers for the query posed
+          items:
+            $ref: '#/components/schemas/Result'
+          type: array
+      type: object
+    NodeBinding:
+      properties:
+        kg_id:
+          oneOf:
+          - type: string
+          - items:
+              type: string
+            type: array
+        qg_id:
+          type: string
+      required:
+      - qg_id
+      - kg_id
+      type: object
+    QEdge:
+      description: An edge in the QueryGraph
+      properties:
+        id:
+          description: 'QueryGraph internal identifier for this QEdge. Recommended
+            form: e00, e01, e02, etc.'
+          example: e00
+          type: string
+        subject:
+          description: Corresponds to the @id of source node of this edge
+          type: string
+        object:
+          description: Corresponds to the @id of target node of this edge
+          type: string
+        type:
+          oneOf:
+          - $ref: '#/components/schemas/BiolinkRelation'
+          - items:
+              $ref: '#/components/schemas/BiolinkRelation'
+            type: array
+      required:
+      - id
+      - subject
+      - object
+      type: object
+    QNode:
+      description: A node in the QueryGraph
+      properties:
+        id:
+          description: CURIE identifier for this node
+          example: OMIM:603903
+          oneOf:
+          - type: string
+          - items:
+              type: string
+            type: array
+        nodeId:
+          description: 'QueryGraph internal identifier for this QNode. Recommended
+            form: n00, n01, n02, etc.'
+          example: n00
+          type: string
+        category:
+          oneOf:
+          - $ref: '#/components/schemas/BiolinkEntity'
+          - description: Entity types of this node (e.g., protein, disease, etc.)
+            example:
+            - disease
+            - genetic_condition
+            items:
+              $ref: '#/components/schemas/BiolinkEntity'
+            type: array
+      required:
+      - id
+      type: object
+    Query:
+      properties:
+        message:
+          $ref: '#/components/schemas/Message'
+      required:
+      - message
+      type: object
+      x-body-name: request_body
+    QueryGraph:
+      description: A graph intended to be the thought path to be followed by a reasoner
+        to answer the question. This graph is a representation of a question.
+      properties:
+        edges:
+          description: List of edges in the QueryGraph
+          items:
+            $ref: '#/components/schemas/QEdge'
+          type: array
+        nodes:
+          description: List of nodes in the QueryGraph
+          items:
+            $ref: '#/components/schemas/QNode'
+          type: array
+      required:
+      - nodes
+      - edges
+      type: object
+    Result:
+      description: One of potentially several results or answers for a query
+      properties:
+        edge_bindings:
+          description: List of QEdge-KEdge bindings.
+          items:
+            $ref: '#/components/schemas/EdgeBinding'
+          type: array
+        node_bindings:
+          description: List of QNode-KNode bindings.
+          items:
+            $ref: '#/components/schemas/NodeBinding'
+          type: array
+        score:
+          description: Any type of score associated with this result
+          example: 163.233
+          format: float
+          type: number
+      required:
+      - node_bindings
+      - edge_bindings
+      type: object
+
+x-externalResources:
+  - x-url: "https://github.com/di2ag/chp_client"
+    x-type: website
