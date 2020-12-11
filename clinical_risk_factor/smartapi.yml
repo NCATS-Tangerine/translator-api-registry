@@ -186,6 +186,13 @@ paths:
       - $ref: '#/components/x-bte-kgs-operations/symptom-disease'
       - $ref: '#/components/x-bte-kgs-operations/disease-disease1'
       - $ref: '#/components/x-bte-kgs-operations/disease-disease2'
+      - $ref: '#/components/x-bte-kgs-operations/attribute-disease1'
+      - $ref: '#/components/x-bte-kgs-operations/drug_exposure-disease3'
+      - $ref: '#/components/x-bte-kgs-operations/drug_exposure-disease4'
+      - $ref: '#/components/x-bte-kgs-operations/observation-disease1'
+      - $ref: '#/components/x-bte-kgs-operations/symptom-disease1'
+      - $ref: '#/components/x-bte-kgs-operations/disease-disease3'
+      - $ref: '#/components/x-bte-kgs-operations/disease-disease4'
     post:
       parameters:
       - $ref: '#/components/parameters/dotfield'
@@ -493,6 +500,118 @@ components:
         $ref: '#/components/x-bte-response-mapping/disease'
       source: Multiomics Provider
       supportBatch: false
+    disease-disease3:
+    - inputs:
+      - id: NCIT
+        semantic: DiseaseOrPhenotypicFeature
+      outputs:
+      - id: DOID
+        semantic: DiseaseOrPhenotypicFeature
+      parameters:
+      fields: association,object.DOID
+      q: subject.id:"{inputs[0]}"
+      size: '1000'
+      predicate: affects_risk_for
+      response_mapping:
+      $ref: '#/components/x-bte-response-mapping/disease-doid'
+      source: Multiomics Provider
+      supportBatch: false
+    disease-disease4:
+    - inputs:
+      - id: MONDO
+        semantic: DiseaseOrPhenotypicFeature
+      outputs:
+      - id: DOID
+        semantic: DiseaseOrPhenotypicFeature
+      parameters:
+      fields: association,object.DOID
+      q: subject.id:"{inputs[0]}"
+      size: '1000'
+      predicate: affects_risk_for
+      response_mapping:
+      $ref: '#/components/x-bte-response-mapping/disease-doid'
+      source: Multiomics Provider
+      supportBatch: false
+    attribute-disease1:
+    - inputs:
+      - id: NCIT
+        semantic: Attribute
+      outputs:
+      - id: DOID
+        semantic: DiseaseOrPhenotypicFeature
+      parameters:
+      fields: association,object.DOID
+      q: subject.id:"{inputs[0]}"
+      size: '1000'
+      predicate: affects_risk_for
+      response_mapping:
+      $ref: '#/components/x-bte-response-mapping/disease-doid'
+      source: Multiomics Provider
+      supportBatch: false
+    drug_exposure-disease3:
+    - inputs:
+      - id: NCIT
+        semantic: DrugExposure
+      outputs:
+      - id: DOID
+        semantic: DiseaseOrPhenotypicFeature
+      parameters:
+      fields: association,object.DOID
+      q: subject.id:"{inputs[0]}"
+      size: '1000'
+      predicate: affects_risk_for
+      response_mapping:
+      $ref: '#/components/x-bte-response-mapping/disease-doid'
+      source: Multiomics Provider
+      supportBatch: false
+    drug_exposure-disease4:
+    - inputs:
+      - id: CHEBI
+        semantic: DrugExposure
+      outputs:
+      - id: DOID
+        semantic: DiseaseOrPhenotypicFeature
+      parameters:
+      fields: association,object.DOID
+      q: subject.id:"{inputs[0]}"
+      size: '1000'
+      predicate: affects_risk_for
+      response_mapping:
+      $ref: '#/components/x-bte-response-mapping/disease-doid'
+      source: Multiomics Provider
+      supportBatch: false
+    symptom-disease1:
+    - inputs:
+      - id: NCIT
+        semantic: Symptom
+      outputs:
+      - id: DOID
+        semantic: DiseaseOrPhenotypicFeature
+      parameters:
+      fields: association,object.DOID
+      q: subject.id:"{inputs[0]}"
+      size: '1000'
+      predicate: affects_risk_for
+      response_mapping:
+      $ref: '#/components/x-bte-response-mapping/disease-doid'
+      source: Multiomics Provider
+      supportBatch: false
+    observation-disease1:
+    - inputs:
+      - id: NCIT
+        semantic: Observation
+      outputs:
+      - id: DOID
+        semantic: DiseaseOrPhenotypicFeature
+      parameters:
+      fields: association,object.DOID
+      q: subject.id:"{inputs[0]}"
+      size: '1000'
+      predicate: affects_risk_for
+      response_mapping:
+      $ref: '#/components/x-bte-response-mapping/disease-doid'
+      source: Multiomics Provider
+      supportBatch: false
   x-bte-response-mapping:
     disease:
       MONDO: hits.object.MONDO
@@ -500,5 +619,10 @@ components:
       has_feature_importance: hits.association.has_feature_importance
       relation: hits.association.relation
       uses_classifier: hits.associatioin.uses_classifier
-      
-      
+    disease-doid:
+      DOID: hits.object.DOID
+      has_auc_roc: hits.association.has_auc_roc
+      has_feature_importance: hits.association.has_feature_importance
+      relation: hits.association.relation
+      uses_classifier: hits.associatioin.uses_classifier     
+        
