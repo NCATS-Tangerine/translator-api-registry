@@ -1,0 +1,2863 @@
+openapi: 3.0.0
+info:
+  contact:
+    email: help@biothings.io
+    name: JIWEN XIN
+    x-id: https://github.com/kevinxin90
+    x-role: responsible developer
+  description: Documentation of the Text Mining Targeted Association query web services.
+  termsOfService: https://biothings.io/about
+  title: Text Mining Targeted Association API
+  version: '1.0'
+  x-translator:
+    component: KP
+    team:
+      - Text Mining Provider
+      - Service Provider
+servers:
+- description: Encrypted Production server
+  url: https://biothings.ncats.io/text_mining_co_occurrence_kp
+- description: Production server
+  url: http://biothings.ncats.io/text_mining_co_occurrence_kp/
+tags:
+- name: gene
+- name: chemical
+- name: association
+- name: annotation
+- name: query
+- name: translator
+- name: biothings
+- name: biothings_graph
+paths:
+  /association:
+    post:
+      parameters:
+      - $ref: '#/components/parameters/dotfield'
+        name: dotfield
+      - $ref: '#/components/parameters/fields'
+        name: fields
+      - $ref: '#/components/parameters/email'
+        name: email
+      - $ref: '#/components/parameters/format'
+        name: format
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              properties:
+                ids:
+                  description: 'multiple association IDs separated by comma. Note
+                    that currently we only take the input ids up to 1000 maximum,
+                    the rest will be omitted. Type: string (list). Max: 1000.'
+                  type: string
+              required:
+              - ids
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/Association'
+                type: array
+          description: A list of matching association objects
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResult'
+          description: A response indicating an improperly formatted query
+      summary: For a list of association IDs, return the matching disease object
+      tags:
+      - association
+  /association/{associationid}:
+    get:
+      parameters:
+      - description: Retrieve association objects based on Association ID  Supports
+          JSONP and CORS as well.
+        example: 275bfadd2b4c60c3
+        in: path
+        name: associationid
+        required: true
+        schema:
+          type: string
+      - $ref: '#/components/parameters/dotfield'
+        name: dotfield
+      - $ref: '#/components/parameters/callback'
+        name: callback
+      - $ref: '#/components/parameters/fields'
+        name: fields
+      - $ref: '#/components/parameters/email'
+        name: email
+      - $ref: '#/components/parameters/format'
+        name: format
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Association'
+          description: A matching association object
+        '404':
+          description: A response indicating an unknown association ID
+      summary: Retrieve association objects based on ID
+      tags:
+      - association
+  /metadata:
+    get:
+      parameters:
+      - $ref: '#/components/parameters/callback'
+        in: query
+        name: callback
+      responses:
+        '200':
+          description: KP metadata object
+      summary: Get metadata about the data available from the API
+      tags:
+      - metadata
+  /metadata/fields:
+    get:
+      parameters:
+      - $ref: '#/components/parameters/search'
+        name: search
+      - $ref: '#/components/parameters/callback'
+        name: callback
+      - $ref: '#/components/parameters/prefix'
+        name: prefix
+      - $ref: '#/components/parameters/format'
+        name: format
+      responses:
+        '200':
+          description: metadata fields object
+      summary: Get metadata about the data fields available
+      tags:
+      - metadata
+  /query:
+    get:
+      parameters:
+      - description: Query string.
+        example: object.id:CHEBI\:9590
+        in: query
+        name: q
+        required: true
+        schema:
+          type: string
+      - $ref: '#/components/parameters/dotfield'
+        name: dotfield
+      - $ref: '#/components/parameters/fields'
+        name: fields
+      - $ref: '#/components/parameters/facet_size'
+        name: facet_size
+      - $ref: '#/components/parameters/sort'
+        name: sort
+      - $ref: '#/components/parameters/callback'
+        name: callback
+      - $ref: '#/components/parameters/email'
+        name: email
+      - $ref: '#/components/parameters/facets'
+        name: facets
+      - $ref: '#/components/parameters/size'
+        name: size
+      - $ref: '#/components/parameters/from'
+        name: from
+      - $ref: '#/components/parameters/format'
+        name: format
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QueryResult'
+          description: A query response with the "hits" property
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResult'
+          description: A response indicating an improperly formatted query
+      summary: Make queries and return matching association hits. Supports JSONP and
+        CORS as well.
+      tags:
+      - query
+      x-bte-kgs-operations:
+        - $ref: '#/components/x-bte-kgs-operations/ChemicalSubstance-ChemicalSubstance'
+        - $ref: '#/components/x-bte-kgs-operations/ChemicalSubstance-Cell'
+        - $ref: '#/components/x-bte-kgs-operations/ChemicalSubstance-BiologicalProcess'
+        - $ref: '#/components/x-bte-kgs-operations/ChemicalSubstance-CellularComponent'
+        - $ref: '#/components/x-bte-kgs-operations/ChemicalSubstance-MolecularActivity'
+        - $ref: '#/components/x-bte-kgs-operations/ChemicalSubstance-PhenotypicFeature'
+        - $ref: '#/components/x-bte-kgs-operations/ChemicalSubstance-Disease'
+        - $ref: '#/components/x-bte-kgs-operations/ChemicalSubstance-Gene'
+        - $ref: '#/components/x-bte-kgs-operations/ChemicalSubstance-Protein'
+        - $ref: '#/components/x-bte-kgs-operations/ChemicalSubstance-SequenceFeature'
+        - $ref: '#/components/x-bte-kgs-operations/ChemicalSubstance-AnatomicalEntity'
+        - $ref: '#/components/x-bte-kgs-operations/ChemicalSubstance-OrganismTaxon'
+        - $ref: '#/components/x-bte-kgs-operations/Cell-ChemicalSubstance'
+        - $ref: '#/components/x-bte-kgs-operations/Cell-Cell'
+        - $ref: '#/components/x-bte-kgs-operations/Cell-BiologicalProcess'
+        - $ref: '#/components/x-bte-kgs-operations/Cell-CellularComponent'
+        - $ref: '#/components/x-bte-kgs-operations/Cell-MolecularActivity'
+        - $ref: '#/components/x-bte-kgs-operations/Cell-PhenotypicFeature'
+        - $ref: '#/components/x-bte-kgs-operations/Cell-Disease'
+        - $ref: '#/components/x-bte-kgs-operations/Cell-Gene'
+        - $ref: '#/components/x-bte-kgs-operations/Cell-Protein'
+        - $ref: '#/components/x-bte-kgs-operations/Cell-SequenceFeature'
+        - $ref: '#/components/x-bte-kgs-operations/Cell-AnatomicalEntity'
+        - $ref: '#/components/x-bte-kgs-operations/Cell-OrganismTaxon'
+        - $ref: '#/components/x-bte-kgs-operations/BiologicalProcess-ChemicalSubstance'
+        - $ref: '#/components/x-bte-kgs-operations/BiologicalProcess-Cell'
+        - $ref: '#/components/x-bte-kgs-operations/BiologicalProcess-BiologicalProcess'
+        - $ref: '#/components/x-bte-kgs-operations/BiologicalProcess-CellularComponent'
+        - $ref: '#/components/x-bte-kgs-operations/BiologicalProcess-MolecularActivity'
+        - $ref: '#/components/x-bte-kgs-operations/BiologicalProcess-PhenotypicFeature'
+        - $ref: '#/components/x-bte-kgs-operations/BiologicalProcess-Disease'
+        - $ref: '#/components/x-bte-kgs-operations/BiologicalProcess-Gene'
+        - $ref: '#/components/x-bte-kgs-operations/BiologicalProcess-Protein'
+        - $ref: '#/components/x-bte-kgs-operations/BiologicalProcess-SequenceFeature'
+        - $ref: '#/components/x-bte-kgs-operations/BiologicalProcess-AnatomicalEntity'
+        - $ref: '#/components/x-bte-kgs-operations/BiologicalProcess-OrganismTaxon'
+        - $ref: '#/components/x-bte-kgs-operations/CellularComponent-ChemicalSubstance'
+        - $ref: '#/components/x-bte-kgs-operations/CellularComponent-Cell'
+        - $ref: '#/components/x-bte-kgs-operations/CellularComponent-BiologicalProcess'
+        - $ref: '#/components/x-bte-kgs-operations/CellularComponent-CellularComponent'
+        - $ref: '#/components/x-bte-kgs-operations/CellularComponent-MolecularActivity'
+        - $ref: '#/components/x-bte-kgs-operations/CellularComponent-PhenotypicFeature'
+        - $ref: '#/components/x-bte-kgs-operations/CellularComponent-Disease'
+        - $ref: '#/components/x-bte-kgs-operations/CellularComponent-Gene'
+        - $ref: '#/components/x-bte-kgs-operations/CellularComponent-Protein'
+        - $ref: '#/components/x-bte-kgs-operations/CellularComponent-SequenceFeature'
+        - $ref: '#/components/x-bte-kgs-operations/CellularComponent-AnatomicalEntity'
+        - $ref: '#/components/x-bte-kgs-operations/CellularComponent-OrganismTaxon'
+        - $ref: '#/components/x-bte-kgs-operations/MolecularActivity-ChemicalSubstance'
+        - $ref: '#/components/x-bte-kgs-operations/MolecularActivity-Cell'
+        - $ref: '#/components/x-bte-kgs-operations/MolecularActivity-BiologicalProcess'
+        - $ref: '#/components/x-bte-kgs-operations/MolecularActivity-CellularComponent'
+        - $ref: '#/components/x-bte-kgs-operations/MolecularActivity-MolecularActivity'
+        - $ref: '#/components/x-bte-kgs-operations/MolecularActivity-PhenotypicFeature'
+        - $ref: '#/components/x-bte-kgs-operations/MolecularActivity-Disease'
+        - $ref: '#/components/x-bte-kgs-operations/MolecularActivity-Gene'
+        - $ref: '#/components/x-bte-kgs-operations/MolecularActivity-Protein'
+        - $ref: '#/components/x-bte-kgs-operations/MolecularActivity-SequenceFeature'
+        - $ref: '#/components/x-bte-kgs-operations/MolecularActivity-AnatomicalEntity'
+        - $ref: '#/components/x-bte-kgs-operations/MolecularActivity-OrganismTaxon'
+        - $ref: '#/components/x-bte-kgs-operations/PhenotypicFeature-ChemicalSubstance'
+        - $ref: '#/components/x-bte-kgs-operations/PhenotypicFeature-Cell'
+        - $ref: '#/components/x-bte-kgs-operations/PhenotypicFeature-BiologicalProcess'
+        - $ref: '#/components/x-bte-kgs-operations/PhenotypicFeature-CellularComponent'
+        - $ref: '#/components/x-bte-kgs-operations/PhenotypicFeature-MolecularActivity'
+        - $ref: '#/components/x-bte-kgs-operations/PhenotypicFeature-PhenotypicFeature'
+        - $ref: '#/components/x-bte-kgs-operations/PhenotypicFeature-Disease'
+        - $ref: '#/components/x-bte-kgs-operations/PhenotypicFeature-Gene'
+        - $ref: '#/components/x-bte-kgs-operations/PhenotypicFeature-Protein'
+        - $ref: '#/components/x-bte-kgs-operations/PhenotypicFeature-SequenceFeature'
+        - $ref: '#/components/x-bte-kgs-operations/PhenotypicFeature-AnatomicalEntity'
+        - $ref: '#/components/x-bte-kgs-operations/PhenotypicFeature-OrganismTaxon'
+        - $ref: '#/components/x-bte-kgs-operations/Disease-ChemicalSubstance'
+        - $ref: '#/components/x-bte-kgs-operations/Disease-Cell'
+        - $ref: '#/components/x-bte-kgs-operations/Disease-BiologicalProcess'
+        - $ref: '#/components/x-bte-kgs-operations/Disease-CellularComponent'
+        - $ref: '#/components/x-bte-kgs-operations/Disease-MolecularActivity'
+        - $ref: '#/components/x-bte-kgs-operations/Disease-PhenotypicFeature'
+        - $ref: '#/components/x-bte-kgs-operations/Disease-Disease'
+        - $ref: '#/components/x-bte-kgs-operations/Disease-Gene'
+        - $ref: '#/components/x-bte-kgs-operations/Disease-Protein'
+        - $ref: '#/components/x-bte-kgs-operations/Disease-SequenceFeature'
+        - $ref: '#/components/x-bte-kgs-operations/Disease-AnatomicalEntity'
+        - $ref: '#/components/x-bte-kgs-operations/Disease-OrganismTaxon'
+        - $ref: '#/components/x-bte-kgs-operations/Gene-ChemicalSubstance'
+        - $ref: '#/components/x-bte-kgs-operations/Gene-Cell'
+        - $ref: '#/components/x-bte-kgs-operations/Gene-BiologicalProcess'
+        - $ref: '#/components/x-bte-kgs-operations/Gene-CellularComponent'
+        - $ref: '#/components/x-bte-kgs-operations/Gene-MolecularActivity'
+        - $ref: '#/components/x-bte-kgs-operations/Gene-PhenotypicFeature'
+        - $ref: '#/components/x-bte-kgs-operations/Gene-Disease'
+        - $ref: '#/components/x-bte-kgs-operations/Gene-Gene'
+        - $ref: '#/components/x-bte-kgs-operations/Gene-Protein'
+        - $ref: '#/components/x-bte-kgs-operations/Gene-SequenceFeature'
+        - $ref: '#/components/x-bte-kgs-operations/Gene-AnatomicalEntity'
+        - $ref: '#/components/x-bte-kgs-operations/Gene-OrganismTaxon'
+        - $ref: '#/components/x-bte-kgs-operations/Protein-ChemicalSubstance'
+        - $ref: '#/components/x-bte-kgs-operations/Protein-Cell'
+        - $ref: '#/components/x-bte-kgs-operations/Protein-BiologicalProcess'
+        - $ref: '#/components/x-bte-kgs-operations/Protein-CellularComponent'
+        - $ref: '#/components/x-bte-kgs-operations/Protein-MolecularActivity'
+        - $ref: '#/components/x-bte-kgs-operations/Protein-PhenotypicFeature'
+        - $ref: '#/components/x-bte-kgs-operations/Protein-Disease'
+        - $ref: '#/components/x-bte-kgs-operations/Protein-Gene'
+        - $ref: '#/components/x-bte-kgs-operations/Protein-Protein'
+        - $ref: '#/components/x-bte-kgs-operations/Protein-SequenceFeature'
+        - $ref: '#/components/x-bte-kgs-operations/Protein-AnatomicalEntity'
+        - $ref: '#/components/x-bte-kgs-operations/Protein-OrganismTaxon'
+        - $ref: '#/components/x-bte-kgs-operations/SequenceFeature-ChemicalSubstance'
+        - $ref: '#/components/x-bte-kgs-operations/SequenceFeature-Cell'
+        - $ref: '#/components/x-bte-kgs-operations/SequenceFeature-BiologicalProcess'
+        - $ref: '#/components/x-bte-kgs-operations/SequenceFeature-CellularComponent'
+        - $ref: '#/components/x-bte-kgs-operations/SequenceFeature-MolecularActivity'
+        - $ref: '#/components/x-bte-kgs-operations/SequenceFeature-PhenotypicFeature'
+        - $ref: '#/components/x-bte-kgs-operations/SequenceFeature-Disease'
+        - $ref: '#/components/x-bte-kgs-operations/SequenceFeature-Gene'
+        - $ref: '#/components/x-bte-kgs-operations/SequenceFeature-Protein'
+        - $ref: '#/components/x-bte-kgs-operations/SequenceFeature-SequenceFeature'
+        - $ref: '#/components/x-bte-kgs-operations/SequenceFeature-AnatomicalEntity'
+        - $ref: '#/components/x-bte-kgs-operations/SequenceFeature-OrganismTaxon'
+        - $ref: '#/components/x-bte-kgs-operations/AnatomicalEntity-ChemicalSubstance'
+        - $ref: '#/components/x-bte-kgs-operations/AnatomicalEntity-Cell'
+        - $ref: '#/components/x-bte-kgs-operations/AnatomicalEntity-BiologicalProcess'
+        - $ref: '#/components/x-bte-kgs-operations/AnatomicalEntity-CellularComponent'
+        - $ref: '#/components/x-bte-kgs-operations/AnatomicalEntity-MolecularActivity'
+        - $ref: '#/components/x-bte-kgs-operations/AnatomicalEntity-PhenotypicFeature'
+        - $ref: '#/components/x-bte-kgs-operations/AnatomicalEntity-Disease'
+        - $ref: '#/components/x-bte-kgs-operations/AnatomicalEntity-Gene'
+        - $ref: '#/components/x-bte-kgs-operations/AnatomicalEntity-Protein'
+        - $ref: '#/components/x-bte-kgs-operations/AnatomicalEntity-SequenceFeature'
+        - $ref: '#/components/x-bte-kgs-operations/AnatomicalEntity-AnatomicalEntity'
+        - $ref: '#/components/x-bte-kgs-operations/AnatomicalEntity-OrganismTaxon'
+        - $ref: '#/components/x-bte-kgs-operations/OrganismTaxon-ChemicalSubstance'
+        - $ref: '#/components/x-bte-kgs-operations/OrganismTaxon-Cell'
+        - $ref: '#/components/x-bte-kgs-operations/OrganismTaxon-BiologicalProcess'
+        - $ref: '#/components/x-bte-kgs-operations/OrganismTaxon-CellularComponent'
+        - $ref: '#/components/x-bte-kgs-operations/OrganismTaxon-MolecularActivity'
+        - $ref: '#/components/x-bte-kgs-operations/OrganismTaxon-PhenotypicFeature'
+        - $ref: '#/components/x-bte-kgs-operations/OrganismTaxon-Disease'
+        - $ref: '#/components/x-bte-kgs-operations/OrganismTaxon-Gene'
+        - $ref: '#/components/x-bte-kgs-operations/OrganismTaxon-Protein'
+        - $ref: '#/components/x-bte-kgs-operations/OrganismTaxon-SequenceFeature'
+        - $ref: '#/components/x-bte-kgs-operations/OrganismTaxon-AnatomicalEntity'
+        - $ref: '#/components/x-bte-kgs-operations/OrganismTaxon-OrganismTaxon'
+    post:
+      parameters:
+      - $ref: '#/components/parameters/dotfield'
+        name: dotfield
+      - $ref: '#/components/parameters/email'
+        name: email
+      - $ref: '#/components/parameters/fields'
+        name: fields
+      - $ref: '#/components/parameters/size'
+        name: size
+      - $ref: '#/components/parameters/format'
+        name: format
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              properties:
+                q:
+                  description: multiple query terms separated by comma (also "+" or
+                    whitespace).  Does not support wildcard queries
+                  type: string
+                scopes:
+                  description: 'a comma-separated list of fields as the search "scopes"
+                    (fields to search through for query term). The available "fields"
+                    that can be passed to the "scopes" parameter are listed in the
+                    **/metadata/fields** endpoint.string Default: "scopes=_id".'
+                  type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QueryPOSTResult'
+          description: Query response objects with the "hits" property
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResult'
+          description: A response indicating an improperly formatted query
+      summary: Make batch disease queries and return matching disease hits
+      tags:
+      - query
+components:
+  parameters:
+    callback:
+      description: 'you can pass a "callback" parameter to make a JSONP call. Type:
+        string.'
+      in: query
+      name: callback
+      schema:
+        type: string
+    dotfield:
+      description: 'control the format of the returned chem object. If "true" or "1",
+        all fields will be collapsed into a single level deep object (all nested objects
+        will be a single level deep, using dotfield notation to signify the nested
+        structure) Type: boolean. Default: false.'
+      in: query
+      name: dotfield
+      schema:
+        type: boolean
+    email:
+      description: If you are regular users of our services, we encourage you to provide
+        us with an email, so that we can better track the usage or follow up with
+        you.
+      in: query
+      name: email
+      schema:
+        type: string
+    facet_size:
+      description: 'the number of facet buckets to return in the response. Type: integer.
+        Default: 10. Max: 1000.'
+      in: query
+      name: facet_size
+      schema:
+        type: integer
+    facets:
+      description: 'a comma-separated list of fields to return facets on.  In addition
+        to query hits, the fields notated in "facets" will be aggregated by value
+        and bucklet counts will be displayed in the "facets" field of the response
+        object. Type: string (list). Default: None. Max: 1000.'
+      in: query
+      name: facets
+      schema:
+        type: string
+    fields:
+      description: 'a comma-separated list of fields (in dotfield notation) used to
+        limit the fields returned from the matching chem hit(s). The supported field
+        names can be found from any chem object or from the /metadata/fields endpoint.
+        If "fields=all", all available fields will be returned. Type: string (list).
+        Default: all. Max: 1000.'
+      in: query
+      name: fields
+      schema:
+        type: string
+    format:
+      description: 'controls output format of server response, currently supports:
+        "json", "jsonld", "html". Type: string. Default: json.'
+      in: query
+      name: format
+      schema:
+        type: string
+    from:
+      description: 'the number of matching chem hits to skip, starting from 0.  This
+        can be useful for paging in combination with the "size" parameter. Type: integer.
+        Default: None.'
+      in: query
+      name: from
+      schema:
+        type: integer
+    prefix:
+      description: 'Pass a prefix string to filter the available fields. Type: string.
+        Default: None.'
+      in: query
+      name: prefix
+      schema:
+        type: string
+    search:
+      description: 'Pass a search term to filter the available fields. Type: string.
+        Default: None.'
+      in: query
+      name: search
+      schema:
+        type: string
+    size:
+      description: 'the maximum number of matching chem hits to return per batch.
+        Type: integer. Default: 10.'
+      in: query
+      name: size
+      schema:
+        type: integer
+    sort:
+      description: 'the comma-separated list of fields to sort on. Prefix each with
+        "-" for descending order, otherwise in ascending order. Default: sort by descending
+        score.'
+      in: query
+      name: sort
+      schema:
+        type: string
+  schemas:
+    Association:
+      properties:
+        _id:
+          type: string
+      required:
+      - _id
+      type: object
+    ErrorResult:
+      properties:
+        message:
+          type: string
+        success:
+          type: boolean
+      type: object
+    QueryPOSTResult:
+      items:
+        allOf:
+        - $ref: '#/components/schemas/Association'
+        - properties:
+            _score:
+              format: float
+              type: number
+            query:
+              type: string
+          type: object
+      type: array
+    QueryResult:
+      properties:
+        hits:
+          items:
+            $ref: '#/components/schemas/Association'
+          type: array
+        max_score:
+          format: float
+          type: number
+        took:
+          type: integer
+        total:
+          type: integer
+      type: object
+    int64_or_array:
+      oneOf:
+      - items:
+          format: int64
+          type: integer
+        type: array
+      - format: int64
+        type: integer
+    string_or_array:
+      oneOf:
+      - items:
+          type: string
+        type: array
+      - type: string
+  x-bte-kgs-operations:
+    AnatomicalEntity-AnatomicalEntity:
+      - inputs:
+        - id: UBERON
+          semantic: AnatomicalEntity
+        outputs:
+        - id: UBERON
+          semantic: AnatomicalEntity
+        parameters:
+          fields: object,association
+          q: subject.UBERON:"{inputs[0]}"
+          size: 1000
+        predicate: related_to
+        response_mapping:
+          $ref: '#/components/x-bte-response-mapping/AnatomicalEntity'
+        source: Text Mining KP
+        supportBatch: false
+    AnatomicalEntity-BiologicalProcess:
+    - inputs:
+      - id: UBERON
+        semantic: AnatomicalEntity
+      outputs:
+      - id: GO
+        semantic: BiologicalProcess
+      parameters:
+        fields: object,association
+        q: subject.UBERON:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/BiologicalProcess'
+      source: Text Mining KP
+      supportBatch: false
+    AnatomicalEntity-Cell:
+    - inputs:
+      - id: UBERON
+        semantic: AnatomicalEntity
+      outputs:
+      - id: CL
+        semantic: Cell
+      parameters:
+        fields: object,association
+        q: subject.UBERON:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/Cell'
+      source: Text Mining KP
+      supportBatch: false
+    AnatomicalEntity-CellularComponent:
+    - inputs:
+      - id: UBERON
+        semantic: AnatomicalEntity
+      outputs:
+      - id: GO
+        semantic: CellularComponent
+      parameters:
+        fields: object,association
+        q: subject.UBERON:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/CellularComponent'
+      source: Text Mining KP
+      supportBatch: false
+    AnatomicalEntity-ChemicalSubstance:
+    - inputs:
+      - id: UBERON
+        semantic: AnatomicalEntity
+      outputs:
+      - id: CHEBI
+        semantic: ChemicalSubstance
+      parameters:
+        fields: object,association
+        q: subject.UBERON:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/ChemicalSubstance'
+      source: Text Mining KP
+      supportBatch: false
+    AnatomicalEntity-Disease:
+    - inputs:
+      - id: UBERON
+        semantic: AnatomicalEntity
+      outputs:
+      - id: MONDO
+        semantic: Disease
+      parameters:
+        fields: object,association
+        q: subject.UBERON:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/Disease'
+      source: Text Mining KP
+      supportBatch: false
+    AnatomicalEntity-Gene:
+    - inputs:
+      - id: UBERON
+        semantic: AnatomicalEntity
+      outputs:
+      - id: NBIGene
+        semantic: Gene
+      parameters:
+        fields: object,association
+        q: subject.UBERON:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/Gene'
+      source: Text Mining KP
+      supportBatch: false
+    AnatomicalEntity-MolecularActivity:
+    - inputs:
+      - id: UBERON
+        semantic: AnatomicalEntity
+      outputs:
+      - id: GO
+        semantic: MolecularActivity
+      parameters:
+        fields: object,association
+        q: subject.UBERON:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/MolecularActivity'
+      source: Text Mining KP
+      supportBatch: false
+    AnatomicalEntity-OrganismTaxon:
+    - inputs:
+      - id: UBERON
+        semantic: AnatomicalEntity
+      outputs:
+      - id: NCBITaxon
+        semantic: OrganismTaxon
+      parameters:
+        fields: object,association
+        q: subject.UBERON:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/OrganismTaxon'
+      source: Text Mining KP
+      supportBatch: false
+    AnatomicalEntity-PhenotypicFeature:
+    - inputs:
+      - id: UBERON
+        semantic: AnatomicalEntity
+      outputs:
+      - id: HP
+        semantic: PhenotypicFeature
+      parameters:
+        fields: object,association
+        q: subject.UBERON:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/PhenotypicFeature'
+      source: Text Mining KP
+      supportBatch: false
+    AnatomicalEntity-Protein:
+    - inputs:
+      - id: UBERON
+        semantic: AnatomicalEntity
+      outputs:
+      - id: PR
+        semantic: Protein
+      parameters:
+        fields: object,association
+        q: subject.UBERON:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/Protein'
+      source: Text Mining KP
+      supportBatch: false
+    AnatomicalEntity-SequenceFeature:
+    - inputs:
+      - id: UBERON
+        semantic: AnatomicalEntity
+      outputs:
+      - id: SO
+        semantic: SequenceFeature
+      parameters:
+        fields: object,association
+        q: subject.UBERON:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/SequenceFeature'
+      source: Text Mining KP
+      supportBatch: false
+    BiologicalProcess-AnatomicalEntity:
+    - inputs:
+      - id: GO
+        semantic: BiologicalProcess
+      outputs:
+      - id: UBERON
+        semantic: AnatomicalEntity
+      parameters:
+        fields: object,association
+        q: subject.GO:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/AnatomicalEntity'
+      source: Text Mining KP
+      supportBatch: false
+    BiologicalProcess-BiologicalProcess:
+    - inputs:
+      - id: GO
+        semantic: BiologicalProcess
+      outputs:
+      - id: GO
+        semantic: BiologicalProcess
+      parameters:
+        fields: object,association
+        q: subject.GO:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/BiologicalProcess'
+      source: Text Mining KP
+      supportBatch: false
+    BiologicalProcess-Cell:
+    - inputs:
+      - id: GO
+        semantic: BiologicalProcess
+      outputs:
+      - id: CL
+        semantic: Cell
+      parameters:
+        fields: object,association
+        q: subject.GO:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/Cell'
+      source: Text Mining KP
+      supportBatch: false
+    BiologicalProcess-CellularComponent:
+    - inputs:
+      - id: GO
+        semantic: BiologicalProcess
+      outputs:
+      - id: GO
+        semantic: CellularComponent
+      parameters:
+        fields: object,association
+        q: subject.GO:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/CellularComponent'
+      source: Text Mining KP
+      supportBatch: false
+    BiologicalProcess-ChemicalSubstance:
+    - inputs:
+      - id: GO
+        semantic: BiologicalProcess
+      outputs:
+      - id: CHEBI
+        semantic: ChemicalSubstance
+      parameters:
+        fields: object,association
+        q: subject.GO:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/ChemicalSubstance'
+      source: Text Mining KP
+      supportBatch: false
+    BiologicalProcess-Disease:
+    - inputs:
+      - id: GO
+        semantic: BiologicalProcess
+      outputs:
+      - id: MONDO
+        semantic: Disease
+      parameters:
+        fields: object,association
+        q: subject.GO:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/Disease'
+      source: Text Mining KP
+      supportBatch: false
+    BiologicalProcess-Gene:
+    - inputs:
+      - id: GO
+        semantic: BiologicalProcess
+      outputs:
+      - id: NBIGene
+        semantic: Gene
+      parameters:
+        fields: object,association
+        q: subject.GO:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/Gene'
+      source: Text Mining KP
+      supportBatch: false
+    BiologicalProcess-MolecularActivity:
+    - inputs:
+      - id: GO
+        semantic: BiologicalProcess
+      outputs:
+      - id: GO
+        semantic: MolecularActivity
+      parameters:
+        fields: object,association
+        q: subject.GO:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/MolecularActivity'
+      source: Text Mining KP
+      supportBatch: false
+    BiologicalProcess-OrganismTaxon:
+    - inputs:
+      - id: GO
+        semantic: BiologicalProcess
+      outputs:
+      - id: NCBITaxon
+        semantic: OrganismTaxon
+      parameters:
+        fields: object,association
+        q: subject.GO:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/OrganismTaxon'
+      source: Text Mining KP
+      supportBatch: false
+    BiologicalProcess-PhenotypicFeature:
+    - inputs:
+      - id: GO
+        semantic: BiologicalProcess
+      outputs:
+      - id: HP
+        semantic: PhenotypicFeature
+      parameters:
+        fields: object,association
+        q: subject.GO:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/PhenotypicFeature'
+      source: Text Mining KP
+      supportBatch: false
+    BiologicalProcess-Protein:
+    - inputs:
+      - id: GO
+        semantic: BiologicalProcess
+      outputs:
+      - id: PR
+        semantic: Protein
+      parameters:
+        fields: object,association
+        q: subject.GO:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/Protein'
+      source: Text Mining KP
+      supportBatch: false
+    BiologicalProcess-SequenceFeature:
+    - inputs:
+      - id: GO
+        semantic: BiologicalProcess
+      outputs:
+      - id: SO
+        semantic: SequenceFeature
+      parameters:
+        fields: object,association
+        q: subject.GO:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/SequenceFeature'
+      source: Text Mining KP
+      supportBatch: false
+    Cell-AnatomicalEntity:
+    - inputs:
+      - id: CL
+        semantic: Cell
+      outputs:
+      - id: UBERON
+        semantic: AnatomicalEntity
+      parameters:
+        fields: object,association
+        q: subject.CL:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/AnatomicalEntity'
+      source: Text Mining KP
+      supportBatch: false
+    Cell-BiologicalProcess:
+    - inputs:
+      - id: CL
+        semantic: Cell
+      outputs:
+      - id: GO
+        semantic: BiologicalProcess
+      parameters:
+        fields: object,association
+        q: subject.CL:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/BiologicalProcess'
+      source: Text Mining KP
+      supportBatch: false
+    Cell-Cell:
+    - inputs:
+      - id: CL
+        semantic: Cell
+      outputs:
+      - id: CL
+        semantic: Cell
+      parameters:
+        fields: object,association
+        q: subject.CL:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/Cell'
+      source: Text Mining KP
+      supportBatch: false
+    Cell-CellularComponent:
+    - inputs:
+      - id: CL
+        semantic: Cell
+      outputs:
+      - id: GO
+        semantic: CellularComponent
+      parameters:
+        fields: object,association
+        q: subject.CL:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/CellularComponent'
+      source: Text Mining KP
+      supportBatch: false
+    Cell-ChemicalSubstance:
+    - inputs:
+      - id: CL
+        semantic: Cell
+      outputs:
+      - id: CHEBI
+        semantic: ChemicalSubstance
+      parameters:
+        fields: object,association
+        q: subject.CL:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/ChemicalSubstance'
+      source: Text Mining KP
+      supportBatch: false
+    Cell-Disease:
+    - inputs:
+      - id: CL
+        semantic: Cell
+      outputs:
+      - id: MONDO
+        semantic: Disease
+      parameters:
+        fields: object,association
+        q: subject.CL:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/Disease'
+      source: Text Mining KP
+      supportBatch: false
+    Cell-Gene:
+    - inputs:
+      - id: CL
+        semantic: Cell
+      outputs:
+      - id: NBIGene
+        semantic: Gene
+      parameters:
+        fields: object,association
+        q: subject.CL:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/Gene'
+      source: Text Mining KP
+      supportBatch: false
+    Cell-MolecularActivity:
+    - inputs:
+      - id: CL
+        semantic: Cell
+      outputs:
+      - id: GO
+        semantic: MolecularActivity
+      parameters:
+        fields: object,association
+        q: subject.CL:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/MolecularActivity'
+      source: Text Mining KP
+      supportBatch: false
+    Cell-OrganismTaxon:
+    - inputs:
+      - id: CL
+        semantic: Cell
+      outputs:
+      - id: NCBITaxon
+        semantic: OrganismTaxon
+      parameters:
+        fields: object,association
+        q: subject.CL:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/OrganismTaxon'
+      source: Text Mining KP
+      supportBatch: false
+    Cell-PhenotypicFeature:
+    - inputs:
+      - id: CL
+        semantic: Cell
+      outputs:
+      - id: HP
+        semantic: PhenotypicFeature
+      parameters:
+        fields: object,association
+        q: subject.CL:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/PhenotypicFeature'
+      source: Text Mining KP
+      supportBatch: false
+    Cell-Protein:
+    - inputs:
+      - id: CL
+        semantic: Cell
+      outputs:
+      - id: PR
+        semantic: Protein
+      parameters:
+        fields: object,association
+        q: subject.CL:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/Protein'
+      source: Text Mining KP
+      supportBatch: false
+    Cell-SequenceFeature:
+    - inputs:
+      - id: CL
+        semantic: Cell
+      outputs:
+      - id: SO
+        semantic: SequenceFeature
+      parameters:
+        fields: object,association
+        q: subject.CL:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/SequenceFeature'
+      source: Text Mining KP
+      supportBatch: false
+    CellularComponent-AnatomicalEntity:
+    - inputs:
+      - id: GO
+        semantic: CellularComponent
+      outputs:
+      - id: UBERON
+        semantic: AnatomicalEntity
+      parameters:
+        fields: object,association
+        q: subject.GO:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/AnatomicalEntity'
+      source: Text Mining KP
+      supportBatch: false
+    CellularComponent-BiologicalProcess:
+    - inputs:
+      - id: GO
+        semantic: CellularComponent
+      outputs:
+      - id: GO
+        semantic: BiologicalProcess
+      parameters:
+        fields: object,association
+        q: subject.GO:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/BiologicalProcess'
+      source: Text Mining KP
+      supportBatch: false
+    CellularComponent-Cell:
+    - inputs:
+      - id: GO
+        semantic: CellularComponent
+      outputs:
+      - id: CL
+        semantic: Cell
+      parameters:
+        fields: object,association
+        q: subject.GO:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/Cell'
+      source: Text Mining KP
+      supportBatch: false
+    CellularComponent-CellularComponent:
+    - inputs:
+      - id: GO
+        semantic: CellularComponent
+      outputs:
+      - id: GO
+        semantic: CellularComponent
+      parameters:
+        fields: object,association
+        q: subject.GO:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/CellularComponent'
+      source: Text Mining KP
+      supportBatch: false
+    CellularComponent-ChemicalSubstance:
+    - inputs:
+      - id: GO
+        semantic: CellularComponent
+      outputs:
+      - id: CHEBI
+        semantic: ChemicalSubstance
+      parameters:
+        fields: object,association
+        q: subject.GO:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/ChemicalSubstance'
+      source: Text Mining KP
+      supportBatch: false
+    CellularComponent-Disease:
+    - inputs:
+      - id: GO
+        semantic: CellularComponent
+      outputs:
+      - id: MONDO
+        semantic: Disease
+      parameters:
+        fields: object,association
+        q: subject.GO:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/Disease'
+      source: Text Mining KP
+      supportBatch: false
+    CellularComponent-Gene:
+    - inputs:
+      - id: GO
+        semantic: CellularComponent
+      outputs:
+      - id: NBIGene
+        semantic: Gene
+      parameters:
+        fields: object,association
+        q: subject.GO:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/Gene'
+      source: Text Mining KP
+      supportBatch: false
+    CellularComponent-MolecularActivity:
+    - inputs:
+      - id: GO
+        semantic: CellularComponent
+      outputs:
+      - id: GO
+        semantic: MolecularActivity
+      parameters:
+        fields: object,association
+        q: subject.GO:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/MolecularActivity'
+      source: Text Mining KP
+      supportBatch: false
+    CellularComponent-OrganismTaxon:
+    - inputs:
+      - id: GO
+        semantic: CellularComponent
+      outputs:
+      - id: NCBITaxon
+        semantic: OrganismTaxon
+      parameters:
+        fields: object,association
+        q: subject.GO:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/OrganismTaxon'
+      source: Text Mining KP
+      supportBatch: false
+    CellularComponent-PhenotypicFeature:
+    - inputs:
+      - id: GO
+        semantic: CellularComponent
+      outputs:
+      - id: HP
+        semantic: PhenotypicFeature
+      parameters:
+        fields: object,association
+        q: subject.GO:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/PhenotypicFeature'
+      source: Text Mining KP
+      supportBatch: false
+    CellularComponent-Protein:
+    - inputs:
+      - id: GO
+        semantic: CellularComponent
+      outputs:
+      - id: PR
+        semantic: Protein
+      parameters:
+        fields: object,association
+        q: subject.GO:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/Protein'
+      source: Text Mining KP
+      supportBatch: false
+    CellularComponent-SequenceFeature:
+    - inputs:
+      - id: GO
+        semantic: CellularComponent
+      outputs:
+      - id: SO
+        semantic: SequenceFeature
+      parameters:
+        fields: object,association
+        q: subject.GO:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/SequenceFeature'
+      source: Text Mining KP
+      supportBatch: false
+    ChemicalSubstance-AnatomicalEntity:
+    - inputs:
+      - id: CHEBI
+        semantic: ChemicalSubstance
+      outputs:
+      - id: UBERON
+        semantic: AnatomicalEntity
+      parameters:
+        fields: object,association
+        q: subject.CHEBI:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/AnatomicalEntity'
+      source: Text Mining KP
+      supportBatch: false
+    ChemicalSubstance-BiologicalProcess:
+    - inputs:
+      - id: CHEBI
+        semantic: ChemicalSubstance
+      outputs:
+      - id: GO
+        semantic: BiologicalProcess
+      parameters:
+        fields: object,association
+        q: subject.CHEBI:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/BiologicalProcess'
+      source: Text Mining KP
+      supportBatch: false
+    ChemicalSubstance-Cell:
+    - inputs:
+      - id: CHEBI
+        semantic: ChemicalSubstance
+      outputs:
+      - id: CL
+        semantic: Cell
+      parameters:
+        fields: object,association
+        q: subject.CHEBI:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/Cell'
+      source: Text Mining KP
+      supportBatch: false
+    ChemicalSubstance-CellularComponent:
+    - inputs:
+      - id: CHEBI
+        semantic: ChemicalSubstance
+      outputs:
+      - id: GO
+        semantic: CellularComponent
+      parameters:
+        fields: object,association
+        q: subject.CHEBI:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/CellularComponent'
+      source: Text Mining KP
+      supportBatch: false
+    ChemicalSubstance-ChemicalSubstance:
+    - inputs:
+      - id: CHEBI
+        semantic: ChemicalSubstance
+      outputs:
+      - id: CHEBI
+        semantic: ChemicalSubstance
+      parameters:
+        fields: object,association
+        q: subject.CHEBI:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/ChemicalSubstance'
+      source: Text Mining KP
+      supportBatch: false
+    ChemicalSubstance-Disease:
+    - inputs:
+      - id: CHEBI
+        semantic: ChemicalSubstance
+      outputs:
+      - id: MONDO
+        semantic: Disease
+      parameters:
+        fields: object,association
+        q: subject.CHEBI:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/Disease'
+      source: Text Mining KP
+      supportBatch: false
+    ChemicalSubstance-Gene:
+    - inputs:
+      - id: CHEBI
+        semantic: ChemicalSubstance
+      outputs:
+      - id: NBIGene
+        semantic: Gene
+      parameters:
+        fields: object,association
+        q: subject.CHEBI:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/Gene'
+      source: Text Mining KP
+      supportBatch: false
+    ChemicalSubstance-MolecularActivity:
+    - inputs:
+      - id: CHEBI
+        semantic: ChemicalSubstance
+      outputs:
+      - id: GO
+        semantic: MolecularActivity
+      parameters:
+        fields: object,association
+        q: subject.CHEBI:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/MolecularActivity'
+      source: Text Mining KP
+      supportBatch: false
+    ChemicalSubstance-OrganismTaxon:
+    - inputs:
+      - id: CHEBI
+        semantic: ChemicalSubstance
+      outputs:
+      - id: NCBITaxon
+        semantic: OrganismTaxon
+      parameters:
+        fields: object,association
+        q: subject.CHEBI:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/OrganismTaxon'
+      source: Text Mining KP
+      supportBatch: false
+    ChemicalSubstance-PhenotypicFeature:
+    - inputs:
+      - id: CHEBI
+        semantic: ChemicalSubstance
+      outputs:
+      - id: HP
+        semantic: PhenotypicFeature
+      parameters:
+        fields: object,association
+        q: subject.CHEBI:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/PhenotypicFeature'
+      source: Text Mining KP
+      supportBatch: false
+    ChemicalSubstance-Protein:
+    - inputs:
+      - id: CHEBI
+        semantic: ChemicalSubstance
+      outputs:
+      - id: PR
+        semantic: Protein
+      parameters:
+        fields: object,association
+        q: subject.CHEBI:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/Protein'
+      source: Text Mining KP
+      supportBatch: false
+    ChemicalSubstance-SequenceFeature:
+    - inputs:
+      - id: CHEBI
+        semantic: ChemicalSubstance
+      outputs:
+      - id: SO
+        semantic: SequenceFeature
+      parameters:
+        fields: object,association
+        q: subject.CHEBI:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/SequenceFeature'
+      source: Text Mining KP
+      supportBatch: false
+    Disease-AnatomicalEntity:
+    - inputs:
+      - id: MONDO
+        semantic: Disease
+      outputs:
+      - id: UBERON
+        semantic: AnatomicalEntity
+      parameters:
+        fields: object,association
+        q: subject.MONDO:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/AnatomicalEntity'
+      source: Text Mining KP
+      supportBatch: false
+    Disease-BiologicalProcess:
+    - inputs:
+      - id: MONDO
+        semantic: Disease
+      outputs:
+      - id: GO
+        semantic: BiologicalProcess
+      parameters:
+        fields: object,association
+        q: subject.MONDO:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/BiologicalProcess'
+      source: Text Mining KP
+      supportBatch: false
+    Disease-Cell:
+    - inputs:
+      - id: MONDO
+        semantic: Disease
+      outputs:
+      - id: CL
+        semantic: Cell
+      parameters:
+        fields: object,association
+        q: subject.MONDO:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/Cell'
+      source: Text Mining KP
+      supportBatch: false
+    Disease-CellularComponent:
+    - inputs:
+      - id: MONDO
+        semantic: Disease
+      outputs:
+      - id: GO
+        semantic: CellularComponent
+      parameters:
+        fields: object,association
+        q: subject.MONDO:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/CellularComponent'
+      source: Text Mining KP
+      supportBatch: false
+    Disease-ChemicalSubstance:
+    - inputs:
+      - id: MONDO
+        semantic: Disease
+      outputs:
+      - id: CHEBI
+        semantic: ChemicalSubstance
+      parameters:
+        fields: object,association
+        q: subject.MONDO:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/ChemicalSubstance'
+      source: Text Mining KP
+      supportBatch: false
+    Disease-Disease:
+    - inputs:
+      - id: MONDO
+        semantic: Disease
+      outputs:
+      - id: MONDO
+        semantic: Disease
+      parameters:
+        fields: object,association
+        q: subject.MONDO:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/Disease'
+      source: Text Mining KP
+      supportBatch: false
+    Disease-Gene:
+    - inputs:
+      - id: MONDO
+        semantic: Disease
+      outputs:
+      - id: NBIGene
+        semantic: Gene
+      parameters:
+        fields: object,association
+        q: subject.MONDO:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/Gene'
+      source: Text Mining KP
+      supportBatch: false
+    Disease-MolecularActivity:
+    - inputs:
+      - id: MONDO
+        semantic: Disease
+      outputs:
+      - id: GO
+        semantic: MolecularActivity
+      parameters:
+        fields: object,association
+        q: subject.MONDO:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/MolecularActivity'
+      source: Text Mining KP
+      supportBatch: false
+    Disease-OrganismTaxon:
+    - inputs:
+      - id: MONDO
+        semantic: Disease
+      outputs:
+      - id: NCBITaxon
+        semantic: OrganismTaxon
+      parameters:
+        fields: object,association
+        q: subject.MONDO:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/OrganismTaxon'
+      source: Text Mining KP
+      supportBatch: false
+    Disease-PhenotypicFeature:
+    - inputs:
+      - id: MONDO
+        semantic: Disease
+      outputs:
+      - id: HP
+        semantic: PhenotypicFeature
+      parameters:
+        fields: object,association
+        q: subject.MONDO:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/PhenotypicFeature'
+      source: Text Mining KP
+      supportBatch: false
+    Disease-Protein:
+    - inputs:
+      - id: MONDO
+        semantic: Disease
+      outputs:
+      - id: PR
+        semantic: Protein
+      parameters:
+        fields: object,association
+        q: subject.MONDO:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/Protein'
+      source: Text Mining KP
+      supportBatch: false
+    Disease-SequenceFeature:
+    - inputs:
+      - id: MONDO
+        semantic: Disease
+      outputs:
+      - id: SO
+        semantic: SequenceFeature
+      parameters:
+        fields: object,association
+        q: subject.MONDO:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/SequenceFeature'
+      source: Text Mining KP
+      supportBatch: false
+    Gene-AnatomicalEntity:
+    - inputs:
+      - id: NBIGene
+        semantic: Gene
+      outputs:
+      - id: UBERON
+        semantic: AnatomicalEntity
+      parameters:
+        fields: object,association
+        q: subject.NBIGene:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/AnatomicalEntity'
+      source: Text Mining KP
+      supportBatch: false
+    Gene-BiologicalProcess:
+    - inputs:
+      - id: NBIGene
+        semantic: Gene
+      outputs:
+      - id: GO
+        semantic: BiologicalProcess
+      parameters:
+        fields: object,association
+        q: subject.NBIGene:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/BiologicalProcess'
+      source: Text Mining KP
+      supportBatch: false
+    Gene-Cell:
+    - inputs:
+      - id: NBIGene
+        semantic: Gene
+      outputs:
+      - id: CL
+        semantic: Cell
+      parameters:
+        fields: object,association
+        q: subject.NBIGene:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/Cell'
+      source: Text Mining KP
+      supportBatch: false
+    Gene-CellularComponent:
+    - inputs:
+      - id: NBIGene
+        semantic: Gene
+      outputs:
+      - id: GO
+        semantic: CellularComponent
+      parameters:
+        fields: object,association
+        q: subject.NBIGene:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/CellularComponent'
+      source: Text Mining KP
+      supportBatch: false
+    Gene-ChemicalSubstance:
+    - inputs:
+      - id: NBIGene
+        semantic: Gene
+      outputs:
+      - id: CHEBI
+        semantic: ChemicalSubstance
+      parameters:
+        fields: object,association
+        q: subject.NBIGene:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/ChemicalSubstance'
+      source: Text Mining KP
+      supportBatch: false
+    Gene-Disease:
+    - inputs:
+      - id: NBIGene
+        semantic: Gene
+      outputs:
+      - id: MONDO
+        semantic: Disease
+      parameters:
+        fields: object,association
+        q: subject.NBIGene:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/Disease'
+      source: Text Mining KP
+      supportBatch: false
+    Gene-Gene:
+    - inputs:
+      - id: NBIGene
+        semantic: Gene
+      outputs:
+      - id: NBIGene
+        semantic: Gene
+      parameters:
+        fields: object,association
+        q: subject.NBIGene:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/Gene'
+      source: Text Mining KP
+      supportBatch: false
+    Gene-MolecularActivity:
+    - inputs:
+      - id: NBIGene
+        semantic: Gene
+      outputs:
+      - id: GO
+        semantic: MolecularActivity
+      parameters:
+        fields: object,association
+        q: subject.NBIGene:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/MolecularActivity'
+      source: Text Mining KP
+      supportBatch: false
+    Gene-OrganismTaxon:
+    - inputs:
+      - id: NBIGene
+        semantic: Gene
+      outputs:
+      - id: NCBITaxon
+        semantic: OrganismTaxon
+      parameters:
+        fields: object,association
+        q: subject.NBIGene:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/OrganismTaxon'
+      source: Text Mining KP
+      supportBatch: false
+    Gene-PhenotypicFeature:
+    - inputs:
+      - id: NBIGene
+        semantic: Gene
+      outputs:
+      - id: HP
+        semantic: PhenotypicFeature
+      parameters:
+        fields: object,association
+        q: subject.NBIGene:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/PhenotypicFeature'
+      source: Text Mining KP
+      supportBatch: false
+    Gene-Protein:
+    - inputs:
+      - id: NBIGene
+        semantic: Gene
+      outputs:
+      - id: PR
+        semantic: Protein
+      parameters:
+        fields: object,association
+        q: subject.NBIGene:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/Protein'
+      source: Text Mining KP
+      supportBatch: false
+    Gene-SequenceFeature:
+    - inputs:
+      - id: NBIGene
+        semantic: Gene
+      outputs:
+      - id: SO
+        semantic: SequenceFeature
+      parameters:
+        fields: object,association
+        q: subject.NBIGene:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/SequenceFeature'
+      source: Text Mining KP
+      supportBatch: false
+    MolecularActivity-AnatomicalEntity:
+    - inputs:
+      - id: GO
+        semantic: MolecularActivity
+      outputs:
+      - id: UBERON
+        semantic: AnatomicalEntity
+      parameters:
+        fields: object,association
+        q: subject.GO:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/AnatomicalEntity'
+      source: Text Mining KP
+      supportBatch: false
+    MolecularActivity-BiologicalProcess:
+    - inputs:
+      - id: GO
+        semantic: MolecularActivity
+      outputs:
+      - id: GO
+        semantic: BiologicalProcess
+      parameters:
+        fields: object,association
+        q: subject.GO:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/BiologicalProcess'
+      source: Text Mining KP
+      supportBatch: false
+    MolecularActivity-Cell:
+    - inputs:
+      - id: GO
+        semantic: MolecularActivity
+      outputs:
+      - id: CL
+        semantic: Cell
+      parameters:
+        fields: object,association
+        q: subject.GO:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/Cell'
+      source: Text Mining KP
+      supportBatch: false
+    MolecularActivity-CellularComponent:
+    - inputs:
+      - id: GO
+        semantic: MolecularActivity
+      outputs:
+      - id: GO
+        semantic: CellularComponent
+      parameters:
+        fields: object,association
+        q: subject.GO:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/CellularComponent'
+      source: Text Mining KP
+      supportBatch: false
+    MolecularActivity-ChemicalSubstance:
+    - inputs:
+      - id: GO
+        semantic: MolecularActivity
+      outputs:
+      - id: CHEBI
+        semantic: ChemicalSubstance
+      parameters:
+        fields: object,association
+        q: subject.GO:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/ChemicalSubstance'
+      source: Text Mining KP
+      supportBatch: false
+    MolecularActivity-Disease:
+    - inputs:
+      - id: GO
+        semantic: MolecularActivity
+      outputs:
+      - id: MONDO
+        semantic: Disease
+      parameters:
+        fields: object,association
+        q: subject.GO:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/Disease'
+      source: Text Mining KP
+      supportBatch: false
+    MolecularActivity-Gene:
+    - inputs:
+      - id: GO
+        semantic: MolecularActivity
+      outputs:
+      - id: NBIGene
+        semantic: Gene
+      parameters:
+        fields: object,association
+        q: subject.GO:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/Gene'
+      source: Text Mining KP
+      supportBatch: false
+    MolecularActivity-MolecularActivity:
+    - inputs:
+      - id: GO
+        semantic: MolecularActivity
+      outputs:
+      - id: GO
+        semantic: MolecularActivity
+      parameters:
+        fields: object,association
+        q: subject.GO:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/MolecularActivity'
+      source: Text Mining KP
+      supportBatch: false
+    MolecularActivity-OrganismTaxon:
+    - inputs:
+      - id: GO
+        semantic: MolecularActivity
+      outputs:
+      - id: NCBITaxon
+        semantic: OrganismTaxon
+      parameters:
+        fields: object,association
+        q: subject.GO:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/OrganismTaxon'
+      source: Text Mining KP
+      supportBatch: false
+    MolecularActivity-PhenotypicFeature:
+    - inputs:
+      - id: GO
+        semantic: MolecularActivity
+      outputs:
+      - id: HP
+        semantic: PhenotypicFeature
+      parameters:
+        fields: object,association
+        q: subject.GO:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/PhenotypicFeature'
+      source: Text Mining KP
+      supportBatch: false
+    MolecularActivity-Protein:
+    - inputs:
+      - id: GO
+        semantic: MolecularActivity
+      outputs:
+      - id: PR
+        semantic: Protein
+      parameters:
+        fields: object,association
+        q: subject.GO:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/Protein'
+      source: Text Mining KP
+      supportBatch: false
+    MolecularActivity-SequenceFeature:
+    - inputs:
+      - id: GO
+        semantic: MolecularActivity
+      outputs:
+      - id: SO
+        semantic: SequenceFeature
+      parameters:
+        fields: object,association
+        q: subject.GO:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/SequenceFeature'
+      source: Text Mining KP
+      supportBatch: false
+    OrganismTaxon-AnatomicalEntity:
+    - inputs:
+      - id: NCBITaxon
+        semantic: OrganismTaxon
+      outputs:
+      - id: UBERON
+        semantic: AnatomicalEntity
+      parameters:
+        fields: object,association
+        q: subject.NCBITaxon:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/AnatomicalEntity'
+      source: Text Mining KP
+      supportBatch: false
+    OrganismTaxon-BiologicalProcess:
+    - inputs:
+      - id: NCBITaxon
+        semantic: OrganismTaxon
+      outputs:
+      - id: GO
+        semantic: BiologicalProcess
+      parameters:
+        fields: object,association
+        q: subject.NCBITaxon:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/BiologicalProcess'
+      source: Text Mining KP
+      supportBatch: false
+    OrganismTaxon-Cell:
+    - inputs:
+      - id: NCBITaxon
+        semantic: OrganismTaxon
+      outputs:
+      - id: CL
+        semantic: Cell
+      parameters:
+        fields: object,association
+        q: subject.NCBITaxon:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/Cell'
+      source: Text Mining KP
+      supportBatch: false
+    OrganismTaxon-CellularComponent:
+    - inputs:
+      - id: NCBITaxon
+        semantic: OrganismTaxon
+      outputs:
+      - id: GO
+        semantic: CellularComponent
+      parameters:
+        fields: object,association
+        q: subject.NCBITaxon:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/CellularComponent'
+      source: Text Mining KP
+      supportBatch: false
+    OrganismTaxon-ChemicalSubstance:
+    - inputs:
+      - id: NCBITaxon
+        semantic: OrganismTaxon
+      outputs:
+      - id: CHEBI
+        semantic: ChemicalSubstance
+      parameters:
+        fields: object,association
+        q: subject.NCBITaxon:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/ChemicalSubstance'
+      source: Text Mining KP
+      supportBatch: false
+    OrganismTaxon-Disease:
+    - inputs:
+      - id: NCBITaxon
+        semantic: OrganismTaxon
+      outputs:
+      - id: MONDO
+        semantic: Disease
+      parameters:
+        fields: object,association
+        q: subject.NCBITaxon:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/Disease'
+      source: Text Mining KP
+      supportBatch: false
+    OrganismTaxon-Gene:
+    - inputs:
+      - id: NCBITaxon
+        semantic: OrganismTaxon
+      outputs:
+      - id: NBIGene
+        semantic: Gene
+      parameters:
+        fields: object,association
+        q: subject.NCBITaxon:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/Gene'
+      source: Text Mining KP
+      supportBatch: false
+    OrganismTaxon-MolecularActivity:
+    - inputs:
+      - id: NCBITaxon
+        semantic: OrganismTaxon
+      outputs:
+      - id: GO
+        semantic: MolecularActivity
+      parameters:
+        fields: object,association
+        q: subject.NCBITaxon:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/MolecularActivity'
+      source: Text Mining KP
+      supportBatch: false
+    OrganismTaxon-OrganismTaxon:
+    - inputs:
+      - id: NCBITaxon
+        semantic: OrganismTaxon
+      outputs:
+      - id: NCBITaxon
+        semantic: OrganismTaxon
+      parameters:
+        fields: object,association
+        q: subject.NCBITaxon:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/OrganismTaxon'
+      source: Text Mining KP
+      supportBatch: false
+    OrganismTaxon-PhenotypicFeature:
+    - inputs:
+      - id: NCBITaxon
+        semantic: OrganismTaxon
+      outputs:
+      - id: HP
+        semantic: PhenotypicFeature
+      parameters:
+        fields: object,association
+        q: subject.NCBITaxon:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/PhenotypicFeature'
+      source: Text Mining KP
+      supportBatch: false
+    OrganismTaxon-Protein:
+    - inputs:
+      - id: NCBITaxon
+        semantic: OrganismTaxon
+      outputs:
+      - id: PR
+        semantic: Protein
+      parameters:
+        fields: object,association
+        q: subject.NCBITaxon:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/Protein'
+      source: Text Mining KP
+      supportBatch: false
+    OrganismTaxon-SequenceFeature:
+    - inputs:
+      - id: NCBITaxon
+        semantic: OrganismTaxon
+      outputs:
+      - id: SO
+        semantic: SequenceFeature
+      parameters:
+        fields: object,association
+        q: subject.NCBITaxon:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/SequenceFeature'
+      source: Text Mining KP
+      supportBatch: false
+    PhenotypicFeature-AnatomicalEntity:
+    - inputs:
+      - id: HP
+        semantic: PhenotypicFeature
+      outputs:
+      - id: UBERON
+        semantic: AnatomicalEntity
+      parameters:
+        fields: object,association
+        q: subject.HP:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/AnatomicalEntity'
+      source: Text Mining KP
+      supportBatch: false
+    PhenotypicFeature-BiologicalProcess:
+    - inputs:
+      - id: HP
+        semantic: PhenotypicFeature
+      outputs:
+      - id: GO
+        semantic: BiologicalProcess
+      parameters:
+        fields: object,association
+        q: subject.HP:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/BiologicalProcess'
+      source: Text Mining KP
+      supportBatch: false
+    PhenotypicFeature-Cell:
+    - inputs:
+      - id: HP
+        semantic: PhenotypicFeature
+      outputs:
+      - id: CL
+        semantic: Cell
+      parameters:
+        fields: object,association
+        q: subject.HP:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/Cell'
+      source: Text Mining KP
+      supportBatch: false
+    PhenotypicFeature-CellularComponent:
+    - inputs:
+      - id: HP
+        semantic: PhenotypicFeature
+      outputs:
+      - id: GO
+        semantic: CellularComponent
+      parameters:
+        fields: object,association
+        q: subject.HP:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/CellularComponent'
+      source: Text Mining KP
+      supportBatch: false
+    PhenotypicFeature-ChemicalSubstance:
+    - inputs:
+      - id: HP
+        semantic: PhenotypicFeature
+      outputs:
+      - id: CHEBI
+        semantic: ChemicalSubstance
+      parameters:
+        fields: object,association
+        q: subject.HP:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/ChemicalSubstance'
+      source: Text Mining KP
+      supportBatch: false
+    PhenotypicFeature-Disease:
+    - inputs:
+      - id: HP
+        semantic: PhenotypicFeature
+      outputs:
+      - id: MONDO
+        semantic: Disease
+      parameters:
+        fields: object,association
+        q: subject.HP:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/Disease'
+      source: Text Mining KP
+      supportBatch: false
+    PhenotypicFeature-Gene:
+    - inputs:
+      - id: HP
+        semantic: PhenotypicFeature
+      outputs:
+      - id: NBIGene
+        semantic: Gene
+      parameters:
+        fields: object,association
+        q: subject.HP:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/Gene'
+      source: Text Mining KP
+      supportBatch: false
+    PhenotypicFeature-MolecularActivity:
+    - inputs:
+      - id: HP
+        semantic: PhenotypicFeature
+      outputs:
+      - id: GO
+        semantic: MolecularActivity
+      parameters:
+        fields: object,association
+        q: subject.HP:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/MolecularActivity'
+      source: Text Mining KP
+      supportBatch: false
+    PhenotypicFeature-OrganismTaxon:
+    - inputs:
+      - id: HP
+        semantic: PhenotypicFeature
+      outputs:
+      - id: NCBITaxon
+        semantic: OrganismTaxon
+      parameters:
+        fields: object,association
+        q: subject.HP:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/OrganismTaxon'
+      source: Text Mining KP
+      supportBatch: false
+    PhenotypicFeature-PhenotypicFeature:
+    - inputs:
+      - id: HP
+        semantic: PhenotypicFeature
+      outputs:
+      - id: HP
+        semantic: PhenotypicFeature
+      parameters:
+        fields: object,association
+        q: subject.HP:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/PhenotypicFeature'
+      source: Text Mining KP
+      supportBatch: false
+    PhenotypicFeature-Protein:
+    - inputs:
+      - id: HP
+        semantic: PhenotypicFeature
+      outputs:
+      - id: PR
+        semantic: Protein
+      parameters:
+        fields: object,association
+        q: subject.HP:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/Protein'
+      source: Text Mining KP
+      supportBatch: false
+    PhenotypicFeature-SequenceFeature:
+    - inputs:
+      - id: HP
+        semantic: PhenotypicFeature
+      outputs:
+      - id: SO
+        semantic: SequenceFeature
+      parameters:
+        fields: object,association
+        q: subject.HP:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/SequenceFeature'
+      source: Text Mining KP
+      supportBatch: false
+    Protein-AnatomicalEntity:
+    - inputs:
+      - id: PR
+        semantic: Protein
+      outputs:
+      - id: UBERON
+        semantic: AnatomicalEntity
+      parameters:
+        fields: object,association
+        q: subject.PR:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/AnatomicalEntity'
+      source: Text Mining KP
+      supportBatch: false
+    Protein-BiologicalProcess:
+    - inputs:
+      - id: PR
+        semantic: Protein
+      outputs:
+      - id: GO
+        semantic: BiologicalProcess
+      parameters:
+        fields: object,association
+        q: subject.PR:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/BiologicalProcess'
+      source: Text Mining KP
+      supportBatch: false
+    Protein-Cell:
+    - inputs:
+      - id: PR
+        semantic: Protein
+      outputs:
+      - id: CL
+        semantic: Cell
+      parameters:
+        fields: object,association
+        q: subject.PR:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/Cell'
+      source: Text Mining KP
+      supportBatch: false
+    Protein-CellularComponent:
+    - inputs:
+      - id: PR
+        semantic: Protein
+      outputs:
+      - id: GO
+        semantic: CellularComponent
+      parameters:
+        fields: object,association
+        q: subject.PR:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/CellularComponent'
+      source: Text Mining KP
+      supportBatch: false
+    Protein-ChemicalSubstance:
+    - inputs:
+      - id: PR
+        semantic: Protein
+      outputs:
+      - id: CHEBI
+        semantic: ChemicalSubstance
+      parameters:
+        fields: object,association
+        q: subject.PR:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/ChemicalSubstance'
+      source: Text Mining KP
+      supportBatch: false
+    Protein-Disease:
+    - inputs:
+      - id: PR
+        semantic: Protein
+      outputs:
+      - id: MONDO
+        semantic: Disease
+      parameters:
+        fields: object,association
+        q: subject.PR:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/Disease'
+      source: Text Mining KP
+      supportBatch: false
+    Protein-Gene:
+    - inputs:
+      - id: PR
+        semantic: Protein
+      outputs:
+      - id: NBIGene
+        semantic: Gene
+      parameters:
+        fields: object,association
+        q: subject.PR:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/Gene'
+      source: Text Mining KP
+      supportBatch: false
+    Protein-MolecularActivity:
+    - inputs:
+      - id: PR
+        semantic: Protein
+      outputs:
+      - id: GO
+        semantic: MolecularActivity
+      parameters:
+        fields: object,association
+        q: subject.PR:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/MolecularActivity'
+      source: Text Mining KP
+      supportBatch: false
+    Protein-OrganismTaxon:
+    - inputs:
+      - id: PR
+        semantic: Protein
+      outputs:
+      - id: NCBITaxon
+        semantic: OrganismTaxon
+      parameters:
+        fields: object,association
+        q: subject.PR:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/OrganismTaxon'
+      source: Text Mining KP
+      supportBatch: false
+    Protein-PhenotypicFeature:
+    - inputs:
+      - id: PR
+        semantic: Protein
+      outputs:
+      - id: HP
+        semantic: PhenotypicFeature
+      parameters:
+        fields: object,association
+        q: subject.PR:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/PhenotypicFeature'
+      source: Text Mining KP
+      supportBatch: false
+    Protein-Protein:
+    - inputs:
+      - id: PR
+        semantic: Protein
+      outputs:
+      - id: PR
+        semantic: Protein
+      parameters:
+        fields: object,association
+        q: subject.PR:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/Protein'
+      source: Text Mining KP
+      supportBatch: false
+    Protein-SequenceFeature:
+    - inputs:
+      - id: PR
+        semantic: Protein
+      outputs:
+      - id: SO
+        semantic: SequenceFeature
+      parameters:
+        fields: object,association
+        q: subject.PR:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/SequenceFeature'
+      source: Text Mining KP
+      supportBatch: false
+    SequenceFeature-AnatomicalEntity:
+    - inputs:
+      - id: SO
+        semantic: SequenceFeature
+      outputs:
+      - id: UBERON
+        semantic: AnatomicalEntity
+      parameters:
+        fields: object,association
+        q: subject.SO:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/AnatomicalEntity'
+      source: Text Mining KP
+      supportBatch: false
+    SequenceFeature-BiologicalProcess:
+    - inputs:
+      - id: SO
+        semantic: SequenceFeature
+      outputs:
+      - id: GO
+        semantic: BiologicalProcess
+      parameters:
+        fields: object,association
+        q: subject.SO:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/BiologicalProcess'
+      source: Text Mining KP
+      supportBatch: false
+    SequenceFeature-Cell:
+    - inputs:
+      - id: SO
+        semantic: SequenceFeature
+      outputs:
+      - id: CL
+        semantic: Cell
+      parameters:
+        fields: object,association
+        q: subject.SO:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/Cell'
+      source: Text Mining KP
+      supportBatch: false
+    SequenceFeature-CellularComponent:
+    - inputs:
+      - id: SO
+        semantic: SequenceFeature
+      outputs:
+      - id: GO
+        semantic: CellularComponent
+      parameters:
+        fields: object,association
+        q: subject.SO:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/CellularComponent'
+      source: Text Mining KP
+      supportBatch: false
+    SequenceFeature-ChemicalSubstance:
+    - inputs:
+      - id: SO
+        semantic: SequenceFeature
+      outputs:
+      - id: CHEBI
+        semantic: ChemicalSubstance
+      parameters:
+        fields: object,association
+        q: subject.SO:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/ChemicalSubstance'
+      source: Text Mining KP
+      supportBatch: false
+    SequenceFeature-Disease:
+    - inputs:
+      - id: SO
+        semantic: SequenceFeature
+      outputs:
+      - id: MONDO
+        semantic: Disease
+      parameters:
+        fields: object,association
+        q: subject.SO:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/Disease'
+      source: Text Mining KP
+      supportBatch: false
+    SequenceFeature-Gene:
+    - inputs:
+      - id: SO
+        semantic: SequenceFeature
+      outputs:
+      - id: NBIGene
+        semantic: Gene
+      parameters:
+        fields: object,association
+        q: subject.SO:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/Gene'
+      source: Text Mining KP
+      supportBatch: false
+    SequenceFeature-MolecularActivity:
+    - inputs:
+      - id: SO
+        semantic: SequenceFeature
+      outputs:
+      - id: GO
+        semantic: MolecularActivity
+      parameters:
+        fields: object,association
+        q: subject.SO:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/MolecularActivity'
+      source: Text Mining KP
+      supportBatch: false
+    SequenceFeature-OrganismTaxon:
+    - inputs:
+      - id: SO
+        semantic: SequenceFeature
+      outputs:
+      - id: NCBITaxon
+        semantic: OrganismTaxon
+      parameters:
+        fields: object,association
+        q: subject.SO:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/OrganismTaxon'
+      source: Text Mining KP
+      supportBatch: false
+    SequenceFeature-PhenotypicFeature:
+    - inputs:
+      - id: SO
+        semantic: SequenceFeature
+      outputs:
+      - id: HP
+        semantic: PhenotypicFeature
+      parameters:
+        fields: object,association
+        q: subject.SO:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/PhenotypicFeature'
+      source: Text Mining KP
+      supportBatch: false
+    SequenceFeature-Protein:
+    - inputs:
+      - id: SO
+        semantic: SequenceFeature
+      outputs:
+      - id: PR
+        semantic: Protein
+      parameters:
+        fields: object,association
+        q: subject.SO:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/Protein'
+      source: Text Mining KP
+      supportBatch: false
+    SequenceFeature-SequenceFeature:
+    - inputs:
+      - id: SO
+        semantic: SequenceFeature
+      outputs:
+      - id: SO
+        semantic: SequenceFeature
+      parameters:
+        fields: object,association
+        q: subject.SO:"{inputs[0]}"
+        size: 1000
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/SequenceFeature'
+      source: Text Mining KP
+      supportBatch: false
+  x-bte-response-mapping:
+    AnatomicalEntity:
+      UBERON: hits.object.UBERON
+      ngd: hits.association.ngd
+    BiologicalProcess:
+      GO: hits.object.GO
+      ngd: hits.association.ngd
+    Cell:
+      CL: hits.object.CL
+      ngd: hits.association.ngd
+    CellularComponent:
+      GO: hits.object.GO
+      ngd: hits.association.ngd
+    ChemicalSubstance:
+      CHEBI: hits.object.CHEBI
+      ngd: hits.association.ngd
+    Disease:
+      MONDO: hits.object.MONDO
+      ngd: hits.association.ngd
+    Gene:
+      NBIGene: hits.object.NBIGene
+      ngd: hits.association.ngd
+    MolecularActivity:
+      GO: hits.object.GO
+      ngd: hits.association.ngd
+    OrganismTaxon:
+      NCBITaxon: hits.object.NCBITaxon
+      ngd: hits.association.ngd
+    PhenotypicFeature:
+      HP: hits.object.HP
+      ngd: hits.association.ngd
+    Protein:
+      PR: hits.object.PR
+      ngd: hits.association.ngd
+    SequenceFeature:
+      SO: hits.object.SO
+      ngd: hits.association.ngd
+    
