@@ -31,7 +31,7 @@ def generate_individual_x_bte_operation(input_type, output_type):
                     }
                 ],
                 "parameters": {
-                    "q": "subject." + TYPE_ID_MAPPING[input_type] + ':"{inputs[0]}"',
+                    "q": "subject." + TYPE_ID_MAPPING[input_type] + ':"{inputs[0]}"' + " AND object.type:" + output_type,
                     "fields": "object,association",
                     "size": 1000
                 },
@@ -62,7 +62,7 @@ def generate_individual_x_bte_reverse_operation(input_type, output_type):
                     }
                 ],
                 "parameters": {
-                    "q": "object." + TYPE_ID_MAPPING[input_type] + ':"{inputs[0]}"',
+                    "q": "object." + TYPE_ID_MAPPING[input_type] + ':"{inputs[0]}"' + " AND subject.type:" + output_type,
                     "fields": "subject,association",
                     "size": 1000
                 },
@@ -110,11 +110,21 @@ def generate_individual_x_bte_response_mapping(output_type):
         }
     }
 
+def generate_individual_x_bte_response_mapping_reverse(output_type):
+    return {
+        output_type + '-reverse': {
+            "ngd": "hits.association.ngd",
+            TYPE_ID_MAPPING[output_type]: "hits.subject." +
+            TYPE_ID_MAPPING[output_type]
+        }
+    }
+
 
 def generate_x_bte_response_mappings():
     res = {}
     for k in TYPE_ID_MAPPING.keys():
         res.update(generate_individual_x_bte_response_mapping(k))
+        res.update(generate_individual_x_bte_response_mapping_reverse(k))
     return res
 
 
