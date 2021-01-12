@@ -45,12 +45,44 @@ def generate_individual_x_bte_operation(input_type, output_type):
         ]
     }
 
+def generate_individual_x_bte_reverse_operation(input_type, output_type):
+    return {
+        input_type + '-' + output_type + '-reverse': [
+            {
+                "inputs": [
+                    {
+                        "id": TYPE_ID_MAPPING[input_type],
+                        "semantic": input_type
+                    }
+                ],
+                "outputs": [
+                    {
+                        "id": TYPE_ID_MAPPING[output_type],
+                        "semantic": output_type
+                    }
+                ],
+                "parameters": {
+                    "q": "object." + TYPE_ID_MAPPING[input_type] + ':"{inputs[0]}"',
+                    "fields": "subject,association",
+                    "size": 1000
+                },
+                "predicate": "related_to",
+                "response_mapping": {
+                    "$ref": '#/components/x-bte-response-mapping/' + output_type + "-reverse"
+                },
+                "source": "Text Mining KP",
+                "supportBatch": False
+            }
+        ]
+    }
+
 
 def generate_x_bte_operations():
     res = {}
     for k in TYPE_ID_MAPPING.keys():
         for v in TYPE_ID_MAPPING.keys():
             res.update(generate_individual_x_bte_operation(k, v))
+            res.update(generate_individual_x_bte_reverse_operation(k, v))
     return res
 
 
@@ -60,6 +92,9 @@ def generate_x_bte_operations_refs():
         for v in TYPE_ID_MAPPING.keys():
             res.append({
                 "$ref": "#/components/x-bte-kgs-operations/" + k + '-' + v
+            })
+            res.append({
+                "$ref": "#/components/x-bte-kgs-operations/" + k + '-' + v + '-reverse'
             })
     return {
         "x-bte-kgs-operations:": res
