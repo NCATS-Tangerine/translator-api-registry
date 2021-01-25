@@ -1,792 +1,606 @@
-openapi: 3.0.0
+openapi: 3.0.1
 info:
-  title: Molecular Data Provider
-  version: 2.0.0
+  description: Molecular Data Provider for NCATS Biomedical Translator Reasoners
+  version: 1.0.0
+  title: Molecular Data Provider for NCATS Biomedical Translator Reasoners
   contact:
     email: translator@broadinstitute.org
-  
+    name: Molecular Data Provider
+    x-role: responsible organization
+  license:
+    name: MIT License
+    url: https://github.com/broadinstitute/molecular-data-provider/blob/master/LICENSE
+  termsOfService: https://github.com/broadinstitute/molecular-data-provider/blob/master/terms_of_service.md
+  x-trapi:
+    version: 1.0.0
+  x-translator:
+    component: KP
+    team:
+    - Molecular Data Provider
+externalDocs:
+  description: >-
+    Documentation for the NCATS Biomedical Translator Reasoners web services
+  url: https://github.com/NCATSTranslator/ReasonerAPI
 servers:
-- url: https://translator.broadinstitute.org/molecular_data_provider
-
+- url: https://translator.broadinstitute.org/molepro/trapi/v1.0
 tags:
-  - name: compounds
-  - name: transformers
-  - name: collections
-
+  - name: predicates
+    description: Get supported relationships by source and target
+  - name: query
+    description: Query reasoner using a predefined question type
+  - name: translator
+  - name: reasoner
 paths:
-
-  /compound/by_name/{name}:
+  /predicates:
     get:
       tags:
-      - compounds
-      summary: Retrieve a compound by a name
-      parameters:
-      - name: name
-        in: path
-        description: Name of a compound.
-        required: true
-        schema:
-          type: string
+        - predicates
+      summary: Get supported relationships by source and target
       responses:
-        200:
-          description: successful operation
+        '200':
+          description: Predicates by source and target
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/compound_list'
-        404:
-          description: not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/error_msg'
-        500:
-          description: internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/error_msg'
-
-  /compound/by_id/{compound_id}:
-    get:
-      tags:
-      - compounds
-      summary: Retrieve a compound by an id
-      parameters:
-      - name: compound_id
-        in: path
-        description: Id of a compound (CURIE). Can be PubChem CID, DrugBank id, ChEMBL id, ChEBI id , or HMDB id.
-        required: true
-        schema:
-          type: string
-      responses:
-        200:
-          description: successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/compound_info'
-        404:
-          description: not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/error_msg'
-        500:
-          description: internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/error_msg'
-
-  /compound/by_structure:
+                description: Source map
+                type: object
+                additionalProperties:
+                  description: Target map
+                  type: object
+                  additionalProperties:
+                    description: Array of predicates
+                    type: array
+                    items:
+                      type: string
+                example:
+                  'biolink:ChemicalSubstance':
+                    'biolink:Gene':
+                      - biolink:directly_interacts_with
+                      - biolink:decreases_activity_of
+  /query:
     post:
       tags:
-      - compounds
-      summary: Retrieve a compound by a structure
+        - query
+      summary: Query reasoner via one of several inputs
+      description: ''
+      operationId: query
       requestBody:
-        description: Structure of the compounds in SMILES, InChI, or InChI-key notation
-        content:
-          text/plain:
-            schema:
-              type: string
+        description: Query information to be submitted
         required: true
-      responses:
-        200:
-          description: successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/compound_info'
-        404:
-          description: not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/error_msg'
-        500:
-          description: internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/error_msg'
-
-  /transformers:
-    get:
-      tags:
-      - transformers
-      summary: Retrieve a list of transformers
-      description: Provides a list of transformers and their descriptions.
-      responses:
-        200:
-          description: successful operation
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/transformer_info'
-        500:
-          description: internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/error_msg'
-
-
-  /transform:
-    post:
-      tags:
-      - transformers
-      summary: Transform a list of genes or compounds
-      description: Depending on the function of a transformer, creates, expands, or
-        filters a list.
-      requestBody:
-        description: transformer query
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/transformer_query'
-        required: true
+              $ref: '#/components/schemas/Query'
       responses:
-        200:
-          description: successful operation
+        '200':
+          description: >-
+            OK. There may or may not be results. Note that some of the provided
+            identifiers may not have been recognized.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/collection_info'
-        400:
-          description: bad request
+                $ref: '#/components/schemas/Response'
+        '400':
+          description: >-
+            Bad request. The request is invalid according to this OpenAPI
+            schema OR a specific identifier is believed to be invalid somehow
+            (not just unrecognized).
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/error_msg'
-        404:
-          description: not found
+                type: string
+        '500':
+          description: >-
+            Internal server error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/error_msg'
-        500:
-          description: internal server error
+                type: string
+        '501':
+          description: >-
+            Not implemented.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/error_msg'
-
-  /collection/{collection_id}:
-    get:
-      tags:
-      - collections
-      summary: Retrieve a collection_id
-      description: Retrieves a collection for a given collection id.
-      parameters:
-      - name: collection_id
-        in: path
-        description: collection id
-        required: true
-        schema:
-          type: string
-      responses:
-        200:
-          description: successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/collection'
-        404:
-          description: not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/error_msg'
-        500:
-          description: internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/error_msg'
-
-
-  /gene/list/{list_id}:
-    get:
-      tags:
-      - collections
-      summary: Retrieve a gene list
-      description: Retrieves a gene list for a given gene-list id.
-      parameters:
-      - name: list_id
-        in: path
-        description: gene-list id
-        required: true
-        schema:
-          type: string
-      responses:
-        200:
-          description: successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/gene_list'
-        404:
-          description: not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/error_msg'
-        500:
-          description: internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/error_msg'
-
-
-  /compound/list/{list_id}:
-    get:
-      tags:
-      - collections
-      summary: Retrieve a compound list
-      description: Retrieves a compound list for a given compound-list id.
-      parameters:
-      - name: list_id
-        in: path
-        description: compound-list id
-        required: true
-        schema:
-          type: string
-      responses:
-        200:
-          description: successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/compound_list'
-        404:
-          description: not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/error_msg'
-        500:
-          description: internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/error_msg'
-
-
-
-  /aggregate:
-    post:
-      tags:
-      - transformers
-      summary: Aggregate multiple collections
-      description: Aggregates multiple collections into one collections.
-      requestBody:
-        description: aggregation query
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/aggregation_query'
-        required: true
-      responses:
-        200:
-          description: successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/collection_info'
-
+                type: string
+      x-swagger-router-controller: swagger_server.controllers.query_controller
 components:
   schemas:
-
-    transformer_info:
+    Query:
+      description: >-
+        The Query class is used to package a user request for information. A
+        Query object consists of a required Message object with optional
+        additional properties. Additional properties are intended to convey
+        implementation-specific or query-independent parameters. For example,
+        an additional property specifying a log level could allow a user to
+        override the default log level in order to receive more fine-grained
+        log information when debugging an issue.
+      x-body-name: request_body
       type: object
       properties:
-        name:
-          type: string
-          description: Name of the transformer.
-        label:
-          type: string
-          description: Short label for GUI display.
-        description:
-          type: string
-          description: Description of the transformer.
-        url:
-          type: string
-          description: Transformer's URL.
-        version:
-          type: string
-          description: Transformer's version.
+        message:
+          $ref: '#/components/schemas/Message'
+          description: >-
+            The query Message is a serialization of the user request. Content
+            of the Message object depends on the intended TRAPI operation. For
+            example, the fill operation requires a non-empty query_graph field
+            as part of the Message, whereas other operations, e.g. overlay,
+            require non-empty results and knowledge_graph fields.
+      example:
+        message:
+          query_graph:
+            edges:
+              e00:
+                subject: n00
+                predicate: 'biolink:affects'
+                object: n01
+            nodes:
+              n00:
+                id: 'PUBCHEM.COMPOUND:2244'
+                category: 'biolink:ChemicalSubstance'
+              n01:
+                category: 'biolink:Gene'
+      additionalProperties: true
+      required:
+        - message
+    Response:
+      type: object
+      description: >-
+        The Response object contains the main payload when a TRAPI query
+        endpoint interprets and responds to the submitted query successfully
+        (i.e., HTTP Status Code 200). The message property contains the
+        knowledge of the response (query graph, knowledge graph, and results).
+        The status, description, and logs properties provide additional details
+        about the response.
+      properties:
+        message:
+          description: >-
+            Contains the knowledge of the response (query graph, knowledge
+            graph, and results).
+          $ref: '#/components/schemas/Message'
         status:
+          description: >-
+            One of a standardized set of short codes,
+            e.g. Success, QueryNotTraversable, KPsNotAvailable
           type: string
-          description: Status of the transformer, one of 'online', 'offline'.
-          enum:
-          - online
-          - offline
-        function:
+          example: Success
+          nullable: true
+        description:
+          description: A brief human-readable description of the outcome
           type: string
-          description: Function of the transformer, one of 'producer', 'expander',
-            'filter', 'transformer', 'exporter', or 'aggregator'.
+          example: Success. 42 results found.
+          nullable: true
+        logs:
+          description: >-
+            Log entries containing errors, warnings, debugging information, etc
+          type: array
+          items:
+            $ref: '#/components/schemas/LogEntry'
+          nullable: true
+      additionalProperties: true
+      required:
+        - message
+    Message:
+      description: >-
+        The message object holds the main content of a Query or a Response in
+        three properties: query_graph, results, and knowledge_graph.
+        The query_graph property contains the query configuration, the results
+        property contains any answers that are returned by the service,
+        and knowledge_graph property contains lists of edges and nodes in the
+        thought graph corresponding to this message. The content of these
+        properties is context-dependent to the encompassing object and
+        the TRAPI operation requested.
+      type: object
+      properties:
+        results:
+          description: >-
+            List of all returned Result objects for the query posed
+          type: array
+          items:
+            $ref: '#/components/schemas/Result'
+          nullable: true
+        query_graph:
+          description: >-
+            QueryGraph object that contains a serialization of a query in the
+            form of a graph
+          allOf:
+            - $ref: '#/components/schemas/QueryGraph'
+          nullable: true
+        knowledge_graph:
+          description: >-
+            KnowledgeGraph object that contains lists of nodes and edges
+            in the thought graph corresponding to the message
+          allOf:
+            - $ref: '#/components/schemas/KnowledgeGraph'
+          nullable: true
+      additionalProperties: false
+    LogEntry:
+      description: >-
+        The LogEntry object contains information useful for tracing
+        and debugging across Translator components.  Although an
+        individual component (for example, an ARA or KP) may have its
+        own logging and debugging infrastructure, this internal
+        information is not, in general, available to other components.
+        In addition to a timestamp and logging level, LogEntry
+        includes a string intended to be read by a human, along with
+        one of a standardized set of codes describing the condition of
+        the component sending the message.
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          description: Timestamp in ISO 8601 format
+          example: '2020-09-03T18:13:49+00:00'
+          nullable: true
+        level:
+          type: string
+          description: Logging level
           enum:
-          - producer
-          - expander
-          - filter
-          - transformer
-          - exporter
-          - aggregator
-        knowledge_map:
-          $ref: '#/components/schemas/knowledge_map'
-        properties:
+            - ERROR
+            - WARNING
+            - INFO
+            - DEBUG
+          nullable: true
+        code:
+          type: string
+          description: >-
+            One of a standardized set of short codes
+            e.g. QueryNotTraversable, KPNotAvailable, KPResponseMalformed
+          nullable: true
+        message:
+          type: string
+          description: A human-readable log message
+          nullable: true
+      additionalProperties: true
+    Result:
+      type: object
+      description: >-
+        A Result object specifies the nodes and edges in the knowledge graph
+        that satisfy the structure or conditions of a user-submitted query
+        graph. It must contain a NodeBindings object (list of query graph node
+        to knowledge graph node mappings) and an EdgeBindings object (list of
+        query graph edge to knowledge graph edge mappings).
+      properties:
+        node_bindings:
           type: object
-          properties:
-            list_predicate:
-              type: string
-              description: BioLink model predicate describing relationship between
-                input and output gene lists.
-            member_predicate:
-              type: string
-              description: BioLink model predicate describing relationship between
-                input and output genes.
-            source_url:
-              type: string
-              description: URL for underlying data or a wrapped service.
-            terms_of_service:
-              type: string
-              description: Link to the page that describes the terms of service for the transformer.
-            method:
-              type: string
-              description: A method used to generate output gene lists.
-          description: Additional metadata for the transformer.
-        parameters:
-          type: array
-          description: Parameters used to control the transformer.
-          items:
-            $ref: '#/components/schemas/parameter'
-      description: Definition of the transformer.
-      required: 
-      - name
-      - status
-      - function
-      - url
-
-
-    parameter:
+          description: >-
+            The dictionary of Input Query Graph to Result Knowledge Graph node
+            bindings where the dictionary keys are the key identifiers of the
+            Query Graph nodes and the associated values of those keys are
+            instances of NodeBinding schema type (see below). This value is an
+            array of NodeBindings since a given query node may have multiple
+            knowledge graph Node bindings in the result.
+          additionalProperties:
+            type: array
+            items:
+              $ref: '#/components/schemas/NodeBinding'
+        edge_bindings:
+          type: object
+          description: >-
+            The dictionary of Input Query Graph to Result Knowledge Graph edge
+            bindings where the dictionary keys are the key identifiers of the
+            Query Graph edges and the associated values of those keys are
+            instances of EdgeBinding schema type (see below). This value is an
+            array of EdgeBindings since a given query edge may resolve to
+            multiple knowledge graph edges in the result.
+          additionalProperties:
+            type: array
+            items:
+              $ref: '#/components/schemas/EdgeBinding'
+      additionalProperties: true
       required:
-      - name
-      - type
-      type: object
-      properties:
-        name:
-          type: string
-          description: Name of the parameter.
-        type:
-          type: string
-          description: Type of the parameter, one of 'Boolean', 'int', 'double', 'string'.
-          enum:
-          - Boolean
-          - int
-          - double
-          - string
-        default:
-          type: string
-          description: Default value of the parameter.
-        example:
-          type: string
-          description: Example value of the parameter.
-        biolink_class:
-          type: string
-          description: BioLink class of the parameter. Applicable to producers only
-            and only one parameter can have a BioLink class.
-        allowed_values:
-          type: array
-          description: Allowed values for the parameter.
-          items:
-            type: string
-        allowed_range:
-          maxItems: 2
-          minItems: 2
-          type: array
-          description: Allowed range for values of the parameter.
-          items:
-            type: number
-        suggested_values:
-          type: string
-          description: Suggested value range for the parameter.
-        lookup_url:
-          type: string
-          description: URL to search for suitable parameter values.
-
-
-    knowledge_map:
-      type: object
-      description: Knowledge-graph representation of the transformer.
-      properties:
-        input_class:
-          type: string
-          description: BioLink class for the members of the input list. 
-        output_class:
-          type: string
-          description: BioLink class for the members of the output list.
-        predicates:
-          type: array
-          description: Predicates describing relationships between subjects and objects.
-          items:
-            $ref: '#/components/schemas/predicate'
-
-    predicate:
-      type: object
-      description: Predicate describing relationship between a subject and an object.
-      properties:
-        subject:
-          type: string
-        predicate:
-          type: string
-        object:
-          type: string
-      required:
-      - subject
-      - predicate
-      - object
-
-    transformer_query:
-      type: object
-      properties:
-        name:
-          type: string
-          description: Name of the transformer that will be executed.
-        collection_id:
-          type: string
-          description: Id of the gene list that will be transformed. Required for
-            expanders and filters;  should be omitted for producers.
-        controls:
-          type: array
-          description: Values that control the behavior of the transformer. Names
-            of the controls must match the names specified in the transformer's definition
-            and values must match types (and possibly allowed_values) specified in
-            the transformer's definition.
-          items:
-            $ref: '#/components/schemas/property'
-      required:
-      - controls
-      - name
-
-    property:
-      required:
-      - name
-      - value
-      type: object
-      properties:
-        name:
-          type: string
-        value:
-          type: string
-
-
-    collection_info:
-      type: object
-      properties:
-        id:    
-          type: string
-          description: ID of the collection.
-        size:
-          type: integer
-          description: Number of elements in the collection.
-        element_class:
-          type: string
-          description: BioLink-compatible class of elements in this collection.
-        source:
-          type: string
-          description: Transformer that produced this collection.
-        url:
-          type: string
-          description: URL to obtain members of this collection.
-        attributes:
-          type: array
-          description: Additional information and provenance about the collection.
-          items:
-            $ref: '#/components/schemas/attribute'
-      required:
-      - id
-      - size
-      - element_class
-      - source
-
-    collection:
-      allOf:
-        - $ref: '#/components/schemas/collection_info'
-        - type: object
-          properties:
-            elements:
-              type: array
-              description: Members of the gene list.
-              items:
-                $ref: '#/components/schemas/element'
-
-    gene_list:
-      allOf:
-        - $ref: '#/components/schemas/collection_info'
-        - type: object
-          properties:
-            elements:
-              type: array
-              description: Members of the gene list.
-              items:
-                $ref: '#/components/schemas/gene_info'
-
-    compound_list:
-      allOf:
-        - $ref: '#/components/schemas/collection_info'
-        - type: object
-          properties:
-            elements:
-              type: array
-              description: Members of the compound list.
-              items:
-                $ref: '#/components/schemas/compound_info'
-
-    element:
+        - node_bindings
+        - edge_bindings
+    NodeBinding:
       type: object
       properties:
         id:
-          type: string
-          description: Id of the gene. 
-        biolink_class:
-          type: string
-          description: BioLink class of the element.
-        identifiers:
-          type: object
-          additionalProperties: true
-        names_synonyms:
-          type: array
-          items:
-            $ref: '#/components/schemas/names'
-          description: Names and synonyms of the element.
-        attributes:
-          type: array
-          description: Additional information about the element and provenance about
-            collection membership. 
-          items:
-            $ref: '#/components/schemas/attribute'
-        source:
-          type: string
-          description: Name of a transformer that added the element to the collection.
+          $ref: '#/components/schemas/CURIE'
+          description: >-
+            An instance of NodeBinding is a single KnowledgeGraph Node mapping,
+            identified by the corresponding 'id' object key identifier of the
+            Node within the Knowledge Graph. Instances of NodeBinding may
+            include extra annotation (such annotation is not yet fully
+            standardized).
+      additionalProperties: true
       required:
-      - id
-
-    gene_info:
+        - id
+    EdgeBinding:
       type: object
+      description: >-
+        A instance of EdgeBinding is a single KnowledgeGraph Edge mapping,
+        identified by the corresponding 'id' object key identifier of the
+        Edge within the Knowledge Graph. Instances of EdgeBinding may include
+        extra annotation (such annotation is not yet fully standardized).
       properties:
-        gene_id:
+        id:
           type: string
-          description: Id of the gene. Preferably HGNC id; can be Entrez or ENSEMBL
-            id if HGNC id is not available.
-        identifiers:
+          description: The key identifier of a specific KnowledgeGraph Edge.
+      additionalProperties: true
+      required:
+        - id
+    KnowledgeGraph:
+      type: object
+      description: >-
+        The knowledge graph associated with a set of results. The instances
+        of Node and Edge defining this graph represent instances of
+        biolink:NamedThing (concept nodes) and biolink:Association
+        (relationship edges) representing (Attribute) annotated knowledge
+        returned from the knowledge sources and inference agents wrapped by
+        the given TRAPI implementation.
+      properties:
+        nodes:
           type: object
-          properties:
-            entrez:
-              type: string
-              description: Entrez gene id (CURIE).
-              example: NCBIGene:100
-            hgnc:
-              type: string
-              description: HGNC gene id (CURIE).
-              example: HGNC:186
-            mim:
-              type: string
-              description: OMIM gene id (CURIE).
-              example: MIM:608958
-            ensembl:
-              type: array
-              description: ENSEMBL gene id (CURIE).
+          description: >-
+            Dictionary of Node instances used in the KnowledgeGraph,
+            referenced elsewhere in the TRAPI output by the dictionary key.
+          additionalProperties:
+            $ref: '#/components/schemas/Node'
+        edges:
+          type: object
+          description: >-
+            Dictionary of Edge instances used in the KnowledgeGraph,
+            referenced elsewhere in the TRAPI output by the dictionary key.
+          additionalProperties:
+            $ref: '#/components/schemas/Edge'
+      additionalProperties: true
+      required:
+        - nodes
+        - edges
+    QueryGraph:
+      type: object
+      description: >-
+        A graph representing a biomedical question. It serves as a template for
+        each result (answer), where each bound knowledge graph node/edge is
+        expected to obey the constraints of the associated query graph element.
+      properties:
+        nodes:
+          type: object
+          description: >-
+            The node specifications. The keys of this map are unique node
+            identifiers and the corresponding values include the constraints
+            on bound nodes.
+          additionalProperties:
+            $ref: '#/components/schemas/QNode'
+        edges:
+          type: object
+          description: >-
+            The edge specifications. The keys of this map are unique edge
+            identifiers and the corresponding values include the constraints
+            on bound edges, in addition to specifying the subject and object
+            QNodes.
+          additionalProperties:
+            $ref: '#/components/schemas/QEdge'
+      additionalProperties: true
+      required:
+        - nodes
+        - edges
+    QNode:
+      type: object
+      description: A node in the QueryGraph used to represent an entity in a
+        query. If a CURIE is not specified, any nodes matching the category
+        of the QNode will be returned in the Results.
+      properties:
+        id:
+          oneOf:
+            - $ref: '#/components/schemas/CURIE'
+            - type: array
               items:
-                type: string
-                example: ENSEMBL:ENSG00000196839
-            mygene_info:
-              type: string
-              description: myGene.info primary id.
-              example: "100"
-        attributes:
-          type: array
-          description: Additional information about the gene and provenance about
-            gene-list membership. 
-          items:
-            $ref: '#/components/schemas/attribute'
-        source:
-          type: string
-          description: Name of a transformer that added gene to the gene list.
-      required:
-      - gene_id
-
-    compound_info:
+                $ref: '#/components/schemas/CURIE'
+          example: OMIM:603903
+          description: CURIE identifier for this node
+          nullable: true
+        category:
+          oneOf:
+            - $ref: '#/components/schemas/BiolinkEntity'
+            - type: array
+              items:
+                $ref: '#/components/schemas/BiolinkEntity'
+          nullable: true
+        is_set:
+          type: boolean
+          description: >-
+            Boolean that if set to true, indicates that this QNode MAY have
+            multiple KnowledgeGraph Nodes bound to it within each Result.
+            The nodes in a set should be considered as a set of independent
+            nodes, rather than a set of dependent nodes, i.e., the answer
+            would still be valid if the nodes in the set were instead returned
+            individually. Multiple QNodes may have is_set=True. If a QNode
+            (n1) with is_set=True is connected to a QNode (n2) with
+            is_set=False, each n1 must be connected to n2. If a QNode (n1)
+            with is_set=True is connected to a QNode (n2) with is_set=True,
+            each n1 must be connected to at least one n2.
+          default: false
+      additionalProperties: true
+    QEdge:
       type: object
+      description: >-
+        An edge in the QueryGraph used as an filter pattern specification in a
+        query. If optional predicate or relation properties are not specified,
+        they are assumed to be wildcard matches to the target knowledge space.
+        If specified, the ontological inheritance hierarchy associated with
+        the terms provided is assumed, such that edge bindings returned may be
+        an exact match to the given QEdge predicate or relation term ('class'),
+        or to a term which is a subclass of the QEdge specified term.
       properties:
-        compound_id:
+        predicate:
+          oneOf:
+            - $ref: '#/components/schemas/BiolinkPredicate'
+            - type: array
+              items:
+                $ref: '#/components/schemas/BiolinkPredicate'
+          nullable: true
+        relation:
           type: string
-          description: Ids of the compound.
-        identifiers:
-          type: object
-          properties:
-            chebi:
-              type: string
-              description: ChEBI id of the compound (CURIE).
-              example: CHEBI:15365
-            chembl:
-              type: string
-              description: ChEMBL id of the compound (CURIE).
-              example: ChEMBL:CHEMBL25
-            drugbank:
-              type: string
-              description: DrugBank id of the compound (CURIE).
-              example: DrugBank:DB00945
-            pubchem:
-              type: string
-              description: PubChem CID of the compound (CURIE).
-              example: CID:2244
-            mesh:
-              type: string
-              description: MeSH id of the compound (CURIE).
-              example: MESH:D001241
-            hmdb:
-              type: string
-              description: HMDB id of the compound (CURIE).
-              example: HMDB:HMDB0001879
-            unii:
-              type: string
-              description: UNII id of the compound (CURIE).
-              example: UNII:R16CO5Y76E
-            kegg:
-              type: string
-              description: KEGG id of the compound (CURIE).
-              example: KEGG.COMPOUND:C01405
-            gtopdb:
-              type: string
-              description: Guide to PHARMACOLOGY id of the compound (CURIE).
-              example: GTOPDB:4139
-            chembank:
-              type: string
-              description: ChemBank id of the compound (CURIE).
-              example: ChemBank:1171
-            drugcentral:
-              type: string
-              description: DrugCentral id of the compound (CURIE).
-              example: DrugCentral:74
-            cas:
-              type: string
-              description: CAS id of the compound (CURIE).
-              example: CAS:50-78-2
-            mychem_info:
-              type: string
-              description: myChem.info id of the compound.
-        names_synonyms:
-          type: array
-          items:
-            $ref: '#/components/schemas/names'
-          description: Compound names and synonyms.
-        structure:
-          type: object
-          properties:
-            smiles:
-              type: string
-              description: SMILES representation of the compound's structure.
-            inchi:
-              type: string
-              description: InChI representation of the compound's structure.
-            inchikey:
-              type: string
-              description: InChI key representation of the compound's structure.
-            source:
-              type: string
-              description: Source of the compound's structure.
-        attributes:
-          type: array
-          description: Additional information about the compound and provenance about
-            compound-list membership. 
-          items:
-            $ref: '#/components/schemas/attribute'
-        source:
+          example: RO:0002447
+          description: >-
+            Query constraint against the relationship type term of this edge,
+            as originally specified by, or curated by inference from, the
+            original external source of knowledge. Note that this should
+            often be specified as predicate ontology term CURIE, although
+            this may not be strictly enforced.
+          nullable: true
+        subject:
           type: string
-          description: Name of a transformer that added compound to the compound list.
-      required: 
-      - compound_id
-
-    attribute:
+          example: https://omim.org/entry/603903
+          description: >-
+            Corresponds to the map key identifier of the
+            subject concept node anchoring the query filter
+            pattern for the query relationship edge.
+        object:
+          type: string
+          example: https://www.uniprot.org/uniprot/P00738
+          description: >-
+            Corresponds to the map key identifier of the
+            object concept node anchoring the query filter
+            pattern for the query relationship edge.
+      additionalProperties: true
+      required:
+        - subject
+        - object
+    Node:
       type: object
+      description: >-
+        A node in the KnowledgeGraph which represents some biomedical
+        concept. Nodes are identified by the keys in the KnowledgeGraph
+        Node mapping.
       properties:
         name:
           type: string
-          description: Name of the attribute.
+          example: Haptoglobin
+          description: Formal name of the entity
+          nullable: true
+        category:
+          oneOf:
+            - $ref: '#/components/schemas/BiolinkEntity'
+            - type: array
+              items:
+                $ref: '#/components/schemas/BiolinkEntity'
+          nullable: true
+        attributes:
+          type: array
+          description: A list of attributes describing the node
+          items:
+            $ref: '#/components/schemas/Attribute'
+          nullable: true
+      additionalProperties: false
+    Attribute:
+      type: object
+      description: >-
+        Generic attribute for a node or an edge that expands key-value pair
+        concept by including a type of this attribute from a suitable ontology,
+        a source of this attribute, and (optionally) a url with additional
+        information about this attribute.
+      properties:
+        name:
+          type: string
+          description: >-
+            Human-readable name or label for the attribute. If appropriate,
+            should be the name of the semantic type term.
+          example: PubMed Identifier
+          nullable: true
         value:
-          type: string
-          description: Value of the attribute.
-        source:
-          type: string
-          description: Transformer that produced the attribute's value.
-        url:
-          type: string
-          description: URL for additional information.
-      required:
-      - name
-      - source
-      - value
-
-    names:
-      type: object
-      properties:
-        name:
-          type: string
-          description: Name of the compound.
-        synonyms:
-          type: array
-          items:
-            type: string
-          description: Name of the compound.
-        source:
-          type: string
-          description: Source of names and synonyms.
-        url:
-          type: string
-          description: URL for additional information.
-      required:
-      - source
-
-    aggregation_query:
-      type: object
-      properties:
-        operation:
-          type: string
-          description: Gene-list aggregation operation, one of 'union', 'intersection',
-            'difference','symmetric difference'.
-        controls:
-          type: array
-          description: Values that control the behavior of the aggregator. Names of
-            the controls must match the names specified in the aggregator's definition
-            and values must match types (and possibly  allowed_values) specified in
-            the aggregator's definition.
-          items:
-            $ref: '#/components/schemas/property'
-        collection_ids:
-          type: array
-          description: Ids of the collections to be aggregated.
-          example:
-          - gene_list_id_1
-          - gene_list_id_2
-          items:
-            type: string
-      required:
-      - collection_ids
-      - operation
-
-    error_msg:
-      type: object
-      properties:
-        status:
-          type: integer
-        title:
-          type: string
-        detail:
-          type: string
+          example: 32529952
+          description: >-
+            Value of the attribute. May be any data type, including a list.
         type:
+          $ref: '#/components/schemas/CURIE'
+          description: >-
+            CURIE of the semantic type of the attribute. For properties
+            defined by the Biolink model this should be a biolink CURIE,
+            otherwise, if possible, from the EDAM ontology. If a suitable
+            identifier does not exist, enter a descriptive phrase here and
+            submit the new type for consideration by the appropriate
+            authority.
+          example: EDAM:data_1187
+        url:
           type: string
-
+          description: >-
+            Human-consumable URL to link out and provide additional information
+            about the attribute (not the node or the edge).
+          example: https://pubmed.ncbi.nlm.nih.gov/32529952
+          nullable: true
+        source:
+          type: string
+          description: Source of the attribute, preferably as a CURIE prefix.
+          example: UniProtKB
+          nullable: true
+      required:
+        - type
+        - value
+      additionalProperties: false
+    Edge:
+      type: object
+      description: >-
+        A specification of the semantic relationship linking two concepts
+        that are expressed as nodes in the knowledge "thought" graph
+        resulting from a query upon the underlying knowledge source.
+      properties:
+        predicate:
+          allOf:
+            - $ref: '#/components/schemas/BiolinkPredicate'
+          nullable: true
+        relation:
+          type: string
+          example: RO:0002447
+          description: >-
+            The relationship type term of this edge, originally specified by,
+            or curated by inference from, the original source of knowledge.
+            This should generally be specified as predicate ontology CURIE.
+          nullable: true
+        subject:
+          $ref: '#/components/schemas/CURIE'
+          example: OMIM:603903
+          description: >-
+            Corresponds to the map key CURIE of the
+            subject concept node of this relationship edge.
+        object:
+          $ref: '#/components/schemas/CURIE'
+          example: UniProtKB:P00738
+          description: >-
+            Corresponds to the map key CURIE of the
+            object concept node of this relationship edge.
+        attributes:
+          type: array
+          description: A list of additional attributes for this edge
+          items:
+            $ref: '#/components/schemas/Attribute'
+          nullable: true
+      additionalProperties: false
+      required:
+        - subject
+        - object
+    BiolinkEntity:
+      description: >-
+        Compact URI (CURIE) for a Biolink class, biolink:NamedThing
+        or a child thereof. The CURIE must use the prefix 'biolink:'
+        followed by the PascalCase class name.
+      type: string
+      pattern: ^biolink:[A-Z][a-zA-Z]*$
+      externalDocs:
+        description: Biolink model entities
+        url: https://biolink.github.io/biolink-model/docs/NamedThing.html
+      example: biolink:PhenotypicFeature
+    BiolinkPredicate:
+      description: >-
+        CURIE for a Biolink 'predicate' slot, taken from the Biolink slot
+        ('is_a') hierarchy rooted in biolink:related_to (snake_case). This
+        predicate defines the Biolink relationship between the subject and
+        object nodes of a biolink:Association defining a knowledge graph edge.
+      type: string
+      pattern: ^biolink:[a-z][a-z_]*$
+      externalDocs:
+        description: Biolink model predicates
+        url: https://biolink.github.io/biolink-model/docs/related_to.html
+      example: biolink:interacts_with
+    CURIE:
+      type: string
+      description: >-
+        A Compact URI, consisting of a prefix and a reference separated
+        by a colon, such as UniProtKB:P00738. Via an external context
+        definition, the CURIE prefix and colon may be replaced by a URI
+        prefix, such as http://identifiers.org/uniprot/, to form a full
+        URI.
+      externalDocs:
+        url: https://www.w3.org/TR/2010/NOTE-curie-20101216/
