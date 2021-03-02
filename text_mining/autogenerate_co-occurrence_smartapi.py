@@ -6,7 +6,7 @@ TYPE_ID_MAPPING = {
     "MolecularActivity": "GO",
     "PhenotypicFeature": "HP",
     "Disease": "MONDO",
-    "Gene": "NCBIGene",
+    "Gene": "NCBIGENE",
     "Protein": "PR",
     "SequenceFeature": "SO",
     "AnatomicalEntity": "UBERON",

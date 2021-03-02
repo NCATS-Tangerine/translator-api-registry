@@ -1,0 +1,89 @@
+openapi: 3.0.0
+info:
+  contact:
+    email: help@renci.org
+    name: Chris B.
+  description: Scibite
+  termsOfService: https://automat.renci.org
+  title: Automat covid-phenotypes API
+  version: '2.0'
+servers:
+- description: Production server
+  url: curl -X GET "https://automat.renci.org/covid-phenotypes
+tags:
+- name: phenotype
+- name: disease
+- name: automat
+- name: translator
+paths:
+  /disease/phenotype/{mondo}:
+    get:
+      parameters:
+      - description: Put MONDO ID here, e.g. "MONDO:0100096"
+        example: "MONDO:0100096"
+        in: path
+        name: mondo
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: An association object
+      summary: disease2phenotype
+      x-bte-kgs-operations:
+      - $ref: '#/components/x-bte-kgs-operations/disease2phenotype'
+      tags: 
+        - disease
+  /phenotypic_feature/disease/{hp}:
+    get:
+      parameters:
+      - description: Put HPO ID here, e.g. "HP:0002027"
+        example: "HP:0002027"
+        in: path
+        name: hp
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: An association object
+      summary: phenotype2disease
+      x-bte-kgs-operations:
+      - $ref: '#/components/x-bte-kgs-operations/phenotype2disease'
+      tags:
+        - phenotype
+components:
+  x-bte-kgs-operations:
+    disease2phenotype:
+    - inputs:
+      - id: MONDO
+        semantic: Disease
+      outputs:
+      - id: HP
+        semantic: PhenotypicFeature
+      parameters:
+        chebi: '{inputs[0]}'
+      predicate: has_phenotype
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/disease2phenotype'
+      source: covid_phenotypes_csv
+      supportBatch: false
+    phenotype2disease:
+    - inputs:
+      - id: HP
+        semantic: PhenotypicFeature
+      outputs:
+      - id: MONDO
+        semantic: Disease
+      parameters:
+        chebi: '{inputs[0]}'
+      predicate: related_to
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/phenotype2disease'
+      source: covid_phenotypes_csv
+      supportBatch: false
+  x-bte-response-mapping:
+    disease2phenotype:
+      HP: associated_with.hp
+    phenotype2disease:
+      MONDO: associated_with.mondo
