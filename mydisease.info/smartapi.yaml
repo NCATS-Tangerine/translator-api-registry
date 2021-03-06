@@ -224,13 +224,20 @@ paths:
       - "$ref": "#/components/x-bte-kgs-operations/disease-variant"
       - "$ref": "#/components/x-bte-kgs-operations/disease-phenotype"
       - "$ref": "#/components/x-bte-kgs-operations/disease-phenotype2"
+      - "$ref": "#/components/x-bte-kgs-operations/disease-phenotype3"  ## for covid_phenotypes
       - "$ref": "#/components/x-bte-kgs-operations/disease-chemical"
-      - "$ref": "#/components/x-bte-kgs-operations/disease-bp"
+      - "$ref": "#/components/x-bte-kgs-operations/disease-chemical2"
+#       - "$ref": "#/components/x-bte-kgs-operations/disease-pathway"
+#       - "$ref": "#/components/x-bte-kgs-operations/disease-pathway2"
       - "$ref": "#/components/x-bte-kgs-operations/gene-disease"
       - "$ref": "#/components/x-bte-kgs-operations/variant-disease"
       - "$ref": "#/components/x-bte-kgs-operations/phenotype-disease"
+      - "$ref": "#/components/x-bte-kgs-operations/phenotype-disease2"
+      - "$ref": "#/components/x-bte-kgs-operations/phenotype-disease3"  ## for covid_phenotypes
       - "$ref": "#/components/x-bte-kgs-operations/chemical-disease"
-      - "$ref": "#/components/x-bte-kgs-operations/bp-disease"
+      - "$ref": "#/components/x-bte-kgs-operations/chemical-disease2"
+#       - "$ref": "#/components/x-bte-kgs-operations/pathway-disease"
+#       - "$ref": "#/components/x-bte-kgs-operations/pathway-disease2"
       - "$ref": "#/components/x-bte-kgs-operations/has_subclass"
       - "$ref": "#/components/x-bte-kgs-operations/subclass_of"
 components:
@@ -387,29 +394,41 @@ components:
   x-bte-response-mapping:
     disease-gene:
       NCBIGENE: disgenet.genes_related_to_disease.gene_id
+      pubmed: disgenet.genes_related_to_disease.pubmed
     disease-variant:
       DBSNP: disgenet.variants_related_to_disease.rsid
       pubmed: disgenet.variants_related_to_disease.pubmed
     disease-phenotype:
       HP: hpo.phenotype_related_to_disease.hpo_id
+      ## note: there are 6 reference-related fields: isbn_refs, pmid_refs, website_refs, decipher_refs, omim_refs, orphanet_refs
+      pubmed: hpo.phenotype_related_to_disease.pmid_refs
+      ## evidence is evidence codes (IEA, TAS, PCS)
       evidence: hpo.phenotype_related_to_disease.evidence
-      frequency: hpo.phenotype_related_to_disease.frequency
+      ## note: there are 4 frequency-related fields: hp_freq, numeric_freq, freq_numerator, freq_denominator 
+      frequency: hpo.phenotype_related_to_disease.numeric_freq
     disease-phenotype2:
       HP: covid_phenotypes.hp
     disease-chemical:
       MESH: ctd.chemical_related_to_disease.mesh_chemical_id
-      pubmed: ctd.chemical_related_to_disease.pubmed
-    disease-bp:
-      GO: ctd.bp_related_to_disease.go_id
-      name: ctd.bp_related_to_disease.go_name
+      ## note: evidence has two values, 'marker/mechanism' or 'therapeutic'
+      evidence: ctd.chemical_related_to_disease.direct_evidence
+      pubmed: ctd.chemical_related_to_disease.pubmed 
+#     disease-pathway:  
+#       REACT: ctd.pathway_related_to_disease.react_pathway_id
+#     disease-pathway2:  
+#       KEGG: ctd.pathway_related_to_disease.kegg_pathway_id
     umls:
       UMLS: disgenet.xrefs.umls
     omim:
-      OMIM: mondo.xrefs.omim
-    mesh:
-      MESH: disgenet.xrefs.mesh
-    bp-disease:
+      OMIM: hpo.omim
+    orphanet:  ## added for phenotype-disease2 operation
+      ORPHANET: hpo.orphanet       
+    mondo:  ## added for phenotype-disease3, pathway-disease operation
+      MONDO: mondo.mondo
+    ctd-mesh-disease:  ## added for chemical-disease operation
       MESH: ctd.mesh
+     ctd-omim-disease:  ## added for chemical-disease2 operation
+      OMIM: ctd.omim
     has_subclass:
       MONDO: mondo.descendants
     subclass_of:
@@ -419,12 +438,10 @@ components:
     - supportBatch: true
       inputSeparator: ","
       parameters:
-        fields: disgenet.genes_related_to_disease.gene_id
-      predicate: related_to
-      source: disgenet
+        fields: disgenet.genes_related_to_disease
       requestBody:
         body:
-          q: "{inputs[0]}"
+          q: "{inputs[0]}"  ## example: put C0024776 here
           scopes: mondo.xrefs.umls, disgenet.xrefs.umls
         header: application/x-www-form-urlencoded
       inputs:
@@ -433,6 +450,8 @@ components:
       outputs:
       - id: NCBIGENE
         semantic: Gene
+      predicate: related_to
+      source: DisGeNET
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/disease-gene"
     disease-variant:
@@ -442,7 +461,7 @@ components:
         fields: disgenet.variants_related_to_disease
       requestBody:
         body:
-          q: "{inputs[0]}"
+          q: "{inputs[0]}"   ## example: put C0024776 here
           scopes: mondo.xrefs.umls, disgenet.xrefs.umls
         header: application/x-www-form-urlencoded
       inputs:
@@ -452,7 +471,7 @@ components:
       - id: DBSNP
         semantic: SequenceVariant
       predicate: related_to
-      source: disgenet
+      source: DisGeNET
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/disease-variant"
     disease-phenotype:
@@ -462,7 +481,7 @@ components:
         fields: hpo.phenotype_related_to_disease
       requestBody:
         body:
-          q: "{inputs[0]}"
+          q: "{inputs[0]}"    ## example: put 246900 here
           scopes: hpo.omim
         header: application/x-www-form-urlencoded
       inputs:
@@ -472,49 +491,49 @@ components:
       - id: HP
         semantic: PhenotypicFeature
       predicate: has_phenotype
-      source: Human Phenotype Ontology
+      source: HPO Annotations
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/disease-phenotype"
     disease-phenotype2:
-      - supportBatch: true
-        inputSeparator: ","
-        parameters:
-          fields: hpo.phenotype_related_to_disease
-        requestBody:
-          body:
-            q: "{inputs[0]}"
-            scopes: hpo.orphanet
-          header: application/x-www-form-urlencoded
-        inputs:
-        - id: ORPHANET
-          semantic: Disease
-        outputs:
-        - id: HP
-          semantic: PhenotypicFeature
-        predicate: related_to
-        source: Human Phenotype Ontology
-        response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/disease-phenotype"
-    disease-phenotype3:
-      - supportBatch: true
-        inputSeparator: ","
-        parameters:
-          fields: covid_phenotypes.hp
-        requestBody:
-          body:
-            q: "{inputs[0]}"
-            scopes: mondo.mondo
-          header: application/x-www-form-urlencoded
-        inputs:
-        - id: MONDO
-          semantic: Disease
-        outputs:
-        - id: HP
-          semantic: PhenotypicFeature
-        predicate: related_to
-        source: covid_phenotypes
-        response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/disease-phenotype2"
+    - supportBatch: true
+      inputSeparator: ","
+      parameters:
+        fields: hpo.phenotype_related_to_disease
+      requestBody:
+        body:
+          q: "{inputs[0]}"    ## example: put 881 here
+          scopes: hpo.orphanet
+        header: application/x-www-form-urlencoded
+      inputs:
+      - id: ORPHANET
+        semantic: Disease
+      outputs:
+      - id: HP
+        semantic: PhenotypicFeature
+      predicate: has_phenotype
+      source: HPO Annotations
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/disease-phenotype"
+    disease-phenotype3:  ## covid only
+    - supportBatch: true
+      inputSeparator: ","
+      parameters:
+        fields: covid_phenotypes.hp
+      requestBody:
+        body:
+          q: "{inputs[0]}"      ## example: put MONDO:0100096 here
+          scopes: mondo.mondo
+        header: application/x-www-form-urlencoded
+      inputs:
+      - id: MONDO
+        semantic: Disease
+      outputs:
+      - id: HP
+        semantic: PhenotypicFeature
+      predicate: has_phenotype
+      source: Automat covid_phenotypes
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/disease-phenotype2"
     disease-chemical:
     - path: "/query"
       method: post
@@ -524,8 +543,8 @@ components:
         fields: ctd.chemical_related_to_disease
       requestBody:
         body:
-          q: "{inputs[0]}"
-          scopes: mondo.xrefs.mesh, disgenet.xrefs.mesh
+          q: "{inputs[0]}"  ## example: put D009102 here
+          scopes: ctd.mesh
         header: application/x-www-form-urlencoded
       inputs:
       - id: MESH
@@ -537,45 +556,130 @@ components:
       source: CTD
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/disease-chemical"
-    disease-bp:
-    - supportBatch: true
+    disease-chemical2:
+    - path: "/query"
+      method: post
+      supportBatch: true
       inputSeparator: ","
       parameters:
-        fields: ctd.bp_related_to_disease
+        fields: ctd.chemical_related_to_disease
       requestBody:
         body:
-          q: "{inputs[0]}"
-          scopes: mondo.xrefs.mesh, disgenet.xrefs.mesh
+          q: "{inputs[0]}"  ## example: put 146850 here
+          scopes: ctd.omim
         header: application/x-www-form-urlencoded
       inputs:
-      - id: MESH
+      - id: OMIM
         semantic: Disease
       outputs:
-      - id: GO
-        semantic: BiologicalProcess
+      - id: MESH
+        semantic: ChemicalSubstance
       predicate: related_to
       source: CTD
       response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/disease-bp"
+        "$ref": "#/components/x-bte-response-mapping/disease-chemical"        
+#     disease-pathway:  ## input is MESH Disease, example: put C536029 here
+#     ## output is REACT pathway ID
+#     - supportBatch: true
+#       inputSeparator: ","
+#       parameters:
+#         fields: ctd.pathway_related_to_disease
+#       requestBody:
+#         body:
+#           q: "{inputs[0]}"
+#           scopes: ctd.mesh
+#         header: application/x-www-form-urlencoded
+#       inputs:
+#       - id: MESH
+#         semantic: Disease
+#       outputs:  
+#       - id: REACT
+#         semantic: Pathway      
+#       predicate: related_to
+#       source: CTD
+#       response_mapping:
+#         "$ref": "#/components/x-bte-response-mapping/disease-pathway" 
+#     ## output is KEGG pathway ID
+#     - supportBatch: true
+#       inputSeparator: ","
+#       parameters:
+#         fields: ctd.pathway_related_to_disease
+#       requestBody:
+#         body:
+#           q: "{inputs[0]}"
+#           scopes: ctd.mesh
+#         header: application/x-www-form-urlencoded
+#       inputs:
+#       - id: MESH
+#         semantic: Disease
+#       outputs:  
+#       - id: KEGG
+#         semantic: Pathway      
+#       predicate: related_to
+#       source: CTD
+#       response_mapping:
+#         "$ref": "#/components/x-bte-response-mapping/disease-pathway2"           
+#     disease-pathway2:  ## input is OMIM Disease, example: put 261515 here
+#     ## output is REACT pathway ID
+#     - supportBatch: true
+#       inputSeparator: ","
+#       parameters:
+#         fields: ctd.pathway_related_to_disease
+#       requestBody:
+#         body:
+#           q: "{inputs[0]}"
+#           scopes: ctd.omim
+#         header: application/x-www-form-urlencoded
+#       inputs:
+#       - id: OMIM
+#         semantic: Disease
+#       outputs:  
+#       - id: REACT
+#         semantic: Pathway      
+#       predicate: related_to
+#       source: CTD
+#       response_mapping:
+#         "$ref": "#/components/x-bte-response-mapping/disease-pathway" 
+#     ## output is KEGG pathway ID
+#     - supportBatch: true
+#       inputSeparator: ","
+#       parameters:
+#         fields: ctd.pathway_related_to_disease
+#       requestBody:
+#         body:
+#           q: "{inputs[0]}"
+#           scopes: ctd.omim
+#         header: application/x-www-form-urlencoded
+#       inputs:
+#       - id: OMIM
+#         semantic: Disease
+#       outputs:  
+#       - id: KEGG
+#         semantic: Pathway      
+#       predicate: related_to
+#       source: CTD
+#       response_mapping:
+#         "$ref": "#/components/x-bte-response-mapping/disease-pathway2"    
     gene-disease:
     - supportBatch: true
       inputSeparator: ","
       parameters:
         fields: disgenet.xrefs.umls
-        size: '250'
-      predicate: related_to
-      source: disgenet
+        size: '1000'  
+        ## note the size limit
       requestBody:
         body:
-          q: "{inputs[0]}"
+          q: "{inputs[0]}"   ## example: put 1629 here 
           scopes: disgenet.genes_related_to_disease.gene_id
         header: application/x-www-form-urlencoded
-      outputs:
-      - id: UMLS
-        semantic: Disease
       inputs:
       - id: NCBIGENE
         semantic: Gene
+      outputs:
+      - id: UMLS
+        semantic: Disease
+      predicate: related_to
+      source: DisGeNET
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/umls"
     variant-disease:
@@ -583,20 +687,21 @@ components:
       inputSeparator: ","
       parameters:
         fields: disgenet.xrefs.umls
-        size: '250'
+        ## note that we are setting a size limit here
+        size: '1000'
       requestBody:
         body:
-          q: "{inputs[0]}"
+          q: "{inputs[0]}"   ## example: put rs1001179 here   
           scopes: disgenet.variants_related_to_disease.rsid
         header: application/x-www-form-urlencoded
-      outputs:
-      - id: UMLS
-        semantic: Disease
       inputs:
       - id: DBSNP
         semantic: SequenceVariant
+      outputs:
+      - id: UMLS
+        semantic: Disease
       predicate: related_to
-      source: disgenet
+      source: DisGeNET
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/umls"
     phenotype-disease:
@@ -605,69 +710,208 @@ components:
       supportBatch: true
       inputSeparator: ","
       parameters:
-        fields: mondo.xrefs.omim
-        size: '250'
+        fields: hpo.omim
+        ## note that we are setting a size limit here
+        size: '1000'
       requestBody:
         body:
-          q: "{inputs[0]}"
+          q: "{inputs[0]}"   ## example: put HP:0000224 here 
           scopes: hpo.phenotype_related_to_disease.hpo_id
         header: application/x-www-form-urlencoded
-      outputs:
-      - id: OMIM
-        semantic: Disease
       inputs:
       - id: HP
         semantic: PhenotypicFeature
+      outputs:
+      - id: OMIM
+        semantic: Disease
       predicate: related_to
-      source: Human Phenotype Ontology
+      source: HPO Annotations
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/omim"
+    phenotype-disease2:
+    - path: "/query"
+      method: post
+      supportBatch: true
+      inputSeparator: ","
+      parameters:
+        fields: hpo.orphanet
+        ## note that we are setting a size limit here
+        size: '1000'
+      requestBody:
+        body:
+          q: "{inputs[0]}"   ## example: put HP:0000224 here 
+          scopes: hpo.phenotype_related_to_disease.hpo_id
+        header: application/x-www-form-urlencoded
+      inputs:
+      - id: HP
+        semantic: PhenotypicFeature
+      outputs:
+      - id: ORPHANET
+        semantic: Disease
+      predicate: related_to
+      source: HPO Annotations
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/orphanet"
+    phenotype-disease3:  ## covid only
+    - path: "/query"
+      method: post
+      supportBatch: true
+      inputSeparator: ","
+      parameters:
+        fields: mondo.mondo
+      requestBody:
+        body:
+          q: "{inputs[0]}"  ## example: put HP:0011899 here 
+          scopes: covid_phenotypes.hp
+        header: application/x-www-form-urlencoded
+      inputs:
+      - id: HP
+        semantic: PhenotypicFeature
+      outputs:
+      - id: MONDO
+        semantic: Disease
+      predicate: related_to
+      source: Automat covid_phenotypes
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/mondo"
     chemical-disease:
     - path: "/query"
       method: post
       supportBatch: true
       inputSeparator: ","
       parameters:
-        fields: disgenet.xrefs.mesh
-        size: '250'
+        fields: ctd.mesh
+        ## note that we are setting a size limit here
+        size: '1000'
       requestBody:
         body:
-          q: "{inputs[0]}"
+          q: "{inputs[0]}"  ## example: put D015031 here   
           scopes: ctd.chemical_related_to_disease.mesh_chemical_id
         header: application/x-www-form-urlencoded
-      outputs:
-      - id: MESH
-        semantic: Disease
       inputs:
       - id: MESH
         semantic: ChemicalSubstance
+      outputs:
+      - id: MESH
+        semantic: Disease
       predicate: related_to
-      source: hpo
+      source: CTD
       response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/mesh"
-    bp-disease:
+        "$ref": "#/components/x-bte-response-mapping/ctd-mesh-disease"
+    chemical-disease2:
     - path: "/query"
       method: post
       supportBatch: true
       inputSeparator: ","
       parameters:
-        fields: ctd.mesh
-        size: '250'
+        fields: ctd.omim
+        ## note that we are setting a size limit here
+        size: '1000'
       requestBody:
         body:
-          q: "{inputs[0]}"
-          scopes: ctd.bp_related_to_disease.go_id
+          q: "{inputs[0]}"  ## example: put D015031 here
+          scopes: ctd.chemical_related_to_disease.mesh_chemical_id
         header: application/x-www-form-urlencoded
-      outputs:
-      - id: MESH
-        semantic: Disease
       inputs:
-      - id: GO
-        semantic: BiologicalProcess
+      - id: MESH
+        semantic: ChemicalSubstance
+      outputs:
+      - id: OMIM
+        semantic: Disease
       predicate: related_to
       source: CTD
-      response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/bp-disease"
+      response_mapping: 
+        "$ref": "#/components/x-bte-response-mapping/ctd-omim-disease"  
+#     pathway-disease:  ## input is REACT pathway ID, example: put R-HSA-1280218 or R-HSA-5619084 here  
+#     ## output is MESH Disease
+#     - supportBatch: true
+#       inputSeparator: ","
+#       parameters:
+#         fields: ctd.mesh
+#         ## note that we are setting a size limit here
+#         size: '1000'
+#       requestBody:
+#         body:
+#           q: "{inputs[0]}"
+#           scopes: ctd.pathway_related_to_disease.react_pathway_id
+#         header: application/x-www-form-urlencoded
+#       inputs:  
+#       - id: REACT
+#         semantic: Pathway
+#       outputs:
+#       - id: MESH
+#         semantic: Disease
+#       predicate: related_to
+#       source: CTD
+#       response_mapping:
+#         "$ref": "#/components/x-bte-response-mapping/ctd-mesh-disease"
+#     ## output is OMIM Disease
+#     - supportBatch: true
+#       inputSeparator: ","
+#       parameters:
+#         fields: ctd.omim
+#         ## note that we are setting a size limit here
+#         size: '1000'
+#       requestBody:
+#         body:
+#           q: "{inputs[0]}"
+#           scopes: ctd.pathway_related_to_disease.react_pathway_id
+#         header: application/x-www-form-urlencoded
+#       inputs:  
+#       - id: REACT
+#         semantic: Pathway
+#       outputs:
+#       - id: OMIM
+#         semantic: Disease
+#       predicate: related_to
+#       source: CTD
+#       response_mapping:
+#         "$ref": "#/components/x-bte-response-mapping/ctd-omim-disease" 
+#     pathway-disease2:  ## input is KEGG pathway ID, example: put hsa04360 or hsa00230 here  
+#     ## output is MESH Disease
+#     - supportBatch: true
+#       inputSeparator: ","
+#       parameters:
+#         fields: ctd.mesh
+#         ## note that we are setting a size limit here
+#         size: '1000'
+#       requestBody:
+#         body:
+#           q: "{inputs[0]}"
+#           scopes: ctd.pathway_related_to_disease.kegg_pathway_id
+#         header: application/x-www-form-urlencoded
+#       inputs:  
+#       - id: KEGG
+#         semantic: Pathway
+#       outputs:
+#       - id: MESH
+#         semantic: Disease
+#       predicate: related_to
+#       source: CTD
+#       response_mapping:
+#         "$ref": "#/components/x-bte-response-mapping/ctd-mesh-disease"
+#     ## output is OMIM Disease
+#     - supportBatch: true
+#       inputSeparator: ","
+#       parameters:
+#         fields: ctd.omim
+#         ## note that we are setting a size limit here
+#         size: '1000'
+#       requestBody:
+#         body:
+#           q: "{inputs[0]}"
+#           scopes: ctd.pathway_related_to_disease.kegg_pathway_id
+#         header: application/x-www-form-urlencoded
+#       inputs:  
+#       - id: KEGG
+#         semantic: Pathway
+#       outputs:
+#       - id: OMIM
+#         semantic: Disease
+#       predicate: related_to
+#       source: CTD
+#       response_mapping:
+#         "$ref": "#/components/x-bte-response-mapping/ctd-omim-disease"
     has_subclass:
     - path: "/query"
       method: post
@@ -675,19 +919,21 @@ components:
       inputSeparator: ","
       parameters:
         fields: mondo.descendants
+        ## note that we are setting a size limit here
+        size: '1000'
       requestBody:
         body:
-          q: "{inputs[0]}"
+          q: "{inputs[0]}"  ## example: put MONDO:0002494 here
           scopes: mondo.mondo
         header: application/x-www-form-urlencoded
-      outputs:
-      - id: MONDO
-        semantic: Disease
       inputs:
       - id: MONDO
         semantic: Disease
-      predicate: superclass_of
-      source: mondo
+      outputs:
+      - id: MONDO
+        semantic: Disease
+      predicate: superclass_of  ## this is the inverse of subclass_of right now
+      source: MONDO
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/has_subclass"
     subclass_of:
@@ -697,18 +943,20 @@ components:
       inputSeparator: ","
       parameters:
         fields: mondo.parents
+        ## note that we are setting a size limit here
+        size: '1000'
       requestBody:
         body:
-          q: "{inputs[0]}"
+          q: "{inputs[0]}"  ## example: put MONDO:0002494 here
           scopes: mondo.mondo
         header: application/x-www-form-urlencoded
-      outputs:
-      - id: MONDO
-        semantic: Disease
       inputs:
       - id: MONDO
         semantic: Disease
+      outputs:
+      - id: MONDO
+        semantic: Disease
       predicate: subclass_of
-      source: mondo
+      source: MONDO
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/subclass_of"
