@@ -1,4 +1,224 @@
---- 
+openapi: '3.0.0'
+info: 
+  version: '3.0'
+  title: MyGene.info API
+  description: >-
+    Documentation of the MyGene.info Gene Query web services. Learn more about
+    [MyGene.info](http://mygene.info/)
+  termsOfService: "http://mygene.info/terms/"
+  contact: 
+    name: "Chunlei Wu"
+    x-role: "responsible developer"
+    email: help@mygene.info
+    x-id: "https://github.com/newgene"
+  x-translator: 
+    component: KP
+    team: 
+      - Service Provider
+servers: 
+  - description: "Encrypted Production server"
+    url: "https://mygene.info/v3"
+  - description: "Production server"
+    url: "http://mygene.info/v3"
+tags: 
+  - name: gene
+  - name: annotation
+  - name: query
+  - name: translator
+  - name: biothings
+paths: 
+  "/gene": 
+    post: 
+      parameters: 
+        - $ref: "#/components/parameters/fields"
+          name: fields
+        - $ref: "#/components/parameters/species"
+          name: species
+        - $ref: "#/components/parameters/dotfield"
+          name: dotfield
+        - $ref: "#/components/parameters/email"
+          name: email
+      requestBody: 
+        content: 
+          application/x-www-form-urlencoded: 
+            schema: 
+              properties: 
+                ids: 
+                  description: "multiple geneids separated by comma, e.g., \"ids=1017,1018\" or \"ids=695,ENSG00000123374\". Note that currently we only take the input ids up to 1000 maximum, the rest will be omitted."
+                  type: string
+              required: 
+                - ids
+      responses: 
+        '200': 
+          content: 
+            application/json: 
+              schema: 
+                items: 
+                  $ref: "#/components/schemas/Gene"
+                type: array
+          description: "a list of matching gene objects"
+      summary: "For a list of gene ids, return the matching gene objects"
+      tags: 
+        - annotation
+  "/gene/{geneid}": 
+    get: 
+      parameters: 
+        - description: "Entrez or Ensembl gene id, e.g., 1017, ENSG00000170248. A retired Entrez Gene id works too if it is replaced by a new one, e.g., 245794"
+          example: "1017"
+          in: path
+          name: geneid
+          required: true
+          schema: 
+            type: string
+        - $ref: "#/components/parameters/fields"
+          name: fields
+        - $ref: "#/components/parameters/dotfield"
+          name: dotfield
+        - $ref: "#/components/parameters/callback"
+          name: callback
+        - $ref: "#/components/parameters/email"
+          name: email
+      responses: 
+        "200": 
+          content: 
+            application/json: 
+              schema: 
+                $ref: "#/components/schemas/Gene"
+          description: "A matching gene object"
+      summary: "Retrieve gene annotation object based on Entrez or Ensembl gene id, support JSONP and CORS as well."
+      tags: 
+        - annotation
+  "/metadata": 
+    get: 
+      parameters: 
+        - $ref: "#/components/parameters/callback"
+          name: callback
+      responses: 
+        "200": 
+          description: "MyGene.info metadata object"
+      summary: "Get metadata about the data available from MyGene.info."
+  "/metadata/fields": 
+    get: 
+      parameters: 
+        - description: "Pass a search term to filter the available fields, e.g. \"search=clinvar\"."
+          in: query
+          name: search
+          schema: 
+            type: string
+        - description: "Pass a prefix string to filter the available fields, e.g. \"prefix=refseq\"."
+          in: query
+          name: prefix
+          schema: 
+            type: string
+        - $ref: "#/components/parameters/callback"
+          name: callback
+      responses: 
+        "200": 
+          description: "MyGene.info metadata fields object"
+      summary: "Get metadata about the data fields available from MyGene.info."
+  "/query": 
+    get: 
+      parameters: 
+        - description: "Query string. Examples \"CDK2\", \"NM_052827\", \"204639_at\", \"chr1:151,073,054-151,383,976\", \"hg19.chr1:151073054-151383976\". The detailed query syntax can be found from our [docs](http://docs.mygene.info/en/latest/doc/query_service.html)."
+          example: CDK2
+          in: query
+          name: q
+          required: true
+          schema: 
+            type: string
+        - $ref: "#/components/parameters/fields"
+          name: fields
+        - $ref: "#/components/parameters/species"
+          name: species
+        - $ref: "#/components/parameters/size"
+          name: size
+        - $ref: "#/components/parameters/from"
+          name: from
+        - $ref: "#/components/parameters/sort"
+          name: sort
+        - description: "a single field or comma-separated fields to return facets, for example, \"facets=taxid\", \"facets=taxid,type_of_gene\"."
+          in: query
+          name: facets
+          schema: 
+            type: string
+        - description: "relevant when faceting on species (i.e., “facets=taxid” are passed). It’s used to pass species filter without changing the scope of faceting, so that the returned facet counts won’t change. Either species name or taxonomy id can be used, just like “species” parameter."
+          in: query
+          name: species_facet_filter
+          schema: 
+            type: string
+        - description: "when passed as “True” or “1”, the query returns only the hits with valid Entrez gene ids. Default: False."
+          in: query
+          name: entrezonly
+          schema: 
+            type: boolean
+        - description: "when passed as “True” or “1”, the query returns only the hits with valid Ensembl gene ids. Default: False."
+          in: query
+          name: ensemblonly
+          schema: 
+            type: boolean
+        - $ref: "#/components/parameters/callback"
+          name: callback
+        - $ref: "#/components/parameters/dotfield"
+          name: dotfield
+        - $ref: "#/components/parameters/email"
+          name: email
+      responses: 
+        "200": 
+          content: 
+            application/json: 
+              schema: 
+                $ref: "#/components/schemas/QueryResult"
+          description: "A query response object with \"hits\" property"
+      summary: "Make gene query and return matching gene list. Support JSONP and CORS as well."
+      tags: 
+        - query
+    post: 
+      parameters: 
+        - $ref: "#/components/parameters/fields"
+          name: fields
+        - $ref: "#/components/parameters/species"
+          name: species
+        - $ref: "#/components/parameters/dotfield"
+          name: dotfield
+        - $ref: "#/components/parameters/email"
+          name: email
+      requestBody: 
+        content: 
+          application/x-www-form-urlencoded: 
+            schema: 
+              properties: 
+                q: 
+                  description: "multiple query terms seperated by comma (also support \"+\" or white space), but no wildcard, e.g., \"q=1017,1018\" or \"q=CDK2+BTK\""
+                  type: string
+                scopes: 
+                  description: "Specify one or more fields (separated by comma) as the search \"scopes\", e.g., \"scopes=entrezgene\", \"scopes=entrezgene,ensemblgene\". The available \"fields\" can be passed to \"scopes\" parameter are listed [here](http://mygene.info/doc/query_service.html#available-fields). Default: \"scopes=entrezgene,ensemblgene,retired\" (either Entrez or Ensembl gene ids)."
+                  type: string
+              required: 
+                - q
+      responses: 
+        "200": 
+          content: 
+            application/json: 
+              schema: 
+                $ref: "#/components/schemas/QueryPOSTResult"
+          description: "Query response objects with \"hits\" property"
+      summary: "Make gene batch query and return matching gene hits"
+      tags: 
+        - query
+      ## not doing the reverse for GeneToTranscript, 
+      x-bte-kgs-operations: 
+        - $ref: "#/components/x-bte-kgs-operations/PathwayHasHumanGene"
+        - $ref: "#/components/x-bte-kgs-operations/HumanGeneInPathway"
+        - $ref: "#/components/x-bte-kgs-operations/GeneToMF"
+        - $ref: "#/components/x-bte-kgs-operations/GeneToBP"
+        - $ref: "#/components/x-bte-kgs-operations/GeneToCC"
+        - $ref: "#/components/x-bte-kgs-operations/MFToGene"
+        - $ref: "#/components/x-bte-kgs-operations/BPToGene"
+        - $ref: "#/components/x-bte-kgs-operations/CCToGene"
+        - $ref: "#/components/x-bte-kgs-operations/GeneToTranscript"
+        - $ref: "#/components/x-bte-kgs-operations/GeneToProtein"
+        - $ref: "#/components/x-bte-kgs-operations/ProteinToGene"
+        - $ref: "#/components/x-bte-kgs-operations/HumanGeneToHomolog"
 components: 
   parameters: 
     callback: 
@@ -82,7 +302,7 @@ components:
           type: string
         accession: 
           type: object
-        aliase: 
+        alias: 
           type: string
         ec: 
           type: string
@@ -186,10 +406,8 @@ components:
     QueryPOSTResult: 
       items: 
         allOf: 
-          - 
-            $ref: "#/components/schemas/MinimalGene"
-          - 
-            properties: 
+          - $ref: "#/components/schemas/MinimalGene"
+          - properties: 
               _score: 
                 format: float
                 type: number
@@ -213,570 +431,602 @@ components:
       type: object
     int64_or_array: 
       oneOf: 
-        - 
-          items: 
+        - items: 
             format: int64
             type: integer
           type: array
-        - 
-          format: int64
+        - format: int64
           type: integer
     string_or_array: 
       oneOf: 
-        - 
-          items: 
+        - items: 
             type: string
           type: array
-        - 
-          type: string
-  x-bte-kgs-operations: 
-    PathwayHasGene: 
-      - 
-        inputSeparator: ","
-        inputs: 
-          - 
-            id: REACT
-            semantic: Pathway
-        method: post
-        outputs: 
-          - 
-            id: NCBIGENE
-            semantic: Gene
-        parameters: 
-          fields: entrezgene
-          size: 1000
-          species: human
-        predicate: functional_association
-        requestBody: 
-          body: 
-            q: "{inputs[0]}"
-            scopes: pathway.reactome.id
-          header: application/x-www-form-urlencoded
-        response_mapping: 
-          $ref: "#/components/x-bte-response-mapping/functional_association_reactome_gene"
-        source: CPDB
-        supportBatch: true
-      - 
-        inputSeparator: ","
-        inputs: 
-          - 
-            id: NCBIGENE
-            semantic: Gene
-        method: post
-        outputs: 
-          - 
-            id: REACT
-            semantic: Pathway
-        parameters: 
-          fields: pathway.reactome
-          species: human
-        predicate: functional_association
-        requestBody: 
-          body: 
-            q: "{inputs[0]}"
-            scopes: entrezgene
-          header: application/x-www-form-urlencoded
-        response_mapping: 
-          $ref: "#/components/x-bte-response-mapping/functional_association_reactome"
-        source: CPDB
-        supportBatch: true
-    enablesMF: 
-      - 
-        inputSeparator: ","
-        inputs: 
-          - 
-            id: NCBIGENE
-            semantic: Gene
-        outputs: 
-          - 
-            id: GO
-            semantic: MolecularActivity
-        parameters: 
-          fields: go.MF
-        predicate: functional_association
-        requestBody: 
-          body: 
-            q: "{inputs[0]}"
-            scopes: entrezgene
-          header: application/x-www-form-urlencoded
-        response_mapping: 
-          $ref: "#/components/x-bte-response-mapping/functional_association_mf"
-        source: entrez
-        supportBatch: true
-    hasGeneProduct: 
-      - 
-        inputSeparator: ","
-        inputs: 
-          - 
-            id: ENSEMBL
-            semantic: Gene
-        outputs: 
-          - 
-            id: UNIPROTKB
-            semantic: Protein
-        parameters: 
-          fields: uniprot.Swiss-Prot
-        predicate: has_gene_product
-        requestBody: 
-          body: 
-            q: "{inputs[0]}"
-            scopes: ensembl.gene
-          header: application/x-www-form-urlencoded
-        response_mapping: 
-          $ref: "#/components/x-bte-response-mapping/has_gene_product"
-        supportBatch: true
-      - 
-        inputSeparator: ","
-        inputs: 
-          - 
-            id: ENSEMBL
-            semantic: Gene
-        outputs: 
-          - 
-            id: ENSEMBL
-            semantic: Protein
-        parameters: 
-          fields: ensembl.protein
-        predicate: has_gene_product
-        requestBody: 
-          body: 
-            q: "{inputs[0]}"
-            scopes: ensembl.gene
-          header: application/x-www-form-urlencoded
-        response_mapping: 
-          $ref: "#/components/x-bte-response-mapping/has_gene_product"
-        supportBatch: true
-    hasHomolog: 
-      - 
-        inputSeparator: ","
-        inputs: 
-          - 
-            id: NCBIGENE
-            semantic: Gene
-        outputs: 
-          - 
-            id: MGI
-            semantic: Gene
-        parameters: 
-          fields: pantherdb.ortholog
-        predicate: homologous_to
-        requestBody: 
-          body: 
-            q: "{inputs[0]}"
-            scopes: entrezgene
-          header: application/x-www-form-urlencoded
-        response_mapping: 
-          $ref: "#/components/x-bte-response-mapping/homologous_to"
-        supportBatch: true
-    hasTranscript: 
-      - 
-        inputSeparator: ","
-        inputs: 
-          - 
-            id: ENSEMBL
-            semantic: Gene
-        outputs: 
-          - 
-            id: ENSEMBL
-            semantic: Transcript
-        parameters: 
-          fields: ensembl.transcript
-        predicate: gene_to_transcript_relationship
-        requestBody: 
-          body: 
-            q: "{inputs[0]}"
-            scopes: ensembl.gene
-          header: application/x-www-form-urlencoded
-        response_mapping: 
-          $ref: "#/components/x-bte-response-mapping/gene_to_transcript_relationship"
-        supportBatch: true
-    involvedInBP: 
-      - 
-        inputSeparator: ","
-        inputs: 
-          - 
-            id: NCBIGENE
-            semantic: Gene
-        outputs: 
-          - 
-            id: GO
-            semantic: BiologicalProcess
-        parameters: 
-          fields: go.BP
-        predicate: functional_association
-        requestBody: 
-          body: 
-            q: "{inputs[0]}"
-            scopes: entrezgene
-          header: application/x-www-form-urlencoded
-        response_mapping: 
-          $ref: "#/components/x-bte-response-mapping/functional_association_bp"
-        source: entrez
-        supportBatch: true
-    involvedInCC: 
-      - 
-        inputSeparator: ","
-        inputs: 
-          - 
-            id: NCBIGENE
-            semantic: Gene
-        outputs: 
-          - 
-            id: GO
-            semantic: CellularComponent
-        parameters: 
-          fields: go.CC
-        predicate: functional_association
-        requestBody: 
-          body: 
-            q: "{inputs[0]}"
-            scopes: entrezgene
-          header: application/x-www-form-urlencoded
-        response_mapping: 
-          $ref: "#/components/x-bte-response-mapping/functional_association_cc"
-        source: entrez
-        supportBatch: true
-    involvedInPathway: 
-      - 
-        inputSeparator: ","
-        inputs: 
-          - 
-            id: NCBIGENE
-            semantic: Gene
-        method: post
-        outputs: 
-          - 
-            id: WIKIPATHWAYS
-            semantic: Pathway
-        parameters: 
-          fields: pathway.wikipathways
-        predicate: functional_association
-        requestBody: 
-          body: 
-            q: "{inputs[0]}"
-            scopes: entrezgene
-          header: application/x-www-form-urlencoded
-        response_mapping: 
-          $ref: "#/components/x-bte-response-mapping/functional_association_wikipathways"
-        source: CPDB
-        supportBatch: true
+        - type: string
   x-bte-response-mapping: 
-    ENSEMBL: ensembl.gene
-    HGNC: HGNC
-    NCBIGENE: entrezgene
-    OMIM: MIM
-    PHARMGKB: pharmgkb
-    PHAROS: pahros.target_id
-    SYMBOL: symbol
-    UMLS: umls.cui
-    description: summary
-    functional_association_bp: 
-      GO: go.BP.id
-      evidence: go.BP.evidence
-      pubmed: go.BP.pubmed
-      term: go.BP.term
-    functional_association_cc: 
-      GO: go.CC.id
-      evidence: go.CC.evidence
-      pubmed: go.CC.pubmed
-      term: go.CC.term
-    functional_association_mf: 
+    entrezgene:
+      NCBIGENE: entrezgene
+    reactomePathway: 
+      REACT: pathway.reactome.id
+      name: pathway.reactome.name
+    keggPathway: 
+      KEGG: pathway.kegg.id
+      name: pathway.kegg.name
+    wikipathway: 
+      WIKIPATHWAYS: pathway.wikipathways.id
+      name: pathway.wikipathways.name  
+    molecularFunction: 
       GO: go.MF.id
       evidence: go.MF.evidence
       pubmed: go.MF.pubmed
-      term: go.MF.term
-    functional_association_reactome: 
-      REACT: pathway.reactome.id
-      name: pathway.reactome.name
-    functional_association_reactome_gene: 
-      NCBIGENE: entrezgene
-    functional_association_wikipathways: 
-      WIKIPATHWAYS: pathway.wikipathways.id
-      name: pathway.wikipathways.name
-    gene_to_transcript_relationship: 
+      name: go.MF.term
+    biologicalProcess: 
+      GO: go.BP.id
+      evidence: go.BP.evidence
+      pubmed: go.BP.pubmed
+      name: go.BP.term
+    cellularComponent: 
+      GO: go.CC.id
+      evidence: go.CC.evidence
+      pubmed: go.CC.pubmed
+      name: go.CC.term
+    ensemblTranscript: 
       ENSEMBL: ensembl.transcript
-    has_gene_product: 
+    ensemblProtein: 
       ENSEMBL: ensembl.protein
+    uniprotProtein: 
       UNIPROTKB: uniprot.Swiss-Prot
-    homologous_to: 
-      ENSEMBL: pantherdb.ortholog.Ensembl
-      FlyBase: pantherdb.ortholog.FlyBase
-      HGNC: pantherdb.ortholog.HGNC
+    ensemblGene: 
+      ENSEMBL: ensembl.gene
+    ## include ortholog_type for panther?
+    pantherMGI:
       MGI: pantherdb.ortholog.MGI
-      POMBASE: pantherdb.ortholog.PomBase
-      RGD: pantherdb.ortholog.RGD
-      SGD: pantherdb.ortholog.SGD
-      TAIR: pantherdb.ortholog.TAIR
-      ZFIN: pantherdb.ortholog.ZFIN
-      dictyBase: pantherdb.ortholog.dictyBase
       inTaxon: pantherdb.ortholog.taxid
-    inTaxon: taxid
-    name: 
-      - name
-      - other_names
-info: 
-  contact: 
-    email: help@mygene.info
-    name: "Chunlei Wu"
-    x-id: "https://github.com/newgene"
-    x-role: "responsible developer"
-  description: "Documentation of the MyGene.info Gene Query web services. Learn more about [MyGene.info](http://mygene.info/)"
-  termsOfService: "http://mygene.info/terms/"
-  title: "MyGene.info API"
-  version: "3.0"
-  x-translator: 
-    component: KP
-    team: 
-      - "Service Provider"
-openapi: "3.0.0"
-paths: 
-  /gene: 
-    post: 
-      parameters: 
-        - 
-          $ref: "#/components/parameters/fields"
-          name: fields
-        - 
-          $ref: "#/components/parameters/species"
-          name: species
-        - 
-          $ref: "#/components/parameters/dotfield"
-          name: dotfield
-        - 
-          $ref: "#/components/parameters/email"
-          name: email
-      requestBody: 
-        content: 
-          application/x-www-form-urlencoded: 
-            schema: 
-              properties: 
-                ids: 
-                  description: "multiple geneids seperated by comma, e.g., \"ids=1017,1018\" or \"ids=695,ENSG00000123374\". Note that currently we only take the input ids up to 1000 maximum, the rest will be omitted."
-                  type: string
-              required: 
-                - ids
-      responses: 
-        ? "200"
-        : 
-          content: 
-            application/json: 
-              schema: 
-                items: 
-                  $ref: "#/components/schemas/Gene"
-                type: array
-          description: "a list of matching gene objects"
-      summary: "For a list of gene ids, return the matching gene objects"
-      tags: 
-        - annotation
-  ? "/gene/{geneid}"
-  : 
-    get: 
-      parameters: 
-        - 
-          description: "Entrez or Ensembl gene id, e.g., 1017, ENSG00000170248. A retired Entrez Gene id works too if it is replaced by a new one, e.g., 245794"
-          example: "1017"
-          in: path
-          name: geneid
-          required: true
-          schema: 
-            type: string
-        - 
-          $ref: "#/components/parameters/fields"
-          name: fields
-        - 
-          $ref: "#/components/parameters/dotfield"
-          name: dotfield
-        - 
-          $ref: "#/components/parameters/callback"
-          name: callback
-        - 
-          $ref: "#/components/parameters/email"
-          name: email
-      responses: 
-        ? "200"
-        : 
-          content: 
-            application/json: 
-              schema: 
-                $ref: "#/components/schemas/Gene"
-          description: "A matching gene object"
-      summary: "Retrieve gene annotation object based on Entrez or Ensembl gene id, support JSONP and CORS as well."
-      tags: 
-        - annotation
-  /metadata: 
-    get: 
-      parameters: 
-        - 
-          $ref: "#/components/parameters/callback"
-          name: callback
-      responses: 
-        ? "200"
-        : 
-          description: "MyGene.info metadata object"
-      summary: "Get metadata about the data available from MyGene.info."
-  /metadata/fields: 
-    get: 
-      parameters: 
-        - 
-          description: "Pass a search term to filter the available fields, e.g. \"search=clinvar\"."
-          in: query
-          name: search
-          schema: 
-            type: string
-        - 
-          description: "Pass a prefix string to filter the available fields, e.g. \"prefix=refseq\"."
-          in: query
-          name: prefix
-          schema: 
-            type: string
-        - 
-          $ref: "#/components/parameters/callback"
-          name: callback
-      responses: 
-        ? "200"
-        : 
-          description: "MyGene.info metadata fields object"
-      summary: "Get metadata about the data fields available from MyGene.info."
-  /query: 
-    get: 
-      parameters: 
-        - 
-          description: "Query string. Examples \"CDK2\", \"NM_052827\", \"204639_at\", \"chr1:151,073,054-151,383,976\", \"hg19.chr1:151073054-151383976\". The detailed query syntax can be found from our [docs](http://docs.mygene.info/en/latest/doc/query_service.html)."
-          example: CDK2
-          in: query
-          name: q
-          required: true
-          schema: 
-            type: string
-        - 
-          $ref: "#/components/parameters/fields"
-          name: fields
-        - 
-          $ref: "#/components/parameters/species"
-          name: species
-        - 
-          $ref: "#/components/parameters/size"
-          name: size
-        - 
-          $ref: "#/components/parameters/from"
-          name: from
-        - 
-          $ref: "#/components/parameters/sort"
-          name: sort
-        - 
-          description: "a single field or comma-separated fields to return facets, for example, \"facets=taxid\", \"facets=taxid,type_of_gene\"."
-          in: query
-          name: facets
-          schema: 
-            type: string
-        - 
-          description: "relevant when faceting on species (i.e., “facets=taxid” are passed). It’s used to pass species filter without changing the scope of faceting, so that the returned facet counts won’t change. Either species name or taxonomy id can be used, just like “species” parameter."
-          in: query
-          name: species_facet_filter
-          schema: 
-            type: string
-        - 
-          description: "when passed as “True” or “1”, the query returns only the hits with valid Entrez gene ids. Default: False."
-          in: query
-          name: entrezonly
-          schema: 
-            type: boolean
-        - 
-          description: "when passed as “True” or “1”, the query returns only the hits with valid Ensembl gene ids. Default: False."
-          in: query
-          name: ensemblonly
-          schema: 
-            type: boolean
-        - 
-          $ref: "#/components/parameters/callback"
-          name: callback
-        - 
-          $ref: "#/components/parameters/dotfield"
-          name: dotfield
-        - 
-          $ref: "#/components/parameters/email"
-          name: email
-      responses: 
-        ? "200"
-        : 
-          content: 
-            application/json: 
-              schema: 
-                $ref: "#/components/schemas/QueryResult"
-          description: "A query response object with \"hits\" property"
-      summary: "Make gene query and return matching gene list. Support JSONP and CORS as well."
-      tags: 
-        - query
-    post: 
-      parameters: 
-        - 
-          $ref: "#/components/parameters/fields"
-          name: fields
-        - 
-          $ref: "#/components/parameters/species"
-          name: species
-        - 
-          $ref: "#/components/parameters/dotfield"
-          name: dotfield
-        - 
-          $ref: "#/components/parameters/email"
-          name: email
-      requestBody: 
-        content: 
-          application/x-www-form-urlencoded: 
-            schema: 
-              properties: 
-                q: 
-                  description: "multiple query terms seperated by comma (also support \"+\" or white space), but no wildcard, e.g., \"q=1017,1018\" or \"q=CDK2+BTK\""
-                  type: string
-                scopes: 
-                  description: "Specify one or more fields (separated by comma) as the search \"scopes\", e.g., \"scopes=entrezgene\", \"scopes=entrezgene,ensemblgene\". The available \"fields\" can be passed to \"scopes\" parameter are listed [here](http://mygene.info/doc/query_service.html#available-fields). Default: \"scopes=entrezgene,ensemblgene,retired\" (either Entrez or Ensembl gene ids)."
-                  type: string
-              required: 
-                - q
-      responses: 
-        ? "200"
-        : 
-          content: 
-            application/json: 
-              schema: 
-                $ref: "#/components/schemas/QueryPOSTResult"
-          description: "Query response objects with \"hits\" property"
-      summary: "Make gene batch query and return matching gene hits"
-      tags: 
-        - query
-      x-bte-kgs-operations: 
-        - 
-          $ref: "#/components/x-bte-kgs-operations/enablesMF"
-        - 
-          $ref: "#/components/x-bte-kgs-operations/involvedInBP"
-        - 
-          $ref: "#/components/x-bte-kgs-operations/involvedInCC"
-        - 
-          $ref: "#/components/x-bte-kgs-operations/involvedInPathway"
-        - 
-          $ref: "#/components/x-bte-kgs-operations/hasTranscript"
-        - 
-          $ref: "#/components/x-bte-kgs-operations/hasGeneProduct"
-        - 
-          $ref: "#/components/x-bte-kgs-operations/hasHomolog"
-        - 
-          $ref: "#/components/x-bte-kgs-operations/PathwayHasGene"
-servers: 
-  - 
-    description: "Encrypted Production server"
-    url: "https://mygene.info/v3"
-  - 
-    description: "Production server"
-    url: "http://mygene.info/v3"
-tags: 
-  - 
-    name: gene
-  - 
-    name: annotation
-  - 
-    name: query
-  - 
-    name: translator
-  - 
-    name: biothings
+    pantherRGD:
+      RGD: pantherdb.ortholog.RGD
+      inTaxon: pantherdb.ortholog.taxid
+    pantherZFIN:
+      ZFIN: pantherdb.ortholog.ZFIN
+      inTaxon: pantherdb.ortholog.taxid      
+    pantherWorm:
+      WormBase: pantherdb.ortholog.WormBase
+      inTaxon: pantherdb.ortholog.taxid   
+    pantherSGD:
+      SGD: pantherdb.ortholog.SGD
+      inTaxon: pantherdb.ortholog.taxid         
+    pantherDicty:
+      dictyBase: pantherdb.ortholog.dictyBase
+      inTaxon: pantherdb.ortholog.taxid    
+    pantherPom:
+      POMBASE: pantherdb.ortholog.PomBase
+      inTaxon: pantherdb.ortholog.taxid
+  x-bte-kgs-operations: 
+  ## notes:
+  ## - reactome parser could retrieve more info: evidence codes, species, website 
+  ## - for ConsensusPathDB, look at "content information" tab at http://cpdb.molgen.mpg.de/CPDB to see versions of the pathway databases they used
+    PathwayHasHumanGene:  ## using Reactome, KEGG, Wikipathways
+      - supportBatch: true
+        inputSeparator: ","
+        method: post
+        parameters: 
+          fields: entrezgene
+          species: human
+        requestBody: 
+          body: 
+            q: "{inputs[0]}"
+            scopes: pathway.reactome.id  ## example: R-HSA-70895
+            size: 1000
+          header: application/x-www-form-urlencoded
+        inputs: 
+          - id: REACT
+            semantic: Pathway
+        outputs:  
+          - id: NCBIGENE
+            semantic: Gene
+        predicate: has_participant
+        source: Reactome
+        response_mapping: 
+          $ref: "#/components/x-bte-response-mapping/entrezgene"
+      - supportBatch: true
+        inputSeparator: ","
+        method: post
+        parameters: 
+          fields: entrezgene
+          species: human
+        requestBody: 
+          body: 
+            q: "{inputs[0]}"
+            scopes: pathway.kegg.id  ## example: hsa00120
+            size: 1000
+          header: application/x-www-form-urlencoded
+        inputs: 
+          - id: KEGG
+            semantic: Pathway
+        outputs: 
+          - id: NCBIGENE
+            semantic: Gene
+        predicate: has_participant
+        ## don't abbreviate since multiple resources named "CPDB"
+        source: ConsensusPathDB
+        response_mapping: 
+          $ref: "#/components/x-bte-response-mapping/entrezgene"
+      - supportBatch: true
+        inputSeparator: ","
+        method: post
+        parameters: 
+          fields: entrezgene
+          species: human
+        requestBody: 
+          body: 
+            q: "{inputs[0]}"
+            scopes: pathway.wikipathways.id  ## example: WP3942
+            size: 1000
+          header: application/x-www-form-urlencoded
+        inputs: 
+          - id: WIKIPATHWAYS
+            semantic: Pathway
+        outputs: 
+          - id: NCBIGENE
+            semantic: Gene
+        predicate: has_participant
+        ## don't abbreviate since multiple resources named "CPDB"
+        source: ConsensusPathDB
+        response_mapping: 
+          $ref: "#/components/x-bte-response-mapping/entrezgene"
+    HumanGeneInPathway:   ## using Reactome, KEGG, Wikipathways
+      - supportBatch: true
+        inputSeparator: ","
+        method: post
+        parameters: 
+          fields: pathway.reactome
+          species: human
+        requestBody: 
+          body: 
+            q: "{inputs[0]}"
+            scopes: entrezgene
+          header: application/x-www-form-urlencoded
+        inputs: 
+          - id: NCBIGENE
+            semantic: Gene
+        outputs: 
+          - id: REACT
+            semantic: Pathway
+        predicate: participates_in
+        source: Reactome
+        response_mapping: 
+          $ref: "#/components/x-bte-response-mapping/reactomePathway"
+      - supportBatch: true
+        inputSeparator: ","
+        method: post
+        parameters: 
+          fields: pathway.kegg
+          species: human
+        requestBody: 
+          body: 
+            q: "{inputs[0]}"
+            scopes: entrezgene
+          header: application/x-www-form-urlencoded
+        inputs: 
+          - id: NCBIGENE
+            semantic: Gene
+        outputs: 
+          - id: KEGG
+            semantic: Pathway
+        predicate: participates_in
+        source: ConsensusPathDB
+        response_mapping: 
+          $ref: "#/components/x-bte-response-mapping/keggPathway"
+      - supportBatch: true
+        inputSeparator: ","
+        method: post
+        parameters: 
+          fields: pathway.wikipathways
+          species: human
+        requestBody: 
+          body: 
+            q: "{inputs[0]}"
+            scopes: entrezgene
+          header: application/x-www-form-urlencoded
+        inputs: 
+          - id: NCBIGENE
+            semantic: Gene
+        outputs: 
+          - id: WIKIPATHWAYS
+            semantic: Pathway
+        predicate: participates_in
+        source: ConsensusPathDB
+        response_mapping: 
+          $ref: "#/components/x-bte-response-mapping/wikipathway"
+    GeneToMF: 
+      - supportBatch: true
+        inputSeparator: ","
+        method: post
+        parameters: 
+          fields: go.MF
+          species: human
+        requestBody: 
+          body: 
+            q: "{inputs[0]}"
+            scopes: entrezgene
+          header: application/x-www-form-urlencoded
+        inputs: 
+          - id: NCBIGENE
+            semantic: Gene
+        outputs: 
+          - id: GO
+            semantic: MolecularActivity
+        predicate: enables
+        source: "NCBI Gene"
+        response_mapping: 
+          $ref: "#/components/x-bte-response-mapping/molecularFunction" 
+    GeneToBP: 
+      - supportBatch: true
+        inputSeparator: ","
+        method: post
+        parameters: 
+          fields: go.BP
+          species: human
+        requestBody: 
+          body: 
+            q: "{inputs[0]}"
+            scopes: entrezgene
+          header: application/x-www-form-urlencoded
+        inputs: 
+          - id: NCBIGENE
+            semantic: Gene
+        outputs: 
+          - id: GO
+            semantic: BiologicalProcess
+        predicate: enables
+        source: "NCBI Gene"
+        response_mapping: 
+          $ref: "#/components/x-bte-response-mapping/biologicalProcess"
+    GeneToCC: 
+      - supportBatch: true
+        inputSeparator: ","
+        method: post
+        parameters: 
+          fields: go.CC
+          species: human
+        requestBody: 
+          body: 
+            q: "{inputs[0]}"
+            scopes: entrezgene
+          header: application/x-www-form-urlencoded
+        inputs: 
+          - id: NCBIGENE
+            semantic: Gene
+        outputs: 
+          - id: GO
+            semantic: CellularComponent
+        predicate: enables
+        source: "NCBI Gene"
+        response_mapping: 
+          $ref: "#/components/x-bte-response-mapping/cellularComponent"  
+    MFToGene: 
+      - supportBatch: true
+        inputSeparator: ","
+        method: post
+        parameters: 
+          fields: entrezgene
+          species: human
+        requestBody: 
+          body: 
+            q: "{inputs[0]}"
+            scopes: go.MF.id
+            size: 1000
+          header: application/x-www-form-urlencoded 
+        inputs: 
+          - id: GO
+            semantic: MolecularActivity          
+        outputs: 
+          - id: NCBIGENE
+            semantic: Gene
+        predicate: enabled_by
+        source: "NCBI Gene"
+        response_mapping: 
+          $ref: "#/components/x-bte-response-mapping/entrezgene"
+    BPToGene: 
+      - supportBatch: true
+        inputSeparator: ","
+        method: post
+        parameters: 
+          fields: entrezgene
+          species: human
+        requestBody: 
+          body: 
+            q: "{inputs[0]}"
+            scopes: go.BP.id
+            size: 1000
+          header: application/x-www-form-urlencoded 
+        inputs: 
+          - id: GO
+            semantic: BiologicalProcess          
+        outputs: 
+          - id: NCBIGENE
+            semantic: Gene
+        predicate: enabled_by
+        source: "NCBI Gene"
+        response_mapping: 
+          $ref: "#/components/x-bte-response-mapping/entrezgene"  
+    CCToGene: 
+      - supportBatch: true
+        inputSeparator: ","
+        method: post
+        parameters: 
+          fields: entrezgene
+          species: human
+        requestBody: 
+          body: 
+            q: "{inputs[0]}"
+            scopes: go.CC.id
+            size: 1000
+          header: application/x-www-form-urlencoded 
+        inputs: 
+          - id: GO
+            semantic: CellularComponent          
+        outputs: 
+          - id: NCBIGENE
+            semantic: Gene
+        predicate: enabled_by
+        source: "NCBI Gene"
+        response_mapping: 
+          $ref: "#/components/x-bte-response-mapping/entrezgene"  
+    GeneToTranscript: 
+      - supportBatch: true
+        inputSeparator: ","
+        method: post
+        parameters: 
+          fields: ensembl.transcript
+          species: human
+        requestBody: 
+          body:  
+            q: "{inputs[0]}"
+            scopes: ensembl.gene
+          header: application/x-www-form-urlencoded
+        inputs: 
+          - id: ENSEMBL
+            semantic: Gene
+        outputs: 
+          - id: ENSEMBL
+            semantic: Transcript
+        ## no biolink predicate for gene -> transcript. "has_gene_product" seems to be for only functional rnas, proteins
+        predicate: related_to
+        source: Ensembl
+        response_mapping: 
+          $ref: "#/components/x-bte-response-mapping/ensemblTranscript" 
+    GeneToProtein: 
+      - supportBatch: true
+        inputSeparator: ","
+        method: post
+        parameters: 
+          fields: ensembl.protein
+          species: human
+        requestBody: 
+          body:  
+            q: "{inputs[0]}"
+            scopes: ensembl.gene
+          header: application/x-www-form-urlencoded
+        inputs: 
+          - id: ENSEMBL
+            semantic: Gene
+        outputs: 
+          - id: ENSEMBL
+            semantic: Protein
+        predicate: has_gene_product
+        source: Ensembl
+        response_mapping: 
+          $ref: "#/components/x-bte-response-mapping/ensemblProtein" 
+      - supportBatch: true
+        inputSeparator: ","
+        method: post
+        parameters: 
+          fields: uniprot.Swiss-Prot
+          species: human
+        requestBody: 
+          body: 
+            q: "{inputs[0]}"
+            scopes: ensembl.gene
+          header: application/x-www-form-urlencoded
+        inputs: 
+          - id: ENSEMBL
+            semantic: Gene
+        outputs: 
+          - id: UNIPROTKB
+            semantic: Protein
+        predicate: has_gene_product
+        ## technically from the ID mapping file https://www.uniprot.org/downloads#uniprotkblink
+        source: UniprotKB
+        response_mapping: 
+          $ref: "#/components/x-bte-response-mapping/uniprotProtein"
+    ProteinToGene: 
+      - supportBatch: true
+        inputSeparator: ","
+        method: post
+        parameters: 
+          fields: ensembl.gene
+          species: human
+        requestBody: 
+          body:  
+            q: "{inputs[0]}"
+            scopes: ensembl.protein
+          header: application/x-www-form-urlencoded
+        inputs: 
+          - id: ENSEMBL
+            semantic: Protein
+        outputs: 
+          - id: ENSEMBL
+            semantic: Gene
+        ## no predicate inverse for "has_gene_product"
+        predicate: related_to
+        source: Ensembl
+        response_mapping: 
+          $ref: "#/components/x-bte-response-mapping/ensemblGene" 
+      - supportBatch: true
+        inputSeparator: ","
+        method: post
+        parameters: 
+          fields: ensembl.gene
+          species: human
+        requestBody: 
+          body:  
+            q: "{inputs[0]}"
+            scopes: uniprot.Swiss-Prot
+          header: application/x-www-form-urlencoded
+        inputs: 
+          - id: UNIPROTKB
+            semantic: Protein
+        outputs: 
+          - id: ENSEMBL
+            semantic: Gene
+        ## no predicate inverse for "has_gene_product"
+        predicate: related_to
+        ## technically from the ID mapping file https://www.uniprot.org/downloads#uniprotkblink
+        source: UniprotKB
+        response_mapping: 
+          $ref: "#/components/x-bte-response-mapping/ensemblGene" 
+    ## pantherdb gives orthologs and paralogs, which are both homologs. Hence we use homolog
+    ## currently output: MGI, RGD, ZFIN, WormBase, SGD, dictyBase, POMBASE
+    ## Biolink questions: using FB (rather than FlyBase)?? Also no TAIR. 
+    ## Also have Ensembl (for specific non-human species) and UniprotKB (for all orthologs)
+    HumanGeneToHomolog: 
+      - supportBatch: true
+        inputSeparator: ","
+        method: post
+        parameters: 
+          fields: pantherdb.ortholog
+        requestBody: 
+          body:  
+            q: "{inputs[0]}"
+            scopes: entrezgene
+          header: application/x-www-form-urlencoded
+        inputs: 
+          - id: NCBIGENE
+            semantic: Gene  
+        outputs: 
+          - id: MGI
+            semantic: Gene
+        predicate: homologous_to
+        source: PANTHER
+        response_mapping: 
+          $ref: "#/components/x-bte-response-mapping/pantherMGI" 
+      - supportBatch: true
+        inputSeparator: ","
+        method: post
+        parameters: 
+          fields: pantherdb.ortholog
+        requestBody: 
+          body:  
+            q: "{inputs[0]}"
+            scopes: entrezgene
+          header: application/x-www-form-urlencoded
+        inputs: 
+          - id: NCBIGENE
+            semantic: Gene  
+        outputs: 
+          - id: RGD
+            semantic: Gene
+        predicate: homologous_to
+        source: PANTHER
+        response_mapping: 
+          $ref: "#/components/x-bte-response-mapping/pantherRGD"           
+      - supportBatch: true
+        inputSeparator: ","
+        method: post
+        parameters: 
+          fields: pantherdb.ortholog
+        requestBody: 
+          body:  
+            q: "{inputs[0]}"
+            scopes: entrezgene
+          header: application/x-www-form-urlencoded
+        inputs: 
+          - id: NCBIGENE
+            semantic: Gene  
+        outputs: 
+          - id: ZFIN
+            semantic: Gene
+        predicate: homologous_to
+        source: PANTHER
+        response_mapping: 
+          $ref: "#/components/x-bte-response-mapping/pantherZFIN"   
+      - supportBatch: true
+        inputSeparator: ","
+        method: post
+        parameters: 
+          fields: pantherdb.ortholog
+        requestBody: 
+          body:  
+            q: "{inputs[0]}"
+            scopes: entrezgene
+          header: application/x-www-form-urlencoded
+        inputs: 
+          - id: NCBIGENE
+            semantic: Gene  
+        outputs: 
+          - id: WormBase
+            semantic: Gene
+        predicate: homologous_to
+        source: PANTHER
+        response_mapping: 
+          $ref: "#/components/x-bte-response-mapping/pantherWorm"   
+      - supportBatch: true
+        inputSeparator: ","
+        method: post
+        parameters: 
+          fields: pantherdb.ortholog
+        requestBody: 
+          body:  
+            q: "{inputs[0]}"
+            scopes: entrezgene
+          header: application/x-www-form-urlencoded
+        inputs: 
+          - id: NCBIGENE
+            semantic: Gene  
+        outputs: 
+          - id: SGD
+            semantic: Gene
+        predicate: homologous_to
+        source: PANTHER
+        response_mapping: 
+          $ref: "#/components/x-bte-response-mapping/pantherSGD"   
+      - supportBatch: true
+        inputSeparator: ","
+        method: post
+        parameters: 
+          fields: pantherdb.ortholog
+        requestBody: 
+          body:  
+            q: "{inputs[0]}"
+            scopes: entrezgene
+          header: application/x-www-form-urlencoded
+        inputs: 
+          - id: NCBIGENE
+            semantic: Gene  
+        outputs: 
+          - id: dictyBase
+            semantic: Gene
+        predicate: homologous_to
+        source: PANTHER
+        response_mapping: 
+          $ref: "#/components/x-bte-response-mapping/pantherDicty"   
+      - supportBatch: true
+        inputSeparator: ","
+        method: post
+        parameters: 
+          fields: pantherdb.ortholog
+        requestBody: 
+          body:  
+            q: "{inputs[0]}"
+            scopes: entrezgene
+          header: application/x-www-form-urlencoded
+        inputs: 
+          - id: NCBIGENE
+            semantic: Gene  
+        outputs: 
+          - id: POMBASE
+            semantic: Gene
+        predicate: homologous_to
+        source: PANTHER
+        response_mapping: 
+          $ref: "#/components/x-bte-response-mapping/pantherPom"
