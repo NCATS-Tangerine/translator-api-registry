@@ -389,6 +389,7 @@ components:
     metabolizedBy:
       name: drugbank.enzymes.name
       SYMBOL: drugbank.enzymes.gene_name
+      pubmed: drugbank.enzymes.pmids
       function: drugbank.enzymes.general_function
       action: drugbank.enzymes.actions
     target-drugbank:
@@ -427,8 +428,10 @@ components:
       inputs:
       - id: DRUGBANK
         semantic: ChemicalSubstance
+      ## this isn't a current biolink predicate
       predicate: metabolic_processing_affected_by
       source: drugbank
+      ## output could also be the uniprot ID?
       outputs:
       - id: SYMBOL
         semantic: Gene
@@ -447,6 +450,7 @@ components:
       inputs:
       - id: DRUGBANK
         semantic: ChemicalSubstance
+      ## output could also be the uniprot ID?
       outputs:
       - id: SYMBOL
         semantic: Gene
@@ -466,6 +470,7 @@ components:
       inputs:
       - id: CHEMBL.COMPOUND
         semantic: ChemicalSubstance
+      ## output could also be the uniprot ID?
       outputs:
       - id: SYMBOL
         semantic: Gene
@@ -486,6 +491,7 @@ components:
       inputs:
       - id: CHEMBL.COMPOUND
         semantic: ChemicalSubstance
+      ## output could also be the SNOMED, CUI IDs?
       outputs:
       - id: UMLS
         semantic: Disease
@@ -506,10 +512,11 @@ components:
       inputs:
       - id: CHEMBL.COMPOUND
         semantic: ChemicalSubstance
+      ## output could also be the SNOMED, CUI IDs?
       outputs:
       - id: UMLS
         semantic: Disease
-      predicate: contraindication
+      predicate: contraindicated_for  ## current biolink predicate
       source: drugcentral
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/contraindication"
@@ -518,7 +525,7 @@ components:
       inputSeparator: ","
       parameters:
         fields: drugbank.id
-        size: '250'
+        size: '1000'
       requestBody:
         body:
           q: "{inputs[0]}"
@@ -527,8 +534,10 @@ components:
       outputs:
       - id: DRUGBANK
         semantic: ChemicalSubstance
+      ## this isn't a current biolink predicate
       predicate: metabolize
       source: drugbank
+      ## input could also be uniprot IDs (different scopes)
       inputs:
       - id: SYMBOL
         semantic: Gene
@@ -539,7 +548,7 @@ components:
       inputSeparator: ","
       parameters:
         fields: drugbank.id
-        size: '250'
+        size: '1000'
       requestBody:
         body:
           q: "{inputs[0]}"
@@ -548,6 +557,7 @@ components:
       outputs:
       - id: DRUGBANK
         semantic: ChemicalSubstance
+      ## input could also be uniprot IDs (different scopes)
       inputs:
       - id: SYMBOL
         semantic: Gene
@@ -559,7 +569,7 @@ components:
       inputSeparator: ","
       parameters:
         fields: chembl.molecule_chembl_id
-        size: '250'
+        size: '1000'
       requestBody:
         body:
           q: "{inputs[0]}"
@@ -568,6 +578,7 @@ components:
       outputs:
       - id: CHEMBL.COMPOUND
         semantic: ChemicalSubstance
+      ## input could also be uniprot IDs (different scopes)
       inputs:
       - id: SYMBOL
         semantic: Gene
@@ -580,7 +591,7 @@ components:
       inputSeparator: ","
       parameters:
         fields: chembl.molecule_chembl_id
-        size: '250'
+        size: '1000'
       requestBody:
         body:
           q: "{inputs[0]}"
@@ -589,6 +600,7 @@ components:
       outputs:
       - id: CHEMBL.COMPOUND
         semantic: ChemicalSubstance
+      ## input could also be the SNOMED, CUI IDs?
       inputs:
       - id: UMLS
         semantic: Disease
@@ -601,7 +613,7 @@ components:
       inputSeparator: ","
       parameters:
         fields: chembl.molecule_chembl_id
-        size: '250'
+        size: '1000'
       requestBody:
         body:
           q: "{inputs[0]}"
@@ -610,10 +622,12 @@ components:
       outputs:
       - id: CHEMBL.COMPOUND
         semantic: ChemicalSubstance
+      ## input could also be the SNOMED, CUI IDs?
       inputs:
       - id: UMLS
         semantic: Disease
-      predicate: contraindicated_for
+      ## this currently isn't a biolink predicate (need an inverse for ChemicalSubstance -(contraindicated for)->Disease)
+      predicate: is_contraindication_to_receiving
       source: drugcentral
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/chembl"
