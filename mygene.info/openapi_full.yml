@@ -297,6 +297,33 @@ components:
         ## don't abbreviate since multiple resources named "CPDB"
         source: ConsensusPathDB
         supportBatch: true
+      - 
+        inputSeparator: ","
+        inputs: 
+          - 
+            id: BIOCARTA
+            semantic: Pathway
+        method: post
+        outputs: 
+          - 
+            id: NCBIGENE
+            semantic: Gene
+        parameters: 
+          fields: entrezgene
+          species: human
+        predicate: has_participant
+        requestBody: 
+          body: 
+            q: "{inputs[0]}"
+            scopes: pathway.biocarta.id  ## example: WP3942
+            size: 1000
+          header: application/x-www-form-urlencoded
+        response_mapping: 
+          $ref: "#/components/x-bte-response-mapping/entrezgene"
+        ## don't abbreviate since multiple resources named "CPDB"
+        source: ConsensusPathDB
+        supportBatch: true
+      
     enablesMF:
     ## biolink: weird predicate. biolink doesn't have something like has_activity/has_function 
     ## future: relation could be RO:0000085 (has_function), but this currently isn't mapped to biolink
@@ -816,6 +843,30 @@ components:
           $ref: "#/components/x-bte-response-mapping/wikipathway"
         source: ConsensusPathDB
         supportBatch: true
+      - 
+        inputSeparator: ","
+        inputs: 
+          - 
+            id: NCBIGENE
+            semantic: Gene
+        method: post
+        outputs: 
+          - 
+            id: BIOCARTA
+            semantic: Pathway
+        parameters: 
+          fields: pathway.biocarta
+          species: human
+        predicate: participates_in
+        requestBody: 
+          body: 
+            q: "{inputs[0]}"
+            scopes: entrezgene
+          header: application/x-www-form-urlencoded
+        response_mapping: 
+          $ref: "#/components/x-bte-response-mapping/biocarta"
+        source: ConsensusPathDB
+        supportBatch: true
   x-bte-response-mapping: 
 #     ENSEMBL: ensembl.gene
 #     HGNC: HGNC
@@ -852,6 +903,9 @@ components:
     wikipathway: 
       WIKIPATHWAYS: pathway.wikipathways.id
       name: pathway.wikipathways.name
+    biocarta: 
+      BIOCARTA: pathway.biocarta.id
+      name: pathway.biocarta.name
     keggPathway: 
       KEGG: pathway.kegg.id
       name: pathway.kegg.name
