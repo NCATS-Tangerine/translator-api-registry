@@ -135,7 +135,7 @@ paths:
     get:
       parameters:
       - description: Query string.
-        example: subject.NCBIGENE:51742
+        example: subject.NCBIGene:51742
         in: query
         name: q
         required: true
@@ -384,11 +384,13 @@ components:
       - id: NCBIGENE
         semantic: Gene
       parameters:
-        fields: association.context.disease.mondo,subject.NCBIGENE,association.effect_size,association.pvalue
+        fields: association.context.disease.mondo,subject.NCBIGene,association.effect_size,association.pvalue
         q: "object.PUBCHEM:{inputs[0]} AND association.effect_size:<0 AND association.pvalue:<0.05"
         sort: "association.pvalue"
         size: '1000'
-      predicate: gene_has_variant_that_contributes_to_drug_response_association
+      ## previously gene_has_variant_that_contributes_to_drug_response_association which isn't in biolink
+      ## this is the inverse to "affects response to" in biolink PR #699
+      predicate: response_affected_by
       response_mapping:
         $ref: '#/components/x-bte-response-mapping/chemical-gene'
       source: Multiomics Provider
@@ -402,17 +404,18 @@ components:
         semantic: ChemicalSubstance
       parameters:
         fields: association.context.disease.mondo,object.PUBCHEM,association.effect_size,association.pvalue
-        q: "subject.NCBIGENE:{inputs[0]} AND association.effect_size:<0 AND association.pvalue:<0.05"
+        q: "subject.NCBIGene:{inputs[0]} AND association.effect_size:<0 AND association.pvalue:<0.05"
         sort: "association.pvalue"
         size: '1000'
-      predicate: gene_has_variant_that_contributes_to_drug_response_association
+      ## previously gene_has_variant_that_contributes_to_drug_response_association which isn't in biolink
+      predicate: affects_response_to
       response_mapping:
         $ref: '#/components/x-bte-response-mapping/gene-chemical'
       source: Multiomics Provider
       supportBatch: false
   x-bte-response-mapping:
     chemical-gene:
-      NCBIGENE: hits.subject.NCBIGENE
+      NCBIGENE: hits.subject.NCBIGene
       effect_size: hits.association.effect_size
       pvalue: hits.association.pvalue
       disease_context: hits.association.context.disease.mondo
