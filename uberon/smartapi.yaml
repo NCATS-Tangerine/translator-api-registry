@@ -223,7 +223,7 @@ paths:
       - $ref: '#/components/x-bte-kgs-operations/subclass_of'
       - $ref: '#/components/x-bte-kgs-operations/part_of'
       - $ref: '#/components/x-bte-kgs-operations/has_part'
-      - $ref: '#/components/x-bte-kgs-operations/developes_from'
+      - $ref: '#/components/x-bte-kgs-operations/develops_from'
       - $ref: '#/components/x-bte-kgs-operations/located_in'
       - $ref: '#/components/x-bte-kgs-operations/location_of'
       - $ref: '#/components/x-bte-kgs-operations/produced_by'
@@ -390,7 +390,7 @@ components:
         semantic: AnatomicalEntity
       parameters:
         fields: children
-      predicate: has_subclass
+      predicate: superclass_of  ## this is the inverse of subclass_of right now
       requestBody:
         body:
           q: '{inputs[0]}'
@@ -529,7 +529,7 @@ components:
       - id: UBERON
         semantic: AnatomicalEntity
       parameters:
-        fields: _id
+        fields: location_of.uberon
       predicate: location_of
       requestBody:
         body:
@@ -540,7 +540,7 @@ components:
         $ref: '#/components/x-bte-response-mapping/location_of'
       source: UBERON Ontology
       supportBatch: true
-    developes_from:
+    develops_from:
     - inputSeparator: ','
       inputs:
       - id: UBERON
@@ -549,15 +549,15 @@ components:
       - id: UBERON
         semantic: AnatomicalEntity
       parameters:
-        fields: developes_from.uberon
-      predicate: developes_from
+        fields: develops_from.uberon
+      predicate: develops_from
       requestBody:
         body:
           q: '{inputs[0]}'
           scopes: _id
         header: application/x-www-form-urlencoded
       response_mapping:
-        $ref: '#/components/x-bte-response-mapping/developes_from'
+        $ref: '#/components/x-bte-response-mapping/develops_from'
       source: UBERON Ontology
       supportBatch: true
   x-bte-response-mapping:
@@ -569,10 +569,10 @@ components:
       UBERON: part_of.uberon
     has_part:
       UBERON: _id
-    developes_from:
-      UBERON: developes_from.uberon
+    develops_from:
+      UBERON: develops_from.uberon
     location_of:
-      UBERON: _id
+      UBERON: location_of.uberon
     located_in:
       UBERON: located_in.uberon
     produced_by:
