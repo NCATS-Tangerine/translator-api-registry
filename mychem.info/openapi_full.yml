@@ -229,6 +229,7 @@ paths:
       - "$ref": "#/components/x-bte-kgs-operations/metabolizedBy"
       - "$ref": "#/components/x-bte-kgs-operations/target"
       - "$ref": "#/components/x-bte-kgs-operations/treats"
+      - "$ref": "#/components/x-bte-kgs-operations/treats2"
       - "$ref": "#/components/x-bte-kgs-operations/contraindication"
       - "$ref": "#/components/x-bte-kgs-operations/metabolize"
       - "$ref": "#/components/x-bte-kgs-operations/targetedBy"
@@ -414,6 +415,10 @@ components:
       DRUGBANK: drugbank.id
     chembl:
       CHEMBL.COMPOUND: chembl.molecule_chembl_id
+    chembl-treats:
+      MESH: chembl.drug_indications.mesh_id
+      max_phase: chembl.drug_indications.max_phase_for_ind
+      first_approval: chembl.drug_indications.first_approval
   x-bte-kgs-operations:
     metabolizedBy:
     - supportBatch: true
@@ -640,5 +645,51 @@ components:
       ## Biolink PR to make this predicate, as an inverse of "contraindicated for"
       predicate: is_contraindication_for
       source: drugcentral
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/chembl"
+    treats2:
+    - supportBatch: true
+      inputSeparator: ","
+      parameters:
+        fields: chembl.drug_indications
+        size: '1000'
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: chembl.molecule_chembl_id
+        header: application/x-www-form-urlencoded
+      inputs:
+      - id: CHEMBL.COMPOUND
+        semantic: ChemicalSubstance
+      ## FYI: input could also be SNOMED, CUI IDs
+      outputs:
+      - id: MESH
+        semantic: chembl.drug_indications.mesh_id
+      ## Biolink PR to make this predicate, as an inverse of "contraindicated for"
+      predicate: treats
+      source: chembl
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/chembl-treats"
+    treated_by2:
+    - supportBatch: true
+      inputSeparator: ","
+      parameters:
+        fields: chembl.molecule_chembl_id
+        size: '1000'
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: chembl.drug_indications.mesh_id
+        header: application/x-www-form-urlencoded
+      outputs:
+      - id: CHEMBL.COMPOUND
+        semantic: ChemicalSubstance
+      ## FYI: input could also be SNOMED, CUI IDs
+      inputs:
+      - id: MESH
+        semantic: chembl.drug_indications.mesh_id
+      ## Biolink PR to make this predicate, as an inverse of "contraindicated for"
+      predicate: treated_by
+      source: chembl
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/chembl"
