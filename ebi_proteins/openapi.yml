@@ -3,15 +3,20 @@ info:
   description: >-
     The Proteins REST API provides access to key biological data from UniProt and data from Large Scale Studies (LSS)
     mapped to UniProt. The services provide sequence feature annotations from UniProtKB, variation data from UniProtKB
-    and mapped from LSS (1000 Genomes, ExAC and COSMIC), proteomics data mapped from MS-proteomics repositories
-    (PeptideAtlas, MaxQB and EPD), antigen sequences mapped from Human Protein Atlas (HPA), proteomes and taxonomy
-    search and retrieval, and reference genome coordinate mappings.
+    and mapped from LSS (1000 Genomes, ExAC, ClinVar, TCGA, COSMIC, TOPMed and gnomAD), proteomics data mapped from
+    MS-proteomics repositories (PeptideAtlas, MaxQB, EPD and ProteomicsDB), antigen sequences mapped from Human Protein
+    Atlas (HPA), proteomes and taxonomy search and retrieval, reference genome coordinate mappings and data from UniParc.
+    Go to https://www.ebi.ac.uk/proteins/api/doc/ to learn more.
   version: '1.0'
   title: Proteins REST API
-  termsOfService: https://www.ebi.ac.uk/proteins/api/doc/
+  termsOfService: https://www.ebi.ac.uk/about/terms-of-use/
   contact:
     name: UniProt (EBI)
-    url: https://groups.google.com/forum/#!forum/ebi-proteins-api
+    url: https://www.ebi.ac.uk/proteins/api/doc/contact.html
+  x-translator:
+    component: KP
+    team:
+      - Service Provider
 tags:
   - name: coordinates
   - name: antigen
@@ -22,8 +27,11 @@ tags:
   - name: variation
   - name: genecentric
   - name: proteins
-## deprecate this registry entry?
-#   - name: translator
+  - name: translator
+## notes:
+## 1) the schemas below that describe the endpoint responses are likely outdated. There are differences between them and the current models for the responses provided by https://www.ebi.ac.uk/proteins/api/doc/
+## 2) I'm not sure if the xml response schemas are correct
+## 3) this endpoint isn't included below and looks identical to one we already have: /coordinates/{taxonomy}/{locations}/feature
 paths:
   /antigen:
     get:
@@ -529,7 +537,7 @@ paths:
             application/xml:
               schema:
                 $ref: '#/components/schemas/ErrorMessage'
-  '/coordinates/{taxonomy}/{chromosome}:{gstart}-{gend}':
+  '/coordinates/{taxonomy}/{locations}':
     get:
       tags:
         - coordinates
@@ -562,21 +570,12 @@ paths:
           required: true
           schema:
             type: string
-        - name: chromosome
+        - name: locations
           in: path
-          description: 'Chromosome name, i.e. 1, 2, X, etc.'
-          required: true
-          schema:
-            type: string
-        - name: gstart
-          in: path
-          description: Genome location start
-          required: true
-          schema:
-            type: string
-        - name: gend
-          in: path
-          description: Genome location end
+          description: >-
+            genomic locations such as x:58205437-58219305,12452535-12452536,2:32452,
+            before colon is the chromosome such as x:58205437-58219305, or without
+            chromosome such as 12452535-12452536, means any chromosome
           required: true
           schema:
             type: string
@@ -667,6 +666,14 @@ paths:
             type: string
             minItems: 3
             maxItems: 100
+        - name: exact_gene
+          in: query
+          description: UniProt exact gene name. Comma separated values accepted up to 20.
+          required: false
+          schema:
+            type: string
+            minItems: 3
+            maxItems: 100
         - name: protein
           in: query
           description: UniProt protein name
@@ -693,7 +700,7 @@ paths:
           in: query
           description: >-
             Category type(s): MOLECULE_PROCESSING, TOPOLOGY,
-            SEQUENCE_INFORMATION, STRUCTURAL, DOMAINS_AND_SITES, PTM, VARIANT,
+            SEQUENCE_INFORMATION, STRUCTURAL, DOMAINS_AND_SITES, PTM, VARIANTS,
             MUTAGENESIS. Comma separated values accepted up to 20
           required: false
           schema:
@@ -797,7 +804,7 @@ paths:
           in: query
           description: >-
             Category type(s): MOLECULE_PROCESSING, TOPOLOGY,
-            SEQUENCE_INFORMATION, STRUCTURAL, DOMAINS_AND_SITES, PTM, VARIANT,
+            SEQUENCE_INFORMATION, STRUCTURAL, DOMAINS_AND_SITES, PTM, VARIANTS,
             MUTAGENESIS. Comma separated values accepted up to 20
           required: false
           explode: true
@@ -894,7 +901,7 @@ paths:
           in: query
           description: >-
             Category type(s): MOLECULE_PROCESSING, TOPOLOGY,
-            SEQUENCE_INFORMATION, STRUCTURAL, DOMAINS_AND_SITES, PTM, VARIANT,
+            SEQUENCE_INFORMATION, STRUCTURAL, DOMAINS_AND_SITES, PTM, VARIANTS,
             MUTAGENESIS. Comma separated values accepted up to 20
           required: false
           explode: true
@@ -1155,6 +1162,14 @@ paths:
             type: string
             minItems: 3
             maxItems: 50
+        - name: exact_gene
+          in: query
+          description: UniProt exact gene name. Comma separated values accepted up to 20.
+          required: false
+          schema:
+            type: string
+            minItems: 3
+            maxItems: 50
         - name: protein
           in: query
           description: UniProt protein name
@@ -1185,6 +1200,24 @@ paths:
           required: false
           schema:
             type: string
+        - name: seqLength
+          in: query
+          description: >-
+            Sequence length. Sequence length can be a single length value such as
+            123 or range 123-234
+          required: false
+          schema:
+            type: string
+            minItems: 3
+            maxItems: 50
+        - name: md5
+          in: query
+          description: Sequence md5 value.
+          required: false
+          schema:
+            type: string
+            minItems: 3
+            maxItems: 50
       responses:
         '200':
           description: successful operation
@@ -1228,6 +1261,56 @@ paths:
             text/x-fasta:
               schema:
                 $ref: '#/components/schemas/ErrorMessage'
+  '/proteins/covid-19/entries':
+    get:
+      tags:
+        - proteins
+      summary: Get UniProt entries by UniProt cross reference and its ID
+      description: ''
+      operationId: covidProteins
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/xml:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Entry'
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Entry'
+            text/x-fasta:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Entry'
+        '400':
+          description: Invalid request Parameter.
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            text/x-fasta:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '404':
+          description: Resources not found
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            text/x-fasta:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage' 
   '/proteins/interaction/{accession}':
     get:
       tags:
@@ -1329,6 +1412,9 @@ paths:
             text/x-fasta:
               schema:
                 $ref: '#/components/schemas/ErrorMessage'
+      x-bte-kgs-operations:
+        - "$ref": "#/components/x-bte-kgs-operations/gene_to_rhea_reaction"
+        - "$ref": "#/components/x-bte-kgs-operations/protein_to_rhea_reaction"
   '/proteins/{accession}/isoforms':
     get:
       tags:
@@ -1787,8 +1873,8 @@ paths:
         - name: datasource
           in: query
           description: >-
-            Proteomics data source(s): MaxQB, PeptideAtlas or EPD. Comma
-            separated values accepted up to 2.
+            Proteomics data source(s): Proteomics data source(s): MaxQB, PeptideAtlas, EPD
+            or ProteomicsDB. Comma separated values accepted up to 2.
           required: false
           schema:
             type: string
@@ -2187,7 +2273,7 @@ paths:
         returns the sequence and related information. If it finds more than one
         longest active UniProtKB sequence it returns 400 (Bad Request) error
         response with the list of cross references found.
-      operationId: getUniParcBestGuest
+      operationId: getUniParcBestGuess
       parameters:
         - name: upi
           in: query
@@ -2662,7 +2748,11 @@ paths:
       tags:
         - variation
       summary: Search natural variants in UniProt
-      description: ''
+      description: >-
+        Among the available response content types, PEFF format (PSI Extended
+        FASTA Format from the Human Proteome Organisation - Proteomics
+        Standards Initiative, HUPO-PSI) is provided with only variants
+        reported in the output.
       operationId: searchVariation
       parameters:
         - name: offset
@@ -2687,8 +2777,8 @@ paths:
         - name: sourcetype
           in: query
           description: >-
-            Filter by the sourceType for variants: uniprot, large_scale_study
-            and mixed. Comma separated values accepted up to 2.
+            Filter by the sourceType for variants: uniprot, large scale study and mixed.
+            Comma separated values accepted up to 2.
           required: false
           schema:
             type: string
@@ -2861,7 +2951,128 @@ paths:
         - name: sourcetype
           in: query
           description: >-
-            Filter by the sourceType for variants: uniprot, large_scale_study
+            Filter by the sourceType for variants: uniprot, large scale study
+            and mixed. Comma separated values accepted up to 2.
+          required: false
+          schema:
+            type: string
+        - name: consequencetype
+          in: query
+          description: >-
+            Filter by consequenceType for variants: missense, stop gained or
+            stop lost. Comma separated values accepted up to 2.
+          required: false
+          schema:
+            type: string
+        - name: wildtype
+          in: query
+          description: >-
+            Search by specific wildType amino acid. Options: Any single letter
+            amino acid and * for stop codon. Comma separated values accepted up
+            to 20.
+          required: false
+          schema:
+            type: string
+        - name: alternativesequence
+          in: query
+          description: >-
+            Filter by the alternativeSequence amino acid. Any single letter
+            amino acid and * for stopcodon and - for deletions. Comma separated
+            values accepted up to 20.
+          required: false
+          schema:
+            type: string
+        - name: location
+          in: query
+          description: >-
+            Filter by the amino acid range position in the sequence(s). Any
+            valid amino acid range position within the length of the protein
+            sequence such as 10-60 (start position to end position)
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProteinFeatureInfo'
+            application/xml:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProteinFeatureInfo'
+            text/x-gff:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProteinFeatureInfo'
+        '400':
+          description: Invalid request Parameter.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            text/x-gff:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '404':
+          description: Resources not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+            text/x-gff:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+  '/variation/hgvs/{hgvs}':
+    get:
+      tags:
+        - variation
+      summary: Get natural variants in UniProt by HGVS expression
+      description: ''
+      operationId: searchByHGVS
+      parameters:
+        - name: hgvs
+          in: path
+          description: >-
+            Human Genome Variation Society representation, e.g.
+            NC_000017.11:g.58219213C>T
+          required: true
+          schema:
+            type: string
+        - name: offset
+          in: query
+          description: 'Off set, page starting point, with default value 0'
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+            default: 0
+        - name: size
+          in: query
+          description: >-
+            Page size with default value 100. When page size is -1, it returns
+            all records and offset will be ignored
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 100
+        - name: sourcetype
+          in: query
+          description: >-
+            Filter by the sourceType for variants: uniprot, large scale study
             and mixed. Comma separated values accepted up to 2.
           required: false
           schema:
@@ -2961,7 +3172,7 @@ paths:
         - name: sourcetype
           in: query
           description: >-
-            Filter by the sourceType for variants: uniprot, large_scale_study
+            Filter by the sourceType for variants: uniprot, large scale study
             and mixed. Comma separated values accepted up to 2.
           required: false
           schema:
@@ -3043,6 +3254,48 @@ paths:
 servers:
   - url: 'https://www.ebi.ac.uk/proteins/api'
 components:
+  x-bte-kgs-operations:
+  ## uniprot annotates enzymes that catalyze reactions (RHEA IDs): https://www.rhea-db.org/help/enzyme%2Dcatalyzing%2Dreaction
+    protein_to_rhea_reaction:
+    - inputs:
+      - id: UniprotKB
+        semantic: Protein
+      outputs:
+      - id: RHEA
+        semantic: MolecularActivity
+      ## using same predicate as gene -> GO molecular function
+      predicate: enables
+      ## accessing through EBI Proteins API
+      source: UniprotKB
+      parameters:
+        accession: "{inputs[0]}"  ## no prefix
+      supportBatch: false
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/rheaReaction"
+    gene_to_rhea_reaction:
+    - inputs:
+      - id: UniprotKB
+        semantic: Gene
+      outputs:
+      - id: RHEA
+        semantic: MolecularActivity
+      ## using same predicate as gene -> GO molecular function
+      predicate: enables
+      ## accessing through EBI Proteins API
+      source: UniprotKB
+      parameters:
+        accession: "{inputs[0]}"  ## no prefix
+      supportBatch: false
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/rheaReaction"
+  x-bte-response-mapping:
+    rheaReaction:
+    ## does dot-notation parse correctly?
+    ## see example https://www.ebi.ac.uk/proteins/api/proteins/Q93099
+    ## - comments is an array of objects. Some proteins have objects with a reaction key (which is what we want to access)
+    ## - dbReferences is an array of objects. Some of the objects have the type "Rhea" and their id is a curie with prefix RHEA. Others can be type "ChEBI" and their id is a curie with prefix CHEBI...
+      RHEA: comments.reaction.dbReferences.id
+      name: comments.reaction.name
   schemas:
     RedundantProteomeType:
       type: object
@@ -3119,12 +3372,33 @@ components:
           xml:
             attribute: true
           pattern: (^\w+_\w+$)
+        proteinName:
+          type: string
+          xml:
+            attribute: true
+        geneName:
+          type: string
+          xml:
+            attribute: true
+        organismName:
+          type: string
+          xml:
+            attribute: true
+        proteinExistence:
+          type: string
+          xml:
+            attribute: true
         sequence:
           type: string
           xml:
             attribute: true
         sequenceChecksum:
           type: string
+          xml:
+            attribute: true
+        sequenceVersion:
+          type: integer
+          format: int32
           xml:
             attribute: true
         geteGeneId:
@@ -3227,6 +3501,10 @@ components:
           xml:
             attribute: true
           pattern: '^(\?|[1-9][0-9]*>?)$'
+        molecule:
+          type: string
+          xml:
+            attribute: true
         xrefs:
           type: array
           items:
@@ -4748,6 +5026,8 @@ components:
           xml:
             attribute: true
           default: false
+        properties:
+          type: object
     EvidencedString:
       type: object
       properties:
@@ -4757,4 +5037,3 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Evidence'
-
