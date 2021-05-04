@@ -1413,7 +1413,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorMessage'
       x-bte-kgs-operations:
-        - "$ref": "#/components/x-bte-kgs-operations/gene_to_rhea_reaction"
         - "$ref": "#/components/x-bte-kgs-operations/protein_to_rhea_reaction"
   '/proteins/{accession}/isoforms':
     get:
@@ -3272,28 +3271,8 @@ components:
       supportBatch: false
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/rheaReaction"
-    gene_to_rhea_reaction:
-    - inputs:
-      - id: UniProtKB
-        semantic: Gene
-      outputs:
-      - id: RHEA
-        semantic: MolecularActivity
-      ## using same predicate as gene -> GO molecular function
-      predicate: enables
-      ## accessing through EBI Proteins API
-      source: UniProtKB
-      parameters:
-        accession: "{inputs[0]}"  ## no prefix
-      supportBatch: false
-      response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/rheaReaction"
   x-bte-response-mapping:
     rheaReaction:
-    ## does dot-notation parse correctly?
-    ## see example https://www.ebi.ac.uk/proteins/api/proteins/Q93099
-    ## - comments is an array of objects. Some proteins have objects with a reaction key (which is what we want to access)
-    ## - dbReferences is an array of objects. Some of the objects have the type "Rhea" and their id is a curie with prefix RHEA. Others can be type "ChEBI" and their id is a curie with prefix CHEBI...
       RHEA: comments.reaction.dbReferences.id
       name: comments.reaction.name
   schemas:
