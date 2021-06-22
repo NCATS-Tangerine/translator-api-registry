@@ -1,124 +1,83 @@
 openapi: 3.0.1
 info:
+  description: Molecular Data Provider for NCATS Biomedical Translator Reasoners
+  version: 1.1.0.0
+  title: Molecular Data Provider for NCATS Biomedical Translator Reasoners
   contact:
-    email: asu@scripps.edu
-    name: Andrew Su
-    url: https://github.com/andrewsu
-  description: A ReasonerStdAPI for BioThings Explorer
-  termsOfService: https://biothings.io/about
-  title: BioThings Explorer ReasonerStdAPI
-  version: 2.8.0
+    email: translator@broadinstitute.org
+    name: Molecular Data Provider
+    x-role: responsible organization
+  license:
+    name: MIT License
+    url: https://github.com/broadinstitute/molecular-data-provider/blob/master/LICENSE
+  termsOfService: https://github.com/broadinstitute/molecular-data-provider/blob/master/terms_of_service.md
+  x-translator:
+    component: KP
+    team:
+      - Molecular Data Provider
+    biolink-version: 1.8.0
+    externalDocs:
+      description: >-
+        The values for component and team are restricted according to this
+        external JSON schema. See schema and examples at url
+      url: https://github.com/NCATSTranslator/translator_extensions/blob/\
+        production/x-translator/
   x-trapi:
     version: 1.1.0
-  x-translator:
-    component: ARA
-    team:
-      - Exploring Agent
+    externalDocs:
+      description: >-
+        The values for version are restricted according to the regex in
+        this external JSON schema. See schema and examples at url
+      url: https://github.com/NCATSTranslator/translator_extensions/blob/\
+        production/x-trapi/
 servers:
-- url: https://api.bte.ncats.io
+  - url: https://translator.broadinstitute.org/molepro/trapi/v1.1
+    description: TRAPI producetion service for MolePro
+externalDocs:
+  description: >-
+    Documentation for the NCATS Biomedical Translator Reasoners web services
+  url: https://github.com/NCATSTranslator/ReasonerAPI
 tags:
-- name: 1.1.0
-- name: translator
-- name: trapi
-- name: biothings
-- name: metadata
-- name: query
+  - name: predicates
+    description: Get supported relationships by source and target
+  - name: query
+    description: Query reasoner using a predefined question type
+  - name: translator
+    description: Required for SmartAPI validation of x-translator
+  - name: trapi
+    description: Required for SmartAPI validation of x-trapi
 paths:
-  /metakg:
+  /predicates:
     get:
-      parameters:
-      - description: The subject type of the association, e.g. Gene
-        example: Gene
-        in: query
-        name: subject
-        schema:
-          type: string
-      - description: The object type of the association, e.g. ChemicalSubstance
-        example: ChemicalSubstance
-        in: query
-        name: object
-        schema:
-          type: string
-      - description: The predicate of the association, e.g. Gene
-        example: physically_interacts_with
-        in: query
-        name: predicate
-        schema:
-          type: string
-      - description: The API providing the association, e.g. MyChem.info API
-        example: MyChem.info API
-        in: query
-        name: api
-        schema:
-          type: string
-      - description: The data source providing the association, e.g. drugbank
-        example: drugbank
-        in: query
-        name: provided_by
-        schema:
-          type: string
+      deprecated: true
+      tags:
+        - predicates
+      summary: Get supported relationships by source and target
       responses:
         '200':
+          description: Predicates by source and target
           content:
             application/json:
               schema:
-                description: Array of all associations
-                items:
-                  properties:
-                    api:
-                      description: The api providing the association, e.g. MyChem.info
-                      properties:
-                        name:
-                          description: The api providing the association, e.g. MyChem.info
-                          example: MyChem.info API
-                          type: string
-                        smartapi:
-                          description: smartapi related data
-                          properties:
-                            id:
-                              description: unique smartapi id for the api
-                              example: 8f08d1446e0bb9c2b323713ce83e2bd3
-                              type: string
-                            metadata:
-                              description: the url for smartapi specification
-                              example: https://raw.githubusercontent.com/NCATS-Tangerine/translator-api-registry/master/mychem.info/openapi_full.yml
-                              type: string
-                            ui:
-                              description: the web UI url for the API
-                              example: https://smart-api.info/ui/8f08d1446e0bb9c2b323713ce83e2bd3
-                              type: string
-                          type: object
-                      type: object
-                    object:
-                      description: The object type of the association, e.g. ChemicalSubstance
-                      example: ChemicalSubstance
-                      type: string
-                    predicate:
-                      description: The predicate of the association, e.g. physically_interacts_with
-                      example: physically_interacts_with
-                      type: string
-                    provided_by:
-                      description: The data source providing the association, e.g.
-                        ChEMBL
-                      example: ChEMBL
-                      type: string
-                    subject:
-                      description: The subject type of the association, e.g. Gene
-                      example: Gene
-                      type: string
+                description: Source map
+                type: object
+                additionalProperties:
+                  description: Target map
                   type: object
-                type: array
-          description: Association information including subject, object, predicate,
-            api, provided_by and smartapi info.
-      summary: retrieve associations within smartapi, if no parameters provided, will
-        return all associations
-      tags:
-      - metadata
-  /v1/meta_knowledge_graph:
+                  additionalProperties:
+                    description: Array of predicates
+                    type: array
+                    items:
+                      type: string
+                example:
+                  'biolink:ChemicalSubstance':
+                    'biolink:Gene':
+                      - biolink:directly_interacts_with
+                      - biolink:decreases_activity_of
+  /meta_knowledge_graph:
     get:
       tags:
         - meta_knowledge_graph
-        - 1.1.0
       summary: Meta knowledge graph representation of this TRAPI web service.
       responses:
         '200':
@@ -129,64 +88,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MetaKnowledgeGraph'
-  /v1/smartapi/{smartapi_id}/meta_knowledge_graph:
-    get:
-      tags:
-        - meta_knowledge_graph
-        - 1.1.0
-      summary: Get a TRAPI meta knowledge graph representation for an individual smartAPI KP API
-      parameters:
-        - description: SmartAPI ID of an API, you can get it from https://smart-api.info/registry
-          example: 8f08d1446e0bb9c2b323713ce83e2bd3
-          in: path
-          name: smartapi_id
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: >-
-            Returns meta knowledge graph representation of this TRAPI web
-            service.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MetaKnowledgeGraph'
-  /v1/team/{team_name}/meta_knowledge_graph:
-    get:
-      tags:
-        - meta_knowledge_graph
-        - 1.1.0
-      summary: Get a TRAPI meta knowledge graph representation for a KP/ARA team
-      parameters:
-        - description: Translator Team Name, e.g. Service Provider, Multiomics Provider
-          example: Multiomics Provider
-          in: path
-          name: team_name
-          required: true
-          schema:
-            type: string
-            enum:
-              - Multiomics Provider
-              - Text Mining Provider
-              - Service Provider
-      responses:
-        '200':
-          description: >-
-            Returns meta knowledge graph representation of this TRAPI web
-            service.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MetaKnowledgeGraph'
-  /v1/query:
+  /query:
     post:
       tags:
         - query
-        - 1.1.0
-      summary: Query BioThings Explorer TRAPI API as ARA with a TRAPI message
+      summary: Query reasoner via one of several inputs
       description: ''
-      operationId: query
       requestBody:
         description: Query information to be submitted
         required: true
@@ -226,125 +133,6 @@ paths:
             application/json:
               schema:
                 type: string
-      x-swagger-router-controller: swagger_server.controllers.query_controller
-  /v1/smartapi/{smartapi_id}/query:
-    post:
-      tags:
-        - query
-        - 1.1.0
-      summary: Query individual SmartAPI KP API as a TRAPI API
-      description: ''
-      operationId: querySmartAPI
-      parameters:
-        - description: SmartAPI ID of an API, you can get it from https://smart-api.info/registry
-          example: 8f08d1446e0bb9c2b323713ce83e2bd3
-          in: path
-          name: smartapi_id
-          required: true
-          schema:
-            type: string
-      requestBody:
-        description: Query information to be submitted
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Query'
-      responses:
-        '200':
-          description: >-
-            OK. There may or may not be results. Note that some of the provided
-            identifiers may not have been recognized.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Response'
-        '400':
-          description: >-
-            Bad request. The request is invalid according to this OpenAPI
-            schema OR a specific identifier is believed to be invalid somehow
-            (not just unrecognized).
-          content:
-            application/json:
-              schema:
-                type: string
-        '500':
-          description: >-
-            Internal server error.
-          content:
-            application/json:
-              schema:
-                type: string
-        '501':
-          description: >-
-            Not implemented.
-          content:
-            application/json:
-              schema:
-                type: string
-      x-swagger-router-controller: swagger_server.controllers.query_controller
-  /v1/team/{team_name}/query:
-    post:
-      tags:
-        - query
-        - 1.1.0
-      summary: >-
-        Query an individual Translator team's SMARTAPI KP APIs as an individual TRAPI
-        service using team name
-      description: ''
-      operationId: queryTeam
-      parameters:
-        - description: Translator Team Name, e.g. Service Provider, Multiomics Provider
-          example: Text Mining Provider
-          in: path
-          name: team_name
-          required: true
-          schema:
-            type: string
-            enum:
-              - Multiomics Provider
-              - Text Mining Provider
-              - Service Provider
-      requestBody:
-        description: Query information to be submitted
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Query'
-      responses:
-        '200':
-          description: >-
-            OK. There may or may not be results. Note that some of the provided
-            identifiers may not have been recognized.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Response'
-        '400':
-          description: >-
-            Bad request. The request is invalid according to this OpenAPI
-            schema OR a specific identifier is believed to be invalid somehow
-            (not just unrecognized).
-          content:
-            application/json:
-              schema:
-                type: string
-        '500':
-          description: >-
-            Internal server error.
-          content:
-            application/json:
-              schema:
-                type: string
-        '501':
-          description: >-
-            Not implemented.
-          content:
-            application/json:
-              schema:
-                type: string
-      x-swagger-router-controller: swagger_server.controllers.query_controller
 components:
   schemas:
     Query:
@@ -367,6 +155,20 @@ components:
             example, the fill operation requires a non-empty query_graph field
             as part of the Message, whereas other operations, e.g. overlay,
             require non-empty results and knowledge_graph fields.
+      example:
+        message:
+          query_graph:
+            edges:
+              e00:
+                subject: n00
+                predicate: 'biolink:affects'
+                object: n01
+            nodes:
+              n00:
+                id: 'PUBCHEM.COMPOUND:2244'
+                category: 'biolink:ChemicalSubstance'
+              n01:
+                category: 'biolink:Gene'
         log_level:
           description: The least critical level of logs to return
           allOf:
@@ -446,19 +248,6 @@ components:
             - $ref: '#/components/schemas/KnowledgeGraph'
           nullable: true
       additionalProperties: false
-      example:
-        query_graph:
-          edges:
-            e0:
-              predicates: [biolink:correlated_with]
-              subject: n0
-              object: n1
-          nodes:
-            n0:
-              categories: [biolink:ChemicalSubstance]
-              ids: [PUBCHEM.COMPOUND:2244]
-            n1:
-              categories: [biolink:Gene]
     LogEntry:
       description: >-
         The LogEntry object contains information useful for tracing
@@ -1043,4 +832,3 @@ components:
         - operator
         - value
       additionalProperties: false
-      
