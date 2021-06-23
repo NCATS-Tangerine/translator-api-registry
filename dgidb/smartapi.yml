@@ -24,7 +24,7 @@ tags:
 - name: association
 - name: annotation
 - name: query
-- name: translator1
+- name: translator
 - name: biothings
 - name: biothings_graph
 paths:
@@ -176,6 +176,8 @@ paths:
         as well.
       tags:
       - query
+      x-bte-kgs-operations:
+      - $ref: '#/components/x-bte-kgs-operations/chemical-gene'
     post:
       parameters:
       - $ref: '#/components/parameters/dotfield'
@@ -220,7 +222,6 @@ paths:
       tags:
       - query
       x-bte-kgs-operations:
-      - $ref: '#/components/x-bte-kgs-operations/chemical-gene'
       - $ref: '#/components/x-bte-kgs-operations/gene-chemical'
 components:
   parameters:
@@ -374,6 +375,8 @@ components:
         type: array
       - type: string
   x-bte-kgs-operations:
+    ## current database has CHEMBL.COMPOUND curies. So input has to be prefixed, which can happen with 1 GET query (1 input object)).
+    ##   otherwise need logic in BTE to add prefix to each ID for the batch-querying. 
     chemical-gene:
     - inputs:
       - id: CHEMBL.COMPOUND
@@ -382,18 +385,14 @@ components:
       - id: NCBIGene
         semantic: Gene
       parameters:
-        fields: subject.NCBIGene,association.provided_by,association.pubmed
+        q: object.CHEMBL_COMPOUND:"CHEMBL.COMPOUND:{inputs[0]}"
+        fields: subject.NCBIGene,association
         size: 1000
       predicate: physically_interacts_with
-      requestBody:
-        body:
-          q: '{inputs[0]}'
-          scopes: object.CHEMBL_COMPOUND
-        header: application/x-www-form-urlencoded
       response_mapping:
         $ref: '#/components/x-bte-response-mapping/chemical-gene'
       source: DGIdb
-      supportBatch: true
+      supportBatch: false
       inputSeparator: ","
     gene-chemical:
     - inputs:
@@ -403,7 +402,7 @@ components:
       - id: CHEMBL.COMPOUND
         semantic: ChemicalSubstance
       parameters:
-        fields: object.CHEMBL_COMPOUND,association.provided_by,association.pubmed
+        fields: object.CHEMBL_COMPOUND,association
         size: 1000
       predicate: physically_interacts_with
       requestBody:
@@ -418,10 +417,14 @@ components:
       inputSeparator: ","
   x-bte-response-mapping:
     chemical-gene:
-      NCBIGene: subject.NCBIGene
-      pubmed: association.pubmed
-      source: association.provided_by
+      NCBIGene: hits.subject.NCBIGene
+      pubmed: hits.association.pubmed
+      source: hits.association.provided_by
+      relation: hits.association.relation_name
+      score: hits.association.interaction_group_score
     gene-chemical:
       CHEMBL.COMPOUND: object.CHEMBL_COMPOUND
       pubmed: association.pubmed
       source: association.provided_by
+      relation: association.relation_name
+      score: association.interaction_group_score
