@@ -8,7 +8,7 @@ info:
   description: API integration layer for linked biological objects.
   termsOfService: https://github.com/monarch-initiative/biolink-api/
   title: BioLink API
-  version: 0.1.1
+  version: 1.0.1
   x-translator:
     component: KP
     team:
@@ -401,19 +401,8 @@ components:
       source: associations.provided_by
       relation: associations.relation.label
       pubmed: associations.publications.id
-    anatomy-gene-ncbigene:
-      NCBIGene: associations.object.NCBIGene
-      source: associations.provided_by
-      relation: associations.relation.label
-      pubmed: associations.publications.id
     disease-gene-hgnc:
       HGNC: associations.object.HGNC
-      source: associations.provided_by
-      relation: associations.relation.label
-      pubmed: associations.publications.id
-      taxid: associations.object.taxon.id
-    disease-gene-ncbigene:
-      NCBIGene: associations.object.NCBIGene
       source: associations.provided_by
       relation: associations.relation.label
       pubmed: associations.publications.id
@@ -447,12 +436,6 @@ components:
       relation: associations.relation.label
       pubmed: associations.publications.id
       taxid: associations.object.taxon.id
-    gene-interaction-ncbigene:
-      NCBIGene: associations.object.NCBIGene
-      source: associations.provided_by
-      relation: associations.relation.label
-      pubmed: associations.publications.id
-      taxid: associations.object.taxon.id
     pathway-disease:
       MONDO: associations.object.MONDO
       name: associations.object.label
@@ -482,11 +465,6 @@ components:
       source: associations.provided_by
       relation: associations.relation.label
       pubmed: associations.publications.id
-    phenotype-gene-ncbigene:
-      NCBIGene: associations.object.NCBIGene
-      source: associations.provided_by
-      relation: associations.relation.label
-      pubmed: associations.publications.id
     phenotype-pathway:
       REACT: associations.object.REACT
       name: associations.object.label
@@ -512,27 +490,11 @@ components:
       outputs:
       - id: HGNC
         semantic: Gene
-      predicate: related_to
+      predicate: expresses
       source: "Monarch Initiative"
       supportBatch: false
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/anatomy-gene-hgnc"
-    - parameters:
-        anatomy_id: "{inputs[0]}"
-        rows: 200
-        direct: true
-        unselect_evidence: true
-      inputs:
-      - id: UBERON
-        semantic: AnatomicalEntity
-      outputs:
-      - id: NCBIGene
-        semantic: Gene
-      predicate: related_to
-      source: "Monarch Initiative"
-      supportBatch: false
-      response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/anatomy-gene-ncbigene"
     disease-gene:
     - parameters:
         disease_id: "{inputs[0]}"
@@ -545,27 +507,11 @@ components:
       outputs:
       - id: HGNC
         semantic: Gene
-      predicate: related_to
+      predicate: condition_associated_with_gene
       source: "Monarch Initiative"
       supportBatch: false
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/disease-gene-hgnc"
-    - parameters:
-        disease_id: "{inputs[0]}"
-        rows: 200
-        direct: true
-        unselect_evidence: true
-      inputs:
-      - id: MONDO
-        semantic: Disease
-      outputs:
-      - id: NCBIGene
-        semantic: Gene
-      predicate: related_to
-      source: "Monarch Initiative"
-      supportBatch: false
-      response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/disease-gene-ncbigene"
     disease-pathway:
     - parameters:
         disease_id: "{inputs[0]}"
@@ -612,7 +558,7 @@ components:
       outputs:
       - id: UBERON
         semantic: AnatomicalEntity
-      predicate: related_to
+      predicate: expressed_in
       source: "Monarch Initiative"
       supportBatch: false
       response_mapping:
@@ -629,7 +575,7 @@ components:
       outputs:
       - id: MONDO
         semantic: Disease
-      predicate: related_to
+      predicate: gene_associated_with_condition
       source: "Monarch Initiative"
       supportBatch: false
       response_mapping:
@@ -646,7 +592,7 @@ components:
       outputs:
       - id: HP
         semantic: PhenotypicFeature
-      predicate: related_to
+      predicate: has_phenotype
       source: "Monarch Initiative"
       supportBatch: false
       response_mapping:
@@ -663,27 +609,11 @@ components:
       outputs:
       - id: HGNC
         semantic: Gene
-      predicate: physically_interacts_with
+      predicate: interacts_with
       source: "Monarch Initiative"
       supportBatch: false
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/gene-interaction-hgnc"
-    - parameters:
-        gene_id: NCBIGene:{inputs[0]}
-        rows: 200
-        direct: true
-        unselect_evidence: true
-      inputs:
-      - id: NCBIGene
-        semantic: Gene
-      outputs:
-      - id: NCBIGENE
-        semantic: Gene
-      predicate: related_to
-      source: "Monarch Initiative"
-      supportBatch: false
-      response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/gene-interaction-ncbigene"
     pathway-disease:
     - parameters:
         pathway_id: REACT:{inputs[0]}
@@ -730,7 +660,7 @@ components:
       outputs:
       - id: MONDO
         semantic: Disease
-      predicate: related_to
+      predicate: phenotype_of
       source: "Monarch Initiative"
       supportBatch: false
       response_mapping:
@@ -747,27 +677,11 @@ components:
       outputs:
       - id: HGNC
         semantic: Gene
-      predicate: related_to
+      predicate: condition_associated_with_gene
       source: "Monarch Initiative"
       supportBatch: false
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/phenotype-gene-hgnc"
-    - parameters:
-        phenotype_id: "{inputs[0]}"
-        rows: 200
-        direct: true
-        unselect_evidence: true
-      inputs:
-      - id: HP
-        semantic: PhenotypicFeature
-      outputs:
-      - id: NCBIGene
-        semantic: Gene
-      predicate: related_to
-      source: "Monarch Initiative"
-      supportBatch: false
-      response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/phenotype-gene-ncbigene"
     phenotype-pathway:
     - parameters:
         phenotype_id: "{inputs[0]}"
@@ -797,7 +711,7 @@ components:
       outputs:
       - id: DBSNP
         semantic: SequenceVariant
-      predicate: related_to
+      predicate: phenotype_of
       source: "Monarch Initiative"
       supportBatch: false
       response_mapping:

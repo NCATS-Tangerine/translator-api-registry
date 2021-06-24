@@ -181,18 +181,10 @@ paths:
       tags:
       - query
       x-bte-kgs-operations:
-      - $ref: '#/components/x-bte-kgs-operations/chemical-gene-positive'
-      - $ref: '#/components/x-bte-kgs-operations/chemical-gene-negative'
-      - $ref: '#/components/x-bte-kgs-operations/gene-chemical-positive'
-      - $ref: '#/components/x-bte-kgs-operations/gene-chemical-negative'
       - $ref: '#/components/x-bte-kgs-operations/chemical-protein-positive'
       - $ref: '#/components/x-bte-kgs-operations/chemical-protein-negative'
       - $ref: '#/components/x-bte-kgs-operations/protein-chemical-positive'
       - $ref: '#/components/x-bte-kgs-operations/protein-chemical-negative'
-      - $ref: '#/components/x-bte-kgs-operations/chemical-geneorgeneproduct-positive'
-      - $ref: '#/components/x-bte-kgs-operations/chemical-geneorgeneproduct-negative'
-      - $ref: '#/components/x-bte-kgs-operations/geneorgeneproduct-chemical-positive'
-      - $ref: '#/components/x-bte-kgs-operations/geneorgeneproduct-chemical-negative'
     post:
       parameters:
       - $ref: '#/components/parameters/dotfield'
@@ -388,26 +380,10 @@ components:
         type: array
       - type: string
   x-bte-kgs-operations:
-    chemical-gene-positive:
-    - inputs:
-      - id: CHEBI
-        semantic: ChemicalSubstance
-      outputs:
-      - id: PR
-        semantic: Gene
-      parameters:
-        q: subject.CHEBI:"{inputs[0]}" AND association.edge_label:positively_regulates_entity_to_entity
-        fields: object.PR,association.evidence
-        size: 1000
-      predicate: entity_positively_regulates_entity
-      response_mapping:
-        $ref: '#/components/x-bte-response-mapping/chemical-gene'
-      source: Text Mining KP
-      supportBatch: false
     chemical-protein-positive:
     - inputs:
       - id: CHEBI
-        semantic: ChemicalSubstance
+        semantic: SmallMolecule
       outputs:
       - id: PR
         semantic: Protein
@@ -417,45 +393,13 @@ components:
         size: 1000
       predicate: entity_positively_regulates_entity
       response_mapping:
-        $ref: '#/components/x-bte-response-mapping/chemical-gene'
-      source: Text Mining KP
-      supportBatch: false
-    chemical-geneorgeneproduct-positive:
-    - inputs:
-      - id: CHEBI
-        semantic: ChemicalSubstance
-      outputs:
-      - id: PR
-        semantic: GeneOrGeneProduct
-      parameters:
-        q: subject.CHEBI:"{inputs[0]}" AND association.edge_label:positively_regulates_entity_to_entity
-        fields: object.PR,association.evidence
-        size: 1000
-      predicate: entity_positively_regulates_entity
-      response_mapping:
-        $ref: '#/components/x-bte-response-mapping/chemical-gene'
-      source: Text Mining KP
-      supportBatch: false
-    chemical-gene-negative:
-    - inputs:
-      - id: CHEBI
-        semantic: ChemicalSubstance
-      outputs:
-      - id: PR
-        semantic: Gene
-      parameters:
-        q: subject.CHEBI:"{inputs[0]}" AND association.edge_label:negatively_regulates_entity_to_entity
-        fields: object.PR,association.evidence
-        size: 1000
-      predicate: entity_negatively_regulates_entity
-      response_mapping:
-        $ref: '#/components/x-bte-response-mapping/chemical-gene'
+        $ref: '#/components/x-bte-response-mapping/chemical-protein'
       source: Text Mining KP
       supportBatch: false
     chemical-protein-negative:
     - inputs:
       - id: CHEBI
-        semantic: ChemicalSubstance
+        semantic: SmallMolecule
       outputs:
       - id: PR
         semantic: Protein
@@ -465,45 +409,13 @@ components:
         size: 1000
       predicate: entity_negatively_regulates_entity
       response_mapping:
-        $ref: '#/components/x-bte-response-mapping/chemical-gene'
-      source: Text Mining KP
-      supportBatch: false
-    chemical-geneorgeneproduct-negative:
-    - inputs:
-      - id: CHEBI
-        semantic: ChemicalSubstance
-      outputs:
-      - id: PR
-        semantic: GeneOrGeneProduct
-      parameters:
-        q: subject.CHEBI:"{inputs[0]}" AND association.edge_label:negatively_regulates_entity_to_entity
-        fields: object.PR,association.evidence
-        size: 1000
-      predicate: entity_negatively_regulates_entity
-      response_mapping:
-        $ref: '#/components/x-bte-response-mapping/chemical-gene'
-      source: Text Mining KP
-      supportBatch: false
-    gene-chemical-positive:
-    - outputs:
-      - id: CHEBI
-        semantic: ChemicalSubstance
-      inputs:
-      - id: PR
-        semantic: Gene
-      parameters:
-        q: object.PR:"{inputs[0]}" AND association.edge_label:positively_regulates_entity_to_entity
-        fields: subject.CHEBI,association.evidence
-        size: 1000
-      predicate: entity_positively_regulated_by_entity
-      response_mapping:
-        $ref: '#/components/x-bte-response-mapping/gene-chemical'
+        $ref: '#/components/x-bte-response-mapping/chemical-protein'
       source: Text Mining KP
       supportBatch: false
     protein-chemical-positive:
     - outputs:
       - id: CHEBI
-        semantic: ChemicalSubstance
+        semantic: SmallMolecule
       inputs:
       - id: PR
         semantic: Protein
@@ -513,45 +425,13 @@ components:
         size: 1000
       predicate: entity_positively_regulated_by_entity
       response_mapping:
-        $ref: '#/components/x-bte-response-mapping/gene-chemical'
-      source: Text Mining KP
-      supportBatch: false
-    geneorgeneproduct-chemical-positive:
-    - outputs:
-      - id: CHEBI
-        semantic: ChemicalSubstance
-      inputs:
-      - id: PR
-        semantic: GeneOrGeneProduct
-      parameters:
-        q: object.PR:"{inputs[0]}" AND association.edge_label:positively_regulates_entity_to_entity
-        fields: subject.CHEBI,association.evidence
-        size: 1000
-      predicate: entity_positively_regulated_by_entity
-      response_mapping:
-        $ref: '#/components/x-bte-response-mapping/gene-chemical'
-      source: Text Mining KP
-      supportBatch: false
-    gene-chemical-negative:
-    - outputs:
-      - id: CHEBI
-        semantic: ChemicalSubstance
-      inputs:
-      - id: PR
-        semantic: Gene
-      parameters:
-        q: object.PR:"{inputs[0]}" AND association.edge_label:negatively_regulates_entity_to_entity
-        fields: subject.CHEBI,association.evidence
-        size: 1000
-      predicate: entity_negatively_regulated_by_entity
-      response_mapping:
-        $ref: '#/components/x-bte-response-mapping/gene-chemical'
+        $ref: '#/components/x-bte-response-mapping/protein-chemical'
       source: Text Mining KP
       supportBatch: false
     protein-chemical-negative:
     - outputs:
       - id: CHEBI
-        semantic: ChemicalSubstance
+        semantic: SmallMolecule
       inputs:
       - id: PR
         semantic: Protein
@@ -561,27 +441,11 @@ components:
         size: 1000
       predicate: entity_negatively_regulated_by_entity
       response_mapping:
-        $ref: '#/components/x-bte-response-mapping/gene-chemical'
-      source: Text Mining KP
-      supportBatch: false
-    geneorgeneproduct-chemical-negative:
-    - outputs:
-      - id: CHEBI
-        semantic: ChemicalSubstance
-      inputs:
-      - id: PR
-        semantic: GeneOrGeneProduct
-      parameters:
-        q: object.PR:"{inputs[0]}" AND association.edge_label:negatively_regulates_entity_to_entity
-        fields: subject.CHEBI,association.evidence
-        size: 1000
-      predicate: entity_negatively_regulated_by_entity
-      response_mapping:
-        $ref: '#/components/x-bte-response-mapping/gene-chemical'
+        $ref: '#/components/x-bte-response-mapping/protein-chemical'
       source: Text Mining KP
       supportBatch: false
   x-bte-response-mapping:
-    chemical-gene:
+    chemical-protein:
       PR: hits.object.PR
       pubmed: hits.association.evidence.publications
       score: hits.association.evidence.score
@@ -589,7 +453,7 @@ components:
       subject_spans: hits.association.evidence.subject_spans
       object_spans: hits.association.evidence.object_spans
       relation_spans: hits.association.evidence.relation_spans
-    gene-chemical:
+    protein-chemical:
       CHEBI: hits.subject.CHEBI
       pubmed: hits.association.evidence.publications
       score: hits.association.evidence.score
