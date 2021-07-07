@@ -237,6 +237,8 @@ paths:
       - "$ref": "#/components/x-bte-kgs-operations/targetedBy"
       - "$ref": "#/components/x-bte-kgs-operations/treatedBy"
       - "$ref": "#/components/x-bte-kgs-operations/contraindicatedBy"
+      - "$ref": "#/components/x-bte-kgs-operations/causesAdverseEvent"
+      - "$ref": "#/components/x-bte-kgs-operations/adverseEventCausedBy"
 components:
   parameters:
     callback:
@@ -423,6 +425,9 @@ components:
       MESH: chembl.drug_indications.mesh_id
       max_phase: chembl.drug_indications.max_phase_for_ind
       first_approval: chembl.drug_indications.first_approval
+    adverseEvent:
+      name: drugcentral.fda_adverse_event.meddra_term
+      MEDDRA: drugcentral.fda_adverse_event.meddra_code
   x-bte-kgs-operations:
     metabolizedBy:
     - supportBatch: true
@@ -708,5 +713,51 @@ components:
       ## Biolink PR to make this predicate, as an inverse of "contraindicated for"
       predicate: treated_by
       source: "infores:chembl"
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/chembl"
+    causesAdverseEvent:
+    ## example: https://mychem.info/v1/query?q=drugbank.name:nitisinone&fields=drugcentral.fda_adverse_event
+    ## there are also counts for...having drug + adverse event (ae) (drug_ae), having drug but no adverse event (drug_no_ae)
+    ##   no drug but had adverse event (no_drug_ae), no drug and no adverse event (no_drug_no_ar)
+    ## not sure what the llr, llr_threshold, level means
+    - supportBatch: true
+      inputSeparator: ","
+      parameters:
+        fields: drugcentral.fda_adverse_event
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: chembl.molecule_chembl_id
+        header: application/x-www-form-urlencoded
+      inputs:
+      - id: CHEMBL.COMPOUND
+        semantic: ChemicalSubstance
+      outputs:
+      - id: MEDDRA
+        semantic: PhenotypicFeature
+      predicate: causes_adverse_event  ## current biolink predicate
+      ## through drugcentral, FDA Adverse Event Reporting System (FAERS) information
+      source: drugcentral
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/adverseEvent"
+    adverseEventCausedBy:
+    - supportBatch: true
+      inputSeparator: ","
+      parameters:
+        fields: chembl.molecule_chembl_id
+        size: '1000'
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: drugcentral.fda_adverse_event.meddra_code
+        header: application/x-www-form-urlencoded
+      outputs:
+      - id: CHEMBL.COMPOUND
+        semantic: ChemicalSubstance
+      inputs:
+      - id: MEDDRA
+        semantic: PhenotypicFeature
+      predicate: adverse_event_caused_by  ## current biolink predicate
+      source: drugcentral
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/chembl"
