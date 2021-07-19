@@ -7,7 +7,7 @@ info:
   description: A ReasonerStdAPI for BioThings Explorer
   termsOfService: https://biothings.io/about
   title: BioThings Explorer ReasonerStdAPI
-  version: 2.8.0
+  version: 2.8.1
   x-trapi:
     version: 1.1.0
   x-translator:
@@ -15,7 +15,7 @@ info:
     team:
       - Exploring Agent
 servers:
-- url: https://api.bte.ncats.io
+- url: https://api.bte.ncats.io/v1
 tags:
 - name: 1.1.0
 - name: translator
@@ -24,97 +24,7 @@ tags:
 - name: metadata
 - name: query
 paths:
-  /metakg:
-    get:
-      parameters:
-      - description: The subject type of the association, e.g. Gene
-        example: Gene
-        in: query
-        name: subject
-        schema:
-          type: string
-      - description: The object type of the association, e.g. ChemicalSubstance
-        example: ChemicalSubstance
-        in: query
-        name: object
-        schema:
-          type: string
-      - description: The predicate of the association, e.g. Gene
-        example: physically_interacts_with
-        in: query
-        name: predicate
-        schema:
-          type: string
-      - description: The API providing the association, e.g. MyChem.info API
-        example: MyChem.info API
-        in: query
-        name: api
-        schema:
-          type: string
-      - description: The data source providing the association, e.g. drugbank
-        example: drugbank
-        in: query
-        name: provided_by
-        schema:
-          type: string
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                description: Array of all associations
-                items:
-                  properties:
-                    api:
-                      description: The api providing the association, e.g. MyChem.info
-                      properties:
-                        name:
-                          description: The api providing the association, e.g. MyChem.info
-                          example: MyChem.info API
-                          type: string
-                        smartapi:
-                          description: smartapi related data
-                          properties:
-                            id:
-                              description: unique smartapi id for the api
-                              example: 8f08d1446e0bb9c2b323713ce83e2bd3
-                              type: string
-                            metadata:
-                              description: the url for smartapi specification
-                              example: https://raw.githubusercontent.com/NCATS-Tangerine/translator-api-registry/master/mychem.info/openapi_full.yml
-                              type: string
-                            ui:
-                              description: the web UI url for the API
-                              example: https://smart-api.info/ui/8f08d1446e0bb9c2b323713ce83e2bd3
-                              type: string
-                          type: object
-                      type: object
-                    object:
-                      description: The object type of the association, e.g. ChemicalSubstance
-                      example: ChemicalSubstance
-                      type: string
-                    predicate:
-                      description: The predicate of the association, e.g. physically_interacts_with
-                      example: physically_interacts_with
-                      type: string
-                    provided_by:
-                      description: The data source providing the association, e.g.
-                        ChEMBL
-                      example: ChEMBL
-                      type: string
-                    subject:
-                      description: The subject type of the association, e.g. Gene
-                      example: Gene
-                      type: string
-                  type: object
-                type: array
-          description: Association information including subject, object, predicate,
-            api, provided_by and smartapi info.
-      summary: retrieve associations within smartapi, if no parameters provided, will
-        return all associations
-      tags:
-      - metadata
-  /v1/meta_knowledge_graph:
+  /meta_knowledge_graph:
     get:
       tags:
         - meta_knowledge_graph
@@ -129,7 +39,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MetaKnowledgeGraph'
-  /v1/smartapi/{smartapi_id}/meta_knowledge_graph:
+  /smartapi/{smartapi_id}/meta_knowledge_graph:
     get:
       tags:
         - meta_knowledge_graph
@@ -152,7 +62,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MetaKnowledgeGraph'
-  /v1/team/{team_name}/meta_knowledge_graph:
+  /team/{team_name}/meta_knowledge_graph:
     get:
       tags:
         - meta_knowledge_graph
@@ -179,7 +89,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MetaKnowledgeGraph'
-  /v1/query:
+  /query:
     post:
       tags:
         - query
@@ -227,7 +137,7 @@ paths:
               schema:
                 type: string
       x-swagger-router-controller: swagger_server.controllers.query_controller
-  /v1/smartapi/{smartapi_id}/query:
+  /smartapi/{smartapi_id}/query:
     post:
       tags:
         - query
@@ -283,7 +193,7 @@ paths:
               schema:
                 type: string
       x-swagger-router-controller: swagger_server.controllers.query_controller
-  /v1/team/{team_name}/query:
+  /team/{team_name}/query:
     post:
       tags:
         - query
