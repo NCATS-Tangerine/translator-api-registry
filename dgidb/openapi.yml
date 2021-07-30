@@ -179,6 +179,7 @@ paths:
       - query
       x-bte-kgs-operations:
       - $ref: '#/components/x-bte-kgs-operations/chemical-gene'
+      - $ref: '#/components/x-bte-kgs-operations/small-molecule-temp-gene'
     post:
       parameters:
       - $ref: '#/components/parameters/dotfield'
@@ -224,6 +225,7 @@ paths:
       - query
       x-bte-kgs-operations:
       - $ref: '#/components/x-bte-kgs-operations/gene-chemical'
+      - $ref: '#/components/x-bte-kgs-operations/gene-small-molecule-temp'
 components:
   parameters:
     callback:
@@ -376,6 +378,44 @@ components:
         type: array
       - type: string
   x-bte-kgs-operations:
+    small-molecule-temp-gene:
+    - inputs:
+      - id: CHEMBL.COMPOUND
+        semantic: SmallMolecule
+      outputs:
+      - id: NCBIGene
+        semantic: Gene
+      parameters:
+        q: object.CHEMBL_COMPOUND:"CHEMBL.COMPOUND:{inputs[0]}"
+        fields: subject.NCBIGene,association
+        size: 1000
+      predicate: physically_interacts_with
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/chemical-gene'
+      source: "infores:dgidb"
+      supportBatch: false
+      inputSeparator: ","
+    gene-small-molecule-temp:
+    - inputs:
+      - id: NCBIGene
+        semantic: Gene
+      outputs:
+      - id: CHEMBL.COMPOUND
+        semantic: SmallMolecule
+      parameters:
+        fields: object.CHEMBL_COMPOUND,association
+        size: 1000
+      predicate: physically_interacts_with
+      requestBody:
+        body:
+          q: '{inputs[0]}'
+          scopes: subject.NCBIGene
+        header: application/x-www-form-urlencoded
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/gene-chemical'
+      source: "infores:dgidb"
+      supportBatch: true
+      inputSeparator: ","
     ## current database has CHEMBL.COMPOUND curies. So input has to be prefixed, which can happen with 1 GET query (1 input object)).
     ##   otherwise need logic in BTE to add prefix to each ID for the batch-querying. 
     chemical-gene:
