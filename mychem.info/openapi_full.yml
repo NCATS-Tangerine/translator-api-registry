@@ -11,6 +11,7 @@ info:
   title: MyChem.info API
   version: '1.0'
   x-translator:
+    infores-curie: "infores:mychem-info"
     component: KP
     team:
       - Service Provider
@@ -416,6 +417,8 @@ components:
       DRUGBANK: drugbank.id
     chembl:
       CHEMBL.COMPOUND: chembl.molecule_chembl_id
+    drugcentral-chembl:
+      CHEMBL.COMPOUND: drugcentral.xrefs.chembl_id
     chembl-treats:
       MESH: chembl.drug_indications.mesh_id
       max_phase: chembl.drug_indications.max_phase_for_ind
@@ -438,7 +441,7 @@ components:
       ## biolink issue #677. Using a new predicate like has_substrate may be better
       ##   could use relation SIO:000905 "has substrate"
       predicate: metabolic_processing_affected_by
-      source: drugbank
+      source: "infores:drugbank"
       ## FYI: output format can also be uniprot ID
       outputs:
       - id: SYMBOL
@@ -465,7 +468,7 @@ components:
       ## biolink issue #677. Using a new predicate like has_target may be better
       ##   could use relation SIO:000291 ("has target")
       predicate: physically_interacts_with
-      source: drugbank
+      source: "infores:drugbank"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/target-drugbank"
     - supportBatch: true
@@ -475,7 +478,9 @@ components:
       requestBody:
         body:
           q: "{inputs[0]}"
-          scopes: chembl.molecule_chembl_id
+          ## there are 2382 records with drugcentral.bioactivity fields
+          ##   most of them (2362) also have the drugcentral.xrefs.chembl_id field
+          scopes: drugcentral.xrefs.chembl_id
         header: application/x-www-form-urlencoded
       inputs:
       - id: CHEMBL.COMPOUND
@@ -487,7 +492,7 @@ components:
       ## biolink issue #677. Using a new predicate like has_target may be better
       ##   could use relation SIO:000291 ("has target")
       predicate: physically_interacts_with
-      source: drugcentral
+      source: "infores:drugcentral"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/target-drugcentral"
     treats:
@@ -498,7 +503,10 @@ components:
       requestBody:
         body:
           q: "{inputs[0]}"
-          scopes: chembl.molecule_chembl_id
+          ## there are 2366 records with drugcentral.drug_use.indication fields
+          ##   most of them (2320) also have the drugcentral.xrefs.chembl_id field
+          ## note: there were slightly more records (2324) with the drugcentral.xrefs.unii field
+          scopes: drugcentral.xrefs.chembl_id
         header: application/x-www-form-urlencoded
       inputs:
       - id: CHEMBL.COMPOUND
@@ -508,7 +516,7 @@ components:
       - id: UMLS
         semantic: Disease
       predicate: treats
-      source: drugcentral
+      source: "infores:drugcentral"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/treats"
     contraindication:
@@ -519,7 +527,9 @@ components:
       requestBody:
         body:
           q: "{inputs[0]}"
-          scopes: chembl.molecule_chembl_id
+          ## there are 1375 records with drugcentral.drug_use.contraindication fields
+          ##   most of them (1365) also have the drugcentral.xrefs.chembl_id field
+          scopes: :drugcentral.xrefs.chembl_id
         header: application/x-www-form-urlencoded
       inputs:
       - id: CHEMBL.COMPOUND
@@ -529,7 +539,7 @@ components:
       - id: UMLS
         semantic: Disease
       predicate: contraindicated_for  ## current biolink predicate
-      source: drugcentral
+      source: "infores:drugcentral"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/contraindication"
     metabolize:
@@ -549,7 +559,7 @@ components:
       ## biolink issue #677. Using a new predicate like is_substrate_of may be better
       ##   could use relation DRUGBANK:Enzyme, DIDEO:00000041 "is substrate of", or NCIT:R122 "Chemical_Or_Drug_Is_Metabolized_By_Enzyme"
       predicate: affects_metabolic_processing_of
-      source: drugbank
+      source: "infores:drugbank"
       ## input could also be uniprot IDs (different scopes)
       inputs:
       - id: SYMBOL
@@ -577,13 +587,15 @@ components:
       ## biolink issue #677. Using a new predicate like targeted_by may be better
       ##   could use relation GENO:0000634 ("is_targeted_by")
       predicate: physically_interacts_with
-      source: drugbank
+      source: "infores:drugbank"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/drugbank"
     - supportBatch: true
       inputSeparator: ","
       parameters:
-        fields: chembl.molecule_chembl_id
+        ## there are 2382 records with drugcentral.bioactivity fields
+        ##   most of them (2362) also have the drugcentral.xrefs.chembl_id field
+        fields: drugcentral.xrefs.chembl_id
         size: '1000'
       requestBody:
         body:
@@ -600,14 +612,17 @@ components:
       ## biolink issue #677. Using a new predicate like targeted_by may be better
       ##   could use relation GENO:0000634 ("is_targeted_by")
       predicate: physically_interacts_with
-      source: drugcentral
+      source: "infores:drugcentral"
       response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/chembl"
+        "$ref": "#/components/x-bte-response-mapping/drugcentral-chembl"
     treatedBy:
     - supportBatch: true
       inputSeparator: ","
       parameters:
-        fields: chembl.molecule_chembl_id
+        ## there are 2366 records with drugcentral.drug_use.indication fields
+        ##   most of them (2320) also have the drugcentral.xrefs.chembl_id field
+        ## note: there were slightly more records (2324) with the drugcentral.xrefs.unii field
+        fields: drugcentral.xrefs.chembl_id
         size: '1000'
       requestBody:
         body:
@@ -622,14 +637,16 @@ components:
       - id: UMLS
         semantic: Disease
       predicate: treated_by
-      source: drugcentral
+      source: "infores:drugcentral"
       response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/chembl"
+        "$ref": "#/components/x-bte-response-mapping/drugcentral-chembl"
     contraindicatedBy:
     - supportBatch: true
       inputSeparator: ","
       parameters:
-        fields: chembl.molecule_chembl_id
+        ## there are 1375 records with drugcentral.drug_use.contraindication fields
+        ##   most of them (1365) also have the drugcentral.xrefs.chembl_id field
+        fields: drugcentral.xrefs.chembl_id
         size: '1000'
       requestBody:
         body:
@@ -644,9 +661,9 @@ components:
       - id: UMLS
         semantic: Disease
       predicate: has_contraindication
-      source: drugcentral
+      source: "infores:drugcentral"
       response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/chembl"
+        "$ref": "#/components/x-bte-response-mapping/drugcentral-chembl"
     treats2:
     - supportBatch: true
       inputSeparator: ","
@@ -667,7 +684,7 @@ components:
         semantic: Disease
       ## Biolink PR to make this predicate, as an inverse of "contraindicated for"
       predicate: treats
-      source: chembl
+      source: "infores:chembl"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/chembl-treats"
     treated_by2:
@@ -690,6 +707,6 @@ components:
         semantic: Disease
       ## Biolink PR to make this predicate, as an inverse of "contraindicated for"
       predicate: treated_by
-      source: chembl
+      source: "infores:chembl"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/chembl"
