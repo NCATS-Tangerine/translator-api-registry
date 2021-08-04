@@ -716,10 +716,12 @@ components:
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/chembl"
     causesAdverseEvent:
-    ## example: https://mychem.info/v1/query?q=drugbank.name:nitisinone&fields=drugcentral.fda_adverse_event
-    ## there are also counts for...having drug + adverse event (ae) (drug_ae), having drug but no adverse event (drug_no_ae)
-    ##   no drug but had adverse event (no_drug_ae), no drug and no adverse event (no_drug_no_ar)
-    ## not sure what the llr, llr_threshold, level means
+    ## - chose to map to Disease semantic type due to more support for ID mapping there, will support queries
+    ##   link: https://github.com/biothings/BioThings_Explorer_TRAPI/issues/217#issuecomment-880204237
+    ## - example: https://mychem.info/v1/query?q=drugbank.name:nitisinone&fields=drugcentral.fda_adverse_event
+    ## - there are also counts for...having drug + adverse event (ae) (drug_ae), having drug but no adverse event (drug_no_ae)
+    ##     no drug but had adverse event (no_drug_ae), no drug and no adverse event (no_drug_no_ar)
+    ##     not sure what the llr, llr_threshold, level means
     - supportBatch: true
       inputSeparator: ","
       parameters:
@@ -727,7 +729,9 @@ components:
       requestBody:
         body:
           q: "{inputs[0]}"
-          scopes: "_id,chembl.molecule_chembl_id"
+          ## there are 2016 records with drugcentral.fda_adverse_event fields
+          ##   most of them (1994) also have the drugcentral.xrefs.chembl_id field
+          scopes: drugcentral.xrefs.chembl_id
         header: application/x-www-form-urlencoded
       inputs:
       - id: CHEMBL.COMPOUND
@@ -737,14 +741,16 @@ components:
         semantic: Disease
       predicate: causes_adverse_event  ## current biolink predicate
       ## through drugcentral, FDA Adverse Event Reporting System (FAERS) information
-      source: drugcentral
+      source: "infores:drugcentral"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/adverseEvent"
     adverseEventCausedBy:
     - supportBatch: true
       inputSeparator: ","
       parameters:
-        fields: chembl.molecule_chembl_id
+        ## there are 2016 records with drugcentral.fda_adverse_event fields
+        ##   most of them (1994) also have the drugcentral.xrefs.chembl_id field
+        fields: drugcentral.xrefs.chembl_id
         size: '1000'
       requestBody:
         body:
@@ -758,6 +764,6 @@ components:
       - id: MEDDRA
         semantic: Disease
       predicate: adverse_event_caused_by  ## current biolink predicate
-      source: drugcentral
+      source: "infores:drugcentral"
       response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/chembl"
+        "$ref": "#/components/x-bte-response-mapping/drugcentral-chembl"
