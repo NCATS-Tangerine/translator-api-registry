@@ -11,6 +11,7 @@ info:
   title: MyVariant.info API
   version: '1.0'
   x-translator:
+    infores-curie: "infores:myvariant-info"
     component: KP
     team:
       - Service Provider
@@ -370,7 +371,7 @@ components:
       parameters:
         fields: dbsnp.gene.geneid
       predicate: is_sequence_variant_of
-      source: dbsnp
+      source: "infores:dbsnp"
       requestBody:
         body:
           q: "{inputs[0]}"
@@ -388,12 +389,14 @@ components:
     - supportBatch: true
       inputSeparator: ","
       parameters:
+        ## maybe use clinvar variant ID (clinvar.variant_id) or allele ID (clinvar.allele_id) instead 
         fields: clinvar.rcv
       predicate: related_to
-      source: clinvar
+      source: "infores:clinvar"
       requestBody:
         body:
           q: "{inputs[0]}"
+          ## out of > 862,000 records with clinvar.rcv field, >695,000 records also have dbsnp.rsid
           scopes: dbsnp.rsid
         header: application/x-www-form-urlencoded
       inputs:
@@ -408,10 +411,11 @@ components:
     - supportBatch: true
       inputSeparator: ","
       parameters:
+        ## out of > 862,000 records with clinvar.rcv field, >695,000 records also have dbsnp.rsid
         fields: dbsnp.rsid
         size: '250'
       predicate: related_to
-      source: clinvar
+      source: "infores:clinvar"
       requestBody:
         body:
           q: "{inputs[0]}"
@@ -429,10 +433,13 @@ components:
       - supportBatch: true
         inputSeparator: ","
         parameters:
+          ## any way to improve retrieval of info with a variant ID?
+          ## out of 2648 records with civic.evidence_items field, 653 records also have dbsnp.rsid
+          ## note that some records' _id field is the CIVIC variant ID (not MYVARIANT_HG19)
           fields: civic.evidence_items
           size: '1000'
         predicate: affects_response_to
-        source: civic
+        source: "infores:civic"
         requestBody:
           body:
             q: "{inputs[0]}"

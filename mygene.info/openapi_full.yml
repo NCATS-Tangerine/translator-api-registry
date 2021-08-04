@@ -232,6 +232,7 @@ components:
             id: NCBIGene
             semantic: Gene
         parameters: 
+          ## all records with pathway.reactome.id field also have entrezgene field
           fields: entrezgene
           species: human
         predicate: has_participant
@@ -243,7 +244,7 @@ components:
           header: application/x-www-form-urlencoded
         response_mapping: 
           $ref: "#/components/x-bte-response-mapping/entrezgene"
-        source: Reactome
+        source: "infores:reactome"
         supportBatch: true
       - 
         inputSeparator: ","
@@ -257,6 +258,7 @@ components:
             id: NCBIGene
             semantic: Gene
         parameters: 
+          ## all records with pathway.kegg field also have entrezgene field
           fields: entrezgene
           species: human
         predicate: has_participant
@@ -268,8 +270,7 @@ components:
           header: application/x-www-form-urlencoded
         response_mapping: 
           $ref: "#/components/x-bte-response-mapping/entrezgene"
-        ## don't abbreviate since multiple resources named "CPDB"
-        source: ConsensusPathDB
+        source: "infores:cpdb"   ## ConsensusPathDB
         supportBatch: true
       - 
         inputSeparator: ","
@@ -283,6 +284,7 @@ components:
             id: NCBIGene
             semantic: Gene
         parameters: 
+          ## all records with pathway.wikipathways field also have entrezgene field
           fields: entrezgene
           species: human
         predicate: has_participant
@@ -294,8 +296,7 @@ components:
           header: application/x-www-form-urlencoded
         response_mapping: 
           $ref: "#/components/x-bte-response-mapping/entrezgene"
-        ## don't abbreviate since multiple resources named "CPDB"
-        source: ConsensusPathDB
+        source: "infores:cpdb"   ## ConsensusPathDB
         supportBatch: true
       - 
         inputSeparator: ","
@@ -309,6 +310,7 @@ components:
             id: NCBIGene
             semantic: Gene
         parameters: 
+          ## all records with pathway.biocarta field also have entrezgene field
           fields: entrezgene
           species: human
         predicate: has_participant
@@ -320,10 +322,8 @@ components:
           header: application/x-www-form-urlencoded
         response_mapping: 
           $ref: "#/components/x-bte-response-mapping/entrezgene"
-        ## don't abbreviate since multiple resources named "CPDB"
-        source: ConsensusPathDB
+        source: "infores:cpdb"   ## ConsensusPathDB
         supportBatch: true
-      
     enablesMF:
     ## biolink: weird predicate. biolink doesn't have something like has_activity/has_function 
     ## future: relation could be RO:0000085 (has_function), but this currently isn't mapped to biolink
@@ -344,11 +344,12 @@ components:
         requestBody: 
           body: 
             q: "{inputs[0]}"
+            ## all records with go.MF field also have entrezgene field
             scopes: entrezgene
           header: application/x-www-form-urlencoded
         response_mapping: 
           $ref: "#/components/x-bte-response-mapping/molecularFunction"
-        source: "NCBI Gene"
+        source: "infores:ncbi-gene"   ## which got from GO Annotations...
         supportBatch: true
     MFToGene:
     ## biolink: weird predicate. biolink doesn't have something like activity_of/function_of 
@@ -364,6 +365,7 @@ components:
             id: NCBIGene
             semantic: Gene
         parameters: 
+          ## all records with go.MF field also have entrezgene field
           fields: entrezgene
           species: human
         predicate: enabled_by
@@ -375,7 +377,7 @@ components:
           header: application/x-www-form-urlencoded
         response_mapping: 
           $ref: "#/components/x-bte-response-mapping/entrezgene"
-        source: "NCBI Gene"
+        source: "infores:ncbi-gene"   ## which got from GO Annotations...
         supportBatch: true
     GeneToProtein: 
     ## future: relation could be RO:0002205 (has_gene_product), currently mapped to biolink:has_gene_product
@@ -391,6 +393,8 @@ components:
             semantic: Protein
         parameters: 
           fields: uniprot.Swiss-Prot
+          ## there are >107,000 records with both uniprot and ensembl.gene fields 
+          ##   (vs >244,000 records with only uniprot fields)
           species: human
         predicate: has_gene_product
         requestBody: 
@@ -401,7 +405,7 @@ components:
         response_mapping: 
           $ref: "#/components/x-bte-response-mapping/uniprotProtein"
         ## specifically from the ID mapping file https://www.uniprot.org/downloads#uniprotkblink
-        source: UniprotKB
+        source: "infores:uniprot"
         supportBatch: true
     ProteinToGene: 
     ## relation: use RO:0002204 (gene_product_of)
@@ -417,6 +421,8 @@ components:
             semantic: Gene
         parameters: 
           fields: ensembl.gene
+          ## there are >107,000 records with both uniprot and ensembl.gene fields 
+          ##   (vs >244,000 records with only uniprot fields)
           species: human
         predicate: gene_product_of
         requestBody: 
@@ -427,7 +433,7 @@ components:
         response_mapping: 
           $ref: "#/components/x-bte-response-mapping/ensemblGene"
         ## specifically from the ID mapping file https://www.uniprot.org/downloads#uniprotkblink
-        source: UniprotKB
+        source: "infores:uniprot"
         supportBatch: true
     ## pantherdb gives orthologs and paralogs, which are both homologs. Hence we use homolog
     ## currently written: MGI, RGD, ZFIN, WormBase, SGD, dictyBase, POMBASE
@@ -446,6 +452,8 @@ components:
             semantic: Gene
         parameters: 
           fields: pantherdb.ortholog
+          ## almost all records with pantherdb.ortholog fields also have the entrezgene field
+          ##   > 145,000 records have both fields, vs ~ 3600 records don't have the entrezgene field
         predicate: homologous_to
         requestBody: 
           body: 
@@ -454,7 +462,7 @@ components:
           header: application/x-www-form-urlencoded
         response_mapping: 
           $ref: "#/components/x-bte-response-mapping/pantherMGI"
-        source: PANTHER
+        source: "infores:panther"
         supportBatch: true
 #       - 
 #         inputSeparator: ","
@@ -476,7 +484,7 @@ components:
 #           header: application/x-www-form-urlencoded
 #         response_mapping: 
 #           $ref: "#/components/x-bte-response-mapping/pantherRGD"
-#         source: PANTHER
+#         source: "infores:panther"
 #         supportBatch: true
 #       - 
 #         inputSeparator: ","
@@ -498,7 +506,7 @@ components:
 #           header: application/x-www-form-urlencoded
 #         response_mapping: 
 #           $ref: "#/components/x-bte-response-mapping/pantherZFIN"
-#         source: PANTHER
+#         source: "infores:panther"
 #         supportBatch: true
 #       - 
 #         inputSeparator: ","
@@ -520,7 +528,7 @@ components:
 #           header: application/x-www-form-urlencoded
 #         response_mapping: 
 #           $ref: "#/components/x-bte-response-mapping/pantherWorm"
-#         source: PANTHER
+#         source: "infores:panther"
 #         supportBatch: true
 #       - 
 #         inputSeparator: ","
@@ -542,7 +550,7 @@ components:
 #           header: application/x-www-form-urlencoded
 #         response_mapping: 
 #           $ref: "#/components/x-bte-response-mapping/pantherSGD"
-#         source: PANTHER
+#         source: "infores:panther"
 #         supportBatch: true
 #       - 
 #         inputSeparator: ","
@@ -564,7 +572,7 @@ components:
 #           header: application/x-www-form-urlencoded
 #         response_mapping: 
 #           $ref: "#/components/x-bte-response-mapping/pantherDicty"
-#         source: PANTHER
+#         source: "infores:panther"
 #         supportBatch: true
 #       - 
 #         inputSeparator: ","
@@ -586,7 +594,7 @@ components:
 #           header: application/x-www-form-urlencoded
 #         response_mapping: 
 #           $ref: "#/components/x-bte-response-mapping/pantherPom"
-#         source: PANTHER
+#         source: "infores:panther"
 #         supportBatch: true
     hasTranscript: 
     ## future: relation could be RO:0002511 (transcribed_to)
@@ -611,7 +619,7 @@ components:
           header: application/x-www-form-urlencoded
         response_mapping: 
           $ref: "#/components/x-bte-response-mapping/ensemblTranscript"
-        source: Ensembl
+        source: "infores:ensembl-gene"  ## ensembl or specifically ensembl-gene?
         supportBatch: true
     involvedInBP:
     ## biolink: confusing. biolink currently doesn't have involved_in; this could also be contributes_to?
@@ -627,6 +635,7 @@ components:
             id: GO
             semantic: BiologicalProcess
         parameters: 
+          ## all records with go.BP field also have entrezgene field
           fields: go.BP
           species: human
         predicate: participates_in
@@ -637,7 +646,7 @@ components:
           header: application/x-www-form-urlencoded
         response_mapping: 
           $ref: "#/components/x-bte-response-mapping/biologicalProcess"
-        source: "NCBI Gene"
+        source: "infores:ncbi-gene"   ## which got from GO Annotations...
         supportBatch: true
     BPToGene: 
     ## biolink: confusing, hard to find inverse for
@@ -653,6 +662,7 @@ components:
             id: NCBIGene
             semantic: Gene
         parameters: 
+          ## all records with go.BP field also have entrezgene field
           fields: entrezgene
           species: human
         predicate: has_participant
@@ -664,7 +674,7 @@ components:
           header: application/x-www-form-urlencoded
         response_mapping: 
           $ref: "#/components/x-bte-response-mapping/entrezgene"
-        source: "NCBI Gene"
+        source: "infores:ncbi-gene"   ## which got from GO Annotations...
         supportBatch: true
     involvedInCC: 
     ## biolink: confusing, since it's a gene whose activity takes place in the cellular component (complex or organelle) - not a direct biological relationship
@@ -681,6 +691,7 @@ components:
             id: GO
             semantic: CellularComponent
         parameters: 
+          ## all records with go.CC field also have entrezgene field
           fields: go.CC
           species: human
         predicate: expressed_in
@@ -691,7 +702,7 @@ components:
           header: application/x-www-form-urlencoded
         response_mapping: 
           $ref: "#/components/x-bte-response-mapping/cellularComponent"
-        source: "NCBI Gene"
+        source: "infores:ncbi-gene"   ## which got from GO Annotations...
         supportBatch: true
     CCToGene: 
     ## biolink: confusing, since it's a gene whose activity takes place in the cellular component (complex or organelle) - not a direct biological relationship
@@ -708,6 +719,7 @@ components:
             id: NCBIGene
             semantic: Gene
         parameters: 
+          ## all records with go.CC field also have entrezgene field
           fields: entrezgene
           species: human
         predicate: expresses
@@ -719,7 +731,7 @@ components:
           header: application/x-www-form-urlencoded
         response_mapping: 
           $ref: "#/components/x-bte-response-mapping/entrezgene"
-        source: "NCBI Gene"
+        source: "infores:ncbi-gene"   ## which got from GO Annotations...
         supportBatch: true
     involvedInPathway:    ## using Reactome, KEGG, Wikipathways
     ## future: use relation "NCIT:gene_is_element_in_pathway" or RO:0000056 (participates in), both mapped to biolink:participates_in
@@ -741,11 +753,12 @@ components:
         requestBody: 
           body: 
             q: "{inputs[0]}"
+            ## all records with pathway.reactome.id field also have entrezgene field
             scopes: entrezgene
           header: application/x-www-form-urlencoded
         response_mapping: 
           $ref: "#/components/x-bte-response-mapping/reactomePathway"
-        source: Reactome
+        source: "infores:reactome"
         supportBatch: true
       - 
         inputSeparator: ","
@@ -765,11 +778,12 @@ components:
         requestBody: 
           body: 
             q: "{inputs[0]}"
+            ## all records with pathway.kegg field also have entrezgene field
             scopes: entrezgene
           header: application/x-www-form-urlencoded
         response_mapping: 
           $ref: "#/components/x-bte-response-mapping/keggPathway"
-        source: ConsensusPathDB
+        source: "infores:cpdb"   ## ConsensusPathDB
         supportBatch: true
       - 
         inputSeparator: ","
@@ -789,11 +803,12 @@ components:
         requestBody: 
           body: 
             q: "{inputs[0]}"
+            ## all records with pathway.wikipathways field also have entrezgene field
             scopes: entrezgene
           header: application/x-www-form-urlencoded
         response_mapping: 
           $ref: "#/components/x-bte-response-mapping/wikipathway"
-        source: ConsensusPathDB
+        source: "infores:cpdb"   ## ConsensusPathDB
         supportBatch: true
       - 
         inputSeparator: ","
@@ -813,11 +828,12 @@ components:
         requestBody: 
           body: 
             q: "{inputs[0]}"
+            ## all records with pathway.biocarta field also have entrezgene field
             scopes: entrezgene
           header: application/x-www-form-urlencoded
         response_mapping: 
           $ref: "#/components/x-bte-response-mapping/biocarta"
-        source: ConsensusPathDB
+        source: "infores:cpdb"   ## ConsensusPathDB
         supportBatch: true
   x-bte-response-mapping: 
 #     ENSEMBL: ensembl.gene
@@ -906,6 +922,7 @@ info:
   title: "MyGene.info API"
   version: "3.0"
   x-translator: 
+    infores-curie: "infores:mygene-info"
     component: KP
     team: 
       - "Service Provider"
