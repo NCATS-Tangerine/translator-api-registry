@@ -5,32 +5,30 @@ info:
     name: BioThings Team
     x-id: https://github.com/biothings
     x-role: responsible developers
-  description: Documentation of the BioThings DGIdb query web services.
+  description: Documentation of the BioThings iDISK (integrated Dietary Supplement Knowledge Base) query web services.
   termsOfService: https://biothings.io/about
-  title: BioThings DGIdb API
+  title: BioThings iDISK API
   version: '1.0'
   x-translator:
-    infores-curie: "infores:biothings-dgidb"
+    infores-curie: "infores:biothings-idisk"
     component: KP
     team:
       - Service Provider
-    biolink-version: "2.1.0"
 servers:
 - description: Encrypted Production server
-  url: https://biothings.ncats.io/dgidb
+  url: https://biothings.ncats.io/idisk
 - description: Production server
-  url: http://biothings.ncats.io/dgidb
+  url: http://biothings.ncats.io/idisk
 tags:
-- name: gene
 - name: chemical
-- name: association
-- name: annotation
+- name: disease
+- name: umls
+- name: phenotype
 - name: query
 - name: translator
 - name: biothings
-- name: biothings_graph
 paths:
-  /association:
+  /umls:
     post:
       parameters:
       - $ref: '#/components/parameters/dotfield'
@@ -47,7 +45,9 @@ paths:
             schema:
               properties:
                 ids:
-                  description: 'multiple association IDs separated by comma. Note that currently we only take the input ids up to 1000 maximum, the rest will be omitted. Type: string (list). Max: 1000.'
+                  description: 'multiple chemical UMLS IDs separated by comma. Note
+                    that currently we only take the input ids up to 1000 maximum,
+                    the rest will be omitted. Type: string (list). Max: 1000.'
                   type: string
               required:
               - ids
@@ -57,26 +57,26 @@ paths:
             application/json:
               schema:
                 items:
-                  $ref: '#/components/schemas/Association'
+                  $ref: '#/components/schemas/umls'
                 type: array
-          description: A list of matching association objects
+          description: A list of matching umls objects
         '400':
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResult'
           description: A response indicating an improperly formatted query
-      summary: For a list of association IDs, return the matching disease object
+      summary: For a list of chemical UMLS IDs, return the matching umls object
       tags:
-      - association
-  /association/{associationid}:
+      - umls
+  /umls/{umlsid}:
     get:
       parameters:
-      - description: Retrieve association objects based on Association ID  Supports
+      - description: Retrieve umls objects based on chemical UMLS ID.  Supports
           JSONP and CORS as well.
-        example: "275bfadd2b4c60c3"
+        example: UMLS:C0005380
         in: path
-        name: associationid
+        name: umlsid
         required: true
         schema:
           type: string
@@ -95,13 +95,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Association'
-          description: A matching association object
+                $ref: '#/components/schemas/umls'
+          description: A matching umls object
         '404':
-          description: A response indicating an unknown association ID
-      summary: Retrieve association objects based on ID
+          description: A response indicating an unknown umls ID
+      summary: Retrieve umls objects based on ID
       tags:
-      - association
+      - umls
   /metadata:
     get:
       parameters:
@@ -110,8 +110,8 @@ paths:
         name: callback
       responses:
         '200':
-          description: KP metadata object
-      summary: Get metadata about the data available from the API
+          description: iDISK metadata object
+      summary: Get metadata about the data available from BioThings iDISK API
       tags:
       - metadata
   /metadata/fields:
@@ -127,15 +127,16 @@ paths:
         name: format
       responses:
         '200':
-          description: metadata fields object
+          description: iDISK metadata fields object
       summary: Get metadata about the data fields available
+        object
       tags:
       - metadata
   /query:
     get:
       parameters:
       - description: Query string.
-        example: object.id:CHEMBL.COMPOUND\:CHEMBL26
+        example: is_effective_for.umls:"UMLS:C0020538"
         in: query
         name: q
         required: true
@@ -174,12 +175,10 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResult'
           description: A response indicating an improperly formatted query
-      summary: Make queries and return matching association hits. Supports JSONP and CORS
+      summary: Make queries and return matching umls hits. Supports JSONP and CORS
         as well.
       tags:
       - query
-      x-bte-kgs-operations:
-      - $ref: '#/components/x-bte-kgs-operations/chemical-gene'
     post:
       parameters:
       - $ref: '#/components/parameters/dotfield'
@@ -220,11 +219,18 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResult'
           description: A response indicating an improperly formatted query
-      summary: Make batch disease queries and return matching disease hits
+      summary: Make batch umls queries and return matching umls hits
+      x-bte-kgs-operations:
+      - $ref: '#/components/x-bte-kgs-operations/has_adverse_effect_on'
+      - $ref: '#/components/x-bte-kgs-operations/has_adverse_effect_on-rev'
+      - $ref: '#/components/x-bte-kgs-operations/has_adverse_reaction'
+      - $ref: '#/components/x-bte-kgs-operations/has_adverse_reaction-rev'
+      - $ref: '#/components/x-bte-kgs-operations/interacts_with'
+      - $ref: '#/components/x-bte-kgs-operations/interacts_with-rev'
+      - $ref: '#/components/x-bte-kgs-operations/is_effective_for'
+      - $ref: '#/components/x-bte-kgs-operations/is_effective_for-rev'
       tags:
       - query
-      x-bte-kgs-operations:
-      - $ref: '#/components/x-bte-kgs-operations/gene-chemical'
 components:
   parameters:
     callback:
@@ -322,7 +328,7 @@ components:
       schema:
         type: string
   schemas:
-    Association:
+    umls:
       properties:
         _id:
           type: string
@@ -339,7 +345,7 @@ components:
     QueryPOSTResult:
       items:
         allOf:
-        - $ref: '#/components/schemas/Association'
+        - $ref: '#/components/schemas/umls'
         - properties:
             _score:
               format: float
@@ -352,7 +358,7 @@ components:
       properties:
         hits:
           items:
-            $ref: '#/components/schemas/Association'
+            $ref: '#/components/schemas/umls'
           type: array
         max_score:
           format: float
@@ -377,55 +383,210 @@ components:
         type: array
       - type: string
   x-bte-kgs-operations:
-    ## current database has CHEMBL.COMPOUND curies. So input has to be prefixed, which can happen with 1 GET query (1 input object)).
-    ##   otherwise need logic in BTE to add prefix to each ID for the batch-querying. 
-    chemical-gene:
-    - inputs:
-      - id: CHEMBL.COMPOUND
-        semantic: SmallMolecule
-      outputs:
-      - id: NCBIGene
-        semantic: Gene
+  ## reference for data: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7075538/
+    has_adverse_effect_on:
+    ## there are 626 records with the has_adverse_effect_on field
+    ## the dietary supplement has an adverse effect (that can be categorized into this class of diseases)
+    - supportBatch: true
+      inputSeparator: ","
       parameters:
-        q: object.CHEMBL_COMPOUND:"CHEMBL.COMPOUND:{inputs[0]}"
-        fields: subject.NCBIGene,association
+        fields: has_adverse_effect_on
         size: 1000
-      predicate: physically_interacts_with
-      response_mapping:
-        $ref: '#/components/x-bte-response-mapping/chemical-gene'
-      source: "infores:dgidb"
-      supportBatch: false
-    gene-chemical:
-    - inputs:
-      - id: NCBIGene
-        semantic: Gene
-      outputs:
-      - id: CHEMBL.COMPOUND
-        semantic: SmallMolecule
-      parameters:
-        fields: object.CHEMBL_COMPOUND,association
-        size: 1000
-      predicate: physically_interacts_with
       requestBody:
         body:
           q: '{inputs[0]}'
-          scopes: subject.NCBIGene
+          scopes: umls
         header: application/x-www-form-urlencoded
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      outputs:
+      - id: MEDDRA
+        semantic: Disease
+      predicate: causes_adverse_event  ## closest biolink predicate?
+      ## iDISK got all these relations from NMCD: Natural Medicines Comprehensive Database 
+      ## ref:  Table 3 of the linked publication, or by comparing number of records total with 
+      ##   the number of records from https://biothings.ncats.io/idisk/query?q=has_adverse_effect_on.source.name:%22NMCD%22
+      source: "infores:idisk"
       response_mapping:
-        $ref: '#/components/x-bte-response-mapping/gene-chemical'
-      source: "infores:dgidb"
-      supportBatch: true
+        $ref: '#/components/x-bte-response-mapping/has_adverse_effect_on'
+    has_adverse_effect_on-rev:
+    - supportBatch: true
       inputSeparator: ","
+      parameters:
+        fields: name,umls
+        size: 1000
+      requestBody:
+        body:
+          q: '{inputs[0]}'
+          scopes: has_adverse_effect_on.meddra
+        header: application/x-www-form-urlencoded
+      inputs:
+      - id: MEDDRA
+        semantic: Disease
+      outputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      predicate: adverse_event_caused_by
+      source: "infores:idisk"
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/rev'
+    has_adverse_reaction:
+    ## there are 204 records with the has_adverse_reaction field
+    ## the dietary supplement has an adverse effect/reaction (specific sign/symptom)
+    - supportBatch: true
+      inputSeparator: ","
+      parameters:
+        fields: has_adverse_reaction
+        size: 1000
+      requestBody:
+        body:
+          q: '{inputs[0]}'
+          scopes: umls
+        header: application/x-www-form-urlencoded
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      outputs:
+      - id: UMLS
+        semantic: Disease  ## use this or PhenotypicFeature?
+        ## don't create two operations or records will duplicate for DiseaseOrPhenotypicFeature query
+      predicate: causes_adverse_event  ## closest biolink predicate?
+      ## iDISK got all these relations from MSKCC: “About Herbs” page on the Memorial Sloan Kettering Cancer Center (MSKCC) website 
+      ## ref:  Table 3 of the linked publication, or by comparing number of records total with 
+      ##   the number of records from https://biothings.ncats.io/idisk/query?q=has_adverse_reaction.source.name:%22MSKCC%22
+      source: "infores:idisk"
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/has_adverse_reaction'
+    has_adverse_reaction-rev:
+    - supportBatch: true
+      inputSeparator: ","
+      parameters:
+        fields: name,umls
+        size: 1000
+      requestBody:
+        body:
+          q: '{inputs[0]}'
+          scopes: has_adverse_reaction.umls
+        header: application/x-www-form-urlencoded
+      inputs:
+      - id: UMLS
+        semantic: Disease
+      outputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      predicate: adverse_event_caused_by
+      source: "infores:idisk"
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/rev'
+    interacts_with:
+    ## there are 673 records with the interacts_with field 
+    ##   most use NMCD (604), but some use MSKCC (178). Some records must have both?
+    ## the dietary supplement interacts with a pharmaceutical drug
+    - supportBatch: true
+      inputSeparator: ","
+      parameters:
+        fields: interacts_with
+        size: 1000
+      requestBody:
+        body:
+          q: '{inputs[0]}'
+          scopes: umls
+        header: application/x-www-form-urlencoded
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      outputs:
+      - id: UMLS
+        semantic: ChemicalSubstance  
+      predicate: interacts_with  ## closest biolink predicate?
+      source: "infores:idisk"
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/interacts_with'
+    interacts_with-rev:
+    - supportBatch: true
+      inputSeparator: ","
+      parameters:
+        fields: name,umls
+        size: 1000
+      requestBody:
+        body:
+          q: '{inputs[0]}'
+          scopes: interacts_with.umls
+        header: application/x-www-form-urlencoded
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      outputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      predicate: interacts_with
+      source: "infores:idisk"
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/rev'
+    is_effective_for:
+    ## there are 654 records with the is_effective_for field 
+    ##   most use NMCD (552), but some use MSKCC (238). Some records must have both?
+    ## the dietary supplement is said to treat disease/condition or may be used for it...
+    - supportBatch: true
+      inputSeparator: ","
+      parameters:
+        fields: is_effective_for
+        size: 1000
+      requestBody:
+        body:
+          q: '{inputs[0]}'
+          scopes: umls
+        header: application/x-www-form-urlencoded
+      inputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      outputs:
+      - id: UMLS
+        semantic: Disease    ## use this or PhenotypicFeature?
+        ## don't create two operations or records will duplicate for DiseaseOrPhenotypicFeature query
+      predicate: treats  ## closest biolink predicate?
+      source: "infores:idisk"
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/is_effective_for'
+    is_effective_for-rev:
+    - supportBatch: true
+      inputSeparator: ","
+      parameters:
+        fields: name,umls
+        size: 1000
+      requestBody:
+        body:
+          q: '{inputs[0]}'
+          scopes: is_effective_for.umls
+        header: application/x-www-form-urlencoded
+      inputs:
+      - id: UMLS
+        semantic: Disease
+      outputs:
+      - id: UMLS
+        semantic: ChemicalSubstance
+      predicate: treated_by
+      source: "infores:idisk"
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/rev'
   x-bte-response-mapping:
-    chemical-gene:
-      NCBIGene: hits.subject.NCBIGene
-      pubmed: hits.association.pubmed
-      source: hits.association.provided_by
-      relation: hits.association.relation_name
-      score: hits.association.interaction_group_score
-    gene-chemical:
-      CHEMBL.COMPOUND: object.CHEMBL_COMPOUND
-      pubmed: association.pubmed
-      source: association.provided_by
-      relation: association.relation_name
-      score: association.interaction_group_score
+    has_adverse_effect_on:
+      MEDDRA: has_adverse_effect_on.meddra
+      name: has_adverse_effect_on.name
+      source: has_adverse_effect_on.source.name
+    rev:
+      UMLS: umls
+      name: name
+    has_adverse_reaction:
+      UMLS: has_adverse_reaction.umls
+      name: has_adverse_reaction.name
+      source: has_adverse_reaction.source.name
+    interacts_with:
+      UMLS: interacts_with.umls
+      name: interacts_with.name
+      source: interacts_with.source.name
+    is_effective_for:
+      UMLS: is_effective_for.umls
+      name: is_effective_for.name
+      source: is_effective_for.source.name
