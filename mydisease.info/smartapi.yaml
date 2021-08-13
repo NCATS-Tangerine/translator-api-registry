@@ -242,6 +242,18 @@ paths:
 #       - "$ref": "#/components/x-bte-kgs-operations/pathway-disease2"
       - "$ref": "#/components/x-bte-kgs-operations/has_subclass"
       - "$ref": "#/components/x-bte-kgs-operations/subclass_of"
+      - "$ref": "#/components/x-bte-kgs-operations/predisposes_towards"
+      - "$ref": "#/components/x-bte-kgs-operations/predisposes_towards-rev"
+      - "$ref": "#/components/x-bte-kgs-operations/disease_shares_features_of"
+      - "$ref": "#/components/x-bte-kgs-operations/disease_shares_features_of-rev"
+      - "$ref": "#/components/x-bte-kgs-operations/disease_has_major_feature"
+      - "$ref": "#/components/x-bte-kgs-operations/disease_has_major_feature-rev"
+      - "$ref": "#/components/x-bte-kgs-operations/disease_has_feature"
+      - "$ref": "#/components/x-bte-kgs-operations/disease_has_feature-rev"
+      - "$ref": "#/components/x-bte-kgs-operations/disease_causes_feature"
+      - "$ref": "#/components/x-bte-kgs-operations/disease_causes_feature-rev"
+      - "$ref": "#/components/x-bte-kgs-operations/disease_arises_from_feature"
+      - "$ref": "#/components/x-bte-kgs-operations/disease_arises_from_feature-rev"
 components:
   parameters:
     callback:
@@ -394,48 +406,90 @@ components:
         type: array
       - type: string
   x-bte-response-mapping:
+    ## not including "name" field since BTE isn't ingesting / using it to annotate nodes...
     disease-gene:
-      NCBIGene: disgenet.genes_related_to_disease.gene_id
-      pubmed: disgenet.genes_related_to_disease.pubmed
+      NCBIGene: disgenet.genes_related_to_disease.gene_id  ## no prefix
+      pubmed: disgenet.genes_related_to_disease.pubmed     ## no prefix
+      source: disgenet.genes_related_to_disease.source
+      ## could remove "disgenet-" prefix from the key
+      ##  if the key becomes the TRAPI attribute "original_attribute_name"
+      disgenet-DPI: disgenet.genes_related_to_disease.DPI
+      disgenet-DSI: disgenet.genes_related_to_disease.DSI
+      disgenet-score: disgenet.genes_related_to_disease.score
     disease-variant:
-      DBSNP: disgenet.variants_related_to_disease.rsid
-      pubmed: disgenet.variants_related_to_disease.pubmed
+      DBSNP: disgenet.variants_related_to_disease.rsid       ## no prefix
+      pubmed: disgenet.variants_related_to_disease.pubmed    ## no prefix
+      source: disgenet.variants_related_to_disease.source
+      ## could remove "disgenet-" prefix from the key
+      ##  if the key becomes the TRAPI attribute "original_attribute_name"
+      disgenet-DPI: disgenet.variants_related_to_disease.DPI
+      disgenet-DSI: disgenet.variants_related_to_disease.DSI
+      disgenet-score: disgenet.variants_related_to_disease.score
     disease-phenotype:
-      HP: hpo.phenotype_related_to_disease.hpo_id
-      ## note: there are 6 reference-related fields: isbn_refs, pmid_refs, website_refs, decipher_refs, omim_refs, orphanet_refs
-      pubmed: hpo.phenotype_related_to_disease.pmid_refs
-      ## evidence is evidence codes (IEA, TAS, PCS)
+      HP: hpo.phenotype_related_to_disease.hpo_id             ## HAS PREFIX (HP)
+      ## note: there are 6 reference-related fields (parser created based on ID namespace)
+      pubmed: hpo.phenotype_related_to_disease.pmid_refs                 ## HAS PREFIX (PMID)
+      isbn_refs: hpo.phenotype_related_to_disease.isbn_refs              ## HAS PREFIX (ISBN)
+      website_refs: hpo.phenotype_related_to_disease.website_refs        ## no prefix
+      decipher_refs: hpo.phenotype_related_to_disease.decipher_refs      ## HAS PREFIX (DECIPHER)
+      omim_refs: hpo.phenotype_related_to_disease.omim_refs              ## HAS PREFIX (OMIM)
+      orphanet_refs: hpo.phenotype_related_to_disease.orphanet_refs      ## HAS PREFIX (ORPHANET)
+      ## note: there are 4 frequency-related fields (parser created based on different data types)
+      numeric_freq: hpo.phenotype_related_to_disease.numeric_freq           ## decimal freq
+      hp_freq: hpo.phenotype_related_to_disease.hp_freq                     ## HP ontology freq term
+      freq_numerator: hpo.phenotype_related_to_disease.freq_numerator       ## frequency as a fraction (numerator)
+      freq_denominator: hpo.phenotype_related_to_disease.freq_denominator   ## frequency as a fraction (denominator)
+      ## value of this field is evidence codes (IEA, TAS, PCS)
       evidence: hpo.phenotype_related_to_disease.evidence
-      ## note: there are 4 frequency-related fields: hp_freq, numeric_freq, freq_numerator, freq_denominator 
-      frequency: hpo.phenotype_related_to_disease.numeric_freq
+      ## modifier/sex fields provide context...only in some disease-phenotype records...
+      modifier: hpo.phenotype_related_to_disease.modifier
+      sex: hpo.phenotype_related_to_disease.sex
+      biocuration: hpo.phenotype_related_to_disease.biocuration
     disease-phenotype2:
-      HP: covid_phenotypes.hp
+      HP: covid_phenotypes.hp    ## HAS PREFIX (HP)
     disease-chemical:
-      MESH: ctd.chemical_related_to_disease.mesh_chemical_id
-      ## note: evidence has two values, 'marker/mechanism' or 'therapeutic'
-      evidence: ctd.chemical_related_to_disease.direct_evidence
-      pubmed: ctd.chemical_related_to_disease.pubmed 
+      MESH: ctd.chemical_related_to_disease.mesh_chemical_id    ## no prefix
+      ## direct_evidence has two values, 'marker/mechanism' or 'therapeutic'
+      direct_evidence: ctd.chemical_related_to_disease.direct_evidence
+      pubmed: ctd.chemical_related_to_disease.pubmed     ## no prefix
 #     disease-pathway:  
 #       REACT: ctd.pathway_related_to_disease.react_pathway_id
 #     disease-pathway2:  
 #       KEGG: ctd.pathway_related_to_disease.kegg_pathway_id
     umls:
-      UMLS: disgenet.xrefs.umls
+      UMLS: disgenet.xrefs.umls     ## no prefix
     omim:
-      OMIM: hpo.omim
-    orphanet:  ## added for phenotype-disease2 operation
-      ORPHANET: hpo.orphanet       
-    mondo:  ## added for phenotype-disease3, pathway-disease operation
-      MONDO: mondo.mondo
+      OMIM: hpo.omim  ## no prefix
+    orphanet:
+      ORPHANET: hpo.orphanet  ## no prefix
+    mondo:  ## added for a bunch of operations
+      MONDO: mondo.mondo  ## HAS PREFIX (MONDO)
     ctd-mesh-disease:  ## added for chemical-disease operation
-      MESH: ctd.mesh
+      MESH: ctd.mesh  ## no prefix
     ctd-omim-disease:  ## added for chemical-disease2 operation
-      OMIM: ctd.omim
+      OMIM: ctd.omim  ## no prefix
     has_subclass:
-      MONDO: mondo.descendants
+      MONDO: mondo.children    ## HAS PREFIX (MONDO)
     subclass_of:
-      MONDO: mondo.parents
+      MONDO: mondo.parents    ## HAS PREFIX (MONDO)
+    predisposes_towards:
+      MONDO: mondo.predisposes_towards.mondo    ## HAS PREFIX (MONDO)
+    disease_shares_features_of:
+      MONDO: mondo.disease_shares_features_of.mondo    ## HAS PREFIX (MONDO)
+    disease_has_major_feature:
+      MONDO: mondo.disease_has_major_feature.mondo    ## HAS PREFIX (MONDO)
+    disease_has_feature:
+      MONDO: mondo.disease_has_feature.mondo    ## HAS PREFIX (MONDO)
+    disease_causes_feature:
+      MONDO: mondo.disease_causes_feature.mondo    ## HAS PREFIX (MONDO)
+    disease_arises_from_feature:
+      MONDO: mondo.disease_arises_from_feature.mondo    ## HAS PREFIX (MONDO)
   x-bte-kgs-operations:
+  ## for disgenet-based operations:
+  ## - the ingested data structure doesn't give a specific relation...
+  ##   and trying to get a specific relation is hard
+  ##   (going thru source -> ontology class -> trying to find a matching ontology property)
+  ## - there are numeric measures, not in response-mapping right now
     disease-gene:
     - supportBatch: true
       inputSeparator: ","
@@ -443,7 +497,9 @@ components:
         fields: disgenet.genes_related_to_disease
       requestBody:
         body:
-          q: "{inputs[0]}"  ## example: put C0024776 here
+          q: "{inputs[0]}"  ## no prefix
+          ## example: put C0023264 here (Leigh Disease).
+          ##   should get NCBIGene:4694 (NDUFA1) in response
           scopes: disgenet.xrefs.umls
         header: application/x-www-form-urlencoded
       inputs:
@@ -463,7 +519,9 @@ components:
         fields: disgenet.variants_related_to_disease
       requestBody:
         body:
-          q: "{inputs[0]}"   ## example: put C0024776 here
+          q: "{inputs[0]}"  ## no prefix
+          ## example: put C0023264 here (Leigh Disease)
+          ##   should get rs1161932777 in response
           scopes: disgenet.xrefs.umls
         header: application/x-www-form-urlencoded
       inputs:
@@ -476,6 +534,12 @@ components:
       source: "infores:disgenet"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/disease-variant"
+  ## for hpo-annotation-based operations:
+  ## - currently, the mydisease parser for hpo maps the resources' IDs (OMIM or ORPHANET) to MONDO. If two IDs (ex: OMIM:218340 and ORPHANET:1777 for Temtamy syndrome) map to the same MONDO ID, it looks like only the OMIM data was kept.
+  ##   However, then data is missing: in the raw data, those two IDs have different sets of annotated phenotypes...
+  ##   Change to keep both IDs and their records, or merge them?
+  ## - there is DECIPHER-ID-based disease-pheno info that isn't captured by BTE right now
+  ##   this is not much info (~22 diseases)
     disease-phenotype:
     - supportBatch: true
       inputSeparator: ","
@@ -483,8 +547,10 @@ components:
         fields: hpo.phenotype_related_to_disease
       requestBody:
         body:
-          q: "{inputs[0]}"    ## example: put 246900 here
+          q: "{inputs[0]}"  ## no prefix
           scopes: hpo.omim
+          ## example: put 246900 here (Dihydrolipoamide Dehydrogenase Deficiency)
+          ##   should get HP:0001254 (Lethargy) in response
         header: application/x-www-form-urlencoded
       inputs:
       - id: OMIM
@@ -493,6 +559,8 @@ components:
       - id: HP
         semantic: PhenotypicFeature
       predicate: has_phenotype
+      ## sort-of has a relation. Parser made this based on annotations with aspect == "P"
+      ##   (notice aspect as "I" became hpo.inheritance, "C" became hpo.course, "M" became hpo.modifier)
       source: "infores:hpo-annotations"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/disease-phenotype"
@@ -503,7 +571,9 @@ components:
         fields: hpo.phenotype_related_to_disease
       requestBody:
         body:
-          q: "{inputs[0]}"    ## example: put 881 here
+          q: "{inputs[0]}"  ## no prefix
+          ## example: put 881 here (Turner Syndrome)
+          ##   should get HP:0000137 (Abnormality of the ovary) in response
           scopes: hpo.orphanet
         header: application/x-www-form-urlencoded
       inputs:
@@ -517,13 +587,16 @@ components:
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/disease-phenotype"
     disease-phenotype3:  ## covid only
+    ## could be updated based on Automat's current tool?
     - supportBatch: true
       inputSeparator: ","
       parameters:
         fields: covid_phenotypes.hp
       requestBody:
         body:
-          q: "{inputs[0]}"      ## example: put MONDO:0100096 here
+          q: "{inputs[0]}"      ## HAS PREFIX (MONDO)
+          ## example: put MONDO:0100096 here (only possible input)
+          ##   should get HP:0011899 (Hyperfibrinogenemia) in response
           scopes: mondo.mondo
         header: application/x-www-form-urlencoded
       inputs:
@@ -536,6 +609,14 @@ components:
       source: "infores:automat-covid-phenotypes"   ## but an older downloaded version...
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/disease-phenotype2"
+  ## for ctd-based operations:
+  ## - when the mydisease parser maps the resources' IDs to MONDO, are there situations where a MESH and a OMIM ID map to the same MONDO? 
+  ##   If so, 1) Is only one of them kept?, 
+  ##          2) Do those IDs have different data linked to them? (so data is missing with the current behavior)
+  ##   From what I can tell, CTD does their own entity resolution. 
+  ##   If a disease has MESH and OMIM IDs, the raw data has its info under the MESH ID only. The OMIM ID is only used as the main disease ID if there isn't a matching MESH ID
+  ## - we wanted to add CTD direct disease-gene data, operations
+  ## - we commented out CTD disease-pathway data because that info is all indirect
     disease-chemical:
     - path: "/query"
       method: post
@@ -545,7 +626,9 @@ components:
         fields: ctd.chemical_related_to_disease
       requestBody:
         body:
-          q: "{inputs[0]}"  ## example: put D009102 here
+          q: "{inputs[0]}"  ## no prefix
+          ## example: put D009102 here (Multiple Organ Failure)
+          ##   should get C448659 (17-(dimethylaminoethylamino)-17-demethoxygeldanamycin, aka ALVESPIMYCIN) in response
           scopes: ctd.mesh
         header: application/x-www-form-urlencoded
       inputs:
@@ -554,7 +637,10 @@ components:
       outputs:
       - id: MESH
         semantic: SmallMolecule
+        ## note that 3085 / 3253 have cas_registry_number field that can be used as well
       predicate: related_to
+      ## there is a field that kinda tells the "relation" IN response-mapping right now
+      ##   (direct_evidence can have value "marker/mechanism" or "therapeutic").
       source: "infores:ctd"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/disease-chemical"
@@ -567,7 +653,9 @@ components:
         fields: ctd.chemical_related_to_disease
       requestBody:
         body:
-          q: "{inputs[0]}"  ## example: put 146850 here
+          q: "{inputs[0]}"  
+          ## example: put 146850 here (IMMUNE SUPPRESSION)
+          ##   should get D014810 (Vitamin E) in response
           scopes: ctd.omim
         header: application/x-www-form-urlencoded
       inputs:
@@ -576,7 +664,10 @@ components:
       outputs:
       - id: MESH
         semantic: SmallMolecule
+        ## note that 3085 / 3253 have cas_registry_number field that can be used as well
       predicate: related_to
+      ## there is a field that kinda tells the "relation" IN response-mapping right now
+      ##   (direct_evidence can have value "marker/mechanism" or "therapeutic").
       source: "infores:ctd"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/disease-chemical"        
@@ -661,17 +752,20 @@ components:
 #       predicate: related_to
 #       source: "infores:ctd"
 #       response_mapping:
-#         "$ref": "#/components/x-bte-response-mapping/disease-pathway2"    
+#         "$ref": "#/components/x-bte-response-mapping/disease-pathway2"
+##########################################################################
+## for "reverse" querying, we currently can't retrieve the other info in the specific record like reference info...
     gene-disease:
     - supportBatch: true
       inputSeparator: ","
       parameters:
         fields: disgenet.xrefs.umls
-        size: '1000'  
-        ## note the size limit
+        size: '1000'  ## note the size limit
       requestBody:
         body:
-          q: "{inputs[0]}"   ## example: put 1629 here 
+          q: "{inputs[0]}"   ## no prefix
+          ## example: put 1629 here (DBT)
+          ##   should get C3658290 in response (Drug-Induced Acute Liver Injury)
           scopes: disgenet.genes_related_to_disease.gene_id
         header: application/x-www-form-urlencoded
       inputs:
@@ -689,11 +783,12 @@ components:
       inputSeparator: ","
       parameters:
         fields: disgenet.xrefs.umls
-        ## note that we are setting a size limit here
-        size: '1000'
+        size: '1000'  ## note the size limit
       requestBody:
         body:
-          q: "{inputs[0]}"   ## example: put rs1001179 here   
+          q: "{inputs[0]}"   ## no prefix
+          ## example: put rs78655421 here
+          ##   should get C4021107 in response (Non-obstructive azoospermia)
           scopes: disgenet.variants_related_to_disease.rsid
         header: application/x-www-form-urlencoded
       inputs:
@@ -713,11 +808,12 @@ components:
       inputSeparator: ","
       parameters:
         fields: hpo.omim
-        ## note that we are setting a size limit here
-        size: '1000'
+        size: '1000'  ## note the size limit
       requestBody:
         body:
-          q: "{inputs[0]}"   ## example: put HP:0000224 here 
+          q: "{inputs[0]}"   ## HAS PREFIX (HP)
+          ## example: put HP:0000224 here (Hypogeusia)
+          ##   should get 608720 in response (Neuropathy, Hereditary Sensory And Autonomic, Adult-onset, With Anosmia)
           scopes: hpo.phenotype_related_to_disease.hpo_id
         header: application/x-www-form-urlencoded
       inputs:
@@ -737,11 +833,12 @@ components:
       inputSeparator: ","
       parameters:
         fields: hpo.orphanet
-        ## note that we are setting a size limit here
-        size: '1000'
+        size: '1000'  ## note the size limit
       requestBody:
         body:
-          q: "{inputs[0]}"   ## example: put HP:0000224 here 
+          q: "{inputs[0]}"   ## HAS PREFIX (HP)
+          ## example: put HP:0000224 here (Hypogeusia)
+          ##   should get 99857 in response (Secondary Syringomyelia)         
           scopes: hpo.phenotype_related_to_disease.hpo_id
         header: application/x-www-form-urlencoded
       inputs:
@@ -763,7 +860,10 @@ components:
         fields: mondo.mondo
       requestBody:
         body:
-          q: "{inputs[0]}"  ## example: put HP:0011899 here 
+          q: "{inputs[0]}"   ## HAS PREFIX (HP)
+          ## example: put HP:0011899 here (Hyperfibrinogenemia)
+          ##   should get MONDO:0100096 in response (COVID-19)         
+          ## somewhat restricted set of possible inputs (~20)
           scopes: covid_phenotypes.hp
         header: application/x-www-form-urlencoded
       inputs:
@@ -783,11 +883,12 @@ components:
       inputSeparator: ","
       parameters:
         fields: ctd.mesh
-        ## note that we are setting a size limit here
-        size: '1000'
+        size: '1000'  ## note the size limit
       requestBody:
         body:
-          q: "{inputs[0]}"  ## example: put D015031 here   
+          q: "{inputs[0]}"  ## no prefix
+          ## example: put D000655 here (Amodiaquine)
+          ##   should get D008288 in response (Malaria) (maps to MONDO:0005136)
           scopes: ctd.chemical_related_to_disease.mesh_chemical_id
         header: application/x-www-form-urlencoded
       inputs:
@@ -807,11 +908,12 @@ components:
       inputSeparator: ","
       parameters:
         fields: ctd.omim
-        ## note that we are setting a size limit here
-        size: '1000'
+        size: '1000'  ## note the size limit
       requestBody:
         body:
-          q: "{inputs[0]}"  ## example: put D015031 here
+          q: "{inputs[0]}"    ## no prefix
+          ## example: put D000655 here (Amodiaquine)
+          ##   should get 248310 in response (PLASMODIUM FALCIPARUM BLOOD INFECTION LEVEL) (maps to MONDO:0009553)
           scopes: ctd.chemical_related_to_disease.mesh_chemical_id
         header: application/x-www-form-urlencoded
       inputs:
@@ -829,8 +931,7 @@ components:
 #     - supportBatch: true
 #       inputSeparator: ","
 #       parameters:
-#         fields: ctd.mesh
-#         ## note that we are setting a size limit here
+#         fields: ctd.mesh  ## note the size limit
 #         size: '1000'
 #       requestBody:
 #         body:
@@ -851,8 +952,7 @@ components:
 #     - supportBatch: true
 #       inputSeparator: ","
 #       parameters:
-#         fields: ctd.omim
-#         ## note that we are setting a size limit here
+#         fields: ctd.omim  ## note the size limit
 #         size: '1000'
 #       requestBody:
 #         body:
@@ -874,8 +974,7 @@ components:
 #     - supportBatch: true
 #       inputSeparator: ","
 #       parameters:
-#         fields: ctd.mesh
-#         ## note that we are setting a size limit here
+#         fields: ctd.mesh  ## note the size limit
 #         size: '1000'
 #       requestBody:
 #         body:
@@ -896,8 +995,7 @@ components:
 #     - supportBatch: true
 #       inputSeparator: ","
 #       parameters:
-#         fields: ctd.omim
-#         ## note that we are setting a size limit here
+#         fields: ctd.omim  ## note the size limit
 #         size: '1000'
 #       requestBody:
 #         body:
@@ -914,18 +1012,27 @@ components:
 #       source: "infores:ctd"
 #       response_mapping:
 #         "$ref": "#/components/x-bte-response-mapping/ctd-omim-disease"
+############################################################################
+    ## - there's also disease_ontology info (ancestors, children, descendants, parents)
+    ## - there's also mondo info (ancestors, descendants)
+    ## - mondo info we're not including:
+    ##     - part_of_progression_of_disease (only 2 disease-disease relationships)
+    ##     - has_modifier (something is off here, shouldn't be mondo prefix...)
+    ##     - excluded_subClassOf (something is off here, I'm not sure what that means)
+    ##     - disjoint from (this is a negation / NOT relationship)
     has_subclass:
     - path: "/query"
       method: post
       supportBatch: true
       inputSeparator: ","
       parameters:
-        fields: mondo.descendants
-        ## note that we are setting a size limit here
-        size: '1000'
+        fields: mondo.children
+        size: '1000'  ## note the size limit
       requestBody:
         body:
-          q: "{inputs[0]}"  ## example: put MONDO:0002494 here
+          q: "{inputs[0]}"  ## HAS PREFIX (MONDO)
+          ## example: put MONDO:0002494 here (substance-related disorder)
+          ##   should get MONDO:0021698 in response (alcohol-related disorders)
           scopes: mondo.mondo
         header: application/x-www-form-urlencoded
       inputs:
@@ -935,6 +1042,7 @@ components:
       - id: MONDO
         semantic: Disease
       predicate: superclass_of  ## this is the inverse of subclass_of right now
+      ## relation: "has children"?
       source: "infores:mondo"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/has_subclass"
@@ -945,11 +1053,12 @@ components:
       inputSeparator: ","
       parameters:
         fields: mondo.parents
-        ## note that we are setting a size limit here
-        size: '1000'
+        size: '1000'  ## note the size limit
       requestBody:
         body:
-          q: "{inputs[0]}"  ## example: put MONDO:0002494 here
+          q: "{inputs[0]}"   ## HAS PREFIX (MONDO)
+          ## example: put MONDO:0002494 here (substance-related disorder)
+          ##   should get MONDO:0002025 in response (psychiatric disorder)
           scopes: mondo.mondo
         header: application/x-www-form-urlencoded
       inputs:
@@ -959,6 +1068,324 @@ components:
       - id: MONDO
         semantic: Disease
       predicate: subclass_of
+      ## relation: "has parents"?
       source: "infores:mondo"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/subclass_of"
+    predisposes_towards:
+    - path: "/query"
+      method: post
+      supportBatch: true
+      inputSeparator: ","
+      parameters:
+        fields: mondo.predisposes_towards
+        size: '1000'  ## note the size limit
+      requestBody:
+        body:
+          q: "{inputs[0]}"   ## HAS PREFIX (MONDO)
+          ## example: put MONDO:0010940 here (inherited susceptibility to asthma)
+          ##   should get MONDO:0004979 in response (asthma)
+          scopes: mondo.mondo
+        header: application/x-www-form-urlencoded
+      inputs:
+      - id: MONDO
+        semantic: Disease
+      outputs:
+      - id: MONDO
+        semantic: Disease
+      predicate: contributes_to  ## maps to "MONDO:predisposes_towards"
+      ## could use more specific biolink predicate like predisposes??
+      ## relation: "MONDO:predisposes_towards"?
+      source: "infores:mondo"
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/predisposes_towards"
+    predisposes_towards-rev:
+    - path: "/query"
+      method: post
+      supportBatch: true
+      inputSeparator: ","
+      parameters:
+        fields: mondo.mondo
+        size: '1000'  ## note the size limit
+      requestBody:
+        body:
+          q: "{inputs[0]}"   ## HAS PREFIX (MONDO)
+          ## example: put MONDO:0004979 (asthma)
+          ##   should get MONDO:0010940 in response (inherited susceptibility to asthma)
+          scopes: mondo.predisposes_towards.mondo
+        header: application/x-www-form-urlencoded
+      inputs:
+      - id: MONDO
+        semantic: Disease
+      outputs:
+      - id: MONDO
+        semantic: Disease
+      predicate: contribution_from
+      ## inverse of contributes_to, which is mapped to "MONDO:predisposes_towards"
+      ## no relation then...
+      source: "infores:mondo"
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/mondo"
+    disease_shares_features_of:
+    - path: "/query"
+      method: post
+      supportBatch: true
+      inputSeparator: ","
+      parameters:
+        fields: mondo.disease_shares_features_of
+        size: '1000'  ## note the size limit
+      requestBody:
+        body:
+          q: "{inputs[0]}"   ## HAS PREFIX (MONDO)
+          ## example: put MONDO:0008711 here (Goodman syndrome)
+          ##   should get MONDO:0019012 in response (Carpenter syndrome)
+          scopes: mondo.mondo
+        header: application/x-www-form-urlencoded
+      inputs:
+      - id: MONDO
+        semantic: Disease
+      outputs:
+      - id: MONDO
+        semantic: Disease
+      predicate: similar_to  ## could biolink have a more specific predicate?
+      ##   note that relation maps to biolink:related_to right now...
+      ## relation: "MONDO:disease_shares_features_of"?
+      source: "infores:mondo"
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/disease_shares_features_of"
+    disease_shares_features_of-rev:
+    ## checked and inverse relationship doesn't exist already in the data
+    ##   for example, the record for Carpenter syndrome doesn't have disease_shares_features_of
+    - path: "/query"
+      method: post
+      supportBatch: true
+      inputSeparator: ","
+      parameters:
+        fields: mondo.mondo
+        size: '1000'  ## note the size limit
+      requestBody:
+        body:
+          q: "{inputs[0]}"   ## HAS PREFIX (MONDO)
+          ## example: put MONDO:0019012 (Carpenter syndrome)
+          ##   should get MONDO:0008711 in response (Goodman syndrome)
+          scopes: mondo.disease_shares_features_of.mondo
+        header: application/x-www-form-urlencoded
+      inputs:
+      - id: MONDO
+        semantic: Disease
+      outputs:
+      - id: MONDO
+        semantic: Disease
+      predicate: similar_to  ## could biolink have a more specific predicate?
+      ## no relation...
+      source: "infores:mondo"
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/mondo"
+    disease_has_major_feature:
+    - path: "/query"
+      method: post
+      supportBatch: true
+      inputSeparator: ","
+      parameters:
+        fields: mondo.disease_has_major_feature
+        size: '1000'  ## note the size limit
+      requestBody:
+        body:
+          q: "{inputs[0]}"   ## HAS PREFIX (MONDO)
+          ## example: put MONDO:0015140 here (early-onset autosomal dominant Alzheimer disease)
+          ##   should get MONDO:0001627 in response (dementia (disease))
+          scopes: mondo.mondo
+        header: application/x-www-form-urlencoded
+      inputs:
+      - id: MONDO
+        semantic: Disease
+      outputs:
+      - id: MONDO
+        semantic: Disease
+      predicate: has_part  ## maps to "MONDO:disease_has_major_feature"
+      ## relation: "MONDO:disease_has_major_feature"?
+      source: "infores:mondo"
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/disease_has_major_feature"
+    disease_has_major_feature-rev:
+    - path: "/query"
+      method: post
+      supportBatch: true
+      inputSeparator: ","
+      parameters:
+        fields: mondo.mondo
+        size: '1000'  ## note the size limit
+      requestBody:
+        body:
+          q: "{inputs[0]}"   ## HAS PREFIX (MONDO)
+          ## example: put MONDO:0001627 (dementia (disease))
+          ##   should get MONDO:0015140 in response (early-onset autosomal dominant Alzheimer disease)
+          scopes: mondo.disease_has_major_feature.mondo
+        header: application/x-www-form-urlencoded
+      inputs:
+      - id: MONDO
+        semantic: Disease
+      outputs:
+      - id: MONDO
+        semantic: Disease
+      predicate: part_of  ## could biolink have a more specific predicate?
+      ## no relation...
+      source: "infores:mondo"
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/mondo"
+    disease_has_feature:
+    - path: "/query"
+      method: post
+      supportBatch: true
+      inputSeparator: ","
+      parameters:
+        fields: mondo.disease_has_feature
+        size: '1000'  ## note the size limit
+      requestBody:
+        body:
+          q: "{inputs[0]}"   ## HAS PREFIX (MONDO)
+          ## example: put MONDO:0005796 here (HIV enteropathy)
+          ##   should get MONDO:0005020 in response (intestinal disease)
+          scopes: mondo.mondo
+        header: application/x-www-form-urlencoded
+      inputs:
+      - id: MONDO
+        semantic: Disease
+      outputs:
+      - id: MONDO
+        semantic: Disease
+      predicate: has_part  ## no biolink mapping...
+      ## relation: "MONDO:disease_has_feature"?
+      source: "infores:mondo"
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/disease_has_feature"
+    disease_has_feature-rev:
+    - path: "/query"
+      method: post
+      supportBatch: true
+      inputSeparator: ","
+      parameters:
+        fields: mondo.mondo
+        size: '1000'  ## note the size limit
+      requestBody:
+        body:
+          q: "{inputs[0]}"   ## HAS PREFIX (MONDO)
+          ## example: put MONDO:0005020 (intestinal disease)
+          ##   should get MONDO:0005796 in response (HIV enteropathy)
+          scopes: mondo.disease_has_feature.mondo
+        header: application/x-www-form-urlencoded
+      inputs:
+      - id: MONDO
+        semantic: Disease
+      outputs:
+      - id: MONDO
+        semantic: Disease
+      predicate: part_of
+      ## no relation...
+      source: "infores:mondo"
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/mondo"
+    disease_causes_feature:
+    - path: "/query"
+      method: post
+      supportBatch: true
+      inputSeparator: ","
+      parameters:
+        fields: mondo.disease_causes_feature
+        size: '1000'  ## note the size limit
+      requestBody:
+        body:
+          q: "{inputs[0]}"   ## HAS PREFIX (MONDO)
+          ## example: put MONDO:0000490 here (glomerulosclerosis)
+          ##   should get MONDO:0001106 in response (kidney failure)
+          scopes: mondo.mondo
+        header: application/x-www-form-urlencoded
+      inputs:
+      - id: MONDO
+        semantic: Disease
+      outputs:
+      - id: MONDO
+        semantic: Disease
+      predicate: causes  ## maps to "MONDO:disease_causes_feature"
+      ## relation: "MONDO:disease_causes_feature"?
+      source: "infores:mondo"
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/disease_causes_feature"
+    disease_causes_feature-rev:
+    - path: "/query"
+      method: post
+      supportBatch: true
+      inputSeparator: ","
+      parameters:
+        fields: mondo.mondo
+        size: '1000'  ## note the size limit
+      requestBody:
+        body:
+          q: "{inputs[0]}"   ## HAS PREFIX (MONDO)
+          ## example: put MONDO:0001106 (kidney failure)
+          ##   should get MONDO:0000490 in response (glomerulosclerosis)
+          scopes: mondo.disease_causes_feature.mondo
+        header: application/x-www-form-urlencoded
+      inputs:
+      - id: MONDO
+        semantic: Disease
+      outputs:
+      - id: MONDO
+        semantic: Disease
+      predicate: caused_by
+      ## no relation...
+      source: "infores:mondo"
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/mondo"
+    disease_arises_from_feature:
+    - path: "/query"
+      method: post
+      supportBatch: true
+      inputSeparator: ","
+      parameters:
+        fields: mondo.disease_arises_from_feature
+        size: '1000'  ## note the size limit
+      requestBody:
+        body:
+          q: "{inputs[0]}"   ## HAS PREFIX (MONDO)
+          ## example: put MONDO:0009346 here (histidinuria due to a renal tubular defect)
+          ##   should get MONDO:0021568 in response (renal tubule disease)
+          scopes: mondo.mondo
+        header: application/x-www-form-urlencoded
+      inputs:
+      - id: MONDO
+        semantic: Disease
+      outputs:
+      - id: MONDO
+        semantic: Disease
+      predicate: caused_by
+      ## relation: "MONDO:disease_arises_from_feature"?
+      source: "infores:mondo"
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/disease_arises_from_feature"
+    disease_arises_from_feature-rev:
+    - path: "/query"
+      method: post
+      supportBatch: true
+      inputSeparator: ","
+      parameters:
+        fields: mondo.mondo
+        size: '1000'  ## note the size limit
+      requestBody:
+        body:
+          q: "{inputs[0]}"   ## HAS PREFIX (MONDO)
+          ## example: put MONDO:0021568 (renal tubule disease)
+          ##   should get MONDO:0009346 in response (histidinuria due to a renal tubular defect)
+          scopes: mondo.disease_arises_from_feature.mondo
+        header: application/x-www-form-urlencoded
+      inputs:
+      - id: MONDO
+        semantic: Disease
+      outputs:
+      - id: MONDO
+        semantic: Disease
+      predicate: causes
+      ## no relation...
+      source: "infores:mondo"
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/mondo"
