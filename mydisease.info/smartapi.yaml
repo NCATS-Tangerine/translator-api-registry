@@ -226,7 +226,6 @@ paths:
       - "$ref": "#/components/x-bte-kgs-operations/disease-variant"
       - "$ref": "#/components/x-bte-kgs-operations/disease-phenotype"
       - "$ref": "#/components/x-bte-kgs-operations/disease-phenotype2"
-      - "$ref": "#/components/x-bte-kgs-operations/disease-phenotype3"  ## for covid_phenotypes
       - "$ref": "#/components/x-bte-kgs-operations/disease-chemical"
       - "$ref": "#/components/x-bte-kgs-operations/disease-chemical2"
 #       - "$ref": "#/components/x-bte-kgs-operations/disease-pathway"
@@ -235,7 +234,6 @@ paths:
       - "$ref": "#/components/x-bte-kgs-operations/variant-disease"
       - "$ref": "#/components/x-bte-kgs-operations/phenotype-disease"
       - "$ref": "#/components/x-bte-kgs-operations/phenotype-disease2"
-      - "$ref": "#/components/x-bte-kgs-operations/phenotype-disease3"  ## for covid_phenotypes
       - "$ref": "#/components/x-bte-kgs-operations/chemical-disease"
       - "$ref": "#/components/x-bte-kgs-operations/chemical-disease2"
 #       - "$ref": "#/components/x-bte-kgs-operations/pathway-disease"
@@ -445,8 +443,6 @@ components:
       modifier: hpo.phenotype_related_to_disease.modifier
       sex: hpo.phenotype_related_to_disease.sex
       biocuration: hpo.phenotype_related_to_disease.biocuration
-    disease-phenotype2:
-      HP: covid_phenotypes.hp    ## HAS PREFIX (HP)
     disease-chemical:
       MESH: ctd.chemical_related_to_disease.mesh_chemical_id    ## no prefix
       ## direct_evidence has two values, 'marker/mechanism' or 'therapeutic'
@@ -586,29 +582,6 @@ components:
       source: "infores:hpo-annotations"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/disease-phenotype"
-    disease-phenotype3:  ## covid only
-    ## could be updated based on Automat's current tool?
-    - supportBatch: true
-      inputSeparator: ","
-      parameters:
-        fields: covid_phenotypes.hp
-      requestBody:
-        body:
-          q: "{inputs[0]}"      ## HAS PREFIX (MONDO)
-          ## example: put MONDO:0100096 here (only possible input)
-          ##   should get HP:0011899 (Hyperfibrinogenemia) in response
-          scopes: mondo.mondo
-        header: application/x-www-form-urlencoded
-      inputs:
-      - id: MONDO
-        semantic: Disease
-      outputs:
-      - id: HP
-        semantic: PhenotypicFeature
-      predicate: has_phenotype
-      source: "infores:automat-covid-phenotypes"   ## but an older downloaded version...
-      response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/disease-phenotype2"
   ## for ctd-based operations:
   ## - when the mydisease parser maps the resources' IDs to MONDO, are there situations where a MESH and a OMIM ID map to the same MONDO? 
   ##   If so, 1) Is only one of them kept?, 
@@ -851,31 +824,6 @@ components:
       source: "infores:hpo-annotations"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/orphanet"
-    phenotype-disease3:  ## covid only
-    - path: "/query"
-      method: post
-      supportBatch: true
-      inputSeparator: ","
-      parameters:
-        fields: mondo.mondo
-      requestBody:
-        body:
-          q: "{inputs[0]}"   ## HAS PREFIX (HP)
-          ## example: put HP:0011899 here (Hyperfibrinogenemia)
-          ##   should get MONDO:0100096 in response (COVID-19)         
-          ## somewhat restricted set of possible inputs (~20)
-          scopes: covid_phenotypes.hp
-        header: application/x-www-form-urlencoded
-      inputs:
-      - id: HP
-        semantic: PhenotypicFeature
-      outputs:
-      - id: MONDO
-        semantic: Disease
-      predicate: phenotype_of
-      source: "infores:automat-covid-phenotypes"
-      response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/mondo"
     chemical-disease:
     - path: "/query"
       method: post
