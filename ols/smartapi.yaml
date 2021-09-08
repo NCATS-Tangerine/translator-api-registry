@@ -17,6 +17,7 @@ info:
     component: KP
     team:
       - Service Provider
+    biolink-version: "2.2.3"
 servers:
 - url: https://www.ebi.ac.uk/ols/api
   description: Production server
@@ -42,6 +43,7 @@ paths:
       - "$ref": "#/components/x-bte-kgs-operations/disease_has_subclass_disease"
 components:
   x-bte-kgs-operations:
+    ## BIG NOTE: there is likely more data in this API, but want to add stuff that would be helpful for use cases, that we regularly update
     disease_has_subclass_disease:
     - inputs:
       - id: DOID
@@ -52,12 +54,14 @@ components:
       - id: DOID
         semantic: Disease
       parameters:
-        id: "{inputs[0]}"
-      supportBatch: false
+        id: "{inputs[0]}"  ## HAS PREFIX (DOID)
+        ## example: put DOID:0050686 here (organ system cancer)
+        ##   should get DOID:1725 in response (peritoneum cancer)
+      supportBatch: false  ## no batch support (get operation)
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/disease_has_subclass_disease"
   x-bte-response-mapping:
     disease_has_subclass_disease:
-      DOID: _embedded.terms.obo_id
+      DOID: _embedded.terms.obo_id  ## HAS PREFIX (DOID)
       name: _embedded.terms.label
-      description: _embedded.terms.description
+      description: _embedded.terms.description  ## it's a free text field...
