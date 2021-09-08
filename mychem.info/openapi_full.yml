@@ -228,16 +228,14 @@ paths:
       tags:
       - query
       x-bte-kgs-operations:
-      - "$ref": "#/components/x-bte-kgs-operations/metabolizedBy"
       - "$ref": "#/components/x-bte-kgs-operations/target"
       - "$ref": "#/components/x-bte-kgs-operations/treats"
-      - "$ref": "#/components/x-bte-kgs-operations/treats2"
-      - "$ref": "#/components/x-bte-kgs-operations/treated_by2"
       - "$ref": "#/components/x-bte-kgs-operations/contraindication"
-      - "$ref": "#/components/x-bte-kgs-operations/metabolize"
       - "$ref": "#/components/x-bte-kgs-operations/targetedBy"
       - "$ref": "#/components/x-bte-kgs-operations/treatedBy"
       - "$ref": "#/components/x-bte-kgs-operations/contraindicatedBy"
+      - "$ref": "#/components/x-bte-kgs-operations/treats2"
+      - "$ref": "#/components/x-bte-kgs-operations/treatedBy2"
       - "$ref": "#/components/x-bte-kgs-operations/causesAdverseEvent"
       - "$ref": "#/components/x-bte-kgs-operations/adverseEventCausedBy"
 components:
@@ -392,110 +390,74 @@ components:
         type: array
       - type: string
   x-bte-response-mapping:
-    metabolizedBy:
-      name: drugbank.enzymes.name
-      SYMBOL: drugbank.enzymes.gene_name
-      pubmed: drugbank.enzymes.pmids
-      function: drugbank.enzymes.general_function
-      action: drugbank.enzymes.actions
-    target-drugbank:
-      name: drugbank.targets.name
-      SYMBOL: drugbank.targets.gene_name
-      function: drugbank.targets.general_function
-      action: drugbank.targets.actions
-      pubmed: drugbank.targets.pmids
     target-drugcentral:
+      UniProtKB: drugcentral.bioactivity.uniprot.uniprot_id  ## no prefix
       name: drugcentral.bioactivity.target_name
-      SYMBOL: drugcentral.bioactivity.uniprot.gene_symbol
-      action: drugcentral.bioactivity.action_type
+      ## edge attributes
+      ## like a relation: has values like AGONIST, ANTAGONIST, INHIBITOR, BLOCKER...
+      ##   BUT NOT ALL ASSOCATIONS HAVE THIS
+      drugcentral_bioactivity_action: drugcentral.bioactivity.action_type
+      ## organism the gene/protein is in...
+      inTaxon: drugcentral.bioactivity.organism
+      ## other fields (difficult to model/understand):
+      ##   - act_value: probably the -log([M]) (concentration?) of chemical
+      ##     act_type: explains what act_value is (Ki, EC50, etc.)
+      ##     act_source: keyword for where this info came from
+      ##   - moa: 1 seems to mean this interaction is part of drug's mechanism of action (moa)
+      ##     moa_source: where the moa info above is from?
     treats:
+      UMLS: drugcentral.drug_use.indication.umls_cui  ## no prefix
       name: drugcentral.drug_use.indication.concept_name
-      SNOMED: drugcentral.drug_use.indication.snomed_concept_id
-      UMLS: drugcentral.drug_use.indication.umls_cui
     contraindication:
+      UMLS: drugcentral.drug_use.contraindication.umls_cui  ## no prefix
       name: drugcentral.drug_use.contraindication.concept_name
-      SNOMED: drugcentral.drug_use.contraindication.snomed_concept_id
-      UMLS: drugcentral.drug_use.contraindication.umls_cui
-    drugbank:
-      DRUGBANK: drugbank.id
     chembl:
-      CHEMBL.COMPOUND: chembl.molecule_chembl_id
+      CHEMBL.COMPOUND: chembl.molecule_chembl_id  ## no prefix
     drugcentral-chembl:
-      CHEMBL.COMPOUND: drugcentral.xrefs.chembl_id
+      CHEMBL.COMPOUND: drugcentral.xrefs.chembl_id  ## no prefix
     chembl-treats:
       MESH: chembl.drug_indications.mesh_id
-      max_phase: chembl.drug_indications.max_phase_for_ind
-      first_approval: chembl.drug_indications.first_approval
+      name: chembl.drug_indications.mesh_heading
+      ## edge attributes
+      max_clinical_phase_for_indication: chembl.drug_indications.max_phase_for_ind
+      year_first_approved: chembl.drug_indications.first_approval
+      ## provenance-related field. Sources are ATC, ClinicalTrial, DailyMed, FDA
+      reference_urls: chembl.drug_indications.indication_refs.url
+      source: chembl.drug_indications.indication_refs.type
     adverseEvent:
-      name: drugcentral.fda_adverse_event.meddra_term
       MEDDRA: drugcentral.fda_adverse_event.meddra_code
+      name: drugcentral.fda_adverse_event.meddra_term
+      ## - there are also edge attributes that are hard to explain/understand
+      ##    - having drug + adverse event (ae) (drug_ae), having drug but no adverse event (drug_no_ae)
+      ##    - no drug but had adverse event (no_drug_ae), no drug and no adverse event (no_drug_no_ar)
+      ##    - not sure what the llr, llr_threshold, level means. 
+      ##      Likely related to log-likelihood ratio (LLR) and its test...
   x-bte-kgs-operations:
-    metabolizedBy:
-    - supportBatch: true
-      inputSeparator: ","
-      parameters:
-        fields: drugbank.enzymes
-      requestBody:
-        body:
-          q: "{inputs[0]}"
-          scopes: drugbank.id
-        header: application/x-www-form-urlencoded
-      inputs:
-      - id: DRUGBANK
-        semantic: SmallMolecule
-      ## Using a new predicate like has_substrate may be better
-      ##   could use relation SIO:000905 "has substrate"
-      predicate: metabolic_processing_affected_by
-      source: "infores:drugbank"
-      ## FYI: output format can also be uniprot ID
-      outputs:
-      - id: SYMBOL
-        semantic: Gene
-      response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/metabolizedBy"
+    ## BIG NOTE: this endpoint actually gives genes from multiple organisms that we don't tell apart right now. Look at drugcentral.bioactivity.organism, I've seen values "Homo sapiens", "Rattus norvegicus", "Bos taurus", "Mus musculus"...
+    ## can adjust query to return only human genes...
     target:
-    - supportBatch: true
-      inputSeparator: ","
-      parameters:
-        fields: drugbank.targets
-      requestBody:
-        body:
-          q: "{inputs[0]}"
-          scopes: drugbank.id
-        header: application/x-www-form-urlencoded
-      inputs:
-      - id: DRUGBANK
-        semantic: SmallMolecule
-      ## FYI: output format can also be uniprot ID
-      outputs:
-      - id: SYMBOL
-        semantic: Gene
-      ## biolink issue #677. Using a new predicate like has_target may be better
-      ##   could use relation SIO:000291 ("has target")
-      predicate: physically_interacts_with
-      source: "infores:drugbank"
-      response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/target-drugbank"
     - supportBatch: true
       inputSeparator: ","
       parameters:
         fields: drugcentral.bioactivity
       requestBody:
         body:
-          q: "{inputs[0]}"
+          q: "{inputs[0]}"  ## no prefix
+          ## example: put CHEMBL384467 here (DEXAMETHASONE)
+          ##   should get P35354 (PTGS2, Human) in response
+          scopes: drugcentral.xrefs.chembl_id
           ## there are 2382 records with drugcentral.bioactivity fields
           ##   most of them (2362) also have the drugcentral.xrefs.chembl_id field
-          scopes: drugcentral.xrefs.chembl_id
         header: application/x-www-form-urlencoded
       inputs:
       - id: CHEMBL.COMPOUND
         semantic: SmallMolecule
-      ## FYI: output format can also be uniprot ID
       outputs:
-      - id: SYMBOL
+      - id: UniProtKB
         semantic: Gene
       ## biolink issue #677. Using a new predicate like has_target may be better
       ##   could use relation SIO:000291 ("has target")
+      ## also tricky since technically the gene product interacts with the chemical
       predicate: physically_interacts_with
       source: "infores:drugcentral"
       response_mapping:
@@ -507,19 +469,24 @@ components:
         fields: drugcentral.drug_use.indication
       requestBody:
         body:
-          q: "{inputs[0]}"
+          q: "{inputs[0]}"  ## no prefix
+          ## example: put CHEMBL650 here (METHYLPREDNISOLONE)
+          ##   should get C0001403 (Primary adrenocortical insufficiency) in response
+          scopes: drugcentral.xrefs.chembl_id
           ## there are 2366 records with drugcentral.drug_use.indication fields
           ##   most of them (2320) also have the drugcentral.xrefs.chembl_id field
           ## note: there were slightly more records (2324) with the drugcentral.xrefs.unii field
-          scopes: drugcentral.xrefs.chembl_id
         header: application/x-www-form-urlencoded
       inputs:
       - id: CHEMBL.COMPOUND
         semantic: SmallMolecule
-      ## FYI: output could also be SNOMED, CUI IDs
       outputs:
       - id: UMLS
         semantic: Disease
+      ## FYI: output could also be SNOMED (specifically SNOMED-CT US Edition). 
+      ##     Looks like the native ID for DrugCentral, see https://drugcentral.org/drugcard/1768#druguse. 
+      ##     The original data source also may have some DOID mappings (see the linked example), but the API doesn't have this right now.
+      ## could use more specific predicate like approved to treat? relation is "indication"
       predicate: treats
       source: "infores:drugcentral"
       response_mapping:
@@ -531,88 +498,47 @@ components:
         fields: drugcentral.drug_use.contraindication
       requestBody:
         body:
-          q: "{inputs[0]}"
+          q: "{inputs[0]}"  ## no prefix
+          ## example: put CHEMBL1229 here (OSELTAMIVIR)
+          ##   should get C0268734 (Acute nephropathy) in response
+          scopes: :drugcentral.xrefs.chembl_id
           ## there are 1375 records with drugcentral.drug_use.contraindication fields
           ##   most of them (1365) also have the drugcentral.xrefs.chembl_id field
-          scopes: :drugcentral.xrefs.chembl_id
         header: application/x-www-form-urlencoded
       inputs:
       - id: CHEMBL.COMPOUND
         semantic: SmallMolecule
-      ## FYI: output could also be SNOMED, CUI IDs
       outputs:
       - id: UMLS
         semantic: Disease
+      ## FYI: output could also be SNOMED (specifically SNOMED-CT US Edition). 
+      ##     Looks like the native ID for DrugCentral, see https://drugcentral.org/drugcard/1768#druguse. 
+      ##     The original data source also may have some DOID mappings (see the linked example), but the API doesn't have this right now.
       predicate: contraindicated_for  ## current biolink predicate
       source: "infores:drugcentral"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/contraindication"
-    metabolize:
-    - supportBatch: true
-      inputSeparator: ","
-      parameters:
-        fields: drugbank.id
-        size: '1000'
-      requestBody:
-        body:
-          q: "{inputs[0]}"
-          scopes: drugbank.enzymes.gene_name
-        header: application/x-www-form-urlencoded
-      outputs:
-      - id: DRUGBANK
-        semantic: SmallMolecule
-      ## Using a new predicate like is_substrate_of may be better
-      ##   could use relation DRUGBANK:Enzyme, DIDEO:00000041 "is substrate of", or NCIT:R122 "Chemical_Or_Drug_Is_Metabolized_By_Enzyme"
-      predicate: affects_metabolic_processing_of
-      source: "infores:drugbank"
-      ## input could also be uniprot IDs (different scopes)
-      inputs:
-      - id: SYMBOL
-        semantic: Gene
-      response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/drugbank"
     targetedBy:
-    - supportBatch: true
-      inputSeparator: ","
-      parameters:
-        fields: drugbank.id
-        size: '1000'
-      requestBody:
-        body:
-          q: "{inputs[0]}"
-          scopes: drugbank.targets.gene_name
-        header: application/x-www-form-urlencoded
-      outputs:
-      - id: DRUGBANK
-        semantic: SmallMolecule
-      ## FYI: input could also be uniprot IDs (different scopes)
-      inputs:
-      - id: SYMBOL
-        semantic: Gene
-      ## biolink issue #677. Using a new predicate like targeted_by may be better
-      ##   could use relation GENO:0000634 ("is_targeted_by")
-      predicate: physically_interacts_with
-      source: "infores:drugbank"
-      response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/drugbank"
     - supportBatch: true
       inputSeparator: ","
       parameters:
         ## there are 2382 records with drugcentral.bioactivity fields
         ##   most of them (2362) also have the drugcentral.xrefs.chembl_id field
         fields: drugcentral.xrefs.chembl_id
-        size: '1000'
+        size: '1000'  ## note size limit
       requestBody:
         body:
-          q: "{inputs[0]}"
-          scopes: drugcentral.bioactivity.uniprot.gene_symbol
+          q: "{inputs[0]}"  ## no prefix
+          ## example: put O15554 here (KCNN4)
+          ##   should get CHEMBL475534 (NITRENDIPINE) in response
+          scopes: drugcentral.bioactivity.uniprot.uniprot_id
         header: application/x-www-form-urlencoded
       outputs:
       - id: CHEMBL.COMPOUND
         semantic: SmallMolecule
-      ## FYI: input could also be uniprot IDs (different scopes)
+      ## to get this, need gene-protein conflation in ID resolver
       inputs:
-      - id: SYMBOL
+      - id: UniProtKB
         semantic: Gene
       ## biolink issue #677. Using a new predicate like targeted_by may be better
       ##   could use relation GENO:0000634 ("is_targeted_by")
@@ -628,19 +554,24 @@ components:
         ##   most of them (2320) also have the drugcentral.xrefs.chembl_id field
         ## note: there were slightly more records (2324) with the drugcentral.xrefs.unii field
         fields: drugcentral.xrefs.chembl_id
-        size: '1000'
+        size: '1000'  ## note size limit
       requestBody:
         body:
-          q: "{inputs[0]}"
+          q: "{inputs[0]}"  ## no prefix
+          ## example: put C0038013 here (Ankylosing spondylitis)
+          ##   should get CHEMBL650 (METHYLPREDNISOLONE) in response
           scopes: drugcentral.drug_use.indication.umls_cui
         header: application/x-www-form-urlencoded
       outputs:
       - id: CHEMBL.COMPOUND
         semantic: SmallMolecule
-      ## FYI: input could also be SNOMED, CUI IDs
+      ## FYI: input could also be SNOMED (specifically SNOMED-CT US Edition). 
+      ##     Looks like the native ID for DrugCentral, see https://drugcentral.org/drugcard/1768#druguse. 
+      ##     The original data source also may have some DOID mappings (see the linked example), but the API doesn't have this right now.
       inputs:
       - id: UMLS
         semantic: Disease
+      ## could use more specific predicate like approved for treatment by? relation is "indication"
       predicate: treated_by
       source: "infores:drugcentral"
       response_mapping:
@@ -652,16 +583,20 @@ components:
         ## there are 1375 records with drugcentral.drug_use.contraindication fields
         ##   most of them (1365) also have the drugcentral.xrefs.chembl_id field
         fields: drugcentral.xrefs.chembl_id
-        size: '1000'
+        size: '1000'  ## note size limit
       requestBody:
         body:
-          q: "{inputs[0]}"
+          q: "{inputs[0]}"  ## no prefix
+          ## example: put C0001403 here (Primary adrenocortical insufficiency)
+          ##   should get CHEMBL1193 (pheniramine) in response
           scopes: drugcentral.drug_use.contraindication.umls_cui
         header: application/x-www-form-urlencoded
       outputs:
       - id: CHEMBL.COMPOUND
         semantic: SmallMolecule
-      ## FYI: input could also be SNOMED, CUI IDs
+      ## FYI: input could also be SNOMED (specifically SNOMED-CT US Edition). 
+      ##     Looks like the native ID for DrugCentral, see https://drugcentral.org/drugcard/1768#druguse. 
+      ##     The original data source also may have some DOID mappings (see the linked example), but the API doesn't have this right now.
       inputs:
       - id: UMLS
         semantic: Disease
@@ -674,64 +609,64 @@ components:
       inputSeparator: ","
       parameters:
         fields: chembl.drug_indications
-        size: '1000'
       requestBody:
         body:
-          q: "{inputs[0]}"
+          q: "{inputs[0]}"  ## no prefix
+          ## example: put CHEMBL650 here (METHYLPREDNISOLONE)
+          ##   should get D000690 (Amyotrophic Lateral Sclerosis) in response
           scopes: chembl.molecule_chembl_id
         header: application/x-www-form-urlencoded
       inputs:
       - id: CHEMBL.COMPOUND
         semantic: SmallMolecule
-      ## FYI: input could also be SNOMED, CUI IDs
       outputs:
       - id: MESH
         semantic: Disease
-      ## Biolink PR to make this predicate, as an inverse of "contraindicated for"
+      ## could use more specific predicate like approved to treat? relation is "indication"
       predicate: treats
       source: "infores:chembl"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/chembl-treats"
-    treated_by2:
+    treatedBy2:
     - supportBatch: true
       inputSeparator: ","
       parameters:
         fields: chembl.molecule_chembl_id
-        size: '1000'
+        size: '1000'  ## note size limit
       requestBody:
         body:
-          q: "{inputs[0]}"
+          q: "{inputs[0]}"  ## no prefix
+          ## example: put D010024 here (Osteoporosis)
+          ##   should get CHEMBL3989569 (IBANDRONATE SODIUM) in response
           scopes: chembl.drug_indications.mesh_id
         header: application/x-www-form-urlencoded
       outputs:
       - id: CHEMBL.COMPOUND
         semantic: SmallMolecule
-      ## FYI: input could also be SNOMED, CUI IDs
       inputs:
       - id: MESH
         semantic: Disease
-      ## Biolink PR to make this predicate, as an inverse of "contraindicated for"
+      ## could use more specific predicate like approved for treatment by? relation is "indication"
       predicate: treated_by
       source: "infores:chembl"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/chembl"
     causesAdverseEvent:
-    ## - chose to map to Disease semantic type due to more support for ID mapping there, will support queries
-    ##   link: https://github.com/biothings/BioThings_Explorer_TRAPI/issues/217#issuecomment-880204237
-    ## - example: https://mychem.info/v1/query?q=drugbank.name:nitisinone&fields=drugcentral.fda_adverse_event
-    ## - there are also counts for...having drug + adverse event (ae) (drug_ae), having drug but no adverse event (drug_no_ae)
-    ##     no drug but had adverse event (no_drug_ae), no drug and no adverse event (no_drug_no_ar)
-    ##     not sure what the llr, llr_threshold, level means
+    ## - chose to map to Disease semantic type since I saw SRI map some MEDDRA IDs to Disease...
+    ##   https://nodenormalization-sri-dev.renci.org/1.1/get_normalized_nodes?curie=MEDDRA%3A10012735&curie=MEDDRA%3A10035528
+    ##   But some are definitely PhenotypicFeatures...
     - supportBatch: true
       inputSeparator: ","
       parameters:
         fields: drugcentral.fda_adverse_event
       requestBody:
         body:
-          q: "{inputs[0]}"
+          q: "{inputs[0]}"  ## no prefix
+          ## example: put CHEMBL231884 here (diosmin)
+          ##   should get 10021036 (Hyponatraemia) in response
+          scopes: drugcentral.xrefs.chembl_id
           ## there are 2016 records with drugcentral.fda_adverse_event fields
           ##   most of them (1994) also have the drugcentral.xrefs.chembl_id field
-          scopes: drugcentral.xrefs.chembl_id
         header: application/x-www-form-urlencoded
       inputs:
       - id: CHEMBL.COMPOUND
@@ -751,10 +686,12 @@ components:
         ## there are 2016 records with drugcentral.fda_adverse_event fields
         ##   most of them (1994) also have the drugcentral.xrefs.chembl_id field
         fields: drugcentral.xrefs.chembl_id
-        size: '1000'
+        size: '1000'  ## note size limit
       requestBody:
         body:
-          q: "{inputs[0]}"
+          q: "{inputs[0]}"  ## no prefix
+          ## example: put 10007554 here (Cardiac failure)
+          ##   should get CHEMBL231884 (diosmin) in response
           scopes: drugcentral.fda_adverse_event.meddra_code
         header: application/x-www-form-urlencoded
       outputs:
@@ -764,6 +701,7 @@ components:
       - id: MEDDRA
         semantic: Disease
       predicate: adverse_event_caused_by  ## current biolink predicate
+      ## through drugcentral, FDA Adverse Event Reporting System (FAERS) information
       source: "infores:drugcentral"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/drugcentral-chembl"
