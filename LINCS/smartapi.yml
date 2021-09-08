@@ -16,7 +16,7 @@ info:
     component: KP
     team:
     - Service Provider
-    biolink-version: "2.1.0"
+    biolink-version: "2.2.3"
 servers:
   - url: 'http://lincsportal.ccs.miami.edu/dcic/api/'
     description: Production server
@@ -31,6 +31,7 @@ tags:
   - name: signature
   - name: translator
 paths:
+  ## BIG NOTE: this API only works if one goes thru an http connection (not https)
   /fetchmolecules:
     get:
       tags:
@@ -71,6 +72,11 @@ paths:
           x-responseValueType:
             - path: lincs.smallmolecule
               valueType: ' http://identifiers.org/'
+      ## To query: use the searchTerm parameter, just put in the keywords/ids without any "" or prefixes
+      ## I have successfully queried using Imatinib, LSM-1023
+      ## What is returned is like a Translator "node" with "node attributes"
+      ## Cool: Predicted Physicochemical Properties that are related to drug suitability
+      ## see Physicochemical Properties section of http://lincsportal.ccs.miami.edu/signatures/perturbations/16646 with its explanations of the terms (cross-ref with the API response's keys)
   /fetchcells:
     get:
       tags:
@@ -111,7 +117,13 @@ paths:
             corresponds to a cell line that matched the query criteria.
           x-responseValueType:
             - path: lincs.cell
-              valueType: 'http://identifiers.org/'''
+              valueType: 'http://identifiers.org/'
+      ## To query: use the searchTerm parameter, put as specified above.
+      ## I have successfully queried using info for the cell line - LINCS_ID:"LCL-1150", Name:"HuTu 80";
+      ##   info for the tissue origin - organ:"intestine" (multiple results);
+      ##   the disease the tissue was from - disease_detail:"DOID:10816"
+      ## What is returned is like a cell line "node" with properties about the cell line.
+      ## so that may be useful if we ever have to connect cell line info to tissue/disease
   /fetchdata:
     get:
       tags:
@@ -152,6 +164,9 @@ paths:
           x-responseValueType:
             - path: lincs.data
               valueType: 'http://identifiers.org/'
+      ## To query: use the searchTerm parameter, just put in the keywords/ids without any "" or prefixes
+      ## I have successfully queried using Transcriptomics, LINCS
+      ## Doesn't look useful to Translator. It's about individual projects that created data used in LINCS, like funding/PI/center/dataset/type-of-assay
   /mechanismOfAction:
     get:
       tags:
@@ -195,6 +210,11 @@ paths:
           x-responseValueType:
             - path: lincs.smallmolecule
               valueType: 'http://identifiers.org/'
+      ## To query: use the id parameter, looks like it only accepts the LINCS small molecule IDs.
+      ## I have successfully queried using LSM-1008, LSM-1023
+      ## This is like a simple ChemicalSubstance -(has target)-> Gene/Protein one-hop, with added mechanism of action info
+      ## What is returned is basically a list of dicts. Each dict has the "mechanism_of_action" of the small molecule on the target gene/protein, the target gene/protein symbol/name (mechanism_target). 
+      ##   This info is likely from CHEMBL. See curated data tab, * note in http://lincsportal.ccs.miami.edu/SmallMolecules/view/LSM-1023
   /bioactivity:
     get:
       tags:
@@ -253,6 +273,12 @@ paths:
           x-responseValueType:
             - path: lincs.smallmolecule
               valueType: 'http://identifiers.org/'
+      ## To query: use the id parameter, looks like it only accepts the LINCS small molecule IDs.
+      ## I have successfully queried using LSM-1008, LSM-1023
+      ## I'm wary of ingesting this into Translator without more info (maybe another Provider doing an analysis and filtering the results).
+      ## This looks like the results from assays for ChemicalSubstances with various Gene/Protein targets. I'm not sure if these have been filtered for "strong/likely/true/interesting" relationships between the chemicals and genes.
+      ## Also there are 3 properties (endpoint_result_type, relationship, median_pvalue) to give the quantitative value for some measure of activity. Note that "pValue" actually means "-log10(Value)" (like pH or pKa); it's not the stats thing. It's hard to know how to interpret that or parse it with BTE though
+      ## This info is likely from CHEMBL. See curated data tab, * note in http://lincsportal.ccs.miami.edu/SmallMolecules/view/LSM-1023
   /drugindication:
     get:
       tags:
@@ -310,6 +336,11 @@ paths:
             valueType: 'http://identifiers.org/'
       x-bte-kgs-operations:
       - $ref: '#/components/x-bte-kgs-operations/drug-indication'
+      ## To query: use the id parameter, looks like it only accepts the LINCS small molecule IDs.
+      ## I have successfully queried using LSM-1008, LSM-1023
+      ## This info is likely from CHEMBL. See curated data tab, * note in http://lincsportal.ccs.miami.edu/SmallMolecules/view/LSM-1023
+      ## it looks like this endpoint could accept only the disease's name (under the efo or mesh parameter)
+      ##   and then lookup the small molecule. But...having to look up diseases by name seems...tricky to hook up
   /disease:
     get:
       tags:
@@ -353,10 +384,14 @@ paths:
           x-responseValueType:
             - path: lincs.cell
               valueType: 'http://identifiers.org/'
+      ## To query: use the disease (renal cell) or doid (ex: DOID:3459) parameter.
+      ## What is returned is the LINCS cell line id
+      ## Doesn't look useful to Translator.
 components:
   x-bte-kgs-operations:
     drug-indication:
     - inputs:
+    ## SRI-ID-Resolver doesn't support LINCS ID prefix...
       - id: LINCS
         semantic: SmallMolecule
       method: get
@@ -364,14 +399,17 @@ components:
       - id: MESH
         semantic: Disease
       parameters:
-        id: '{inputs[0]}'
-      path: /query
+        id: '{inputs[0]}'  ## no prefix
+        ## example: put LSM-1023 here (Imatinib)
+        ##   should get D046152 in response (GASTROINTESTINAL STROMAL TUMORS)
+      ## This info is likely from CHEMBL.
+      ##   See curated data tab, * note in http://lincsportal.ccs.miami.edu/SmallMolecules/view/LSM-1023
       predicate: treats
       response_mapping:
         $ref: '#/components/x-bte-response-mapping/drug-indication'
-      source: "infores:lincs"  ## ...so weird duplicate source info happens here
-      supportBatch: false
+      supportBatch: false  ## no batch support (get operation)
   x-bte-response-mapping:
     drug-indication:
-      MESH: documents.mesh_id
+      MESH: documents.mesh_id  ## no prefix
       name: documents.mesh_heading
+      ## could include categoricalMeasure for FDA max phase (for the indication)
