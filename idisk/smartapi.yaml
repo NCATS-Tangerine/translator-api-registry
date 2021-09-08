@@ -14,6 +14,7 @@ info:
     component: KP
     team:
       - Service Provider
+    biolink-version: "2.2.3"
 servers:
 - description: Encrypted Production server
   url: https://biothings.ncats.io/idisk
@@ -383,6 +384,9 @@ components:
         type: array
       - type: string
   x-bte-kgs-operations:
+  ## SRI-ID-Resolver has issues with the UMLS chemical IDs.
+  ##   some are thought to be Protein/Polypeptides...
+  ##   many aren't resolved at all...
   ## reference for data: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7075538/
     has_adverse_effect_on:
     ## there are 626 records with the has_adverse_effect_on field
@@ -455,7 +459,9 @@ components:
         semantic: SmallMolecule
       outputs:
       - id: UMLS
-        semantic: Disease  ## use this or PhenotypicFeature?
+        semantic: PhenotypicFeature  ## use this or Disease?
+        ## SRI-ID-resolver is resolving these to PhenotypicFeature
+        ##   examples: https://nodenormalization-sri-dev.renci.org/1.1/get_normalized_nodes?curie=UMLS%3AC0455384&curie=UMLS%3AC0018681
         ## don't create two operations or records will duplicate for DiseaseOrPhenotypicFeature query
       predicate: causes_adverse_event  ## closest biolink predicate?
       ## iDISK got all these relations from MSKCC: “About Herbs” page on the Memorial Sloan Kettering Cancer Center (MSKCC) website 
@@ -479,7 +485,10 @@ components:
         header: application/x-www-form-urlencoded
       inputs:
       - id: UMLS
-        semantic: Disease
+        semantic: PhenotypicFeature  ## use this or Disease?
+        ## SRI-ID-resolver is resolving these to PhenotypicFeature
+        ##   examples: https://nodenormalization-sri-dev.renci.org/1.1/get_normalized_nodes?curie=UMLS%3AC0455384&curie=UMLS%3AC0018681
+        ## don't create two operations or records will duplicate for DiseaseOrPhenotypicFeature query
       outputs:
       - id: UMLS
         semantic: SmallMolecule
