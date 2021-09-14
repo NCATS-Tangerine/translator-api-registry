@@ -623,6 +623,60 @@ components:
           $ref: "#/components/x-bte-response-mapping/entrezgene"
         source: "infores:ncbi-gene"   ## which got from GO Annotations...
         supportBatch: true
+    geneToDisease:
+      - 
+        inputSeparator: ","
+        inputs: 
+          - 
+            id: NCBIGene
+            semantic: Gene
+        outputs: 
+          - 
+            id: MONDO
+            semantic: Disease
+        parameters: 
+          ## all records with clingen field have entrezgene, mondo fields
+          fields: clingen
+          species: human
+        predicate: related_to
+        requestBody: 
+          body: 
+            q: "{inputs[0]}"  ## no prefix
+            ## example: put 23126 here (POGZ)
+            ##   should get MONDO:0014606 (intellectual disability-microcephaly-strabismus-behavioral abnormalities syndrome) in response
+            scopes: entrezgene
+          header: application/x-www-form-urlencoded
+        response_mapping: 
+          $ref: "#/components/x-bte-response-mapping/clingen"
+        source: "infores:clingen"
+        supportBatch: true
+    diseaseToGene:
+      - 
+        inputSeparator: ","
+        inputs: 
+          - 
+            id: MONDO
+            semantic: Disease
+        outputs: 
+          - 
+            id: NCBIGene
+            semantic: Gene
+        parameters: 
+          ## all records with clingen field have entrezgene, mondo fields
+          fields: entrezgene
+          species: human
+        predicate: related_to
+        requestBody: 
+          body: 
+            q: "{inputs[0]}"  ## no prefix
+            ## example: put MONDO:0014606 (intellectual disability-microcephaly-strabismus-behavioral abnormalities syndrome) here 
+            ##   should get 23126 (POGZ) in response
+            scopes: clingen.clinical_validity.mondo
+          header: application/x-www-form-urlencoded
+        response_mapping: 
+          $ref: "#/components/x-bte-response-mapping/entrezgene"
+        source: "infores:clingen"
+        supportBatch: true
     hasHomolog: 
       - 
         inputSeparator: ","
@@ -931,6 +985,20 @@ components:
     #     source: "infores:ensembl-gene"  ## ensembl or specifically ensembl-gene?
     #     supportBatch: true
   x-bte-response-mapping:
+    entrezgene: 
+      NCBIGene: entrezgene   ## no prefix
+    reactomePathway: 
+      REACT: pathway.reactome.id   ## no prefix
+      name: pathway.reactome.name
+    keggPathway: 
+      KEGG: pathway.kegg.id   ## no prefix
+      name: pathway.kegg.name
+    wikipathway: 
+      WIKIPATHWAYS: pathway.wikipathways.id   ## no prefix
+      name: pathway.wikipathways.name
+    biocarta: 
+      BIOCARTA: pathway.biocarta.id   ## no prefix
+      name: pathway.biocarta.name
     biologicalProcess: 
       GO: go.BP.id  ## HAS PREFIX (GO)
       evidence: go.BP.evidence  ## categorical variable?
@@ -938,13 +1006,6 @@ components:
       name: go.BP.term
       ## seems to be like a relation
       relation: go.BP.qualifier
-    cellularComponent: 
-      GO: go.CC.id  ## HAS PREFIX (GO)
-      evidence: go.CC.evidence  ## categorical variable?
-      pubmed: go.CC.pubmed
-      name: go.CC.term
-      ## seems to be like a relation
-      relation: go.CC.qualifier
     molecularFunction: 
       GO: go.MF.id  ## HAS PREFIX (GO)
       evidence: go.MF.evidence  ## categorical variable?
@@ -952,20 +1013,17 @@ components:
       name: go.MF.term
       ## seems to be like a relation
       relation: go.MF.qualifier
-    reactomePathway: 
-      REACT: pathway.reactome.id   ## no prefix
-      name: pathway.reactome.name
-    entrezgene: 
-      NCBIGene: entrezgene   ## no prefix
-    wikipathway: 
-      WIKIPATHWAYS: pathway.wikipathways.id   ## no prefix
-      name: pathway.wikipathways.name
-    biocarta: 
-      BIOCARTA: pathway.biocarta.id   ## no prefix
-      name: pathway.biocarta.name
-    keggPathway: 
-      KEGG: pathway.kegg.id   ## no prefix
-      name: pathway.kegg.name
+    cellularComponent: 
+      GO: go.CC.id  ## HAS PREFIX (GO)
+      evidence: go.CC.evidence  ## categorical variable?
+      pubmed: go.CC.pubmed
+      name: go.CC.term
+      ## seems to be like a relation
+      relation: go.CC.qualifier
+    clingen: 
+      MONDO: clingen.clinical_validity.mondo  ## HAS PREFIX (MONDO)
+      relation: clingen.clinical_validity.classification
+      reference-url: clingen.clinical_validity.online_report
     pantherMGI: 
       MGI: pantherdb.ortholog.MGI  ## no prefix
       inTaxon: pantherdb.ortholog.taxid
@@ -1239,6 +1297,10 @@ paths:
           $ref: "#/components/x-bte-kgs-operations/involvedInCC"
         - 
           $ref: "#/components/x-bte-kgs-operations/CCToGene"
+        - 
+          $ref: "#/components/x-bte-kgs-operations/geneToDisease"
+        - 
+          $ref: "#/components/x-bte-kgs-operations/diseaseToGene"
         - 
           $ref: "#/components/x-bte-kgs-operations/hasHomolog"
         - 
