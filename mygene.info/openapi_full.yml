@@ -334,6 +334,175 @@ components:
           $ref: "#/components/x-bte-response-mapping/entrezgene"
         source: "infores:cpdb"   ## ConsensusPathDB
         supportBatch: true
+    involvedInPathway:    ## using Reactome, KEGG, Wikipathways
+    ## future: use relation "NCIT:gene_is_element_in_pathway" or RO:0000056 (participates in), both mapped to biolink:participates_in
+      - 
+        inputSeparator: ","
+        inputs: 
+          - 
+            id: NCBIGene
+            semantic: Gene
+        method: post
+        outputs: 
+          - 
+            id: REACT
+            semantic: Pathway
+        parameters: 
+          fields: pathway.reactome
+          species: human
+        predicate: participates_in
+        requestBody: 
+          body: 
+            q: "{inputs[0]}"  ## no prefix
+            ## example: put 1629 here (DBT)
+            ##   should get R-HSA-70895 (Branched-chain amino acid catabolism) in response
+            ## all records with pathway.reactome.id field also have entrezgene field
+            scopes: entrezgene
+          header: application/x-www-form-urlencoded
+        response_mapping: 
+          $ref: "#/components/x-bte-response-mapping/reactomePathway"
+        source: "infores:reactome"
+        supportBatch: true
+      - 
+        inputSeparator: ","
+        inputs: 
+          - 
+            id: NCBIGene
+            semantic: Gene
+        method: post
+        outputs: 
+          - 
+            id: KEGG
+            semantic: Pathway
+        parameters: 
+          fields: pathway.kegg
+          species: human
+        predicate: participates_in
+        requestBody: 
+          body: 
+            q: "{inputs[0]}"  ## no prefix
+            ## example: put 1629 here (DBT)
+            ##   should get hsa00280 (Valine, leucine and isoleucine degradation - Homo sapiens (human)) in response
+            ## all records with pathway.kegg field also have entrezgene field
+            scopes: entrezgene
+          header: application/x-www-form-urlencoded
+        response_mapping: 
+          $ref: "#/components/x-bte-response-mapping/keggPathway"
+        source: "infores:cpdb"   ## ConsensusPathDB
+        supportBatch: true
+      - 
+        inputSeparator: ","
+        inputs: 
+          - 
+            id: NCBIGene
+            semantic: Gene
+        method: post
+        outputs: 
+          - 
+            id: WIKIPATHWAYS
+            semantic: Pathway
+        parameters: 
+          fields: pathway.wikipathways
+          species: human
+        predicate: participates_in
+        requestBody: 
+          body: 
+            q: "{inputs[0]}"  ## no prefix
+            ## example: put 8309 here (ACOX2)
+            ##   should get WP3942 (PPAR signaling pathway) in response
+            ## all records with pathway.wikipathways field also have entrezgene field
+            scopes: entrezgene
+          header: application/x-www-form-urlencoded
+        response_mapping: 
+          $ref: "#/components/x-bte-response-mapping/wikipathway"
+        source: "infores:cpdb"   ## ConsensusPathDB
+        supportBatch: true
+      - 
+        inputSeparator: ","
+        inputs: 
+          - 
+            id: NCBIGene
+            semantic: Gene
+        method: post
+        outputs: 
+          - 
+            id: BIOCARTA
+            semantic: Pathway
+        parameters: 
+          fields: pathway.biocarta
+          species: human
+        predicate: participates_in
+        requestBody: 
+          body: 
+            q: "{inputs[0]}"  ## no prefix
+            ## example: put 5608 here (MAP2K6)
+            ##   should get p38mapkpathway (p38 mapk signaling pathway) in response
+            ## all records with pathway.biocarta field also have entrezgene field
+            scopes: entrezgene
+          header: application/x-www-form-urlencoded
+        response_mapping: 
+          $ref: "#/components/x-bte-response-mapping/biocarta"
+        source: "infores:cpdb"   ## ConsensusPathDB
+        supportBatch: true
+    involvedInBP:
+    ## biolink: confusing. biolink currently doesn't have involved_in; this could also be contributes_to?
+    ## future: relation could be NCIT:gene_plays_role_in_process or RO:0000056 (participates in); both currently map to biolink:participates_in
+      - 
+        inputSeparator: ","
+        inputs: 
+          - 
+            id: NCBIGene
+            semantic: Gene
+        outputs: 
+          - 
+            id: GO
+            semantic: BiologicalProcess
+        parameters: 
+          ## all records with go.BP field also have entrezgene field
+          fields: go.BP
+          species: human
+        predicate: participates_in
+        requestBody: 
+          body: 
+            q: "{inputs[0]}"  ## no prefix
+            ## example: put 632 here (BGLAP)
+            ##   should get GO:0001501 (skeletal system development) in response
+            scopes: entrezgene
+          header: application/x-www-form-urlencoded
+        response_mapping: 
+          $ref: "#/components/x-bte-response-mapping/biologicalProcess"
+        source: "infores:ncbi-gene"   ## which got from GO Annotations...
+        supportBatch: true
+    BPToGene: 
+    ## biolink: confusing, hard to find inverse for
+    ## future: relation could be RO:0000057 (has_participant), which currently maps to biolink:has_participant
+      - 
+        inputSeparator: ","
+        inputs: 
+          - 
+            id: GO
+            semantic: BiologicalProcess
+        outputs: 
+          - 
+            id: NCBIGene
+            semantic: Gene
+        parameters: 
+          ## all records with go.BP field also have entrezgene field
+          fields: entrezgene
+          species: human
+        predicate: has_participant
+        requestBody: 
+          body: 
+            q: "{inputs[0]}"  ## HAS PREFIX (GO)
+            ## example: put GO:0001501 here (skeletal system development)
+            ##   should get 5741 (PTH) in response
+            scopes: go.BP.id
+            size: 1000  ## note size limit
+          header: application/x-www-form-urlencoded
+        response_mapping: 
+          $ref: "#/components/x-bte-response-mapping/entrezgene"
+        source: "infores:ncbi-gene"   ## which got from GO Annotations...
+        supportBatch: true
     enablesMF:
     ## biolink: weird predicate. biolink doesn't have something like has_activity/has_function 
     ## future: relation could be RO:0000085 (has_function), but this currently isn't mapped to biolink
@@ -393,71 +562,67 @@ components:
           $ref: "#/components/x-bte-response-mapping/entrezgene"
         source: "infores:ncbi-gene"   ## which got from GO Annotations...
         supportBatch: true
-    ## removing because of gene-protein conflation
-    # GeneToProtein: 
-    # ## future: relation could be RO:0002205 (has_gene_product), currently mapped to biolink:has_gene_product
-    #   - 
-    #     inputSeparator: ","
-    #     inputs: 
-    #       - 
-    #         id: ENSEMBL
-    #         semantic: Gene
-    #     outputs: 
-    #       - 
-    #         id: UniProtKB
-    #         semantic: Protein
-    #     parameters: 
-    #       fields: uniprot.Swiss-Prot
-    #       ## there are >107,000 records with both uniprot and ensembl.gene fields 
-    #       ##   (vs >244,000 records with only uniprot fields)
-    #       species: human
-    #     predicate: has_gene_product
-    #     requestBody: 
-    #       body: 
-    #         q: "{inputs[0]}"  ## no prefix
-    #         ## example: put ENSG00000107771 here (CCSER2)
-    #         ##   should get Q9H7U1 in response
-    #         scopes: ensembl.gene
-    #       header: application/x-www-form-urlencoded
-    #     response_mapping: 
-    #       $ref: "#/components/x-bte-response-mapping/uniprotProtein"
-    #     ## specifically from the ID mapping file https://www.uniprot.org/downloads#uniprotkblink
-    #     source: "infores:uniprot"
-    #     supportBatch: true
-    # ProteinToGene: 
-    # ## relation: use RO:0002204 (gene_product_of)
-    #   - 
-    #     inputSeparator: ","
-    #     inputs: 
-    #       - 
-    #         id: UniProtKB
-    #         semantic: Protein
-    #     outputs: 
-    #       - 
-    #         id: ENSEMBL
-    #         semantic: Gene
-    #     parameters: 
-    #       fields: ensembl.gene
-    #       ## there are >107,000 records with both uniprot and ensembl.gene fields 
-    #       ##   (vs >244,000 records with only uniprot fields)
-    #       species: human
-    #     predicate: gene_product_of
-    #     requestBody: 
-    #       body: 
-    #         q: "{inputs[0]}"  ## no prefix
-    #         ## example: put O75688 here (PPM1B)
-    #         ##   should get ENSG00000138032 in response
-    #         scopes: uniprot.Swiss-Prot
-    #       header: application/x-www-form-urlencoded
-    #     response_mapping: 
-    #       $ref: "#/components/x-bte-response-mapping/ensemblGene"
-    #     ## specifically from the ID mapping file https://www.uniprot.org/downloads#uniprotkblink
-    #     source: "infores:uniprot"
-    #     supportBatch: true
-    ## pantherdb gives orthologs and paralogs, which are both homologs. Hence we use homolog
-    ## currently written: MGI, RGD, ZFIN, WormBase, SGD, dictyBase, POMBASE
-    ## Biolink questions: using FB (rather than FlyBase)?? Also no TAIR. 
-    ## Also have Ensembl (for specific non-human species) and UniprotKB (for all orthologs)
+    involvedInCC: 
+    ## biolink: confusing, since it's a gene whose activity takes place in the cellular component (complex or organelle) - not a direct biological relationship
+    ## currently using expressed_in, could also use located_in
+    ## future: relation could be RO:0002206 (expressed_in), currently mapped to biolink:expressed_in
+      - 
+        inputSeparator: ","
+        inputs: 
+          - 
+            id: NCBIGene
+            semantic: Gene
+        outputs: 
+          - 
+            id: GO
+            semantic: CellularComponent
+        parameters: 
+          ## all records with go.CC field also have entrezgene field
+          fields: go.CC
+          species: human
+        predicate: expressed_in
+        requestBody: 
+          body: 
+            q: "{inputs[0]}"  ## no prefix
+            ## example: put 5741 here (PTH)
+            ##   should get GO:0005576 (extracellular region) in response
+            scopes: entrezgene
+          header: application/x-www-form-urlencoded
+        response_mapping: 
+          $ref: "#/components/x-bte-response-mapping/cellularComponent"
+        source: "infores:ncbi-gene"   ## which got from GO Annotations...
+        supportBatch: true
+    CCToGene: 
+    ## biolink: confusing, since it's a gene whose activity takes place in the cellular component (complex or organelle) - not a direct biological relationship
+    ## currently using expresses, could also use location_of 
+    ## future: relation could be RO:0002292 (expresses), currently mapped to biolink:expresses
+      - 
+        inputSeparator: ","
+        inputs: 
+          - 
+            id: GO
+            semantic: CellularComponent
+        outputs: 
+          - 
+            id: NCBIGene
+            semantic: Gene
+        parameters: 
+          ## all records with go.CC field also have entrezgene field
+          fields: entrezgene
+          species: human
+        predicate: expresses
+        requestBody: 
+          body: 
+            q: "{inputs[0]}"  ## HAS PREFIX (GO)
+            ## example: put GO:0033268 here (node of Ranvier)
+            ##   should get 6326 (SCN2A) in response
+            scopes: go.CC.id
+            size: 1000  ## note size limit
+          header: application/x-www-form-urlencoded
+        response_mapping: 
+          $ref: "#/components/x-bte-response-mapping/entrezgene"
+        source: "infores:ncbi-gene"   ## which got from GO Annotations...
+        supportBatch: true
     hasHomolog: 
       - 
         inputSeparator: ","
@@ -644,6 +809,71 @@ components:
           $ref: "#/components/x-bte-response-mapping/entrezgene"
         source: "infores:panther"
         supportBatch: true
+    ## removing because of gene-protein conflation
+    # GeneToProtein: 
+    # ## future: relation could be RO:0002205 (has_gene_product), currently mapped to biolink:has_gene_product
+    #   - 
+    #     inputSeparator: ","
+    #     inputs: 
+    #       - 
+    #         id: ENSEMBL
+    #         semantic: Gene
+    #     outputs: 
+    #       - 
+    #         id: UniProtKB
+    #         semantic: Protein
+    #     parameters: 
+    #       fields: uniprot.Swiss-Prot
+    #       ## there are >107,000 records with both uniprot and ensembl.gene fields 
+    #       ##   (vs >244,000 records with only uniprot fields)
+    #       species: human
+    #     predicate: has_gene_product
+    #     requestBody: 
+    #       body: 
+    #         q: "{inputs[0]}"  ## no prefix
+    #         ## example: put ENSG00000107771 here (CCSER2)
+    #         ##   should get Q9H7U1 in response
+    #         scopes: ensembl.gene
+    #       header: application/x-www-form-urlencoded
+    #     response_mapping: 
+    #       $ref: "#/components/x-bte-response-mapping/uniprotProtein"
+    #     ## specifically from the ID mapping file https://www.uniprot.org/downloads#uniprotkblink
+    #     source: "infores:uniprot"
+    #     supportBatch: true
+    # ProteinToGene: 
+    # ## relation: use RO:0002204 (gene_product_of)
+    #   - 
+    #     inputSeparator: ","
+    #     inputs: 
+    #       - 
+    #         id: UniProtKB
+    #         semantic: Protein
+    #     outputs: 
+    #       - 
+    #         id: ENSEMBL
+    #         semantic: Gene
+    #     parameters: 
+    #       fields: ensembl.gene
+    #       ## there are >107,000 records with both uniprot and ensembl.gene fields 
+    #       ##   (vs >244,000 records with only uniprot fields)
+    #       species: human
+    #     predicate: gene_product_of
+    #     requestBody: 
+    #       body: 
+    #         q: "{inputs[0]}"  ## no prefix
+    #         ## example: put O75688 here (PPM1B)
+    #         ##   should get ENSG00000138032 in response
+    #         scopes: uniprot.Swiss-Prot
+    #       header: application/x-www-form-urlencoded
+    #     response_mapping: 
+    #       $ref: "#/components/x-bte-response-mapping/ensemblGene"
+    #     ## specifically from the ID mapping file https://www.uniprot.org/downloads#uniprotkblink
+    #     source: "infores:uniprot"
+    #     supportBatch: true
+    ## pantherdb gives orthologs and paralogs, which are both homologs. Hence we use homolog
+    ## currently written: MGI, RGD, ZFIN, WormBase, SGD, dictyBase, POMBASE
+    ## Biolink questions: using FB (rather than FlyBase)?? Also no TAIR. 
+    ## Also have Ensembl (for specific non-human species) and UniprotKB (for all orthologs)
     ## removing because Transcript isn't supported by SRI-ID-resolver
     ##   and it doesn't seem useful
     # hasTranscript: 
@@ -700,246 +930,7 @@ components:
     #       $ref: "#/components/x-bte-response-mapping/ensemblGene"
     #     source: "infores:ensembl-gene"  ## ensembl or specifically ensembl-gene?
     #     supportBatch: true
-    involvedInBP:
-    ## biolink: confusing. biolink currently doesn't have involved_in; this could also be contributes_to?
-    ## future: relation could be NCIT:gene_plays_role_in_process or RO:0000056 (participates in); both currently map to biolink:participates_in
-      - 
-        inputSeparator: ","
-        inputs: 
-          - 
-            id: NCBIGene
-            semantic: Gene
-        outputs: 
-          - 
-            id: GO
-            semantic: BiologicalProcess
-        parameters: 
-          ## all records with go.BP field also have entrezgene field
-          fields: go.BP
-          species: human
-        predicate: participates_in
-        requestBody: 
-          body: 
-            q: "{inputs[0]}"  ## no prefix
-            ## example: put 632 here (BGLAP)
-            ##   should get GO:0001501 (skeletal system development) in response
-            scopes: entrezgene
-          header: application/x-www-form-urlencoded
-        response_mapping: 
-          $ref: "#/components/x-bte-response-mapping/biologicalProcess"
-        source: "infores:ncbi-gene"   ## which got from GO Annotations...
-        supportBatch: true
-    BPToGene: 
-    ## biolink: confusing, hard to find inverse for
-    ## future: relation could be RO:0000057 (has_participant), which currently maps to biolink:has_participant
-      - 
-        inputSeparator: ","
-        inputs: 
-          - 
-            id: GO
-            semantic: BiologicalProcess
-        outputs: 
-          - 
-            id: NCBIGene
-            semantic: Gene
-        parameters: 
-          ## all records with go.BP field also have entrezgene field
-          fields: entrezgene
-          species: human
-        predicate: has_participant
-        requestBody: 
-          body: 
-            q: "{inputs[0]}"  ## HAS PREFIX (GO)
-            ## example: put GO:0001501 here (skeletal system development)
-            ##   should get 5741 (PTH) in response
-            scopes: go.BP.id
-            size: 1000  ## note size limit
-          header: application/x-www-form-urlencoded
-        response_mapping: 
-          $ref: "#/components/x-bte-response-mapping/entrezgene"
-        source: "infores:ncbi-gene"   ## which got from GO Annotations...
-        supportBatch: true
-    involvedInCC: 
-    ## biolink: confusing, since it's a gene whose activity takes place in the cellular component (complex or organelle) - not a direct biological relationship
-    ## currently using expressed_in, could also use located_in
-    ## future: relation could be RO:0002206 (expressed_in), currently mapped to biolink:expressed_in
-      - 
-        inputSeparator: ","
-        inputs: 
-          - 
-            id: NCBIGene
-            semantic: Gene
-        outputs: 
-          - 
-            id: GO
-            semantic: CellularComponent
-        parameters: 
-          ## all records with go.CC field also have entrezgene field
-          fields: go.CC
-          species: human
-        predicate: expressed_in
-        requestBody: 
-          body: 
-            q: "{inputs[0]}"  ## no prefix
-            ## example: put 5741 here (PTH)
-            ##   should get GO:0005576 (extracellular region) in response
-            scopes: entrezgene
-          header: application/x-www-form-urlencoded
-        response_mapping: 
-          $ref: "#/components/x-bte-response-mapping/cellularComponent"
-        source: "infores:ncbi-gene"   ## which got from GO Annotations...
-        supportBatch: true
-    CCToGene: 
-    ## biolink: confusing, since it's a gene whose activity takes place in the cellular component (complex or organelle) - not a direct biological relationship
-    ## currently using expresses, could also use location_of 
-    ## future: relation could be RO:0002292 (expresses), currently mapped to biolink:expresses
-      - 
-        inputSeparator: ","
-        inputs: 
-          - 
-            id: GO
-            semantic: CellularComponent
-        outputs: 
-          - 
-            id: NCBIGene
-            semantic: Gene
-        parameters: 
-          ## all records with go.CC field also have entrezgene field
-          fields: entrezgene
-          species: human
-        predicate: expresses
-        requestBody: 
-          body: 
-            q: "{inputs[0]}"  ## HAS PREFIX (GO)
-            ## example: put GO:0033268 here (node of Ranvier)
-            ##   should get 6326 (SCN2A) in response
-            scopes: go.CC.id
-            size: 1000  ## note size limit
-          header: application/x-www-form-urlencoded
-        response_mapping: 
-          $ref: "#/components/x-bte-response-mapping/entrezgene"
-        source: "infores:ncbi-gene"   ## which got from GO Annotations...
-        supportBatch: true
-    involvedInPathway:    ## using Reactome, KEGG, Wikipathways
-    ## future: use relation "NCIT:gene_is_element_in_pathway" or RO:0000056 (participates in), both mapped to biolink:participates_in
-      - 
-        inputSeparator: ","
-        inputs: 
-          - 
-            id: NCBIGene
-            semantic: Gene
-        method: post
-        outputs: 
-          - 
-            id: REACT
-            semantic: Pathway
-        parameters: 
-          fields: pathway.reactome
-          species: human
-        predicate: participates_in
-        requestBody: 
-          body: 
-            q: "{inputs[0]}"  ## no prefix
-            ## example: put 1629 here (DBT)
-            ##   should get R-HSA-70895 (Branched-chain amino acid catabolism) in response
-            ## all records with pathway.reactome.id field also have entrezgene field
-            scopes: entrezgene
-          header: application/x-www-form-urlencoded
-        response_mapping: 
-          $ref: "#/components/x-bte-response-mapping/reactomePathway"
-        source: "infores:reactome"
-        supportBatch: true
-      - 
-        inputSeparator: ","
-        inputs: 
-          - 
-            id: NCBIGene
-            semantic: Gene
-        method: post
-        outputs: 
-          - 
-            id: KEGG
-            semantic: Pathway
-        parameters: 
-          fields: pathway.kegg
-          species: human
-        predicate: participates_in
-        requestBody: 
-          body: 
-            q: "{inputs[0]}"  ## no prefix
-            ## example: put 1629 here (DBT)
-            ##   should get hsa00280 (Valine, leucine and isoleucine degradation - Homo sapiens (human)) in response
-            ## all records with pathway.kegg field also have entrezgene field
-            scopes: entrezgene
-          header: application/x-www-form-urlencoded
-        response_mapping: 
-          $ref: "#/components/x-bte-response-mapping/keggPathway"
-        source: "infores:cpdb"   ## ConsensusPathDB
-        supportBatch: true
-      - 
-        inputSeparator: ","
-        inputs: 
-          - 
-            id: NCBIGene
-            semantic: Gene
-        method: post
-        outputs: 
-          - 
-            id: WIKIPATHWAYS
-            semantic: Pathway
-        parameters: 
-          fields: pathway.wikipathways
-          species: human
-        predicate: participates_in
-        requestBody: 
-          body: 
-            q: "{inputs[0]}"  ## no prefix
-            ## example: put 8309 here (ACOX2)
-            ##   should get WP3942 (PPAR signaling pathway) in response
-            ## all records with pathway.wikipathways field also have entrezgene field
-            scopes: entrezgene
-          header: application/x-www-form-urlencoded
-        response_mapping: 
-          $ref: "#/components/x-bte-response-mapping/wikipathway"
-        source: "infores:cpdb"   ## ConsensusPathDB
-        supportBatch: true
-      - 
-        inputSeparator: ","
-        inputs: 
-          - 
-            id: NCBIGene
-            semantic: Gene
-        method: post
-        outputs: 
-          - 
-            id: BIOCARTA
-            semantic: Pathway
-        parameters: 
-          fields: pathway.biocarta
-          species: human
-        predicate: participates_in
-        requestBody: 
-          body: 
-            q: "{inputs[0]}"  ## no prefix
-            ## example: put 5608 here (MAP2K6)
-            ##   should get p38mapkpathway (p38 mapk signaling pathway) in response
-            ## all records with pathway.biocarta field also have entrezgene field
-            scopes: entrezgene
-          header: application/x-www-form-urlencoded
-        response_mapping: 
-          $ref: "#/components/x-bte-response-mapping/biocarta"
-        source: "infores:cpdb"   ## ConsensusPathDB
-        supportBatch: true
-  x-bte-response-mapping: 
-#     ENSEMBL: ensembl.gene
-#     HGNC: HGNC
-#     NCBIGene: entrezgene
-#     OMIM: MIM
-#     PHARMGKB: pharmgkb
-#     PHAROS: pahros.target_id
-#     SYMBOL: symbol
-#     UMLS: umls.cui
-#     description: summary
+  x-bte-response-mapping:
     biologicalProcess: 
       GO: go.BP.id  ## HAS PREFIX (GO)
       evidence: go.BP.evidence  ## categorical variable?
@@ -975,15 +966,6 @@ components:
     keggPathway: 
       KEGG: pathway.kegg.id   ## no prefix
       name: pathway.kegg.name
-    # ensemblTranscript: 
-    #   ENSEMBL: ensembl.transcript  ## no prefix
-    # ensemblProtein: 
-    #   ENSEMBL: ensembl.protein  ## no prefix
-    # uniprotProtein:
-    #   UniProtKB: uniprot.Swiss-Prot  ## no prefix
-    # ensemblGene: 
-    #   ENSEMBL: ensembl.gene  ## no prefix
-    ## include ortholog_type for panther?
     pantherMGI: 
       MGI: pantherdb.ortholog.MGI  ## no prefix
       inTaxon: pantherdb.ortholog.taxid
@@ -1005,10 +987,15 @@ components:
 #     pantherPom:
 #       POMBASE: pantherdb.ortholog.PomBase
 #       inTaxon: pantherdb.ortholog.taxid
-#     inTaxon: taxid
-#     name: 
-#       - name
-#       - other_names
+    # ensemblTranscript: 
+    #   ENSEMBL: ensembl.transcript  ## no prefix
+    # ensemblProtein: 
+    #   ENSEMBL: ensembl.protein  ## no prefix
+    # uniprotProtein:
+    #   UniProtKB: uniprot.Swiss-Prot  ## no prefix
+    # ensemblGene: 
+    #   ENSEMBL: ensembl.gene  ## no prefix
+    ## include ortholog_type for panther?
 info: 
   contact: 
     email: help@mygene.info
@@ -1237,33 +1224,33 @@ paths:
         - query
       x-bte-kgs-operations: 
         - 
-          $ref: "#/components/x-bte-kgs-operations/enablesMF"
+          $ref: "#/components/x-bte-kgs-operations/PathwayHasGene"
         - 
-          $ref: "#/components/x-bte-kgs-operations/MFToGene"
+          $ref: "#/components/x-bte-kgs-operations/involvedInPathway"
         - 
           $ref: "#/components/x-bte-kgs-operations/involvedInBP"
         - 
           $ref: "#/components/x-bte-kgs-operations/BPToGene"
         - 
+          $ref: "#/components/x-bte-kgs-operations/enablesMF"
+        - 
+          $ref: "#/components/x-bte-kgs-operations/MFToGene"
+        - 
           $ref: "#/components/x-bte-kgs-operations/involvedInCC"
         - 
           $ref: "#/components/x-bte-kgs-operations/CCToGene"
         - 
-          $ref: "#/components/x-bte-kgs-operations/involvedInPathway"
+          $ref: "#/components/x-bte-kgs-operations/hasHomolog"
+        - 
+          $ref: "#/components/x-bte-kgs-operations/hasHomolog-rev"
+        # - 
+        #   $ref: "#/components/x-bte-kgs-operations/GeneToProtein"
+        # - 
+        #   $ref: "#/components/x-bte-kgs-operations/ProteinToGene"
         # - 
         #   $ref: "#/components/x-bte-kgs-operations/hasTranscript"
         # - 
         #   $ref: "#/components/x-bte-kgs-operations/hasTranscript-rev"
-        # - 
-        #   $ref: "#/components/x-bte-kgs-operations/GeneToProtein"
-        # - 
-        #   $ref: "#/components/x-bte-kgs-operations/ProteinToGene"          
-        - 
-          $ref: "#/components/x-bte-kgs-operations/hasHomolog"
-        - 
-          $ref: "#/components/x-bte-kgs-operations/hasHomolog-rev"
-        - 
-          $ref: "#/components/x-bte-kgs-operations/PathwayHasGene"
 servers: 
   - 
     description: "Encrypted Production server"
