@@ -182,10 +182,10 @@ paths:
       tags:
       - query
       x-bte-kgs-operations:
-      - $ref: '#/components/x-bte-kgs-operations/chemical-protein-positive'
-      - $ref: '#/components/x-bte-kgs-operations/chemical-protein-negative'
-      - $ref: '#/components/x-bte-kgs-operations/protein-chemical-positive'
-      - $ref: '#/components/x-bte-kgs-operations/protein-chemical-negative'
+      - $ref: '#/components/x-bte-kgs-operations/chemical-gene-positive'
+      - $ref: '#/components/x-bte-kgs-operations/chemical-gene-negative'
+      - $ref: '#/components/x-bte-kgs-operations/gene-chemical-positive'
+      - $ref: '#/components/x-bte-kgs-operations/gene-chemical-negative'
     post:
       parameters:
       - $ref: '#/components/parameters/dotfield'
@@ -381,84 +381,76 @@ components:
         type: array
       - type: string
   x-bte-kgs-operations:
-    chemical-protein-positive:
+    chemical-gene-positive:
     - inputs:
       - id: CHEBI
         semantic: SmallMolecule
       outputs:
-      - id: PR
-        semantic: Protein
+      - id: NCBIGene
+        semantic: Gene
       parameters:
-        q: subject.CHEBI:"{inputs[0]}" AND association.edge_label:positively_regulates_entity_to_entity
-        fields: object.PR,association.evidence
+        q: subject.CHEBI:"{inputs[0]}" AND association.edge_label:positively_regulates_entity_to_entity AND _exists_:object.NCBIgene
+        fields: object,association
         size: 1000
       predicate: entity_positively_regulates_entity
       response_mapping:
-        $ref: '#/components/x-bte-response-mapping/chemical-protein'
-      ## note: source should be the source of data used
-      # source: Text Mining KP
+        $ref: '#/components/x-bte-response-mapping/chemical-gene'
       supportBatch: false
-    chemical-protein-negative:
+    chemical-gene-negative:
     - inputs:
       - id: CHEBI
         semantic: SmallMolecule
       outputs:
-      - id: PR
-        semantic: Protein
+      - id: NCBIGene
+        semantic: Gene
       parameters:
-        q: subject.CHEBI:"{inputs[0]}" AND association.edge_label:negatively_regulates_entity_to_entity
-        fields: object.PR,association.evidence
+        q: subject.CHEBI:"{inputs[0]}" AND association.edge_label:negatively_regulates_entity_to_entity AND _exists_:object.NCBIgene
+        fields: object,association
         size: 1000
       predicate: entity_negatively_regulates_entity
       response_mapping:
-        $ref: '#/components/x-bte-response-mapping/chemical-protein'
-      ## note: source should be the source of data used
-      # source: Text Mining KP
+        $ref: '#/components/x-bte-response-mapping/chemical-gene'
       supportBatch: false
-    protein-chemical-positive:
+    gene-chemical-positive:
     - outputs:
       - id: CHEBI
         semantic: SmallMolecule
       inputs:
-      - id: PR
-        semantic: Protein
+      - id: NCBIGene
+        semantic: Gene
       parameters:
-        q: object.PR:"{inputs[0]}" AND association.edge_label:positively_regulates_entity_to_entity
-        fields: subject.CHEBI,association.evidence
+        q: object.NCBIgene:"{inputs[0]}" AND association.edge_label:positively_regulates_entity_to_entity
+        fields: subject,association
         size: 1000
       predicate: entity_positively_regulated_by_entity
       response_mapping:
-        $ref: '#/components/x-bte-response-mapping/protein-chemical'
-      ## note: source should be the source of data used
-      # source: Text Mining KP
+        $ref: '#/components/x-bte-response-mapping/gene-chemical'
       supportBatch: false
-    protein-chemical-negative:
+    gene-chemical-negative:
     - outputs:
       - id: CHEBI
         semantic: SmallMolecule
       inputs:
-      - id: PR
-        semantic: Protein
+      - id: NCBIGene
+        semantic: Gene
       parameters:
-        q: object.PR:"{inputs[0]}" AND association.edge_label:negatively_regulates_entity_to_entity
-        fields: subject.CHEBI,association.evidence
+        q: object.NCBIgene:"{inputs[0]}" AND association.edge_label:negatively_regulates_entity_to_entity
+        fields: subject,association
         size: 1000
       predicate: entity_negatively_regulated_by_entity
       response_mapping:
-        $ref: '#/components/x-bte-response-mapping/protein-chemical'
-      ## note: source should be the source of data used
-      # source: Text Mining KP
+        $ref: '#/components/x-bte-response-mapping/gene-chemical'
       supportBatch: false
   x-bte-response-mapping:
-    chemical-protein:
-      PR: hits.object.PR
+    chemical-gene:
+      NCBIGene: hits.object.NCBIgene
       pubmed: hits.association.evidence.publications
       score: hits.association.evidence.score
       sentence: hits.association.evidence.sentence
       subject_spans: hits.association.evidence.subject_spans
       object_spans: hits.association.evidence.object_spans
       relation_spans: hits.association.evidence.relation_spans
-    protein-chemical:
+    gene-chemical:
       CHEBI: hits.subject.CHEBI
       pubmed: hits.association.evidence.publications
       score: hits.association.evidence.score
