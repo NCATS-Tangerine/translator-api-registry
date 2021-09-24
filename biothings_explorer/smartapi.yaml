@@ -254,14 +254,125 @@ paths:
               schema:
                 type: string
       x-swagger-router-controller: swagger_server.controllers.query_controller
-  ## can add once we implement this endpoint on prod
-  ## may need versions for api / team level as well...
   /asyncquery:
     post:
       tags:
         - asyncquery
       summary: Initiate a query with a callback to receive the response
       description: ''
+      requestBody:
+        description: Query information to be submitted
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AsyncQuery'
+      responses:
+        '200':
+          description: >-
+            The query is accepted for processing and the Response will be
+            sent to the callback url when complete.
+          content:
+            application/json:
+              schema:
+                type: string
+        '400':
+          description: >-
+            Bad request. The request is invalid according to this OpenAPI
+            schema OR a specific identifier is believed to be invalid somehow
+            (not just unrecognized).
+          content:
+            application/json:
+              schema:
+                type: string
+        '500':
+          description: >-
+            Internal server error.
+          content:
+            application/json:
+              schema:
+                type: string
+        '501':
+          description: >-
+            Not implemented.
+          content:
+            application/json:
+              schema:
+                type: string
+  /smartapi/{smartapi_id}/asyncquery:
+    post:
+      tags:
+        - asyncquery
+      summary: >- 
+        Initiate a query with a callback to receive the response. This endpoint is for individual SmartAPI KP APIs 
+        (that have x-bte annotation) as a TRAPI API
+      parameters:
+        - description: SmartAPI ID of an API, you can get it from https://smart-api.info/registry
+          example: 8f08d1446e0bb9c2b323713ce83e2bd3
+          in: path
+          name: smartapi_id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: Query information to be submitted
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AsyncQuery'
+      responses:
+        '200':
+          description: >-
+            The query is accepted for processing and the Response will be
+            sent to the callback url when complete.
+          content:
+            application/json:
+              schema:
+                type: string
+        '400':
+          description: >-
+            Bad request. The request is invalid according to this OpenAPI
+            schema OR a specific identifier is believed to be invalid somehow
+            (not just unrecognized).
+          content:
+            application/json:
+              schema:
+                type: string
+        '500':
+          description: >-
+            Internal server error.
+          content:
+            application/json:
+              schema:
+                type: string
+        '501':
+          description: >-
+            Not implemented.
+          content:
+            application/json:
+              schema:
+                type: string
+  /team/{team_name}/asyncquery:
+    post:
+      tags:
+        - asyncquery
+      summary: >-
+        Initiate a query with a callback to receive the response. This endpoint is for querying an individual Translator team's 
+        SMARTAPI KP APIs (that have x-bte annotation) as an individual TRAPI service using team name
+      description: ''
+      parameters:
+        - description: Translator Team Name, e.g. Service Provider, Multiomics Provider
+          example: Text Mining Provider
+          in: path
+          name: team_name
+          required: true
+          schema:
+            type: string
+            enum:
+              - Multiomics Provider
+              - Text Mining Provider
+              - Service Provider
       requestBody:
         description: Query information to be submitted
         required: true
