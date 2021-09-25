@@ -481,107 +481,120 @@ components:
     disease_arises_from_feature:
       MONDO: mondo.disease_arises_from_feature.mondo    ## HAS PREFIX (MONDO)
   x-bte-kgs-operations:
-  ## for disgenet-based operations:
-  ## - the ingested data structure doesn't give a specific relation...
-  ##   and trying to get a specific relation is hard
-  ##   (going thru source -> ontology class -> trying to find a matching ontology property)
-  ## - there are numeric measures, not in response-mapping right now
+  ## NOTES:
+  ## - there isn't more distinct operations because we can't retrieve subsets of the data under a disease / data_source. 
+  ##   for example, https://mydisease.info/v1/query?q=%20disgenet.variants_related_to_disease.source:CLINVAR 
+  ##    will NOT restrict the info under the variants_related_to_disease to only records with source == CLINVAR
+  ##   instead, it will retrieve ALL the info for diseases where AT LEAST 1 variants_related_to_disease record exists that matches that restriction
+  ## - the data files also lack more specific associations...
     disease-gene:
-    - supportBatch: true
-      inputSeparator: ","
-      parameters:
-        fields: disgenet.genes_related_to_disease
-      requestBody:
-        body:
-          q: "{inputs[0]}"  ## no prefix
-          ## example: put C0023264 here (Leigh Disease).
-          ##   should get NCBIGene:4694 (NDUFA1) in response
-          scopes: disgenet.xrefs.umls
-        header: application/x-www-form-urlencoded
-      inputs:
-      - id: UMLS
-        semantic: Disease
-      outputs:
-      - id: NCBIGene
-        semantic: Gene
-      predicate: related_to
-      source: "infores:disgenet"
-      response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/disease-gene"
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: UMLS
+            semantic: Disease
+        requestBody:
+          body:
+            ## currently, BTE already strips prefix...
+            q: "{{ queryInputs | rmPrefix | joinSafe(',') }}"
+            scopes: disgenet.xrefs.umls
+          header: application/x-www-form-urlencoded
+        parameters:
+          fields: disgenet.genes_related_to_disease
+        outputs:
+          - id: NCBIGene
+            semantic: Gene
+        ## can't be more specific because we can't restrict (see note above)
+        predicate: gene_associated_with_condition 
+        source: "infores:disgenet"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/disease-gene"
+        # testExamples:
+        #   - qInput: "UMLS:C0023264"     ## Leigh Disease
+        #     oneOutput: "NCBIGene:4694"  ## NDUFA1
     disease-variant:
-    - supportBatch: true
-      inputSeparator: ","
-      parameters:
-        fields: disgenet.variants_related_to_disease
-      requestBody:
-        body:
-          q: "{inputs[0]}"  ## no prefix
-          ## example: put C0023264 here (Leigh Disease)
-          ##   should get rs1161932777 in response
-          scopes: disgenet.xrefs.umls
-        header: application/x-www-form-urlencoded
-      inputs:
-      - id: UMLS
-        semantic: Disease
-      outputs:
-      - id: DBSNP
-        semantic: SequenceVariant
-      predicate: related_to
-      source: "infores:disgenet"
-      response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/disease-variant"
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: UMLS
+            semantic: Disease
+        requestBody:
+          body:
+            ## currently, BTE already strips prefix...
+            q: "{{ queryInputs | rmPrefix | joinSafe(',') }}"
+            scopes: disgenet.xrefs.umls
+          header: application/x-www-form-urlencoded
+        parameters:
+          fields: disgenet.variants_related_to_disease
+        outputs:
+          - id: DBSNP
+            semantic: SequenceVariant
+        ## can't be more specific because we can't restrict (see note above)
+        predicate: related_to
+        source: "infores:disgenet"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/disease-variant"
+        # testExamples:
+        #   - qInput: "UMLS:C0023264"     ## Leigh Disease
+        #     oneOutput: "DBSNP:rs1161932777"
   ## for hpo-annotation-based operations:
-  ## - currently, the mydisease parser for hpo maps the resources' IDs (OMIM or ORPHANET) to MONDO. If two IDs (ex: OMIM:218340 and ORPHANET:1777 for Temtamy syndrome) map to the same MONDO ID, it looks like only the OMIM data was kept.
+  ## - currently, the mydisease parser for hpo maps the resources' IDs (OMIM or ORPHANET) to MONDO. 
+  ##   If two IDs (ex: OMIM:218340 and ORPHANET:1777 for Temtamy syndrome) map to the same MONDO ID, it looks like only the OMIM data was kept.
   ##   However, then data is missing: in the raw data, those two IDs have different sets of annotated phenotypes...
-  ##   Change to keep both IDs and their records, or merge them?
-  ## - there is DECIPHER-ID-based disease-pheno info that isn't captured by BTE right now
-  ##   this is not much info (~22 diseases)
+  ## - there is DECIPHER-ID-based disease-pheno info that isn't captured by BTE right now.
+  ##   however, this is not much info (~22 diseases) and we don't have mappings from SRI-based ID resolver
     disease-phenotype:
-    - supportBatch: true
-      inputSeparator: ","
-      parameters:
-        fields: hpo.phenotype_related_to_disease
-      requestBody:
-        body:
-          q: "{inputs[0]}"  ## no prefix
-          ## example: put 246900 here (Dihydrolipoamide Dehydrogenase Deficiency)
-          ##   should get HP:0001254 (Lethargy) in response
-          scopes: hpo.omim
-        header: application/x-www-form-urlencoded
-      inputs:
-      - id: OMIM
-        semantic: Disease
-      outputs:
-      - id: HP
-        semantic: PhenotypicFeature
-      predicate: has_phenotype
-      ## sort-of has a relation. Parser made this based on annotations with aspect == "P"
-      ##   (notice aspect as "I" became hpo.inheritance, "C" became hpo.course, "M" became hpo.modifier)
-      source: "infores:hpo-annotations"
-      response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/disease-phenotype"
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: OMIM
+            semantic: Disease
+        requestBody:
+          body:
+            ## currently, BTE already strips prefix...
+            q: "{{ queryInputs | rmPrefix | joinSafe(',') }}"
+            scopes: hpo.omim
+          header: application/x-www-form-urlencoded
+        parameters:
+          fields: hpo.phenotype_related_to_disease
+        outputs:
+          - id: HP
+            semantic: PhenotypicFeature
+        predicate: has_phenotype
+        ## sort-of has a relation. Parser made this based on annotations with aspect == "P"
+        ##   (notice aspect as "I" became hpo.inheritance, "C" became hpo.course, "M" became hpo.modifier)
+        source: "infores:hpo-annotations"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/disease-phenotype"
+        # testExamples:
+        #   - qInput: "OMIM:246900"     ## Dihydrolipoamide Dehydrogenase Deficiency
+        #     oneOutput: "HP:0001254"   ## Lethargy
     disease-phenotype2:
-    - supportBatch: true
-      inputSeparator: ","
-      parameters:
-        fields: hpo.phenotype_related_to_disease
-      requestBody:
-        body:
-          q: "{inputs[0]}"  ## no prefix
-          ## example: put 881 here (Turner Syndrome)
-          ##   should get HP:0000137 (Abnormality of the ovary) in response
-          scopes: hpo.orphanet
-        header: application/x-www-form-urlencoded
-      inputs:
-      - id: ORPHANET
-        semantic: Disease
-      outputs:
-      - id: HP
-        semantic: PhenotypicFeature
-      predicate: has_phenotype
-      source: "infores:hpo-annotations"
-      response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/disease-phenotype"
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: ORPHANET
+            semantic: Disease
+        requestBody:
+          body:
+            ## currently, BTE already strips prefix...
+            q: "{{ queryInputs | rmPrefix | joinSafe(',') }}"
+            scopes: hpo.orphanet
+          header: application/x-www-form-urlencoded
+        parameters:
+          fields: hpo.phenotype_related_to_disease
+        outputs:
+          - id: HP
+            semantic: PhenotypicFeature
+        predicate: has_phenotype
+        ## sort-of has a relation. Parser made this based on annotations with aspect == "P"
+        ##   (notice aspect as "I" became hpo.inheritance, "C" became hpo.course, "M" became hpo.modifier)
+        source: "infores:hpo-annotations"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/disease-phenotype"
+        # testExamples:
+        #   - qInput: "ORPHANET:881"    ## Turner Syndrome
+        #     oneOutput: "HP:0000137"   ## Abnormality of the ovary
   ## for ctd-based operations:
   ## - when the mydisease parser maps the resources' IDs to MONDO, are there situations where a MESH and a OMIM ID map to the same MONDO? 
   ##   If so, 1) Is only one of them kept?, 
@@ -589,377 +602,214 @@ components:
   ##   From what I can tell, CTD does their own entity resolution. 
   ##   If a disease has MESH and OMIM IDs, the raw data has its info under the MESH ID only. The OMIM ID is only used as the main disease ID if there isn't a matching MESH ID
   ## - we wanted to add CTD direct disease-gene data, operations
-  ## - we commented out CTD disease-pathway data because that info is all indirect
+  ## - we removed CTD disease-pathway data because that info is all indirect
     disease-chemical:
-    - path: "/query"
-      method: post
-      supportBatch: true
-      inputSeparator: ","
-      parameters:
-        fields: ctd.chemical_related_to_disease
-      requestBody:
-        body:
-          q: "{inputs[0]}"  ## no prefix
-          ## example: put D009102 here (Multiple Organ Failure)
-          ##   should get C448659 (17-(dimethylaminoethylamino)-17-demethoxygeldanamycin, aka ALVESPIMYCIN) in response
-          scopes: ctd.mesh
-        header: application/x-www-form-urlencoded
-      inputs:
-      - id: MESH
-        semantic: Disease
-      outputs:
-      - id: MESH
-        semantic: SmallMolecule
-        ## note that 3085 / 3253 have cas_registry_number field that can be used as well
-      predicate: related_to
-      ## there is a field that kinda tells the "relation" IN response-mapping right now
-      ##   (direct_evidence can have value "marker/mechanism" or "therapeutic").
-      source: "infores:ctd"
-      response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/disease-chemical"
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: MESH
+            semantic: Disease
+        requestBody:
+          body:
+            ## currently, BTE already strips prefix...
+            q: "{{ queryInputs | rmPrefix | joinSafe(',') }}"
+            scopes: ctd.mesh
+          header: application/x-www-form-urlencoded
+        parameters:
+          fields: ctd.chemical_related_to_disease
+        outputs:
+          - id: MESH
+            semantic: SmallMolecule
+            ## note that 3085 / 3253 have cas_registry_number field that can be used as well
+        predicate: related_to
+        ## there is a field that kinda tells the "relation" in response-mapping right now
+        ##   (direct_evidence can have value "marker/mechanism" or "therapeutic").
+        source: "infores:ctd"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/disease-chemical"
+        # testExamples:
+        #   - qInput: "MESH:D009102"    ## Multiple Organ Failure
+        #     oneOutput: "MESH:C448659"   ## Geldanamycin, monohydrochloride
     disease-chemical2:
-    - path: "/query"
-      method: post
-      supportBatch: true
-      inputSeparator: ","
-      parameters:
-        fields: ctd.chemical_related_to_disease
-      requestBody:
-        body:
-          q: "{inputs[0]}"  ## no prefix
-          ## example: put 146850 here (IMMUNE SUPPRESSION)
-          ##   should get D014810 (Vitamin E) in response
-          scopes: ctd.omim
-        header: application/x-www-form-urlencoded
-      inputs:
-      - id: OMIM
-        semantic: Disease
-      outputs:
-      - id: MESH
-        semantic: SmallMolecule
-        ## note that 3085 / 3253 have cas_registry_number field that can be used as well
-      predicate: related_to
-      ## there is a field that kinda tells the "relation" IN response-mapping right now
-      ##   (direct_evidence can have value "marker/mechanism" or "therapeutic").
-      source: "infores:ctd"
-      response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/disease-chemical"        
-#     disease-pathway:  ## input is MESH Disease, example: put C536029 here
-#     ## output is REACT pathway ID
-#     - supportBatch: true
-#       inputSeparator: ","
-#       parameters:
-#         fields: ctd.pathway_related_to_disease
-#       requestBody:
-#         body:
-#           q: "{inputs[0]}"
-#           scopes: ctd.mesh
-#         header: application/x-www-form-urlencoded
-#       inputs:
-#       - id: MESH
-#         semantic: Disease
-#       outputs:  
-#       - id: REACT
-#         semantic: Pathway      
-#       predicate: related_to
-#       source: "infores:ctd"
-#       response_mapping:
-#         "$ref": "#/components/x-bte-response-mapping/disease-pathway" 
-#     ## output is KEGG pathway ID
-#     - supportBatch: true
-#       inputSeparator: ","
-#       parameters:
-#         fields: ctd.pathway_related_to_disease
-#       requestBody:
-#         body:
-#           q: "{inputs[0]}"
-#           scopes: ctd.mesh
-#         header: application/x-www-form-urlencoded
-#       inputs:
-#       - id: MESH
-#         semantic: Disease
-#       outputs:  
-#       - id: KEGG
-#         semantic: Pathway      
-#       predicate: related_to
-#       source: "infores:ctd"
-#       response_mapping:
-#         "$ref": "#/components/x-bte-response-mapping/disease-pathway2"           
-#     disease-pathway2:  ## input is OMIM Disease, example: put 261515 here
-#     ## output is REACT pathway ID
-#     - supportBatch: true
-#       inputSeparator: ","
-#       parameters:
-#         fields: ctd.pathway_related_to_disease
-#       requestBody:
-#         body:
-#           q: "{inputs[0]}"
-#           scopes: ctd.omim
-#         header: application/x-www-form-urlencoded
-#       inputs:
-#       - id: OMIM
-#         semantic: Disease
-#       outputs:  
-#       - id: REACT
-#         semantic: Pathway      
-#       predicate: related_to
-#       source: "infores:ctd"
-#       response_mapping:
-#         "$ref": "#/components/x-bte-response-mapping/disease-pathway" 
-#     ## output is KEGG pathway ID
-#     - supportBatch: true
-#       inputSeparator: ","
-#       parameters:
-#         fields: ctd.pathway_related_to_disease
-#       requestBody:
-#         body:
-#           q: "{inputs[0]}"
-#           scopes: ctd.omim
-#         header: application/x-www-form-urlencoded
-#       inputs:
-#       - id: OMIM
-#         semantic: Disease
-#       outputs:  
-#       - id: KEGG
-#         semantic: Pathway      
-#       predicate: related_to
-#       source: "infores:ctd"
-#       response_mapping:
-#         "$ref": "#/components/x-bte-response-mapping/disease-pathway2"
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: OMIM
+            semantic: Disease
+        requestBody:
+          body:
+            ## currently, BTE already strips prefix...
+            q: "{{ queryInputs | rmPrefix | joinSafe(',') }}"
+            scopes: ctd.omim
+          header: application/x-www-form-urlencoded
+        parameters:
+          fields: ctd.chemical_related_to_disease
+        outputs:
+          - id: MESH
+            semantic: SmallMolecule
+            ## note that 3085 / 3253 have cas_registry_number field that can be used as well
+        predicate: related_to
+        ## there is a field that kinda tells the "relation" in response-mapping right now
+        ##   (direct_evidence can have value "marker/mechanism" or "therapeutic").
+        source: "infores:ctd"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/disease-chemical"
+        # testExamples:
+        #   - qInput: "OMIM:146850"       ## IMMUNE SUPPRESSION
+        #     oneOutput: "MESH:D014810"   ## DL-alpha-Tocopherol
 ##########################################################################
-## for "reverse" querying, we currently can't retrieve the other info in the specific record like reference info...
+## with "reverse" querying, we will pull up ALL info under the disease, rather than under a specific record...
+##   so we can't retrieve the subset of data for the specific gene / variant / etc's record 
     gene-disease:
-    - supportBatch: true
-      inputSeparator: ","
-      parameters:
-        fields: disgenet.xrefs.umls
-        size: '1000'  ## note the size limit
-      requestBody:
-        body:
-          q: "{inputs[0]}"   ## no prefix
-          ## example: put 1629 here (DBT)
-          ##   should get C3658290 in response (Drug-Induced Acute Liver Injury)
-          scopes: disgenet.genes_related_to_disease.gene_id
-        header: application/x-www-form-urlencoded
-      inputs:
-      - id: NCBIGene
-        semantic: Gene
-      outputs:
-      - id: UMLS
-        semantic: Disease
-      predicate: related_to
-      source: "infores:disgenet"
-      response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/umls"
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: NCBIGene
+            semantic: Gene
+        requestBody:
+          body:
+            ## currently, BTE already strips prefix...
+            q: "{{ queryInputs | rmPrefix | joinSafe(',') }}"
+            scopes: disgenet.genes_related_to_disease.gene_id
+          header: application/x-www-form-urlencoded
+        parameters:
+          fields: disgenet.xrefs.umls
+          size: '1000'  ## note the size limit
+        outputs:
+          - id: UMLS
+            semantic: Disease
+        predicate: condition_associated_with_gene
+        source: "infores:disgenet"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/umls"
+        # testExamples:
+        #   - qInput: "NCBIGene:1629"       ## DBT
+        #     oneOutput: "UMLS:C3658290"    ## Drug-Induced Acute Liver Injury
     variant-disease:
-    - supportBatch: true
-      inputSeparator: ","
-      parameters:
-        fields: disgenet.xrefs.umls
-        size: '1000'  ## note the size limit
-      requestBody:
-        body:
-          q: "{inputs[0]}"   ## no prefix
-          ## example: put rs78655421 here
-          ##   should get C4021107 in response (Non-obstructive azoospermia)
-          scopes: disgenet.variants_related_to_disease.rsid
-        header: application/x-www-form-urlencoded
-      inputs:
-      - id: DBSNP
-        semantic: SequenceVariant
-      outputs:
-      - id: UMLS
-        semantic: Disease
-      predicate: related_to
-      source: "infores:disgenet"
-      response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/umls"
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: DBSNP
+            semantic: SequenceVariant
+        requestBody:
+          body:
+            ## currently, BTE already strips prefix...
+            q: "{{ queryInputs | rmPrefix | joinSafe(',') }}"
+            scopes: disgenet.variants_related_to_disease.rsid
+          header: application/x-www-form-urlencoded
+        parameters:
+          fields: disgenet.xrefs.umls
+          size: '1000'  ## note the size limit
+        outputs:
+          - id: UMLS
+            semantic: Disease
+        predicate: related_to
+        source: "infores:disgenet"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/umls"
+        # testExamples:
+        #   - qInput: "DBSNP:rs78655421"
+        #     oneOutput: "UMLS:C4021107"    ## Non-obstructive azoospermia
     phenotype-disease:
-    - path: "/query"
-      method: post
-      supportBatch: true
-      inputSeparator: ","
-      parameters:
-        fields: hpo.omim
-        size: '1000'  ## note the size limit
-      requestBody:
-        body:
-          q: "{inputs[0]}"   ## HAS PREFIX (HP)
-          ## example: put HP:0000224 here (Hypogeusia)
-          ##   should get 608720 in response (Neuropathy, Hereditary Sensory And Autonomic, Adult-onset, With Anosmia)
-          scopes: hpo.phenotype_related_to_disease.hpo_id
-        header: application/x-www-form-urlencoded
-      inputs:
-      - id: HP
-        semantic: PhenotypicFeature
-      outputs:
-      - id: OMIM
-        semantic: Disease
-      predicate: phenotype_of
-      source: "infores:hpo-annotations"
-      response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/omim"
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: HP
+            semantic: PhenotypicFeature
+        requestBody:
+          body:
+            ## HAS PREFIX (HP): currently a bit redundant to do this (BTE handles it)
+            q: "{{ queryInputs | replPrefix('HP', ':') | joinSafe(',') }}"
+            scopes: hpo.phenotype_related_to_disease.hpo_id
+          header: application/x-www-form-urlencoded
+        parameters:
+          fields: hpo.omim
+          size: '1000'  ## note the size limit
+        outputs:
+          - id: OMIM
+            semantic: Disease
+        predicate: phenotype_of
+        source: "infores:hpo-annotations"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/omim"
+        # testExamples:
+        #   - qInput: "HP:0000224"       ## Hypogeusia
+        #     oneOutput: "OMIM:608720"   ## Neuropathy, Hereditary Sensory And Autonomic, Adult-onset, With Anosmia
     phenotype-disease2:
-    - path: "/query"
-      method: post
-      supportBatch: true
-      inputSeparator: ","
-      parameters:
-        fields: hpo.orphanet
-        size: '1000'  ## note the size limit
-      requestBody:
-        body:
-          q: "{inputs[0]}"   ## HAS PREFIX (HP)
-          ## example: put HP:0000224 here (Hypogeusia)
-          ##   should get 99857 in response (Secondary Syringomyelia)         
-          scopes: hpo.phenotype_related_to_disease.hpo_id
-        header: application/x-www-form-urlencoded
-      inputs:
-      - id: HP
-        semantic: PhenotypicFeature
-      outputs:
-      - id: ORPHANET
-        semantic: Disease
-      predicate: phenotype_of
-      source: "infores:hpo-annotations"
-      response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/orphanet"
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: HP
+            semantic: PhenotypicFeature
+        requestBody:
+          body:
+            ## HAS PREFIX (HP): currently a bit redundant to do this (BTE handles it)
+            q: "{{ queryInputs | replPrefix('HP', ':') | joinSafe(',') }}"
+            scopes: hpo.phenotype_related_to_disease.hpo_id
+          header: application/x-www-form-urlencoded
+        parameters:
+          fields: hpo.orphanet
+          size: '1000'  ## note the size limit
+        outputs:
+          - id: ORPHANET
+            semantic: Disease
+        predicate: phenotype_of
+        source: "infores:hpo-annotations"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/orphanet"
+        # testExamples:
+        #   - qInput: "HP:0000224"          ## Hypogeusia
+        #     oneOutput: "ORPHANET:99857"   ## Secondary Syringomyelia
     chemical-disease:
-    - path: "/query"
-      method: post
-      supportBatch: true
-      inputSeparator: ","
-      parameters:
-        fields: ctd.mesh
-        size: '1000'  ## note the size limit
-      requestBody:
-        body:
-          q: "{inputs[0]}"  ## no prefix
-          ## example: put D000655 here (Amodiaquine)
-          ##   should get D008288 in response (Malaria) (maps to MONDO:0005136)
-          scopes: ctd.chemical_related_to_disease.mesh_chemical_id
-        header: application/x-www-form-urlencoded
-      inputs:
-      - id: MESH
-        semantic: SmallMolecule
-      outputs:
-      - id: MESH
-        semantic: Disease
-      predicate: related_to
-      source: "infores:ctd"
-      response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/ctd-mesh-disease"
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: MESH
+            semantic: SmallMolecule
+        requestBody:
+          body:
+            ## currently, BTE already strips prefix...
+            q: "{{ queryInputs | rmPrefix | joinSafe(',') }}"
+            scopes: ctd.chemical_related_to_disease.mesh_chemical_id
+          header: application/x-www-form-urlencoded
+        parameters:
+          fields: ctd.mesh
+          size: '1000'  ## note the size limit
+        outputs:
+          - id: MESH
+            semantic: Disease
+        predicate: related_to
+        source: "infores:ctd"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/ctd-mesh-disease"
+        # testExamples:
+        #   - qInput: "MESH:D000655"      ## Amodiaquine
+        #     oneOutput: "MESH:D008288"   ## Malaria (maps to MONDO:0005136)
     chemical-disease2:
-    - path: "/query"
-      method: post
-      supportBatch: true
-      inputSeparator: ","
-      parameters:
-        fields: ctd.omim
-        size: '1000'  ## note the size limit
-      requestBody:
-        body:
-          q: "{inputs[0]}"    ## no prefix
-          ## example: put D000655 here (Amodiaquine)
-          ##   should get 248310 in response (PLASMODIUM FALCIPARUM BLOOD INFECTION LEVEL) (maps to MONDO:0009553)
-          scopes: ctd.chemical_related_to_disease.mesh_chemical_id
-        header: application/x-www-form-urlencoded
-      inputs:
-      - id: MESH
-        semantic: SmallMolecule
-      outputs:
-      - id: OMIM
-        semantic: Disease
-      predicate: related_to
-      source: "infores:ctd"
-      response_mapping: 
-        "$ref": "#/components/x-bte-response-mapping/ctd-omim-disease"  
-#     pathway-disease:  ## input is REACT pathway ID, example: put R-HSA-1280218 or R-HSA-5619084 here  
-#     ## output is MESH Disease
-#     - supportBatch: true
-#       inputSeparator: ","
-#       parameters:
-#         fields: ctd.mesh  ## note the size limit
-#         size: '1000'
-#       requestBody:
-#         body:
-#           q: "{inputs[0]}"
-#           scopes: ctd.pathway_related_to_disease.react_pathway_id
-#         header: application/x-www-form-urlencoded
-#       inputs:  
-#       - id: REACT
-#         semantic: Pathway
-#       outputs:
-#       - id: MESH
-#         semantic: Disease
-#       predicate: related_to
-#       source: "infores:ctd"
-#       response_mapping:
-#         "$ref": "#/components/x-bte-response-mapping/ctd-mesh-disease"
-#     ## output is OMIM Disease
-#     - supportBatch: true
-#       inputSeparator: ","
-#       parameters:
-#         fields: ctd.omim  ## note the size limit
-#         size: '1000'
-#       requestBody:
-#         body:
-#           q: "{inputs[0]}"
-#           scopes: ctd.pathway_related_to_disease.react_pathway_id
-#         header: application/x-www-form-urlencoded
-#       inputs:  
-#       - id: REACT
-#         semantic: Pathway
-#       outputs:
-#       - id: OMIM
-#         semantic: Disease
-#       predicate: related_to
-#       source: "infores:ctd"
-#       response_mapping:
-#         "$ref": "#/components/x-bte-response-mapping/ctd-omim-disease" 
-#     pathway-disease2:  ## input is KEGG pathway ID, example: put hsa04360 or hsa00230 here  
-#     ## output is MESH Disease
-#     - supportBatch: true
-#       inputSeparator: ","
-#       parameters:
-#         fields: ctd.mesh  ## note the size limit
-#         size: '1000'
-#       requestBody:
-#         body:
-#           q: "{inputs[0]}"
-#           scopes: ctd.pathway_related_to_disease.kegg_pathway_id
-#         header: application/x-www-form-urlencoded
-#       inputs:  
-#       - id: KEGG
-#         semantic: Pathway
-#       outputs:
-#       - id: MESH
-#         semantic: Disease
-#       predicate: related_to
-#       source: "infores:ctd"
-#       response_mapping:
-#         "$ref": "#/components/x-bte-response-mapping/ctd-mesh-disease"
-#     ## output is OMIM Disease
-#     - supportBatch: true
-#       inputSeparator: ","
-#       parameters:
-#         fields: ctd.omim  ## note the size limit
-#         size: '1000'
-#       requestBody:
-#         body:
-#           q: "{inputs[0]}"
-#           scopes: ctd.pathway_related_to_disease.kegg_pathway_id
-#         header: application/x-www-form-urlencoded
-#       inputs:  
-#       - id: KEGG
-#         semantic: Pathway
-#       outputs:
-#       - id: OMIM
-#         semantic: Disease
-#       predicate: related_to
-#       source: "infores:ctd"
-#       response_mapping:
-#         "$ref": "#/components/x-bte-response-mapping/ctd-omim-disease"
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: MESH
+            semantic: SmallMolecule
+        requestBody:
+          body:
+            ## currently, BTE already strips prefix...
+            q: "{{ queryInputs | rmPrefix | joinSafe(',') }}"
+            scopes: ctd.chemical_related_to_disease.mesh_chemical_id
+          header: application/x-www-form-urlencoded
+        parameters:
+          fields: ctd.omim
+          size: '1000'  ## note the size limit
+        outputs:
+          - id: OMIM
+            semantic: Disease
+        predicate: related_to
+        source: "infores:ctd"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/ctd-omim-disease"
+        # testExamples:
+        #   - qInput: "MESH:D000655"     ## Amodiaquine
+        #     oneOutput: "OMIM:248310"   ## PLASMODIUM FALCIPARUM BLOOD INFECTION LEVEL (maps to MONDO:0009553)
 ############################################################################
     ## - there's also disease_ontology info (ancestors, children, descendants, parents)
     ## - there's also mondo info (ancestors, descendants)
@@ -969,371 +819,371 @@ components:
     ##     - excluded_subClassOf (something is off here, I'm not sure what that means)
     ##     - disjoint from (this is a negation / NOT relationship)
     has_subclass:
-    - path: "/query"
-      method: post
-      supportBatch: true
-      inputSeparator: ","
-      parameters:
-        fields: mondo.children
-        size: '1000'  ## note the size limit
-      requestBody:
-        body:
-          q: "{inputs[0]}"  ## HAS PREFIX (MONDO)
-          ## example: put MONDO:0002494 here (substance-related disorder)
-          ##   should get MONDO:0021698 in response (alcohol-related disorders)
-          scopes: mondo.mondo
-        header: application/x-www-form-urlencoded
-      inputs:
-      - id: MONDO
-        semantic: Disease
-      outputs:
-      - id: MONDO
-        semantic: Disease
-      predicate: superclass_of  ## this is the inverse of subclass_of right now
-      ## relation: "has children"?
-      source: "infores:mondo"
-      response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/has_subclass"
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: MONDO
+            semantic: Disease
+        requestBody:
+          body:
+            ## HAS PREFIX (MONDO): currently a bit redundant to do this (BTE handles it)
+            q: "{{ queryInputs | replPrefix('MONDO', ':') | joinSafe(',') }}"
+            scopes: mondo.mondo
+          header: application/x-www-form-urlencoded
+        parameters:
+          fields: mondo.children
+          size: '1000'  ## note the size limit
+        outputs:
+          - id: MONDO
+            semantic: Disease
+        predicate: superclass_of  ## this is the inverse of subclass_of right now
+        ## relation: "has children"?
+        source: "infores:mondo"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/has_subclass"
+        # testExamples:
+        #   - qInput: "MONDO:0002494"      ## substance-related disorder
+        #     oneOutput: "MONDO:0021698"   ## alcohol-related disorders
     subclass_of:
-    - path: "/query"
-      method: post
-      supportBatch: true
-      inputSeparator: ","
-      parameters:
-        fields: mondo.parents
-        size: '1000'  ## note the size limit
-      requestBody:
-        body:
-          q: "{inputs[0]}"   ## HAS PREFIX (MONDO)
-          ## example: put MONDO:0002494 here (substance-related disorder)
-          ##   should get MONDO:0002025 in response (psychiatric disorder)
-          scopes: mondo.mondo
-        header: application/x-www-form-urlencoded
-      inputs:
-      - id: MONDO
-        semantic: Disease
-      outputs:
-      - id: MONDO
-        semantic: Disease
-      predicate: subclass_of
-      ## relation: "has parents"?
-      source: "infores:mondo"
-      response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/subclass_of"
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: MONDO
+            semantic: Disease
+        requestBody:
+          body:
+            ## HAS PREFIX (MONDO): currently a bit redundant to do this (BTE handles it)
+            q: "{{ queryInputs | replPrefix('MONDO', ':') | joinSafe(',') }}"
+            scopes: mondo.mondo
+          header: application/x-www-form-urlencoded
+        parameters:
+          fields: mondo.parents
+          size: '1000'  ## note the size limit
+        outputs:
+          - id: MONDO
+            semantic: Disease
+        predicate: subclass_of
+        ## relation: "has parents"?
+        source: "infores:mondo"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/subclass_of"
+        # testExamples:
+        #   - qInput: "MONDO:0002494"      ## substance-related disorder
+        #     oneOutput: "MONDO:0002025"   ## psychiatric disorder
     predisposes_towards:
-    - path: "/query"
-      method: post
-      supportBatch: true
-      inputSeparator: ","
-      parameters:
-        fields: mondo.predisposes_towards
-        size: '1000'  ## note the size limit
-      requestBody:
-        body:
-          q: "{inputs[0]}"   ## HAS PREFIX (MONDO)
-          ## example: put MONDO:0010940 here (inherited susceptibility to asthma)
-          ##   should get MONDO:0004979 in response (asthma)
-          scopes: mondo.mondo
-        header: application/x-www-form-urlencoded
-      inputs:
-      - id: MONDO
-        semantic: Disease
-      outputs:
-      - id: MONDO
-        semantic: Disease
-      predicate: contributes_to  ## maps to "MONDO:predisposes_towards"
-      ## could use more specific biolink predicate like predisposes??
-      ## relation: "MONDO:predisposes_towards"?
-      source: "infores:mondo"
-      response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/predisposes_towards"
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: MONDO
+            semantic: Disease
+        requestBody:
+          body:
+            ## HAS PREFIX (MONDO): currently a bit redundant to do this (BTE handles it)
+            q: "{{ queryInputs | replPrefix('MONDO', ':') | joinSafe(',') }}"
+            scopes: mondo.mondo
+          header: application/x-www-form-urlencoded
+        parameters:
+          fields: mondo.predisposes_towards
+          size: '1000'  ## note the size limit
+        outputs:
+          - id: MONDO
+            semantic: Disease
+        predicate: contributes_to  ## maps to "MONDO:predisposes_towards"
+        ## could use more specific biolink predicate like predisposes??
+        ## relation: "MONDO:predisposes_towards"?
+        source: "infores:mondo"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/predisposes_towards"
+        # testExamples:
+        #   - qInput: "MONDO:0010940"      ## inherited susceptibility to asthma
+        #     oneOutput: "MONDO:0004979"   ## asthma
     predisposes_towards-rev:
-    - path: "/query"
-      method: post
-      supportBatch: true
-      inputSeparator: ","
-      parameters:
-        fields: mondo.mondo
-        size: '1000'  ## note the size limit
-      requestBody:
-        body:
-          q: "{inputs[0]}"   ## HAS PREFIX (MONDO)
-          ## example: put MONDO:0004979 (asthma)
-          ##   should get MONDO:0010940 in response (inherited susceptibility to asthma)
-          scopes: mondo.predisposes_towards.mondo
-        header: application/x-www-form-urlencoded
-      inputs:
-      - id: MONDO
-        semantic: Disease
-      outputs:
-      - id: MONDO
-        semantic: Disease
-      predicate: contribution_from
-      ## inverse of contributes_to, which is mapped to "MONDO:predisposes_towards"
-      ## no relation then...
-      source: "infores:mondo"
-      response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/mondo"
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: MONDO
+            semantic: Disease
+        requestBody:
+          body:
+            ## HAS PREFIX (MONDO): currently a bit redundant to do this (BTE handles it)
+            q: "{{ queryInputs | replPrefix('MONDO', ':') | joinSafe(',') }}"
+            scopes: mondo.predisposes_towards.mondo
+          header: application/x-www-form-urlencoded
+        parameters:
+          fields: mondo.mondo
+          size: '1000'  ## note the size limit
+        outputs:
+          - id: MONDO
+            semantic: Disease
+        predicate: contribution_from
+        ## inverse of contributes_to, which is mapped to "MONDO:predisposes_towards"
+        ## no relation then...
+        source: "infores:mondo"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/mondo"
+        # testExamples:
+        #   - qInput: "MONDO:0004979"      ## asthma
+        #     oneOutput: "MONDO:0010940"   ## inherited susceptibility to asthma
     disease_shares_features_of:
-    - path: "/query"
-      method: post
-      supportBatch: true
-      inputSeparator: ","
-      parameters:
-        fields: mondo.disease_shares_features_of
-        size: '1000'  ## note the size limit
-      requestBody:
-        body:
-          q: "{inputs[0]}"   ## HAS PREFIX (MONDO)
-          ## example: put MONDO:0008711 here (Goodman syndrome)
-          ##   should get MONDO:0019012 in response (Carpenter syndrome)
-          scopes: mondo.mondo
-        header: application/x-www-form-urlencoded
-      inputs:
-      - id: MONDO
-        semantic: Disease
-      outputs:
-      - id: MONDO
-        semantic: Disease
-      predicate: similar_to  ## could biolink have a more specific predicate?
-      ##   note that relation maps to biolink:related_to right now...
-      ## relation: "MONDO:disease_shares_features_of"?
-      source: "infores:mondo"
-      response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/disease_shares_features_of"
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: MONDO
+            semantic: Disease
+        requestBody:
+          body:
+            ## HAS PREFIX (MONDO): currently a bit redundant to do this (BTE handles it)
+            q: "{{ queryInputs | replPrefix('MONDO', ':') | joinSafe(',') }}"
+            scopes: mondo.mondo
+          header: application/x-www-form-urlencoded
+        parameters:
+          fields: mondo.disease_shares_features_of
+          size: '1000'  ## note the size limit
+        outputs:
+          - id: MONDO
+            semantic: Disease
+        predicate: similar_to  ## could biolink have a more specific predicate?
+        ##   note that relation maps to biolink:related_to right now...
+        ## relation: "MONDO:disease_shares_features_of"?
+        source: "infores:mondo"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/disease_shares_features_of"
+        # testExamples:
+        #   - qInput: "MONDO:0008711"      ## Goodman syndrome
+        #     oneOutput: "MONDO:0019012"   ## Carpenter syndrome
     disease_shares_features_of-rev:
     ## checked and inverse relationship doesn't exist already in the data
     ##   for example, the record for Carpenter syndrome doesn't have disease_shares_features_of
-    - path: "/query"
-      method: post
-      supportBatch: true
-      inputSeparator: ","
-      parameters:
-        fields: mondo.mondo
-        size: '1000'  ## note the size limit
-      requestBody:
-        body:
-          q: "{inputs[0]}"   ## HAS PREFIX (MONDO)
-          ## example: put MONDO:0019012 (Carpenter syndrome)
-          ##   should get MONDO:0008711 in response (Goodman syndrome)
-          scopes: mondo.disease_shares_features_of.mondo
-        header: application/x-www-form-urlencoded
-      inputs:
-      - id: MONDO
-        semantic: Disease
-      outputs:
-      - id: MONDO
-        semantic: Disease
-      predicate: similar_to  ## could biolink have a more specific predicate?
-      ## no relation...
-      source: "infores:mondo"
-      response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/mondo"
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: MONDO
+            semantic: Disease
+        requestBody:
+          body:
+            ## HAS PREFIX (MONDO): currently a bit redundant to do this (BTE handles it)
+            q: "{{ queryInputs | replPrefix('MONDO', ':') | joinSafe(',') }}"
+            scopes: mondo.disease_shares_features_of.mondo
+          header: application/x-www-form-urlencoded
+        parameters:
+          fields: mondo.mondo
+          size: '1000'  ## note the size limit
+        outputs:
+          - id: MONDO
+            semantic: Disease
+        predicate: similar_to  ## could biolink have a more specific predicate?
+        ## no relation...
+        source: "infores:mondo"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/mondo"
+        # testExamples:
+        #   - qInput: "MONDO:0019012"      ## Carpenter syndrome
+        #     oneOutput: "MONDO:0008711"   ## Goodman syndrome
     disease_has_major_feature:
-    - path: "/query"
-      method: post
-      supportBatch: true
-      inputSeparator: ","
-      parameters:
-        fields: mondo.disease_has_major_feature
-        size: '1000'  ## note the size limit
-      requestBody:
-        body:
-          q: "{inputs[0]}"   ## HAS PREFIX (MONDO)
-          ## example: put MONDO:0015140 here (early-onset autosomal dominant Alzheimer disease)
-          ##   should get MONDO:0001627 in response (dementia (disease))
-          scopes: mondo.mondo
-        header: application/x-www-form-urlencoded
-      inputs:
-      - id: MONDO
-        semantic: Disease
-      outputs:
-      - id: MONDO
-        semantic: Disease
-      predicate: has_part  ## maps to "MONDO:disease_has_major_feature"
-      ## relation: "MONDO:disease_has_major_feature"?
-      source: "infores:mondo"
-      response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/disease_has_major_feature"
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: MONDO
+            semantic: Disease
+        requestBody:
+          body:
+            ## HAS PREFIX (MONDO): currently a bit redundant to do this (BTE handles it)
+            q: "{{ queryInputs | replPrefix('MONDO', ':') | joinSafe(',') }}"
+            scopes: mondo.mondo
+          header: application/x-www-form-urlencoded
+        parameters:
+          fields: mondo.disease_has_major_feature
+          size: '1000'  ## note the size limit
+        outputs:
+          - id: MONDO
+            semantic: Disease
+        predicate: has_part  ## maps to "MONDO:disease_has_major_feature"
+        ## relation: "MONDO:disease_has_major_feature"?
+        source: "infores:mondo"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/disease_has_major_feature"
+        # testExamples:
+        #   - qInput: "MONDO:0015140"      ## early-onset autosomal dominant Alzheimer disease
+        #     oneOutput: "MONDO:0001627"   ## dementia (disease)
     disease_has_major_feature-rev:
-    - path: "/query"
-      method: post
-      supportBatch: true
-      inputSeparator: ","
-      parameters:
-        fields: mondo.mondo
-        size: '1000'  ## note the size limit
-      requestBody:
-        body:
-          q: "{inputs[0]}"   ## HAS PREFIX (MONDO)
-          ## example: put MONDO:0001627 (dementia (disease))
-          ##   should get MONDO:0015140 in response (early-onset autosomal dominant Alzheimer disease)
-          scopes: mondo.disease_has_major_feature.mondo
-        header: application/x-www-form-urlencoded
-      inputs:
-      - id: MONDO
-        semantic: Disease
-      outputs:
-      - id: MONDO
-        semantic: Disease
-      predicate: part_of  ## could biolink have a more specific predicate?
-      ## no relation...
-      source: "infores:mondo"
-      response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/mondo"
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: MONDO
+            semantic: Disease
+        requestBody:
+          body:
+            ## HAS PREFIX (MONDO): currently a bit redundant to do this (BTE handles it)
+            q: "{{ queryInputs | replPrefix('MONDO', ':') | joinSafe(',') }}"
+            scopes: mondo.disease_has_major_feature.mondo
+          header: application/x-www-form-urlencoded
+        parameters:
+          fields: mondo.mondo
+          size: '1000'  ## note the size limit
+        outputs:
+          - id: MONDO
+            semantic: Disease
+        predicate: part_of  ## could biolink have a more specific predicate?
+        ## no relation...
+        source: "infores:mondo"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/mondo"
+        # testExamples:
+        #   - qInput: "MONDO:0001627"      ## dementia (disease)
+        #     oneOutput: "MONDO:0015140"   ## early-onset autosomal dominant Alzheimer disease
     disease_has_feature:
-    - path: "/query"
-      method: post
-      supportBatch: true
-      inputSeparator: ","
-      parameters:
-        fields: mondo.disease_has_feature
-        size: '1000'  ## note the size limit
-      requestBody:
-        body:
-          q: "{inputs[0]}"   ## HAS PREFIX (MONDO)
-          ## example: put MONDO:0005796 here (HIV enteropathy)
-          ##   should get MONDO:0005020 in response (intestinal disease)
-          scopes: mondo.mondo
-        header: application/x-www-form-urlencoded
-      inputs:
-      - id: MONDO
-        semantic: Disease
-      outputs:
-      - id: MONDO
-        semantic: Disease
-      predicate: has_part  ## no biolink mapping...
-      ## relation: "MONDO:disease_has_feature"?
-      source: "infores:mondo"
-      response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/disease_has_feature"
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: MONDO
+            semantic: Disease
+        requestBody:
+          body:
+            ## HAS PREFIX (MONDO): currently a bit redundant to do this (BTE handles it)
+            q: "{{ queryInputs | replPrefix('MONDO', ':') | joinSafe(',') }}"
+            scopes: mondo.mondo
+          header: application/x-www-form-urlencoded
+        parameters:
+          fields: mondo.disease_has_feature
+          size: '1000'  ## note the size limit
+        outputs:
+          - id: MONDO
+            semantic: Disease
+        predicate: has_part  ## no biolink mapping...
+        ## relation: "MONDO:disease_has_feature"?
+        source: "infores:mondo"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/disease_has_feature"
+        # testExamples:
+        #   - qInput: "MONDO:0005796"      ## HIV enteropathy
+        #     oneOutput: "MONDO:0005020"   ## intestinal disease
     disease_has_feature-rev:
-    - path: "/query"
-      method: post
-      supportBatch: true
-      inputSeparator: ","
-      parameters:
-        fields: mondo.mondo
-        size: '1000'  ## note the size limit
-      requestBody:
-        body:
-          q: "{inputs[0]}"   ## HAS PREFIX (MONDO)
-          ## example: put MONDO:0005020 (intestinal disease)
-          ##   should get MONDO:0005796 in response (HIV enteropathy)
-          scopes: mondo.disease_has_feature.mondo
-        header: application/x-www-form-urlencoded
-      inputs:
-      - id: MONDO
-        semantic: Disease
-      outputs:
-      - id: MONDO
-        semantic: Disease
-      predicate: part_of
-      ## no relation...
-      source: "infores:mondo"
-      response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/mondo"
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: MONDO
+            semantic: Disease
+        requestBody:
+          body:
+            ## HAS PREFIX (MONDO): currently a bit redundant to do this (BTE handles it)
+            q: "{{ queryInputs | replPrefix('MONDO', ':') | joinSafe(',') }}"
+            scopes: mondo.disease_has_feature.mondo
+          header: application/x-www-form-urlencoded
+        parameters:
+          fields: mondo.mondo
+          size: '1000'  ## note the size limit
+        outputs:
+          - id: MONDO
+            semantic: Disease
+        predicate: part_of
+        ## no relation...
+        source: "infores:mondo"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/mondo"
+        # testExamples:
+        #   - qInput: "MONDO:0005020"      ## intestinal disease
+        #     oneOutput: "MONDO:0005796"   ## HIV enteropathy
     disease_causes_feature:
-    - path: "/query"
-      method: post
-      supportBatch: true
-      inputSeparator: ","
-      parameters:
-        fields: mondo.disease_causes_feature
-        size: '1000'  ## note the size limit
-      requestBody:
-        body:
-          q: "{inputs[0]}"   ## HAS PREFIX (MONDO)
-          ## example: put MONDO:0000490 here (glomerulosclerosis)
-          ##   should get MONDO:0001106 in response (kidney failure)
-          scopes: mondo.mondo
-        header: application/x-www-form-urlencoded
-      inputs:
-      - id: MONDO
-        semantic: Disease
-      outputs:
-      - id: MONDO
-        semantic: Disease
-      predicate: causes  ## maps to "MONDO:disease_causes_feature"
-      ## relation: "MONDO:disease_causes_feature"?
-      source: "infores:mondo"
-      response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/disease_causes_feature"
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: MONDO
+            semantic: Disease
+        requestBody:
+          body:
+            ## HAS PREFIX (MONDO): currently a bit redundant to do this (BTE handles it)
+            q: "{{ queryInputs | replPrefix('MONDO', ':') | joinSafe(',') }}"
+            scopes: mondo.mondo
+          header: application/x-www-form-urlencoded
+        parameters:
+          fields: mondo.disease_causes_feature
+          size: '1000'  ## note the size limit
+        outputs:
+          - id: MONDO
+            semantic: Disease
+        predicate: causes  ## maps to "MONDO:disease_causes_feature"
+        ## relation: "MONDO:disease_causes_feature"?
+        source: "infores:mondo"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/disease_causes_feature"
+        # testExamples:
+        #   - qInput: "MONDO:0000490"      ## glomerulosclerosis
+        #     oneOutput: "MONDO:0001106"   ## kidney failure
     disease_causes_feature-rev:
-    - path: "/query"
-      method: post
-      supportBatch: true
-      inputSeparator: ","
-      parameters:
-        fields: mondo.mondo
-        size: '1000'  ## note the size limit
-      requestBody:
-        body:
-          q: "{inputs[0]}"   ## HAS PREFIX (MONDO)
-          ## example: put MONDO:0001106 (kidney failure)
-          ##   should get MONDO:0000490 in response (glomerulosclerosis)
-          scopes: mondo.disease_causes_feature.mondo
-        header: application/x-www-form-urlencoded
-      inputs:
-      - id: MONDO
-        semantic: Disease
-      outputs:
-      - id: MONDO
-        semantic: Disease
-      predicate: caused_by
-      ## no relation...
-      source: "infores:mondo"
-      response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/mondo"
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: MONDO
+            semantic: Disease
+        requestBody:
+          body:
+            ## HAS PREFIX (MONDO): currently a bit redundant to do this (BTE handles it)
+            q: "{{ queryInputs | replPrefix('MONDO', ':') | joinSafe(',') }}"
+            scopes: mondo.disease_causes_feature.mondo
+          header: application/x-www-form-urlencoded
+        parameters:
+          fields: mondo.mondo
+          size: '1000'  ## note the size limit
+        outputs:
+          - id: MONDO
+            semantic: Disease
+        predicate: caused_by
+        ## no relation...
+        source: "infores:mondo"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/mondo"
+        # testExamples:
+        #   - qInput: "MONDO:0001106"      ## kidney failure
+        #     oneOutput: "MONDO:0000490"   ## glomerulosclerosis
     disease_arises_from_feature:
-    - path: "/query"
-      method: post
-      supportBatch: true
-      inputSeparator: ","
-      parameters:
-        fields: mondo.disease_arises_from_feature
-        size: '1000'  ## note the size limit
-      requestBody:
-        body:
-          q: "{inputs[0]}"   ## HAS PREFIX (MONDO)
-          ## example: put MONDO:0009346 here (histidinuria due to a renal tubular defect)
-          ##   should get MONDO:0021568 in response (renal tubule disease)
-          scopes: mondo.mondo
-        header: application/x-www-form-urlencoded
-      inputs:
-      - id: MONDO
-        semantic: Disease
-      outputs:
-      - id: MONDO
-        semantic: Disease
-      predicate: caused_by
-      ## relation: "MONDO:disease_arises_from_feature"?
-      source: "infores:mondo"
-      response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/disease_arises_from_feature"
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: MONDO
+            semantic: Disease
+        requestBody:
+          body:
+            ## HAS PREFIX (MONDO): currently a bit redundant to do this (BTE handles it)
+            q: "{{ queryInputs | replPrefix('MONDO', ':') | joinSafe(',') }}"
+            scopes: mondo.mondo
+          header: application/x-www-form-urlencoded
+        parameters:
+          fields: mondo.disease_arises_from_feature
+          size: '1000'  ## note the size limit
+        outputs:
+          - id: MONDO
+            semantic: Disease
+        predicate: caused_by
+        ## relation: "MONDO:disease_arises_from_feature"?
+        source: "infores:mondo"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/disease_arises_from_feature"
+        # testExamples:
+        #   - qInput: "MONDO:0009346"      ## histidinuria due to a renal tubular defect
+        #     oneOutput: "MONDO:0021568"   ## renal tubule disease
     disease_arises_from_feature-rev:
-    - path: "/query"
-      method: post
-      supportBatch: true
-      inputSeparator: ","
-      parameters:
-        fields: mondo.mondo
-        size: '1000'  ## note the size limit
-      requestBody:
-        body:
-          q: "{inputs[0]}"   ## HAS PREFIX (MONDO)
-          ## example: put MONDO:0021568 (renal tubule disease)
-          ##   should get MONDO:0009346 in response (histidinuria due to a renal tubular defect)
-          scopes: mondo.disease_arises_from_feature.mondo
-        header: application/x-www-form-urlencoded
-      inputs:
-      - id: MONDO
-        semantic: Disease
-      outputs:
-      - id: MONDO
-        semantic: Disease
-      predicate: causes
-      ## no relation...
-      source: "infores:mondo"
-      response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/mondo"
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: MONDO
+            semantic: Disease
+        requestBody:
+          body:
+            ## HAS PREFIX (MONDO): currently a bit redundant to do this (BTE handles it)
+            q: "{{ queryInputs | replPrefix('MONDO', ':') | joinSafe(',') }}"
+            scopes: mondo.disease_arises_from_feature.mondo
+          header: application/x-www-form-urlencoded
+        parameters:
+          fields: mondo.mondo
+          size: '1000'  ## note the size limit
+        outputs:
+          - id: MONDO
+            semantic: Disease
+        predicate: causes
+        ## no relation...
+        source: "infores:mondo"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/mondo"
+        # testExamples:
+        #   - qInput: "MONDO:0021568"      ## renal tubule disease
+        #     oneOutput: "MONDO:0009346"   ## histidinuria due to a renal tubular defect
