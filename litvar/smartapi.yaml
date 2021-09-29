@@ -16,7 +16,7 @@ info:
     component: KP
     team:
       - Service Provider
-    biolink-version: "2.1.0"
+    biolink-version: "2.2.3"
 servers:
 - url: https://www.ncbi.nlm.nih.gov/research/bionlp/litvar/api/v1
   description: Production server
@@ -30,7 +30,7 @@ paths:
       parameters:
       - name: variantid
         in: path
-        example: rs121913527
+        example: rs121913527##
         description: rsid
         required: true
         schema:
@@ -43,19 +43,22 @@ paths:
 components:
   x-bte-kgs-operations:
     variant_located_in_gene:
+    ## API cannot do the reverse operation
     - inputs:
       - id: DBSNP
         semantic: SequenceVariant
       outputs:
-      - id: SYMBOL
+      - id: NCBIGene
         semantic: Gene
       predicate: is_sequence_variant_of
       source: "infores:dbsnp"
       parameters:
-        variantid: "{inputs[0]}%23%23"
+        variantid: "{inputs[0]}%23%23"  ## no prefix
+        ## example: replace {inputs[0]} with rs121913527
+        ##   should get 3845 (KRAS) in response
       supportBatch: false
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/variant_located_in_gene"
   x-bte-response-mapping:
     variant_located_in_gene:
-      SYMBOL: gene.name
+      NCBIGene: gene.id
