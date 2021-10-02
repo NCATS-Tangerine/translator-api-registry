@@ -555,6 +555,9 @@ components:
         type: array
       - type: string
   x-bte-kgs-operations:
+## FUTURE: currently, BTE already strips prefix.... In the future, need to add rmPrefix before wrap
+## currently we can't use _exists_ with this kind of query
+## joinSafe is only needed if the delimiter isn't a comma
   ## aapp - Cell
     NCBIGene-affects-cell:
     ## https://biothings.ncats.io/semmeddb/query?q=_exists_:subject.ncbigene AND subject.novelty:1 AND predicate:AFFECTS AND object.semantic_type_abbreviation:cell AND object.novelty:1
@@ -565,7 +568,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >- 
             {
               "q": [ {{ queryInputs | wrap( '["' , '","AFFECTS","cell", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -580,6 +583,9 @@ components:
         source: "infores:semmeddb"
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/umls-obj"
+        ## Examples:
+        ## - NCBIGene:928 (CD9) -> UMLS:C0014467 (eosinophil)
+        ## - NCBIGene:5016 (OVGP1) -> UMLS:C0029045 (Oocytes)
     revOP-Cell-affected_by-aapp:
     ## https://biothings.ncats.io/semmeddb/query?q=subject.semantic_type_abbreviation:aapp AND _exists_:subject.ncbigene AND subject.novelty:1 AND predicate:AFFECTS AND object.semantic_type_abbreviation:cell AND object.novelty:1
       - supportBatch: true
@@ -588,8 +594,8 @@ components:
           - id: UMLS
             semantic: Cell
         requestBodyType: object
-        requestBody:  ## note: we can't express _exists_ with this kind of query
-          body: >-    ## input doesn't include prefix
+        requestBody:
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","AFFECTS","aapp", 1, 1]') }} ],
               "scopes": ["object.umls", "predicate", "subject.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -604,6 +610,9 @@ components:
         source: "infores:semmeddb"
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/ncbigene-subj"
+        ## Examples:
+        ## - UMLS:C0024432 (macrophage) -> NCBIGene:2048 (EPHB2)
+        ## - UMLS:C0005821 (Blood Platelets) -> NCBIGene:973 (CD79A)
     revOP-Cell-affected_by-gngm:
     ## https://biothings.ncats.io/semmeddb/query?q=subject.semantic_type_abbreviation:gngm AND _exists_:subject.ncbigene AND subject.novelty:1 AND predicate:AFFECTS AND object.semantic_type_abbreviation:cell AND object.novelty:1
       - supportBatch: true
@@ -612,8 +621,8 @@ components:
           - id: UMLS
             semantic: Cell
         requestBodyType: object
-        requestBody:  ## note: we can't express _exists_ with this kind of query
-          body: >-    ## input doesn't include prefix
+        requestBody:
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","AFFECTS","gngm", 1, 1]') }} ],
               "scopes": ["object.umls", "predicate", "subject.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -628,6 +637,9 @@ components:
         source: "infores:semmeddb"
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/ncbigene-subj"
+        ## Examples:
+        ## - UMLS:C0014467 (eosinophil) -> NCBIGene:928 (CD9)  
+        ## - UMLS:C0029045 (Oocytes) -> NCBIGene:5016 (OVGP1)  
     NCBIGene-disrupts-cell:
     ## https://biothings.ncats.io/semmeddb/query?q=_exists_:subject.ncbigene AND subject.novelty:1 AND predicate:DISRUPTS AND object.semantic_type_abbreviation:cell AND object.novelty:1
       - supportBatch: true
@@ -637,7 +649,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","DISRUPTS","cell", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -652,6 +664,9 @@ components:
         source: "infores:semmeddb"
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/umls-obj"
+        ## Examples:
+        ## - NCBIGene:9768 (PCLAF) -> UMLS:C0024432 (macrophage)
+        ## - NCBIGene:5131 (PDB1) -> UMLS:C0206427 (Rod Photoreceptors)
     revOP-Cell-disrupted_by-aapp:
     ## https://biothings.ncats.io/semmeddb/query?q=subject.semantic_type_abbreviation:aapp AND _exists_:subject.ncbigene AND subject.novelty:1 AND predicate:DISRUPTS AND object.semantic_type_abbreviation:cell AND object.novelty:1
       - supportBatch: true
@@ -660,8 +675,8 @@ components:
           - id: UMLS
             semantic: Cell
         requestBodyType: object
-        requestBody:  ## note: we can't express _exists_ with this kind of query
-          body: >-    ## input doesn't include prefix
+        requestBody:
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","DISRUPTS","aapp", 1, 1]') }} ],
               "scopes": ["object.umls", "predicate", "subject.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -676,6 +691,9 @@ components:
         source: "infores:semmeddb"
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/ncbigene-subj"
+        ## Examples:
+        ## - UMLS:C0024432 (macrophage) -> NCBIGene:3290 (HSD11B1)  
+        ## - UMLS:C1257975 (Mesenchymal Stem Cells) -> NCBIGene:7422 (VEGFA)  
     revOP-Cell-disrupted_by-gngm:
     ## https://biothings.ncats.io/semmeddb/query?q=subject.semantic_type_abbreviation:gngm AND _exists_:subject.ncbigene AND subject.novelty:1 AND predicate:DISRUPTS AND object.semantic_type_abbreviation:cell AND object.novelty:1
       - supportBatch: true
@@ -684,8 +702,8 @@ components:
           - id: UMLS
             semantic: Cell
         requestBodyType: object
-        requestBody:  ## note: we can't express _exists_ with this kind of query
-          body: >-    ## input doesn't include prefix
+        requestBody:
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","DISRUPTS","gngm", 1, 1]') }} ],
               "scopes": ["object.umls", "predicate", "subject.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -700,6 +718,9 @@ components:
         source: "infores:semmeddb"
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/ncbigene-subj"
+        ## Examples:
+        ## - UMLS:C0024432 (macrophage) -> NCBIGene:9768 (PCLAF) 
+        ## - UMLS:C0206427 (Rod Photoreceptors) -> NCBIGene:5131 (PDB1) 
     NCBIGene-stimulates-cell:
     ## https://biothings.ncats.io/semmeddb/query?q=_exists_:subject.ncbigene AND subject.novelty:1 AND predicate:STIMULATES AND object.semantic_type_abbreviation:cell AND object.novelty:1
       - supportBatch: true
@@ -709,7 +730,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","STIMULATES","cell", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -724,6 +745,9 @@ components:
         source: "infores:semmeddb"
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/umls-obj"
+        ## Examples:
+        ## - NCBIGene:909 (CD1A) -> UMLS:C0004561 (B-Lymphocytes)
+        ## - NCBIGene:728 (C5AR1) -> UMLS:C0023516 (Leukocytes)
     revOP-Cell-stimulated_by-aapp:
     ## https://biothings.ncats.io/semmeddb/query?q=subject.semantic_type_abbreviation:aapp AND _exists_:subject.ncbigene AND subject.novelty:1 AND predicate:STIMULATES AND object.semantic_type_abbreviation:cell AND object.novelty:1
       - supportBatch: true
@@ -732,8 +756,8 @@ components:
           - id: UMLS
             semantic: Cell
         requestBodyType: object
-        requestBody:  ## note: we can't express _exists_ with this kind of query
-          body: >-    ## input doesn't include prefix
+        requestBody:
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","STIMULATES","aapp", 1, 1]') }} ],
               "scopes": ["object.umls", "predicate", "subject.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -748,6 +772,9 @@ components:
         source: "infores:semmeddb"
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/ncbigene-subj"
+        ## Examples:
+        ## - UMLS:C0004561 (B-Lymphocytes) -> NCBIGene:909 (CD1A) 
+        ## - UMLS:C0023516 (Leukocytes) -> NCBIGene:728 (C5AR1) 
     revOP-Cell-stimulated_by-gngm:
     ## https://biothings.ncats.io/semmeddb/query?q=subject.semantic_type_abbreviation:gngm AND _exists_:subject.ncbigene AND subject.novelty:1 AND predicate:DISRUPTS AND object.semantic_type_abbreviation:cell AND object.novelty:1
       - supportBatch: true
@@ -756,8 +783,8 @@ components:
           - id: UMLS
             semantic: Cell
         requestBodyType: object
-        requestBody:  ## note: we can't express _exists_ with this kind of query
-          body: >-    ## input doesn't include prefix
+        requestBody:
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","STIMULATES","gngm", 1, 1]') }} ],
               "scopes": ["object.umls", "predicate", "subject.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -772,6 +799,9 @@ components:
         source: "infores:semmeddb"
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/ncbigene-subj"
+        ## Examples:
+        ## - UMLS:C0024264 (Lymphocyte) -> NCBIGene:3497 (IGHE) 
+        ## - UMLS:C0038250 (Stem cells) -> NCBIGene:50674 (NEUROG3) 
   ## aapp - CellularComponent
     NCBIGene-affects-celc:
     ## https://biothings.ncats.io/semmeddb/query?q=_exists_:subject.ncbigene AND subject.novelty:1 AND predicate:AFFECTS AND object.semantic_type_abbreviation:celc AND object.novelty:1
@@ -782,7 +812,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","AFFECTS","celc", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -797,6 +827,9 @@ components:
         source: "infores:semmeddb"
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/umls-obj"
+        ## Examples:
+        ## - NCBIGene:4589 (MUC7) -> UMLS:C1167331 (outer membrane)
+        ## - NCBIGene:26999 (CYFIP2) -> UMLS:C0872341 (Dendritic Spines)
     revOP-CellularComponent-affected_by-aapp:
     ## https://biothings.ncats.io/semmeddb/query?q=subject.semantic_type_abbreviation:aapp AND _exists_:subject.ncbigene AND subject.novelty:1 AND predicate:AFFECTS AND object.semantic_type_abbreviation:celc AND object.novelty:1
       - supportBatch: true
@@ -805,8 +838,8 @@ components:
           - id: UMLS
             semantic: CellularComponent
         requestBodyType: object
-        requestBody:  ## note: we can't express _exists_ with this kind of query
-          body: >-    ## input doesn't include prefix
+        requestBody:
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","AFFECTS","aapp", 1, 1]') }} ],
               "scopes": ["object.umls", "predicate", "subject.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -821,6 +854,9 @@ components:
         source: "infores:semmeddb"
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/ncbigene-subj"
+        ## Examples:
+        ## - UMLS:C1167518 (nucleocapsid location) -> NCBIGene:2644 (GCHFR) 
+        ## - UMLS:C1167518 (nucleocapsid location) -> NCBIGene:2220 (FCN2) 
     revOP-CellularComponent-affected_by-gngm:
     ## https://biothings.ncats.io/semmeddb/query?q=subject.semantic_type_abbreviation:gngm AND _exists_:subject.ncbigene AND subject.novelty:1 AND predicate:AFFECTS AND object.semantic_type_abbreviation:celc AND object.novelty:1
       - supportBatch: true
@@ -829,8 +865,8 @@ components:
           - id: UMLS
             semantic: CellularComponent
         requestBodyType: object
-        requestBody:  ## note: we can't express _exists_ with this kind of query
-          body: >-    ## input doesn't include prefix
+        requestBody:
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","AFFECTS","gngm", 1, 1]') }} ],
               "scopes": ["object.umls", "predicate", "subject.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -845,6 +881,9 @@ components:
         source: "infores:semmeddb"
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/ncbigene-subj"
+        ## Examples:
+        ## - UMLS:C1167331 (outer membrane) -> NCBIGene:4589 (MUC7)
+        ## - UMLS:C0872341 (Dendritic Spines) -> NCBIGene:26999 (CYFIP2) 
     NCBIGene-disrupts-celc:
     ## https://biothings.ncats.io/semmeddb/query?q=_exists_:subject.ncbigene AND subject.novelty:1 AND predicate:DISRUPTS AND object.semantic_type_abbreviation:celc AND object.novelty:1
       - supportBatch: true
@@ -854,7 +893,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","DISRUPTS","celc", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -869,6 +908,9 @@ components:
         source: "infores:semmeddb"
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/umls-obj"
+        ## Examples:
+        ## - NCBIGene:2965 (GTF2H1) -> UMLS:C0024369 (Lysosomes)
+        ## - NCBIGene:10657 (KHDRBS1) -> UMLS:C0024369 (Lysosomes)
     revOP-CellularComponent-disrupted_by-aapp:
     ## https://biothings.ncats.io/semmeddb/query?q=subject.semantic_type_abbreviation:aapp AND _exists_:subject.ncbigene AND subject.novelty:1 AND predicate:DISRUPTS AND object.semantic_type_abbreviation:celc AND object.novelty:1
       - supportBatch: true
@@ -877,8 +919,8 @@ components:
           - id: UMLS
             semantic: CellularComponent
         requestBodyType: object
-        requestBody:  ## note: we can't express _exists_ with this kind of query
-          body: >-    ## input doesn't include prefix
+        requestBody:
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","DISRUPTS","aapp", 1, 1]') }} ],
               "scopes": ["object.umls", "predicate", "subject.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -893,6 +935,9 @@ components:
         source: "infores:semmeddb"
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/ncbigene-subj"
+        ## Examples:
+        ## - UMLS:C0887869 (Cell-Matrix Junction) -> NCBIGene:3688 (ITGB1)
+        ## - UMLS:C0600315 (Filopodia) -> NCBIGene:6010 (RHO) 
     revOP-CellularComponent-disrupted_by-gngm:
     ## https://biothings.ncats.io/semmeddb/query?q=subject.semantic_type_abbreviation:gngm AND _exists_:subject.ncbigene AND subject.novelty:1 AND predicate:DISRUPTS AND object.semantic_type_abbreviation:celc AND object.novelty:1
       - supportBatch: true
@@ -901,8 +946,8 @@ components:
           - id: UMLS
             semantic: CellularComponent
         requestBodyType: object
-        requestBody:  ## note: we can't express _exists_ with this kind of query
-          body: >-    ## input doesn't include prefix
+        requestBody:
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","DISRUPTS","gngm", 1, 1]') }} ],
               "scopes": ["object.umls", "predicate", "subject.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -917,6 +962,9 @@ components:
         source: "infores:semmeddb"
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/ncbigene-subj"
+        ## Examples:
+        ## - UMLS:C0024369 (Lysosomes) -> NCBIGene:2965 (GTF2H1) 
+        ## - UMLS:C0024369 (Lysosomes) -> NCBIGene:10657 (KHDRBS1)
   ## aapp - ChemicalEntity
     NCBIGene-interacts_with-imft:
     ## https://biothings.ncats.io/semmeddb/query?q=_exists_:subject.ncbigene AND subject.novelty:1 AND predicate:INTERACTS_WITH AND object.semantic_type_abbreviation:imft AND object.novelty:1
@@ -927,7 +975,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","INTERACTS_WITH","imft", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -942,6 +990,9 @@ components:
         source: "infores:semmeddb"
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/umls-obj"
+        ## Examples:
+        ## - NCBIGene:718 (C3) -> UMLS:C0312817 (Immunologic Factor)
+        ## - NCBIGene:3107 (HLA-C) -> UMLS:C0004359 (Autoantigens)
     revOP-ChemicalEntity-interacts_with-aapp:
     ## https://biothings.ncats.io/semmeddb/query?q=subject.semantic_type_abbreviation:aapp AND _exists_:subject.ncbigene AND subject.novelty:1 AND predicate:INTERACTS_WITH AND object.semantic_type_abbreviation:imft AND object.novelty:1
       - supportBatch: true
@@ -950,8 +1001,8 @@ components:
           - id: UMLS
             semantic: ChemicalEntity
         requestBodyType: object
-        requestBody:  ## note: we can't express _exists_ with this kind of query
-          body: >-    ## input doesn't include prefix
+        requestBody:
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","INTERACTS_WITH","aapp", 1, 1]') }} ],
               "scopes": ["object.umls", "predicate", "subject.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -966,6 +1017,9 @@ components:
         source: "infores:semmeddb"
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/ncbigene-subj"
+        ## Examples:
+        ## - UMLS:C0301838 (Soluble antigen) -> NCBIGene:973 (CD79A) 
+        ## - UMLS:C0301838 (Soluble antigen) -> NCBIGene:959 (CD40LG)
     revOP-ChemicalEntity-interacts_with-gngm:
     ## https://biothings.ncats.io/semmeddb/query?q=subject.semantic_type_abbreviation:gngm AND _exists_:subject.ncbigene AND subject.novelty:1 AND predicate:INTERACTS_WITH AND object.semantic_type_abbreviation:imft AND object.novelty:1
       - supportBatch: true
@@ -974,8 +1028,8 @@ components:
           - id: UMLS
             semantic: ChemicalEntity
         requestBodyType: object
-        requestBody:  ## note: we can't express _exists_ with this kind of query
-          body: >-    ## input doesn't include prefix
+        requestBody:
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","INTERACTS_WITH","gngm", 1, 1]') }} ],
               "scopes": ["object.umls", "predicate", "subject.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -990,6 +1044,9 @@ components:
         source: "infores:semmeddb"
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/ncbigene-subj"
+        ## Examples:
+        ## - UMLS:C0312817 (Immunologic Factor) -> NCBIGene:718 (C3) 
+        ## - UMLS:C0004359 (Autoantigens) -> NCBIGene:3107 (HLA-C) 
   ## aapp - affects - Disease
     NCBIGene-affects-acab:
     ## https://biothings.ncats.io/semmeddb/query?q=_exists_:subject.ncbigene AND subject.novelty:1 AND predicate:AFFECTS AND object.semantic_type_abbreviation:acab AND object.novelty:1
@@ -1000,7 +1057,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","AFFECTS","acab", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -1015,6 +1072,9 @@ components:
         source: "infores:semmeddb"
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/umls-obj"
+        ## Examples:
+        ## - NCBIGene:3918 (LAMC2) -> UMLS:C1299564 (Posthemorrhagic hydrocephalus)
+        ## - NCBIGene:2221 (FCP1) -> UMLS:C0001511 (Adhesions)
     revOP-Disease-affected_by-aapp:
     ## https://biothings.ncats.io/semmeddb/query?q=subject.semantic_type_abbreviation:aapp AND _exists_:subject.ncbigene AND subject.novelty:1 AND predicate:AFFECTS AND object.semantic_type_abbreviation:acab AND object.novelty:1
       - supportBatch: true
@@ -1023,8 +1083,8 @@ components:
           - id: UMLS
             semantic: Disease
         requestBodyType: object
-        requestBody:  ## note: we can't express _exists_ with this kind of query
-          body: >-    ## input doesn't include prefix
+        requestBody:
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","AFFECTS","aapp", 1, 1]') }} ],
               "scopes": ["object.umls", "predicate", "subject.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -1039,6 +1099,9 @@ components:
         source: "infores:semmeddb"
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/ncbigene-subj"
+        ## Examples:
+        ## - UMLS:C0271083 (Nonexudative age-related macular degeneration) -> NCBIGene:729230 (CCR2) 
+        ## - UMLS:C0001511 (Adhesions) -> NCBIGene:952 (CD38)
     revOP-Disease-affected_by-gngm:
     ## https://biothings.ncats.io/semmeddb/query?q=subject.semantic_type_abbreviation:gngm AND _exists_:subject.ncbigene AND subject.novelty:1 AND predicate:AFFECTS AND object.semantic_type_abbreviation:acab AND object.novelty:1
       - supportBatch: true
@@ -1047,8 +1110,8 @@ components:
           - id: UMLS
             semantic: Disease
         requestBodyType: object
-        requestBody:  ## note: we can't express _exists_ with this kind of query
-          body: >-    ## input doesn't include prefix
+        requestBody:
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","AFFECTS","gngm", 1, 1]') }} ],
               "scopes": ["object.umls", "predicate", "subject.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -1063,6 +1126,9 @@ components:
         source: "infores:semmeddb"
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/ncbigene-subj"
+        ## Examples:
+        ## - UMLS:C1299564 (Posthemorrhagic hydrocephalus) -> NCBIGene:3918 (LAMC2) 
+        ## - UMLS:C0001511 (Adhesions) -> NCBIGene:2221 (FCP1) 
     NCBIGene-affects-anab:
     ## https://biothings.ncats.io/semmeddb/query?q=_exists_:subject.ncbigene AND subject.novelty:1 AND predicate:AFFECTS AND object.semantic_type_abbreviation:anab AND object.novelty:1
       - supportBatch: true
@@ -1072,7 +1138,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","AFFECTS","anab", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -1087,6 +1153,9 @@ components:
         source: "infores:semmeddb"
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/umls-obj"
+        ## Examples:
+        ## - NCBIGene:1756 (DMD) -> UMLS:C0036439 (Scoliosis, unspecified)
+        ## - NCBIGene:6899 (TBX1) -> UMLS:C0019296 (Inguinal Hernia, Indirect)
       ## uses previous revOPs: revOP-Disease-affected_by-aapp, revOP-Disease-affected_by-gngm
     NCBIGene-affects-cgab:
     ## https://biothings.ncats.io/semmeddb/query?q=_exists_:subject.ncbigene AND subject.novelty:1 AND predicate:AFFECTS AND object.semantic_type_abbreviation:cgab AND object.novelty:1
@@ -1097,7 +1166,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","AFFECTS","cgab", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -1112,6 +1181,9 @@ components:
         source: "infores:semmeddb"
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/umls-obj"
+        ## Examples:
+        ## - NCBIGene:182 (JAG1) -> UMLS:C0085280 (Alagille Syndrome)
+        ## - NCBIGene:6736 (SRY) -> UMLS:C0266361 (Hermaphroditism, True)
       ## uses previous revOPs: revOP-Disease-affected_by-aapp, revOP-Disease-affected_by-gngm
     NCBIGene-affects-comd:
     ## https://biothings.ncats.io/semmeddb/query?q=_exists_:subject.ncbigene AND subject.novelty:1 AND predicate:AFFECTS AND object.semantic_type_abbreviation:comd AND object.novelty:1
@@ -1122,7 +1194,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","AFFECTS","comd", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -1137,6 +1209,9 @@ components:
         source: "infores:semmeddb"
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/umls-obj"
+        ## Examples:
+        ## - NCBIGene:4803 (NGF) -> UMLS:C0027746 (Nerve Degeneration)
+        ## - NCBIGene:6098 (ROS1) -> UMLS:C0012860 (DNA Damage)
       ## uses previous revOPs: revOP-Disease-affected_by-aapp, revOP-Disease-affected_by-gngm
     NCBIGene-affects-dsyn:
     ## https://biothings.ncats.io/semmeddb/query?q=_exists_:subject.ncbigene AND subject.novelty:1 AND predicate:AFFECTS AND object.semantic_type_abbreviation:dsyn AND object.novelty:1
@@ -1147,7 +1222,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","AFFECTS","dsyn", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -1162,6 +1237,9 @@ components:
         source: "infores:semmeddb"
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/umls-obj"
+        ## Examples:
+        ## - NCBIGene:1437 (CSF2) -> UMLS:C0025289 (Meningitis)
+        ## - NCBIGene:3497 (IGHE) -> UMLS:C0949570 (Wheat Hypersensitivity)
       ## uses previous revOPs: revOP-Disease-affected_by-aapp, revOP-Disease-affected_by-gngm
     NCBIGene-affects-inpo:
     ## https://biothings.ncats.io/semmeddb/query?q=_exists_:subject.ncbigene AND subject.novelty:1 AND predicate:AFFECTS AND object.semantic_type_abbreviation:inpo AND object.novelty:1
@@ -1172,7 +1250,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","AFFECTS","inpo", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -1187,6 +1265,9 @@ components:
         source: "infores:semmeddb"
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/umls-obj"
+        ## Examples:
+        ## - NCBIGene:1667 (DEFA1) -> UMLS:C0600688 (Toxic effect)
+        ## - NCBIGene:146 (ADRA1D) -> UMLS:C0746730 (myocardium; injury)
       ## uses previous revOPs: revOP-Disease-affected_by-aapp, revOP-Disease-affected_by-gngm
     NCBIGene-affects-mobd:
     ## https://biothings.ncats.io/semmeddb/query?q=_exists_:subject.ncbigene AND subject.novelty:1 AND predicate:AFFECTS AND object.semantic_type_abbreviation:mobd AND object.novelty:1
@@ -1197,7 +1278,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","AFFECTS","mobd", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -1212,6 +1293,9 @@ components:
         source: "infores:semmeddb"
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/umls-obj"
+        ## Examples:
+        ## - NCBIGene:10800 (CYSLTR1) -> UMLS:C0233794 (Memory impairment)
+        ## - NCBIGene:4986 (OPRK1) -> UMLS:C1510472 (Drug Dependence)
       ## uses previous revOPs: revOP-Disease-affected_by-aapp, revOP-Disease-affected_by-gngm
     NCBIGene-affects-neop:
     ## https://biothings.ncats.io/semmeddb/query?q=_exists_:subject.ncbigene AND subject.novelty:1 AND predicate:AFFECTS AND object.semantic_type_abbreviation:neop AND object.novelty:1
@@ -1222,7 +1306,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","AFFECTS","neop", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -1237,6 +1321,9 @@ components:
         source: "infores:semmeddb"
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/umls-obj"
+        ## Examples:
+        ## - NCBIGene:1442 (CSH1) -> UMLS:C0005695 (Bladder Neoplasm)
+        ## - NCBIGene:4615 (MYD88) -> UMLS:C0598934 (tumor growth)
       ## uses previous revOPs: revOP-Disease-affected_by-aapp, revOP-Disease-affected_by-gngm
     NCBIGene-affects-patf:
     ## https://biothings.ncats.io/semmeddb/query?q=_exists_:subject.ncbigene AND subject.novelty:1 AND predicate:AFFECTS AND object.semantic_type_abbreviation:patf AND object.novelty:1
@@ -1247,7 +1334,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","AFFECTS","patf", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -1262,6 +1349,9 @@ components:
         source: "infores:semmeddb"
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/umls-obj"
+        ## Examples:
+        ## - NCBIGene:3497 (IGHE) -> UMLS:C0021368 (Inflammation)
+        ## - NCBIGene:51497 (NELFCD) -> UMLS:C0021375 (Inflammation, allergic)
       ## uses previous revOPs: revOP-Disease-affected_by-aapp, revOP-Disease-affected_by-gngm
   ## aapp - related_to - Disease
     NCBIGene-associated_with-comd:
@@ -1273,7 +1363,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","ASSOCIATED_WITH","comd", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -1290,6 +1380,9 @@ components:
         source: "infores:semmeddb"
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/umls-obj"
+        ## Examples:
+        ## - NCBIGene:10628 (TXNIP) -> UMLS:C1516373 (Cellular Stress)
+        ## - NCBIGene:2068 (ERCC2) -> UMLS:C0596402 (cytotoxicity)
     revOP-Disease-associated_with-aapp:
     ## https://biothings.ncats.io/semmeddb/query?q=subject.semantic_type_abbreviation:aapp AND _exists_:subject.ncbigene AND subject.novelty:1 AND predicate:ASSOCIATED_WITH AND object.semantic_type_abbreviation:comd AND object.novelty:1
       - supportBatch: true
@@ -1298,8 +1391,8 @@ components:
           - id: UMLS
             semantic: Disease
         requestBodyType: object
-        requestBody:  ## note: we can't express _exists_ with this kind of query
-          body: >-    ## input doesn't include prefix
+        requestBody:
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","ASSOCIATED_WITH","aapp", 1, 1]') }} ],
               "scopes": ["object.umls", "predicate", "subject.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -1314,6 +1407,9 @@ components:
         source: "infores:semmeddb"
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/ncbigene-subj"
+        ## Examples:
+        ## - UMLS:C0700080 (Vascular proliferation) -> NCBIGene:22882 (ZHX2)
+        ## - UMLS:C0021368 (Inflammation) -> NCBIGene:5906 (RAP1A) 
     revOP-Disease-associated_with-gngm:
     ## https://biothings.ncats.io/semmeddb/query?q=subject.semantic_type_abbreviation:gngm AND _exists_:subject.ncbigene AND subject.novelty:1 AND predicate:ASSOCIATED_WITH AND object.semantic_type_abbreviation:comd AND object.novelty:1
       - supportBatch: true
@@ -1322,8 +1418,8 @@ components:
           - id: UMLS
             semantic: Disease
         requestBodyType: object
-        requestBody:  ## note: we can't express _exists_ with this kind of query
-          body: >-    ## input doesn't include prefix
+        requestBody:
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","ASSOCIATED_WITH","gngm", 1, 1]') }} ],
               "scopes": ["object.umls", "predicate", "subject.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -1338,6 +1434,9 @@ components:
         source: "infores:semmeddb"
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/ncbigene-subj"   
+        ## Examples:
+        ## - UMLS:C1516373 (Cellular Stress) -> NCBIGene:10628 (TXNIP) 
+        ## - UMLS:C0596402 (cytotoxicity) -> NCBIGene:2068 (ERCC2) 
     NCBIGene-associated_with-dsyn:
     ## https://biothings.ncats.io/semmeddb/query?q=_exists_:subject.ncbigene AND subject.novelty:1 AND predicate:ASSOCIATED_WITH AND object.semantic_type_abbreviation:dsyn AND object.novelty:1
       - supportBatch: true
@@ -1347,7 +1446,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","ASSOCIATED_WITH","dsyn", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -1364,6 +1463,9 @@ components:
         source: "infores:semmeddb"
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/umls-obj"
+        ## Examples:
+        ## - NCBIGene:213 (ALB) -> UMLS:C0024141 (Lupus Erythematosus, Systemic)
+        ## - NCBIGene:959 (CD40LG) -> UMLS:C0018482 (Haemophilus Infections)
     NCBIGene-associated_with-inpo:
     ## https://biothings.ncats.io/semmeddb/query?q=_exists_:subject.ncbigene AND subject.novelty:1 AND predicate:ASSOCIATED_WITH AND object.semantic_type_abbreviation:inpo AND object.novelty:1
       - supportBatch: true
@@ -1373,7 +1475,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","ASSOCIATED_WITH","inpo", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -1390,6 +1492,9 @@ components:
         source: "infores:semmeddb"
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/umls-obj"
+        ## Examples:
+        ## - NCBIGene:729230 (CCR2) -> UMLS:C0160420 (Injury to kidney NOS)
+        ## - NCBIGene:3918 (LAMC2) -> UMLS:C0281899 (Prolapsed lumbar disc)
     NCBIGene-associated_with-mobd:
     ## https://biothings.ncats.io/semmeddb/query?q=_exists_:subject.ncbigene AND subject.novelty:1 AND predicate:ASSOCIATED_WITH AND object.semantic_type_abbreviation:mobd AND object.novelty:1
       - supportBatch: true
@@ -1399,7 +1504,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","ASSOCIATED_WITH","mobd", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -1416,6 +1521,9 @@ components:
         source: "infores:semmeddb"
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/umls-obj"
+        ## Examples:
+        ## - NCBIGene:55166 (CENPQ) -> UMLS:C0036341 (Schizophrenia)
+        ## - NCBIGene:4985 (OPRD1) -> UMLS:C0019337 (Heroin Dependence)
     NCBIGene-associated_with-neop:
     ## https://biothings.ncats.io/semmeddb/query?q=_exists_:subject.ncbigene AND subject.novelty:1 AND predicate:ASSOCIATED_WITH AND object.semantic_type_abbreviation:neop AND object.novelty:1
       - supportBatch: true
@@ -1425,7 +1533,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","ASSOCIATED_WITH","neop", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -1442,6 +1550,9 @@ components:
         source: "infores:semmeddb"
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/umls-obj"
+        ## Examples:
+        ## - NCBIGene:5727 (PTCH1) -> UMLS:C0238463 (Papillary thyroid carcinoma)
+        ## - NCBIGene:1026 (CDKN1A) -> UMLS:C0017638 (Glioma)
     NCBIGene-associated_with-patf:
     ## https://biothings.ncats.io/semmeddb/query?q=_exists_:subject.ncbigene AND subject.novelty:1 AND predicate:ASSOCIATED_WITH AND object.semantic_type_abbreviation:patf AND object.novelty:1
       - supportBatch: true
@@ -1451,7 +1562,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","ASSOCIATED_WITH","patf", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -1468,6 +1579,9 @@ components:
         source: "infores:semmeddb"
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/umls-obj"
+        ## Examples:
+        ## - NCBIGene:644914 (H3F3AP6) -> UMLS:C0333951 (Growth arrest)
+        ## - NCBIGene:1026 (CDKN1A) -> UMLS:C0333951 (Growth arrest)
   ## aapp - entity_positively_regulates_entity - Disease
     NCBIGene-augments-acab:
     ## https://biothings.ncats.io/semmeddb/query?q=_exists_:subject.ncbigene AND subject.novelty:1 AND predicate:AUGMENTS AND object.semantic_type_abbreviation:acab AND object.novelty:1
@@ -1478,7 +1592,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","AUGMENTS","acab", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -1503,8 +1617,8 @@ components:
           - id: UMLS
             semantic: Disease
         requestBodyType: object
-        requestBody:  ## note: we can't express _exists_ with this kind of query
-          body: >-    ## input doesn't include prefix
+        requestBody:
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","AUGMENTS","aapp", 1, 1]') }} ],
               "scopes": ["object.umls", "predicate", "subject.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -1527,8 +1641,8 @@ components:
           - id: UMLS
             semantic: Disease
         requestBodyType: object
-        requestBody:  ## note: we can't express _exists_ with this kind of query
-          body: >-    ## input doesn't include prefix
+        requestBody:
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","AUGMENTS","gngm", 1, 1]') }} ],
               "scopes": ["object.umls", "predicate", "subject.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -1552,7 +1666,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","AUGMENTS","anab", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -1578,7 +1692,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","AUGMENTS","cgab", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -1604,7 +1718,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","AUGMENTS","comd", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -1630,7 +1744,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","AUGMENTS","dsyn", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -1656,7 +1770,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","AUGMENTS","inpo", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -1682,7 +1796,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","AUGMENTS","mobd", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -1708,7 +1822,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","AUGMENTS","neop", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -1734,7 +1848,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","AUGMENTS","patf", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -1761,7 +1875,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","CAUSES","acab", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -1786,8 +1900,8 @@ components:
           - id: UMLS
             semantic: Disease
         requestBodyType: object
-        requestBody:  ## note: we can't express _exists_ with this kind of query
-          body: >-    ## input doesn't include prefix
+        requestBody:
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","CAUSES","aapp", 1, 1]') }} ],
               "scopes": ["object.umls", "predicate", "subject.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -1810,8 +1924,8 @@ components:
           - id: UMLS
             semantic: Disease
         requestBodyType: object
-        requestBody:  ## note: we can't express _exists_ with this kind of query
-          body: >-    ## input doesn't include prefix
+        requestBody:
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","CAUSES","gngm", 1, 1]') }} ],
               "scopes": ["object.umls", "predicate", "subject.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -1835,7 +1949,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","CAUSES","anab", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -1861,7 +1975,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","CAUSES","cgab", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -1887,7 +2001,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","CAUSES","comd", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -1913,7 +2027,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","CAUSES","dsyn", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -1939,7 +2053,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","CAUSES","inpo", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -1965,7 +2079,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","CAUSES","mobd", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -1991,7 +2105,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","CAUSES","neop", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -2017,7 +2131,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","CAUSES","patf", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -2043,7 +2157,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","COMPLICATES","dsyn", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -2067,8 +2181,8 @@ components:
           - id: UMLS
             semantic: Disease
         requestBodyType: object
-        requestBody:  ## note: we can't express _exists_ with this kind of query
-          body: >-    ## input doesn't include prefix
+        requestBody:
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","COMPLICATES","aapp", 1, 1]') }} ],
               "scopes": ["object.umls", "predicate", "subject.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -2092,8 +2206,8 @@ components:
           - id: UMLS
             semantic: Disease
         requestBodyType: object
-        requestBody:  ## note: we can't express _exists_ with this kind of query
-          body: >-    ## input doesn't include prefix
+        requestBody:
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","COMPLICATES","gngm", 1, 1]') }} ],
               "scopes": ["object.umls", "predicate", "subject.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -2117,7 +2231,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","COMPLICATES","inpo", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -2142,7 +2256,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","COMPLICATES","neop", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -2167,7 +2281,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","COMPLICATES","patf", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -2193,7 +2307,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","DISRUPTS","acab", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -2216,8 +2330,8 @@ components:
           - id: UMLS
             semantic: Disease
         requestBodyType: object
-        requestBody:  ## note: we can't express _exists_ with this kind of query
-          body: >-    ## input doesn't include prefix
+        requestBody:
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","DISRUPTS","aapp", 1, 1]') }} ],
               "scopes": ["object.umls", "predicate", "subject.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -2240,8 +2354,8 @@ components:
           - id: UMLS
             semantic: Disease
         requestBodyType: object
-        requestBody:  ## note: we can't express _exists_ with this kind of query
-          body: >-    ## input doesn't include prefix
+        requestBody:
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","DISRUPTS","gngm", 1, 1]') }} ],
               "scopes": ["object.umls", "predicate", "subject.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -2265,7 +2379,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","DISRUPTS","anab", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -2289,7 +2403,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","DISRUPTS","cgab", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -2313,7 +2427,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","DISRUPTS","comd", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -2337,7 +2451,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","DISRUPTS","dsyn", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -2361,7 +2475,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","DISRUPTS","inpo", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -2385,7 +2499,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","DISRUPTS","mobd", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -2409,7 +2523,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","DISRUPTS","neop", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -2433,7 +2547,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","DISRUPTS","patf", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -2458,7 +2572,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","PREDISPOSES","comd", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -2481,8 +2595,8 @@ components:
           - id: UMLS
             semantic: Disease
         requestBodyType: object
-        requestBody:  ## note: we can't express _exists_ with this kind of query
-          body: >-    ## input doesn't include prefix
+        requestBody:
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","PREDISPOSES","aapp", 1, 1]') }} ],
               "scopes": ["object.umls", "predicate", "subject.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -2506,8 +2620,8 @@ components:
           - id: UMLS
             semantic: Disease
         requestBodyType: object
-        requestBody:  ## note: we can't express _exists_ with this kind of query
-          body: >-    ## input doesn't include prefix
+        requestBody:
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","PREDISPOSES","gngm", 1, 1]') }} ],
               "scopes": ["object.umls", "predicate", "subject.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -2532,7 +2646,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","PREDISPOSES","dsyn", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -2556,7 +2670,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","PREDISPOSES","inpo", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -2580,7 +2694,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","PREDISPOSES","mobd", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -2604,7 +2718,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","PREDISPOSES","neop", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -2628,7 +2742,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","PREDISPOSES","patf", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -2653,7 +2767,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","PREVENTS","acab", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -2676,8 +2790,8 @@ components:
           - id: UMLS
             semantic: Disease
         requestBodyType: object
-        requestBody:  ## note: we can't express _exists_ with this kind of query
-          body: >-    ## input doesn't include prefix
+        requestBody:
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","PREVENTS","aapp", 1, 1]') }} ],
               "scopes": ["object.umls", "predicate", "subject.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -2700,8 +2814,8 @@ components:
           - id: UMLS
             semantic: Disease
         requestBodyType: object
-        requestBody:  ## note: we can't express _exists_ with this kind of query
-          body: >-    ## input doesn't include prefix
+        requestBody:
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","PREVENTS","gngm", 1, 1]') }} ],
               "scopes": ["object.umls", "predicate", "subject.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -2725,7 +2839,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","PREVENTS","anab", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -2749,7 +2863,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","PREVENTS","comd", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -2773,7 +2887,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","PREVENTS","dsyn", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -2797,7 +2911,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","PREVENTS","inpo", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -2821,7 +2935,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","PREVENTS","mobd", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -2845,7 +2959,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","PREVENTS","neop", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -2869,7 +2983,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","PREVENTS","patf", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -2894,7 +3008,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","TREATS","acab", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -2917,8 +3031,8 @@ components:
           - id: UMLS
             semantic: Disease
         requestBodyType: object
-        requestBody:  ## note: we can't express _exists_ with this kind of query
-          body: >-    ## input doesn't include prefix
+        requestBody:
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","TREATS","aapp", 1, 1]') }} ],
               "scopes": ["object.umls", "predicate", "subject.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -2941,8 +3055,8 @@ components:
           - id: UMLS
             semantic: Disease
         requestBodyType: object
-        requestBody:  ## note: we can't express _exists_ with this kind of query
-          body: >-    ## input doesn't include prefix
+        requestBody:
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","TREATS","gngm", 1, 1]') }} ],
               "scopes": ["object.umls", "predicate", "subject.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -2966,7 +3080,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","TREATS","anab", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -2990,7 +3104,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","TREATS","cgab", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -3014,7 +3128,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","TREATS","comd", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -3038,7 +3152,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","TREATS","dsyn", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -3062,7 +3176,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","TREATS","inpo", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -3086,7 +3200,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","TREATS","mobd", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -3110,7 +3224,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","TREATS","neop", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -3134,7 +3248,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","TREATS","patf", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -3159,7 +3273,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","AFFECTS","bpoc", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -3182,8 +3296,8 @@ components:
           - id: UMLS
             semantic: GrossAnatomicalStructure
         requestBodyType: object
-        requestBody:  ## note: we can't express _exists_ with this kind of query
-          body: >-    ## input doesn't include prefix
+        requestBody:
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","AFFECTS","aapp", 1, 1]') }} ],
               "scopes": ["object.umls", "predicate", "subject.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -3206,8 +3320,8 @@ components:
           - id: UMLS
             semantic: GrossAnatomicalStructure
         requestBodyType: object
-        requestBody:  ## note: we can't express _exists_ with this kind of query
-          body: >-    ## input doesn't include prefix
+        requestBody:
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","AFFECTS","gngm", 1, 1]') }} ],
               "scopes": ["object.umls", "predicate", "subject.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -3231,7 +3345,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","AUGMENTS","bpoc", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -3254,8 +3368,8 @@ components:
           - id: UMLS
             semantic: GrossAnatomicalStructure
         requestBodyType: object
-        requestBody:  ## note: we can't express _exists_ with this kind of query
-          body: >-    ## input doesn't include prefix
+        requestBody:
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","AUGMENTS","aapp", 1, 1]') }} ],
               "scopes": ["object.umls", "predicate", "subject.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -3278,8 +3392,8 @@ components:
           - id: UMLS
             semantic: GrossAnatomicalStructure
         requestBodyType: object
-        requestBody:  ## note: we can't express _exists_ with this kind of query
-          body: >-    ## input doesn't include prefix
+        requestBody:
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","AUGMENTS","gngm", 1, 1]') }} ],
               "scopes": ["object.umls", "predicate", "subject.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -3303,7 +3417,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","DISRUPTS","bpoc", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -3326,8 +3440,8 @@ components:
           - id: UMLS
             semantic: GrossAnatomicalStructure
         requestBodyType: object
-        requestBody:  ## note: we can't express _exists_ with this kind of query
-          body: >-    ## input doesn't include prefix
+        requestBody:
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","DISRUPTS","aapp", 1, 1]') }} ],
               "scopes": ["object.umls", "predicate", "subject.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -3350,8 +3464,8 @@ components:
           - id: UMLS
             semantic: GrossAnatomicalStructure
         requestBodyType: object
-        requestBody:  ## note: we can't express _exists_ with this kind of query
-          body: >-    ## input doesn't include prefix
+        requestBody:
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","DISRUPTS","gngm", 1, 1]') }} ],
               "scopes": ["object.umls", "predicate", "subject.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -3375,7 +3489,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","PART_OF","bpoc", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -3398,8 +3512,8 @@ components:
           - id: UMLS
             semantic: GrossAnatomicalStructure
         requestBodyType: object
-        requestBody:  ## note: we can't express _exists_ with this kind of query
-          body: >-    ## input doesn't include prefix
+        requestBody:
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","PART_OF","aapp", 1, 1]') }} ],
               "scopes": ["object.umls", "predicate", "subject.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -3422,8 +3536,8 @@ components:
           - id: UMLS
             semantic: GrossAnatomicalStructure
         requestBodyType: object
-        requestBody:  ## note: we can't express _exists_ with this kind of query
-          body: >-    ## input doesn't include prefix
+        requestBody:
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","PART_OF","gngm", 1, 1]') }} ],
               "scopes": ["object.umls", "predicate", "subject.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -3448,7 +3562,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","AFFECTS","moft", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -3471,8 +3585,8 @@ components:
           - id: UMLS
             semantic: MolecularActivity
         requestBodyType: object
-        requestBody:  ## note: we can't express _exists_ with this kind of query
-          body: >-    ## input doesn't include prefix
+        requestBody:
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","AFFECTS","aapp", 1, 1]') }} ],
               "scopes": ["object.umls", "predicate", "subject.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -3495,8 +3609,8 @@ components:
           - id: UMLS
             semantic: MolecularActivity
         requestBodyType: object
-        requestBody:  ## note: we can't express _exists_ with this kind of query
-          body: >-    ## input doesn't include prefix
+        requestBody:
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","AFFECTS","gngm", 1, 1]') }} ],
               "scopes": ["object.umls", "predicate", "subject.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -3520,7 +3634,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","AUGMENTS","moft", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -3543,8 +3657,8 @@ components:
           - id: UMLS
             semantic: MolecularActivity
         requestBodyType: object
-        requestBody:  ## note: we can't express _exists_ with this kind of query
-          body: >-    ## input doesn't include prefix
+        requestBody:
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","AUGMENTS","aapp", 1, 1]') }} ],
               "scopes": ["object.umls", "predicate", "subject.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -3567,8 +3681,8 @@ components:
           - id: UMLS
             semantic: MolecularActivity
         requestBodyType: object
-        requestBody:  ## note: we can't express _exists_ with this kind of query
-          body: >-    ## input doesn't include prefix
+        requestBody:
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","AUGMENTS","gngm", 1, 1]') }} ],
               "scopes": ["object.umls", "predicate", "subject.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -3592,7 +3706,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","DISRUPTS","moft", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -3615,8 +3729,8 @@ components:
           - id: UMLS
             semantic: MolecularActivity
         requestBodyType: object
-        requestBody:  ## note: we can't express _exists_ with this kind of query
-          body: >-    ## input doesn't include prefix
+        requestBody:
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","DISRUPTS","aapp", 1, 1]') }} ],
               "scopes": ["object.umls", "predicate", "subject.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -3639,8 +3753,8 @@ components:
           - id: UMLS
             semantic: MolecularActivity
         requestBodyType: object
-        requestBody:  ## note: we can't express _exists_ with this kind of query
-          body: >-    ## input doesn't include prefix
+        requestBody:
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","DISRUPTS","gngm", 1, 1]') }} ],
               "scopes": ["object.umls", "predicate", "subject.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -3664,7 +3778,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","STIMULATES","moft", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -3687,8 +3801,8 @@ components:
           - id: UMLS
             semantic: MolecularActivity
         requestBodyType: object
-        requestBody:  ## note: we can't express _exists_ with this kind of query
-          body: >-    ## input doesn't include prefix
+        requestBody:
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","STIMULATES","aapp", 1, 1]') }} ],
               "scopes": ["object.umls", "predicate", "subject.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -3711,8 +3825,8 @@ components:
           - id: UMLS
             semantic: MolecularActivity
         requestBodyType: object
-        requestBody:  ## note: we can't express _exists_ with this kind of query
-          body: >-    ## input doesn't include prefix
+        requestBody:
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","STIMULATES","gngm", 1, 1]') }} ],
               "scopes": ["object.umls", "predicate", "subject.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -3737,7 +3851,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","AFFECTS","sosy", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -3760,8 +3874,8 @@ components:
           - id: UMLS
             semantic: PhenotypicFeature
         requestBodyType: object
-        requestBody:  ## note: we can't express _exists_ with this kind of query
-          body: >-    ## input doesn't include prefix
+        requestBody:
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","AFFECTS","aapp", 1, 1]') }} ],
               "scopes": ["object.umls", "predicate", "subject.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -3784,8 +3898,8 @@ components:
           - id: UMLS
             semantic: PhenotypicFeature
         requestBodyType: object
-        requestBody:  ## note: we can't express _exists_ with this kind of query
-          body: >-    ## input doesn't include prefix
+        requestBody:
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","AFFECTS","gngm", 1, 1]') }} ],
               "scopes": ["object.umls", "predicate", "subject.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -3809,7 +3923,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","ASSOCIATED_WITH","sosy", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -3832,8 +3946,8 @@ components:
           - id: UMLS
             semantic: PhenotypicFeature
         requestBodyType: object
-        requestBody:  ## note: we can't express _exists_ with this kind of query
-          body: >-    ## input doesn't include prefix
+        requestBody:
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","ASSOCIATED_WITH","aapp", 1, 1]') }} ],
               "scopes": ["object.umls", "predicate", "subject.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -3856,8 +3970,8 @@ components:
           - id: UMLS
             semantic: PhenotypicFeature
         requestBodyType: object
-        requestBody:  ## note: we can't express _exists_ with this kind of query
-          body: >-    ## input doesn't include prefix
+        requestBody:
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","ASSOCIATED_WITH","gngm", 1, 1]') }} ],
               "scopes": ["object.umls", "predicate", "subject.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -3881,7 +3995,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","AUGMENTS","sosy", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -3904,8 +4018,8 @@ components:
           - id: UMLS
             semantic: PhenotypicFeature
         requestBodyType: object
-        requestBody:  ## note: we can't express _exists_ with this kind of query
-          body: >-    ## input doesn't include prefix
+        requestBody:
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","AUGMENTS","aapp", 1, 1]') }} ],
               "scopes": ["object.umls", "predicate", "subject.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -3928,8 +4042,8 @@ components:
           - id: UMLS
             semantic: PhenotypicFeature
         requestBodyType: object
-        requestBody:  ## note: we can't express _exists_ with this kind of query
-          body: >-    ## input doesn't include prefix
+        requestBody:
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","AUGMENTS","gngm", 1, 1]') }} ],
               "scopes": ["object.umls", "predicate", "subject.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -3953,7 +4067,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","CAUSES","sosy", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -3976,8 +4090,8 @@ components:
           - id: UMLS
             semantic: PhenotypicFeature
         requestBodyType: object
-        requestBody:  ## note: we can't express _exists_ with this kind of query
-          body: >-    ## input doesn't include prefix
+        requestBody:
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","CAUSES","aapp", 1, 1]') }} ],
               "scopes": ["object.umls", "predicate", "subject.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -4000,8 +4114,8 @@ components:
           - id: UMLS
             semantic: PhenotypicFeature
         requestBodyType: object
-        requestBody:  ## note: we can't express _exists_ with this kind of query
-          body: >-    ## input doesn't include prefix
+        requestBody:
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","CAUSES","gngm", 1, 1]') }} ],
               "scopes": ["object.umls", "predicate", "subject.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -4025,7 +4139,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","DISRUPTS","sosy", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -4048,8 +4162,8 @@ components:
           - id: UMLS
             semantic: PhenotypicFeature
         requestBodyType: object
-        requestBody:  ## note: we can't express _exists_ with this kind of query
-          body: >-    ## input doesn't include prefix
+        requestBody:
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","DISRUPTS","aapp", 1, 1]') }} ],
               "scopes": ["object.umls", "predicate", "subject.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -4072,8 +4186,8 @@ components:
           - id: UMLS
             semantic: PhenotypicFeature
         requestBodyType: object
-        requestBody:  ## note: we can't express _exists_ with this kind of query
-          body: >-    ## input doesn't include prefix
+        requestBody:
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","DISRUPTS","gngm", 1, 1]') }} ],
               "scopes": ["object.umls", "predicate", "subject.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -4097,7 +4211,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","PREDISPOSES","sosy", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -4120,8 +4234,8 @@ components:
           - id: UMLS
             semantic: PhenotypicFeature
         requestBodyType: object
-        requestBody:  ## note: we can't express _exists_ with this kind of query
-          body: >-    ## input doesn't include prefix
+        requestBody:
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","PREDISPOSES","aapp", 1, 1]') }} ],
               "scopes": ["object.umls", "predicate", "subject.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -4144,8 +4258,8 @@ components:
           - id: UMLS
             semantic: PhenotypicFeature
         requestBodyType: object
-        requestBody:  ## note: we can't express _exists_ with this kind of query
-          body: >-    ## input doesn't include prefix
+        requestBody:
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","PREDISPOSES","gngm", 1, 1]') }} ],
               "scopes": ["object.umls", "predicate", "subject.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -4169,7 +4283,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","PREVENTS","sosy", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -4192,8 +4306,8 @@ components:
           - id: UMLS
             semantic: PhenotypicFeature
         requestBodyType: object
-        requestBody:  ## note: we can't express _exists_ with this kind of query
-          body: >-    ## input doesn't include prefix
+        requestBody:
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","PREVENTS","aapp", 1, 1]') }} ],
               "scopes": ["object.umls", "predicate", "subject.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -4216,8 +4330,8 @@ components:
           - id: UMLS
             semantic: PhenotypicFeature
         requestBodyType: object
-        requestBody:  ## note: we can't express _exists_ with this kind of query
-          body: >-    ## input doesn't include prefix
+        requestBody:
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","PREVENTS","gngm", 1, 1]') }} ],
               "scopes": ["object.umls", "predicate", "subject.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -4241,7 +4355,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","TREATS","sosy", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -4264,8 +4378,8 @@ components:
           - id: UMLS
             semantic: PhenotypicFeature
         requestBodyType: object
-        requestBody:  ## note: we can't express _exists_ with this kind of query
-          body: >-    ## input doesn't include prefix
+        requestBody:
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","TREATS","aapp", 1, 1]') }} ],
               "scopes": ["object.umls", "predicate", "subject.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -4288,8 +4402,8 @@ components:
           - id: UMLS
             semantic: PhenotypicFeature
         requestBodyType: object
-        requestBody:  ## note: we can't express _exists_ with this kind of query
-          body: >-    ## input doesn't include prefix
+        requestBody:
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","TREATS","gngm", 1, 1]') }} ],
               "scopes": ["object.umls", "predicate", "subject.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -4314,7 +4428,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","AFFECTS","celf", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -4337,8 +4451,8 @@ components:
           - id: UMLS
             semantic: PhysiologicalProcess
         requestBodyType: object
-        requestBody:  ## note: we can't express _exists_ with this kind of query
-          body: >-    ## input doesn't include prefix
+        requestBody:
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","AFFECTS","aapp", 1, 1]') }} ],
               "scopes": ["object.umls", "predicate", "subject.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -4361,8 +4475,8 @@ components:
           - id: UMLS
             semantic: PhysiologicalProcess
         requestBodyType: object
-        requestBody:  ## note: we can't express _exists_ with this kind of query
-          body: >-    ## input doesn't include prefix
+        requestBody:
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","AFFECTS","gngm", 1, 1]') }} ],
               "scopes": ["object.umls", "predicate", "subject.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -4386,7 +4500,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","AFFECTS","orgf", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -4410,7 +4524,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","AFFECTS","ortf", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
@@ -4434,7 +4548,7 @@ components:
             semantic: Gene
         requestBodyType: object
         requestBody:
-          body: >-    ## input doesn't include prefix
+          body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","AFFECTS","phsf", 1, 1]') }} ],
               "scopes": ["subject.ncbigene", "predicate", "object.semantic_type_abbreviation", "subject.novelty", "object.novelty"]
