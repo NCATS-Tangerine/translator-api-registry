@@ -406,6 +406,7 @@ components:
   x-bte-response-mapping:
     ## not including "name" field since BTE isn't ingesting / using it to annotate nodes...
     disease-gene:
+    ## also has YearFinal and YearInitial (for an association), see https://www.disgenet.org/dbinfo#section44
       NCBIGene: disgenet.genes_related_to_disease.gene_id  ## no prefix
       pubmed: disgenet.genes_related_to_disease.pubmed     ## no prefix
       source: disgenet.genes_related_to_disease.source
@@ -413,8 +414,10 @@ components:
       ##  if the key becomes the TRAPI attribute "original_attribute_name"
       disgenet-DPI: disgenet.genes_related_to_disease.DPI
       disgenet-DSI: disgenet.genes_related_to_disease.DSI
+      disgenet-EI: disgenet.genes_related_to_disease.EI
       disgenet-score: disgenet.genes_related_to_disease.score
     disease-variant:
+    ## also has YearFinal and YearInitial (for an association), see https://www.disgenet.org/dbinfo#section45
       DBSNP: disgenet.variants_related_to_disease.rsid       ## no prefix
       pubmed: disgenet.variants_related_to_disease.pubmed    ## no prefix
       source: disgenet.variants_related_to_disease.source
@@ -422,8 +425,10 @@ components:
       ##  if the key becomes the TRAPI attribute "original_attribute_name"
       disgenet-DPI: disgenet.variants_related_to_disease.DPI
       disgenet-DSI: disgenet.variants_related_to_disease.DSI
+      disgenet-EI: disgenet.variants_related_to_disease.EI
       disgenet-score: disgenet.variants_related_to_disease.score
     disease-phenotype:
+    ## didn't include: biocuration
       HP: hpo.phenotype_related_to_disease.hpo_id             ## HAS PREFIX (HP)
       ## note: there are 6 reference-related fields (parser created based on ID namespace)
       pubmed: hpo.phenotype_related_to_disease.pmid_refs                 ## HAS PREFIX (PMID)
@@ -438,15 +443,17 @@ components:
       freq_numerator: hpo.phenotype_related_to_disease.freq_numerator       ## frequency as a fraction (numerator)
       freq_denominator: hpo.phenotype_related_to_disease.freq_denominator   ## frequency as a fraction (denominator)
       ## value of this field is evidence codes (IEA, TAS, PCS)
-      evidence: hpo.phenotype_related_to_disease.evidence
-      ## modifier/sex fields provide context...only in some disease-phenotype records...
-      modifier: hpo.phenotype_related_to_disease.modifier
-      sex: hpo.phenotype_related_to_disease.sex
-      biocuration: hpo.phenotype_related_to_disease.biocuration
+      hpoa_evidence_code: hpo.phenotype_related_to_disease.evidence
+      ## supposed to provide context (only present in some records)
+      ## - modifier/onset fields are HP terms w/ prefix
+      ## - sex will be "male" or "female"
+      hp_modifier: hpo.phenotype_related_to_disease.modifier
+      hp_onset: hpo.phenotype_related_to_disease.modifier
+      hpoa_sex: hpo.phenotype_related_to_disease.sex
     disease-chemical:
       MESH: ctd.chemical_related_to_disease.mesh_chemical_id    ## no prefix
       ## direct_evidence has two values, 'marker/mechanism' or 'therapeutic'
-      direct_evidence: ctd.chemical_related_to_disease.direct_evidence
+      ctd_evidence_type: ctd.chemical_related_to_disease.direct_evidence
       pubmed: ctd.chemical_related_to_disease.pubmed     ## no prefix
 #     disease-pathway:  
 #       REACT: ctd.pathway_related_to_disease.react_pathway_id
@@ -488,6 +495,7 @@ components:
   ##   instead, it will retrieve ALL the info for diseases where AT LEAST 1 variants_related_to_disease record exists that matches that restriction
   ## - the data files also lack more specific associations...
     disease-gene:
+    ## 22942 / 27762 disgenet.genes_related_to_disease records have disgenet.xrefs.umls
       - supportBatch: true
         inputSeparator: ","
         parameters:
@@ -512,6 +520,7 @@ components:
         #   - qInput: "UMLS:C0023264"     ## Leigh Disease
         #     oneOutput: "NCBIGene:4694"  ## NDUFA1
     disease-variant:
+    ## 11200 / 12605 disgenet.variants_related_to_disease records have disgenet.xrefs.umls
       - supportBatch: true
         inputSeparator: ","
         parameters:
@@ -802,6 +811,7 @@ components:
     ## - there's also disease_ontology info (ancestors, children, descendants, parents)
     ## - there's also mondo info (ancestors, descendants)
     ## - mondo info we're not including:
+    ##     - do we want to keep or remove parent/children relationships?
     ##     - part_of_progression_of_disease (only 2 disease-disease relationships)
     ##     - has_modifier (something is off here, shouldn't be mondo prefix...)
     ##     - excluded_subClassOf (something is off here, I'm not sure what that means)
