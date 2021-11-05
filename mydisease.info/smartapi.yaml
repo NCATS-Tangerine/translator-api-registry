@@ -228,16 +228,12 @@ paths:
       - "$ref": "#/components/x-bte-kgs-operations/disease-phenotype2"
       - "$ref": "#/components/x-bte-kgs-operations/disease-chemical"
       - "$ref": "#/components/x-bte-kgs-operations/disease-chemical2"
-#       - "$ref": "#/components/x-bte-kgs-operations/disease-pathway"
-#       - "$ref": "#/components/x-bte-kgs-operations/disease-pathway2"
       - "$ref": "#/components/x-bte-kgs-operations/gene-disease"
       - "$ref": "#/components/x-bte-kgs-operations/variant-disease"
       - "$ref": "#/components/x-bte-kgs-operations/phenotype-disease"
       - "$ref": "#/components/x-bte-kgs-operations/phenotype-disease2"
       - "$ref": "#/components/x-bte-kgs-operations/chemical-disease"
       - "$ref": "#/components/x-bte-kgs-operations/chemical-disease2"
-#       - "$ref": "#/components/x-bte-kgs-operations/pathway-disease"
-#       - "$ref": "#/components/x-bte-kgs-operations/pathway-disease2"
       - "$ref": "#/components/x-bte-kgs-operations/has_subclass"
       - "$ref": "#/components/x-bte-kgs-operations/subclass_of"
       - "$ref": "#/components/x-bte-kgs-operations/predisposes_towards"
@@ -406,7 +402,6 @@ components:
   x-bte-response-mapping:
     ## not including "name" field since BTE isn't ingesting / using it to annotate nodes...
     disease-gene:
-    ## also has YearFinal and YearInitial (for an association), see https://www.disgenet.org/dbinfo#section44
       NCBIGene: disgenet.genes_related_to_disease.gene_id  ## no prefix
       pubmed: disgenet.genes_related_to_disease.pubmed     ## no prefix
       source: disgenet.genes_related_to_disease.source
@@ -417,7 +412,6 @@ components:
       disgenet-EI: disgenet.genes_related_to_disease.EI
       disgenet-score: disgenet.genes_related_to_disease.score
     disease-variant:
-    ## also has YearFinal and YearInitial (for an association), see https://www.disgenet.org/dbinfo#section45
       DBSNP: disgenet.variants_related_to_disease.rsid       ## no prefix
       pubmed: disgenet.variants_related_to_disease.pubmed    ## no prefix
       source: disgenet.variants_related_to_disease.source
@@ -428,7 +422,6 @@ components:
       disgenet-EI: disgenet.variants_related_to_disease.EI
       disgenet-score: disgenet.variants_related_to_disease.score
     disease-phenotype:
-    ## didn't include: biocuration
       HP: hpo.phenotype_related_to_disease.hpo_id             ## HAS PREFIX (HP)
       ## note: there are 6 reference-related fields (parser created based on ID namespace)
       pubmed: hpo.phenotype_related_to_disease.pmid_refs                 ## HAS PREFIX (PMID)
@@ -448,17 +441,13 @@ components:
       ## - modifier/onset fields are HP terms w/ prefix
       ## - sex will be "male" or "female"
       hp_modifier: hpo.phenotype_related_to_disease.modifier
-      hp_onset: hpo.phenotype_related_to_disease.modifier
+      hp_onset: hpo.phenotype_related_to_disease.onset
       hpoa_sex: hpo.phenotype_related_to_disease.sex
     disease-chemical:
       MESH: ctd.chemical_related_to_disease.mesh_chemical_id    ## no prefix
       ## direct_evidence has two values, 'marker/mechanism' or 'therapeutic'
       ctd_evidence_type: ctd.chemical_related_to_disease.direct_evidence
       pubmed: ctd.chemical_related_to_disease.pubmed     ## no prefix
-#     disease-pathway:  
-#       REACT: ctd.pathway_related_to_disease.react_pathway_id
-#     disease-pathway2:  
-#       KEGG: ctd.pathway_related_to_disease.kegg_pathway_id
     umls:
       UMLS: disgenet.xrefs.umls     ## no prefix
     omim:
@@ -493,13 +482,22 @@ components:
   ##   for example, https://mydisease.info/v1/query?q=%20disgenet.variants_related_to_disease.source:CLINVAR 
   ##    will NOT restrict the info under the variants_related_to_disease to only records with source == CLINVAR
   ##   instead, it will retrieve ALL the info for diseases where AT LEAST 1 variants_related_to_disease record exists that matches that restriction
-  ## - the data files also lack more specific associations...
+  ## - the disgenet data files also lack more specific relationship terms...
     disease-gene:
     ## 22942 / 27762 disgenet.genes_related_to_disease records have disgenet.xrefs.umls
       - supportBatch: true
         inputSeparator: ","
         parameters:
-          fields: disgenet.genes_related_to_disease
+        ## see https://www.disgenet.org/dbinfo#section44
+        ## not including YearFinal, YearInitial, gene_name 
+          fields: >- 
+            disgenet.genes_related_to_disease.gene_id,
+            disgenet.genes_related_to_disease.pubmed,
+            disgenet.genes_related_to_disease.source,
+            disgenet.genes_related_to_disease.DPI,
+            disgenet.genes_related_to_disease.DSI,
+            disgenet.genes_related_to_disease.EI,
+            disgenet.genes_related_to_disease.score
         requestBody:
           body:
             q: "{inputs[0]}"  ## no prefix
@@ -524,7 +522,16 @@ components:
       - supportBatch: true
         inputSeparator: ","
         parameters:
-          fields: disgenet.variants_related_to_disease
+        ## see https://www.disgenet.org/dbinfo#section45
+        ## not including YearFinal, YearInitial, chrom, pos 
+          fields: >- 
+            disgenet.variants_related_to_disease.rsid,
+            disgenet.variants_related_to_disease.pubmed,
+            disgenet.variants_related_to_disease.source,
+            disgenet.variants_related_to_disease.DPI,
+            disgenet.variants_related_to_disease.DSI,
+            disgenet.variants_related_to_disease.EI,
+            disgenet.variants_related_to_disease.score
         requestBody:
           body:
             q: "{inputs[0]}"  ## no prefix
@@ -554,7 +561,23 @@ components:
       - supportBatch: true
         inputSeparator: ","
         parameters:
-          fields: hpo.phenotype_related_to_disease
+        ## not including biocuration field
+          fields: >-
+            hpo.phenotype_related_to_disease.hpo_id,
+            hpo.phenotype_related_to_disease.pmid_refs,
+            hpo.phenotype_related_to_disease.isbn_refs,
+            hpo.phenotype_related_to_disease.website_refs,
+            hpo.phenotype_related_to_disease.decipher_refs,
+            hpo.phenotype_related_to_disease.omim_refs,
+            hpo.phenotype_related_to_disease.orphanet_refs,
+            hpo.phenotype_related_to_disease.numeric_freq,
+            hpo.phenotype_related_to_disease.hp_freq,
+            hpo.phenotype_related_to_disease.freq_numerator,
+            hpo.phenotype_related_to_disease.freq_denominator,
+            hpo.phenotype_related_to_disease.evidence,
+            hpo.phenotype_related_to_disease.modifier,
+            hpo.phenotype_related_to_disease.onset,
+            hpo.phenotype_related_to_disease.sex
         requestBody:
           body:
             q: "{inputs[0]}"  ## no prefix
@@ -567,8 +590,8 @@ components:
         - id: HP
           semantic: PhenotypicFeature
         predicate: has_phenotype
-        ## sort-of has a relation. Parser made this based on annotations with aspect == "P"
-        ##   (notice aspect as "I" became hpo.inheritance, "C" became hpo.course, "M" became hpo.modifier)
+        ## includes annotations with aspect == "P"
+        ##   (aspect as "I" became hpo.inheritance, "C" became hpo.course, "M" became hpo.modifier)
         source: "infores:hpo-annotations"
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/disease-phenotype"
@@ -579,7 +602,23 @@ components:
       - supportBatch: true
         inputSeparator: ","
         parameters:
-          fields: hpo.phenotype_related_to_disease
+        ## not including biocuration field
+          fields: >-
+            hpo.phenotype_related_to_disease.hpo_id,
+            hpo.phenotype_related_to_disease.pmid_refs,
+            hpo.phenotype_related_to_disease.isbn_refs,
+            hpo.phenotype_related_to_disease.website_refs,
+            hpo.phenotype_related_to_disease.decipher_refs,
+            hpo.phenotype_related_to_disease.omim_refs,
+            hpo.phenotype_related_to_disease.orphanet_refs,
+            hpo.phenotype_related_to_disease.numeric_freq,
+            hpo.phenotype_related_to_disease.hp_freq,
+            hpo.phenotype_related_to_disease.freq_numerator,
+            hpo.phenotype_related_to_disease.freq_denominator,
+            hpo.phenotype_related_to_disease.evidence,
+            hpo.phenotype_related_to_disease.modifier,
+            hpo.phenotype_related_to_disease.onset,
+            hpo.phenotype_related_to_disease.sex
         requestBody:
           body:
             q: "{inputs[0]}"  ## no prefix
@@ -592,8 +631,6 @@ components:
         - id: HP
           semantic: PhenotypicFeature
         predicate: has_phenotype
-        ## sort-of has a relation. Parser made this based on annotations with aspect == "P"
-        ##   (notice aspect as "I" became hpo.inheritance, "C" became hpo.course, "M" became hpo.modifier)
         source: "infores:hpo-annotations"
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/disease-phenotype"
@@ -612,7 +649,11 @@ components:
       - supportBatch: true
         inputSeparator: ","
         parameters:
-          fields: ctd.chemical_related_to_disease
+        ## not including: cas_registry_number, chemical_name, source
+          fields: >-
+            ctd.chemical_related_to_disease.mesh_chemical_id,
+            ctd.chemical_related_to_disease.direct_evidence,
+            ctd.chemical_related_to_disease.pubmed
         requestBody:
           body:
             q: "{inputs[0]}"  ## no prefix
@@ -626,8 +667,8 @@ components:
           semantic: SmallMolecule
           ## note that 3085 / 3253 have cas_registry_number field that can be used as well
         predicate: related_to
-        ## there is a field that kinda tells the "relation" IN response-mapping right now
-        ##   (direct_evidence can have value "marker/mechanism" or "therapeutic").
+        ## direct_evidence is kinda like a relation....
+        ##   can have value "marker/mechanism" or "therapeutic").
         source: "infores:ctd"
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/disease-chemical"
@@ -638,7 +679,11 @@ components:
       - supportBatch: true
         inputSeparator: ","
         parameters:
-          fields: ctd.chemical_related_to_disease
+        ## not including: cas_registry_number, chemical_name, source
+          fields: >-
+            ctd.chemical_related_to_disease.mesh_chemical_id,
+            ctd.chemical_related_to_disease.direct_evidence,
+            ctd.chemical_related_to_disease.pubmed
         requestBody:
           body:
             q: "{inputs[0]}"  ## no prefix
@@ -650,10 +695,7 @@ components:
         outputs:
         - id: MESH
           semantic: SmallMolecule
-          ## note that 3085 / 3253 have cas_registry_number field that can be used as well
         predicate: related_to
-        ## there is a field that kinda tells the "relation" IN response-mapping right now
-        ##   (direct_evidence can have value "marker/mechanism" or "therapeutic").
         source: "infores:ctd"
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/disease-chemical"
@@ -668,7 +710,7 @@ components:
         inputSeparator: ","
         parameters:
           fields: disgenet.xrefs.umls
-          size: '1000'  ## note the size limit
+          size: 1000  ## note the size limit
         requestBody:
           body:
             q: "{inputs[0]}"   ## no prefix
@@ -692,7 +734,7 @@ components:
         inputSeparator: ","
         parameters:
           fields: disgenet.xrefs.umls
-          size: '1000'  ## note the size limit
+          size: 1000  ## note the size limit
         requestBody:
           body:
             q: "{inputs[0]}"   ## no prefix
@@ -716,7 +758,7 @@ components:
         inputSeparator: ","
         parameters:
           fields: hpo.omim
-          size: '1000'  ## note the size limit
+          size: 1000  ## note the size limit
         requestBody:
           body:
             q: "{inputs[0]}"   ## HAS PREFIX (HP)
@@ -740,7 +782,7 @@ components:
         inputSeparator: ","
         parameters:
           fields: hpo.orphanet
-          size: '1000'  ## note the size limit
+          size: 1000  ## note the size limit
         requestBody:
           body:
             q: "{inputs[0]}"   ## HAS PREFIX (HP)  
@@ -764,7 +806,7 @@ components:
         inputSeparator: ","
         parameters:
           fields: ctd.mesh
-          size: '1000'  ## note the size limit
+          size: 1000  ## note the size limit
         requestBody:
           body:
             q: "{inputs[0]}"  ## no prefix
@@ -788,7 +830,7 @@ components:
         inputSeparator: ","
         parameters:
           fields: ctd.omim
-          size: '1000'  ## note the size limit
+          size: 1000  ## note the size limit
         requestBody:
           body:
             q: "{inputs[0]}"    ## no prefix
@@ -821,7 +863,7 @@ components:
         inputSeparator: ","
         parameters:
           fields: mondo.children
-          size: '1000'  ## note the size limit
+          size: 1000  ## note the size limit
         requestBody:
           body:
             q: "{inputs[0]}"  ## HAS PREFIX (MONDO)
@@ -846,7 +888,7 @@ components:
         inputSeparator: ","
         parameters:
           fields: mondo.parents
-          size: '1000'  ## note the size limit
+          size: 1000  ## note the size limit
         requestBody:
           body:
             q: "{inputs[0]}"   ## HAS PREFIX (MONDO)
@@ -870,8 +912,8 @@ components:
       - supportBatch: true
         inputSeparator: ","
         parameters:
-          fields: mondo.predisposes_towards
-          size: '1000'  ## note the size limit
+          fields: mondo.predisposes_towards.mondo
+          size: 1000  ## note the size limit
         requestBody:
           body:
             q: "{inputs[0]}"   ## HAS PREFIX (MONDO)
@@ -885,7 +927,6 @@ components:
           semantic: Disease
         predicate: contributes_to  ## maps to "MONDO:predisposes_towards"
         ## could use more specific biolink predicate like predisposes??
-        ## relation: "MONDO:predisposes_towards"?
         source: "infores:mondo"
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/predisposes_towards"
@@ -897,7 +938,7 @@ components:
         inputSeparator: ","
         parameters:
           fields: mondo.mondo
-          size: '1000'  ## note the size limit
+          size: 1000  ## note the size limit
         requestBody:
           body:
             q: "{inputs[0]}"   ## HAS PREFIX (MONDO)
@@ -922,8 +963,8 @@ components:
       - supportBatch: true
         inputSeparator: ","
         parameters:
-          fields: mondo.disease_shares_features_of
-          size: '1000'  ## note the size limit
+          fields: mondo.disease_shares_features_of.mondo
+          size: 1000  ## note the size limit
         requestBody:
           body:
             q: "{inputs[0]}"   ## HAS PREFIX (MONDO)
@@ -937,7 +978,6 @@ components:
           semantic: Disease
         predicate: similar_to  ## could biolink have a more specific predicate?
         ##   note that relation maps to biolink:related_to right now...
-        ## relation: "MONDO:disease_shares_features_of"?
         source: "infores:mondo"
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/disease_shares_features_of"
@@ -951,7 +991,7 @@ components:
         inputSeparator: ","
         parameters:
           fields: mondo.mondo
-          size: '1000'  ## note the size limit
+          size: 1000  ## note the size limit
         requestBody:
           body:
             q: "{inputs[0]}"   ## HAS PREFIX (MONDO)
@@ -964,7 +1004,6 @@ components:
         - id: MONDO
           semantic: Disease
         predicate: similar_to  ## could biolink have a more specific predicate?
-        ## no relation...
         source: "infores:mondo"
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/mondo"
@@ -975,8 +1014,8 @@ components:
       - supportBatch: true
         inputSeparator: ","
         parameters:
-          fields: mondo.disease_has_major_feature
-          size: '1000'  ## note the size limit
+          fields: mondo.disease_has_major_feature.mondo
+          size: 1000  ## note the size limit
         requestBody:
           body:
             q: "{inputs[0]}"   ## HAS PREFIX (MONDO)
@@ -989,7 +1028,6 @@ components:
         - id: MONDO
           semantic: Disease
         predicate: has_part  ## maps to "MONDO:disease_has_major_feature"
-        ## relation: "MONDO:disease_has_major_feature"?
         source: "infores:mondo"
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/disease_has_major_feature"
@@ -1001,7 +1039,7 @@ components:
         inputSeparator: ","
         parameters:
           fields: mondo.mondo
-          size: '1000'  ## note the size limit
+          size: 1000  ## note the size limit
         requestBody:
           body:
             q: "{inputs[0]}"   ## HAS PREFIX (MONDO)
@@ -1014,7 +1052,6 @@ components:
         - id: MONDO
           semantic: Disease
         predicate: part_of  ## could biolink have a more specific predicate?
-        ## no relation...
         source: "infores:mondo"
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/mondo"
@@ -1025,8 +1062,8 @@ components:
       - supportBatch: true
         inputSeparator: ","
         parameters:
-          fields: mondo.disease_has_feature
-          size: '1000'  ## note the size limit
+          fields: mondo.disease_has_feature.mondo
+          size: 1000  ## note the size limit
         requestBody:
           body:
             q: "{inputs[0]}"   ## HAS PREFIX (MONDO)
@@ -1039,7 +1076,6 @@ components:
         - id: MONDO
           semantic: Disease
         predicate: has_part  ## no biolink mapping...
-        ## relation: "MONDO:disease_has_feature"?
         source: "infores:mondo"
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/disease_has_feature"
@@ -1051,7 +1087,7 @@ components:
         inputSeparator: ","
         parameters:
           fields: mondo.mondo
-          size: '1000'  ## note the size limit
+          size: 1000  ## note the size limit
         requestBody:
           body:
             q: "{inputs[0]}"   ## HAS PREFIX (MONDO)
@@ -1064,7 +1100,6 @@ components:
         - id: MONDO
           semantic: Disease
         predicate: part_of
-        ## no relation...
         source: "infores:mondo"
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/mondo"
@@ -1075,8 +1110,8 @@ components:
       - supportBatch: true
         inputSeparator: ","
         parameters:
-          fields: mondo.disease_causes_feature
-          size: '1000'  ## note the size limit
+          fields: mondo.disease_causes_feature.mondo
+          size: 1000  ## note the size limit
         requestBody:
           body:
             q: "{inputs[0]}"   ## HAS PREFIX (MONDO)
@@ -1089,7 +1124,6 @@ components:
         - id: MONDO
           semantic: Disease
         predicate: causes  ## maps to "MONDO:disease_causes_feature"
-        ## relation: "MONDO:disease_causes_feature"?
         source: "infores:mondo"
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/disease_causes_feature"
@@ -1101,7 +1135,7 @@ components:
         inputSeparator: ","
         parameters:
           fields: mondo.mondo
-          size: '1000'  ## note the size limit
+          size: 1000  ## note the size limit
         requestBody:
           body:
             q: "{inputs[0]}"   ## HAS PREFIX (MONDO)
@@ -1114,7 +1148,6 @@ components:
         - id: MONDO
           semantic: Disease
         predicate: caused_by
-        ## no relation...
         source: "infores:mondo"
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/mondo"
@@ -1125,8 +1158,8 @@ components:
       - supportBatch: true
         inputSeparator: ","
         parameters:
-          fields: mondo.disease_arises_from_feature
-          size: '1000'  ## note the size limit
+          fields: mondo.disease_arises_from_feature.mondo
+          size: 1000  ## note the size limit
         requestBody:
           body:
             q: "{inputs[0]}"   ## HAS PREFIX (MONDO)
@@ -1139,7 +1172,6 @@ components:
         - id: MONDO
           semantic: Disease
         predicate: caused_by
-        ## relation: "MONDO:disease_arises_from_feature"?
         source: "infores:mondo"
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/disease_arises_from_feature"
@@ -1151,7 +1183,7 @@ components:
         inputSeparator: ","
         parameters:
           fields: mondo.mondo
-          size: '1000'  ## note the size limit
+          size: 1000  ## note the size limit
         requestBody:
           body:
             q: "{inputs[0]}"   ## HAS PREFIX (MONDO)
@@ -1164,7 +1196,6 @@ components:
         - id: MONDO
           semantic: Disease
         predicate: causes
-        ## no relation...
         source: "infores:mondo"
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/mondo"
