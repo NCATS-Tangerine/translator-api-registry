@@ -229,6 +229,7 @@ paths:
       - query
       x-bte-kgs-operations:
       - "$ref": "#/components/x-bte-kgs-operations/aeolusTreats"
+      ## try this out once the spaces are fixed in next mychem release
       # - "$ref": "#/components/x-bte-kgs-operations/aeolusTreats-rev"
       - "$ref": "#/components/x-bte-kgs-operations/chebiToReactome"
       - "$ref": "#/components/x-bte-kgs-operations/chebiToReactome-rev"
@@ -242,8 +243,9 @@ paths:
       - "$ref": "#/components/x-bte-kgs-operations/drugcentral-contraindication-rev"
       - "$ref": "#/components/x-bte-kgs-operations/drugcentral-indication"
       - "$ref": "#/components/x-bte-kgs-operations/drugcentral-indication-rev"
+      ## try this out once the spaces are fixed in next mychem release
       # - "$ref": "#/components/x-bte-kgs-operations/drugcentral-offlabel"
-      # - "$ref": "#/components/x-bte-kgs-operations/drugcentral-offlabel-rev"
+      - "$ref": "#/components/x-bte-kgs-operations/drugcentral-offlabel-rev"
       - "$ref": "#/components/x-bte-kgs-operations/drugcentral-adverseEvent"
       - "$ref": "#/components/x-bte-kgs-operations/drugcentral-adverseEvent-rev"
       - "$ref": "#/components/x-bte-kgs-operations/fdaOrphanData"
@@ -435,7 +437,7 @@ components:
     drugcentral-unii:
       UNII: drugcentral.xrefs.unii  ## no prefix
     drugcentral-offlabel:
-      UMLS: drugcentral.drug_use.off-label use.umls_cui  ## no prefix
+      UMLS: "drugcentral.drug_use.off-label use.umls_cui"  ## no prefix
     drugcentral-adverseEvent:
       MEDDRA: drugcentral.fda_adverse_event.meddra_code
       fda_count_had-drug_adverse-event: drugcentral.fda_adverse_event.drug_ae
@@ -486,7 +488,7 @@ components:
       # testExamples:
       #   - qInput: "UNII:90347YTW5F"     ## alfuzosin
       #     oneOutput: "MEDDRA:10004446"  ## Benign prostatic hyperplasia
-    ## reverse operation is currently broken because MyChem hasn't indexed the fields  
+    ## try this out once the spaces are fixed in next mychem release
     # aeolusTreats-rev:
     # - supportBatch: true
     #   inputSeparator: ","
@@ -868,27 +870,31 @@ components:
       # testExamples:
       #   - qInput: "UMLS:C0234974"    ## Simple partial seizure
       #     oneOutput: "UNII:44YRR34555"   ## keppra
-    ## may have errors due to space in the field?
+    ## edit this set of operations, try this out once the spaces are fixed in next mychem release
     # drugcentral-offlabel:
     # - supportBatch: true
-    #   inputSeparator: ","
+    #   useTemplating: true
     #   inputs:
     #   - id: "CHEMBL.COMPOUND"
     #     semantic: SmallMolecule
     #   ## there are 638 records with "drugcentral.drug_use.off-label use" fields
     #   ##   most of them (633) also have the drugcentral.xrefs.chembl_id field 
     #   ## note: there were slightly less records (632) with the drugcentral.xrefs.unii field
+    #   requestBodyType: object
     #   requestBody:
-    #     body:
-    #       q: "{inputs[0]}"  ## no prefix
-    #       scopes: drugcentral.xrefs.chembl_id
+    #     body: >-
+    #       { 
+    #         "q": "{{ queryInputs }}",
+    #         "scopes": "drugcentral.xrefs.chembl_id",
+    #         "fields": ["drugcentral.drug_use.off-label use.umls_cui"]
+    #       }
     #     header: application/x-www-form-urlencoded
     #   outputs:
     #   - id: UMLS
     #     semantic: Disease
+    #   ## moved parameters (fields, size) to the request body to allow MyChem to handle field with space inside...
     #   parameters:
-    #     fields: drugcentral.drug_use.off-label use.umls_cui  ## no prefix
-    #     size: 1000  ## note size limit; added just in case
+    #     size: 1000     ## note size limit; added just in case
     #   ## FYI: output could also be SNOMED (specifically SNOMED-CT US Edition). 
     #   ##     Looks like the native ID for DrugCentral, see https://drugcentral.org/drugcard/1768#druguse. 
     #   ##     The original data source also may have some DOID mappings (see the linked example), but the API doesn't have this right now.
@@ -899,30 +905,33 @@ components:
     #   # testExamples:
     #   #   - qInput: "CHEMBL.COMPOUND:CHEMBL11"    ## imipramine
     #   #     oneOutput: "UMLS:C0027796"   ## Neuropathic pain
-    # drugcentral-offlabel-rev:
-    # - supportBatch: true
-    #   inputSeparator: ","
-    #   inputs:
-    #   - id: UMLS
-    #     semantic: Disease
-    #   requestBody:
-    #     body:
-    #       q: "{inputs[0]}"  ## no prefix
-    #       scopes: drugcentral.drug_use.off-label use.umls_cui
-    #     header: application/x-www-form-urlencoded
-    #   outputs:
-    #   - id: "CHEMBL.COMPOUND"
-    #     semantic: SmallMolecule
-    #   parameters:
-    #     fields: drugcentral.xrefs.chembl_id
-    #     size: 1000  ## note size limit
-    #   predicate: treated_by
-    #   source: "infores:drugcentral"
-    #   response_mapping:
-    #     "$ref": "#/components/x-bte-response-mapping/drugcentral-chembl"
-    #   # testExamples:
-    #   #   - qInput: "UMLS:C0149931"                      ## Migraine
-    #   #     oneOutput: "CHEMBL.COMPOUND:CHEMBL2105833"   ## octodrine
+    drugcentral-offlabel-rev:
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: UMLS
+        semantic: Disease
+      requestBodyType: object  
+      requestBody:
+        body: >-
+          {
+            "q": "{{ queryInputs }}",
+            "scopes": ["drugcentral.drug_use.off-label use.umls_cui"]
+          }
+        header: application/x-www-form-urlencoded
+      outputs:
+      - id: "CHEMBL.COMPOUND"
+        semantic: SmallMolecule
+      parameters:
+        fields: drugcentral.xrefs.chembl_id
+        size: 1000  ## note size limit
+      predicate: treated_by
+      source: "infores:drugcentral"
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/drugcentral-chembl"
+      # testExamples:
+      #   - qInput: "UMLS:C0149931"                      ## Migraine
+      #     oneOutput: "CHEMBL.COMPOUND:CHEMBL2105833"   ## octodrine
     drugcentral-adverseEvent:
     ## - chose to map to Disease semantic type since I saw SRI map some MEDDRA IDs to Disease...
     ##   https://nodenormalization-sri.renci.org/1.2/get_normalized_nodes?curie=MEDDRA%3A10035528&conflate=true
