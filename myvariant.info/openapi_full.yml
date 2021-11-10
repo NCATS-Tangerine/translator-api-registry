@@ -15,7 +15,7 @@ info:
     component: KP
     team:
       - Service Provider
-    biolink-version: "2.2.3"
+    biolink-version: "2.2.8"
 servers:
 - description: Encrypted Production server
   url: https://myvariant.info/v1
@@ -163,11 +163,22 @@ paths:
       tags:
       - query
       x-bte-kgs-operations:
-      - "$ref": "#/components/x-bte-kgs-operations/variantAssociatedWithGene"
-      - "$ref": "#/components/x-bte-kgs-operations/geneAssociatedWithVariant"
-      - "$ref": "#/components/x-bte-kgs-operations/variantAssociatedWithCondition"
-      - "$ref": "#/components/x-bte-kgs-operations/conditionAssociatedWithVariant"
-      # - "$ref": "#/components/x-bte-kgs-operations/variantAffectDrugResponse"
+      # - "$ref": "#/components/x-bte-kgs-operations/civic-geneDisease"
+      - "$ref": "#/components/x-bte-kgs-operations/civic-geneDisease-rev"
+      # - "$ref": "#/components/x-bte-kgs-operations/civic-variantDisease"
+      - "$ref": "#/components/x-bte-kgs-operations/civic-variantDisease-rev"
+      - "$ref": "#/components/x-bte-kgs-operations/dbsnp-variantGene"
+      - "$ref": "#/components/x-bte-kgs-operations/dbsnp-variantGene-rev"
+      - "$ref": "#/components/x-bte-kgs-operations/clinvar-variantGene"
+      - "$ref": "#/components/x-bte-kgs-operations/clinvar-variantGene-rev"
+      - "$ref": "#/components/x-bte-kgs-operations/clinvar-geneDisease"
+      - "$ref": "#/components/x-bte-kgs-operations/clinvar-geneDisease-rev"
+      - "$ref": "#/components/x-bte-kgs-operations/clinvar-variantDisease"
+      - "$ref": "#/components/x-bte-kgs-operations/clinvar-variantDisease-rev"
+      - "$ref": "#/components/x-bte-kgs-operations/docm-geneDisease"
+      - "$ref": "#/components/x-bte-kgs-operations/docm-geneDisease-rev"
+      - "$ref": "#/components/x-bte-kgs-operations/docm-variantDisease"
+      - "$ref": "#/components/x-bte-kgs-operations/docm-variantDisease-rev"
   "/variant":
     post:
       parameters:
@@ -351,149 +362,544 @@ components:
         type: array
       - type: string
   x-bte-response-mapping:
-    dbsnp-gene:
-      NCBIGene: dbsnp.gene.geneid  ## no prefix
-    clinvar-rcv-omim:
-      OMIM: clinvar.rcv.conditions.identifiers.omim  ## no prefix
-      ## edge attributes
-      clinvar_clinicalsignificance: clinvar.rcv.clinical_significance  ## similar to relation
-      ## not sure if there can be more than one value. Values seen: "Likely pathogenic", "Uncertain significance", "Pathogenic"
-      clinvar_last_evaluated: clinvar.rcv.last_evaluated  ## gives a date yyyy-mm-dd
-      clinvar_num_of_submitters: clinvar.rcv.number_submitters
-      clinvar_variant_origin: clinvar.rcv.origin
-      clinvar_review_status: clinvar.rcv.review_status
+    civic-geneDisease:
+      DOID: civic.evidence_items.disease.doid,
+      ## categorical var / relation
+      civic_clinical_significance: civic.evidence_items.clinical_significance,  
+      ## free text
+      civic_description: civic.evidence_items.description,                      
+      ## context: drugs involved
+      civic_drug_interaction: civic.evidence_items.drug_interaction_type,       
+      civic_drugs_involved: civic.evidence_items.drugs.name,
+      ## categorical vars
+      civic_evidence_direction: civic.evidence_items.evidence_direction,        
+      civic_evidence_level: civic.evidence_items.evidence_level,
+      civic_evidence_type: civic.evidence_items.evidence_type,
+      ## provenance
+      clinical_trial_url: civic.evidence_items.source.clinical_trials.clinical_trial_url,  
+      pubmed: civic.evidence_items.source.pubmed,
+      ## context: variant involved, could use "biolink:sequence_variant_qualifier"?
+      civic_variant_id: civic.evidence_items.variant_id,                        
+      civic_variant_origin: civic.evidence_items.variant_origin
+    civic-geneOnly:
+      NCBIGene: civic.entrez_id
+    civic-variantDisease:
+      DOID: civic.evidence_items.disease.doid,
+      ## categorical var / relation
+      civic_clinical_significance: civic.evidence_items.clinical_significance,  
+      ## free text
+      civic_description: civic.evidence_items.description, 
+      ## context: gene involved
+      civic_variant_in_gene: civic.entrez_name,       
+      ## context: drugs involved
+      civic_drug_interaction: civic.evidence_items.drug_interaction_type,       
+      civic_drugs_involved: civic.evidence_items.drugs.name,
+      ## categorical vars
+      civic_evidence_direction: civic.evidence_items.evidence_direction,        
+      civic_evidence_level: civic.evidence_items.evidence_level,
+      civic_evidence_type: civic.evidence_items.evidence_type,
+      ## provenance
+      clinical_trial_url: civic.evidence_items.source.clinical_trials.clinical_trial_url,  
+      pubmed: civic.evidence_items.source.pubmed,
+      ## context: variant involved was from where
+      civic_variant_origin: civic.evidence_items.variant_origin
     dbsnp-rsid:
       DBSNP: dbsnp.rsid  ## no prefix
-    # variant_affect_drug_response:
-    #   name: civic.evidence_items.drugs.name
-    #   clinical_significance: civic.evidence_items.clinical_significance
-    #   evidence_type: civic.evidence_items.evidence_type
-    #   evidence_level: civic.evidence_items.evidence_level
-    #   pubmed: civic.evidence_items.source.pubmed
+    dbsnp-gene:
+      NCBIGene: dbsnp.gene.geneid  ## no prefix
+    clinvar-rsid:
+      DBSNP: clinvar.rsid  ## no prefix
+    clinvar-geneDisease:
+      OMIM: clinvar.rcv.conditions.identifiers.omim  ## no prefix
+      ## edge attributes
+      clinvar_clinical_significance: clinvar.rcv.clinical_significance  ## similar to relation
+      clinvar_variant_rsid: dbsnp.rsid    ## context: variant; could use biolink:sequence_variant_qualifier?
+      clinvar_submission_last_evaluated: clinvar.rcv.last_evaluated  ## gives a date yyyy-mm-dd
+      clinvar_num_submitters: clinvar.rcv.number_submitters
+      clinvar_variant_origin: clinvar.rcv.origin
+      clinvar_review_status: clinvar.rcv.review_status
+    clinvar-gene:
+      NCBIGene: clinvar.gene.id  ## no prefix
+    clinvar-variantDisease:
+      OMIM: clinvar.rcv.conditions.identifiers.omim  ## no prefix
+      ## edge attributes
+      clinvar_clinical_significance: clinvar.rcv.clinical_significance  ## similar to relation
+      clinvar_variant_in_gene: clinvar.gene.symbol    ## context: gene
+      clinvar_submission_last_evaluated: clinvar.rcv.last_evaluated  ## gives a date yyyy-mm-dd
+      clinvar_num_submitters: clinvar.rcv.number_submitters
+      clinvar_variant_origin: clinvar.rcv.origin
+      clinvar_review_status: clinvar.rcv.review_status
+    docm-disease-only:
+      DOID: docm.doid
+    docm-gene:
+      ENSEMBL: docm.ensembl_gene_id
+    docm-disease-and-gene:
+      DOID: docm.doid
+      docm_variant_in_gene: docm.genename
+  ## not included:
+  ## - cgi: only 323 records, doesn't have IDs for disease, gene, or drug ID...
+  ## - cosmic: only seems to connect variants to tissue they were found in, but no IDs for the tissue...
+  ## - dbnsfp.clinvar: overlap with clinvar section? 
+  ##   missing indexing for omim, orphanet IDs have ORPHA000 format...
+  ## - dbnsfp.ensembl.geneid: very repetitive for some reason...
+  ## - dbnsfp.gtex.tissue: string, no IDs...
+  ## - grasp.publication.phenotype: looks like curation of publications for variants / phenotypes. string, no IDs...
+  ## - gwassnps.trait: looks like curation of publications for variants / phenotypes. string, no IDs...
   x-bte-kgs-operations:
-  ## BIG NOTE: could add more disease namespaces for the condition operations.
-  ##           Maybe the cosmic data (ehh for the cgi data).
-    variantAssociatedWithGene:
+  ## not working with object-object error
+    ## CIVIC: 
+    ## data seems to be connecting variant-disease, sometimes with a drug (although that drug may not have an ID)
+    ##   having a drug means looking at drug response (given the disease...)
+    ## However, the civic variant IDs don't seem to be easily mapped...
+    ## The variants are mapped to their genes: 2648 records total, all have entrez_id field...
+    ## - not including 
+    ##     - civic assertions (only 30 variant records https://myvariant.info/v1/query?q=_exists_:%22civic.assertions%22)
+    ##     - civic evidence_items.phenotypes: 598 records, some seem to repeat the disease info
+    ##     - civic variant_groups: 129 records, not clear how to structure / what the relationship is
+    # civic-geneDisease:
+    #   - supportBatch: true
+    #     inputSeparator: ","
+    #     inputs:
+    #     - id: NCBIGene
+    #       semantic: Gene
+    #     requestBody:
+    #       body:
+    #         q: "{inputs[0]}"  ## no prefix
+    #         scopes: civic.entrez_id
+    #       header: application/x-www-form-urlencoded
+    #     outputs:
+    #     - id: DOID
+    #       semantic: Disease
+    #     ## out of 2648 civic records, most (2610) have the doid disease field...only some have dbsnp.rsid...
+    #     parameters:
+    #     ## most fields below are categorical variables
+    #     ## description is free text, Disease ID has prefix (DOID), variant ID is CIVIC (no prefix)
+    #     ## only some records have drug information, and only some drugs have NCIT IDs
+    #       fields: civic.evidence_items
+    #       size: 1000        ## note size limit; added just in case
+    #     predicate: affects
+    #     source: "infores:civic"
+    #     response_mapping:
+    #       "$ref": "#/components/x-bte-response-mapping/civic-geneDisease"
+    #   ## this record has drug interaction: https://myvariant.info/v1/query?q=_exists_:%22civic.evidence_items.drug_interaction_type%22
+    #   # testExamples:
+    #   #   - qInput: "NCBIGene:1956"   ## EGFR
+    #   #     oneOutput: "DOID:3910"    ##  Lung Adenocarcinoma
+    civic-geneDisease-rev:
+      - supportBatch: true
+        inputSeparator: ","
+        inputs:
+        - id: DOID
+          semantic: Disease
+        requestBody:
+          body:
+            q: "{inputs[0]}"  ## HAS PREFIX
+            scopes: civic.evidence_items.disease.doid
+          header: application/x-www-form-urlencoded
+        outputs:
+        - id: NCBIGene
+          semantic: Gene
+        parameters:
+          fields: civic.entrez_id  ## no prefix
+          size: 1000
+        predicate: affected_by
+        source: "infores:civic"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/civic-geneOnly"
+      ## this record has drug interaction: https://myvariant.info/v1/query?q=_exists_:%22civic.evidence_items.drug_interaction_type%22
+      # testExamples:
+      #   - qInput: "DOID:9256"            ## Colorectal Cancer
+      #     oneOutput: "NCBIGene:5290"     ##  PIK3CA
+    # civic-variantDisease:
+    # ## out of 2648 civic records, only some (653) have the doid disease field...
+    #   - supportBatch: true
+    #     inputSeparator: ","
+    #     inputs:
+    #     - id: DBSNP
+    #       semantic: SequenceVariant
+    #     requestBody:
+    #       body:
+    #         q: "{inputs[0]}"  ## no prefix
+    #         scopes: dbsnp.rsid
+    #       header: application/x-www-form-urlencoded
+    #     outputs:
+    #     - id: DOID
+    #       semantic: Disease
+    #     parameters:
+    #     ## most fields below are categorical variables
+    #     ## description is free text, Disease ID has prefix (DOID), variant ID is CIVIC (no prefix)
+    #     ## only some records have drug information, and only some drugs have NCIT IDs
+    #     ## using entrez gene name for now (human-readable) rather than id
+    #       fields: >-
+    #         civic.evidence_items,
+    #         civic.entrez_name
+    #       size: 1000        ## note size limit; added just in case
+    #     predicate: affects
+    #     source: "infores:civic"
+    #     response_mapping:
+    #       "$ref": "#/components/x-bte-response-mapping/civic-variantDisease"
+    #   ## this record has drug interaction: https://myvariant.info/v1/query?q=_exists_:%22civic.evidence_items.drug_interaction_type%22%20AND%20_exists_:%22dbsnp.rsid%22
+    #   # testExamples:
+    #   #   - qInput: "DBSNP:rs121913521"   ## in KIT
+    #   #     oneOutput: "DOID:9253"        ##  Gastrointestinal Stromal Tumor
+    civic-variantDisease-rev:
+      - supportBatch: true
+        inputSeparator: ","
+        inputs:
+        - id: DOID
+          semantic: Disease
+        requestBody:
+          body:
+            q: "{inputs[0]}"  ## HAS PREFIX
+            scopes: civic.evidence_items.disease.doid
+          header: application/x-www-form-urlencoded
+        outputs:
+        - id: DBSNP
+          semantic: SequenceVariant
+        parameters:
+          fields: dbsnp.rsid
+          size: 1000        ## note size limit; added just in case
+        predicate: affected_by
+        source: "infores:civic"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/dbsnp-rsid"
+      ## this record has drug interaction: https://myvariant.info/v1/query?q=_exists_:%22civic.evidence_items.drug_interaction_type%22%20AND%20_exists_:%22dbsnp.rsid%22
+      # testExamples:
+      #   - qInput: "DOID:219"                 ## Colon Cancer
+      #     oneOutput: "DBSNP:rs121913470"     ##  in ERBB2
+    dbsnp-variantGene:
     ## note: there may be redundant results in the response
+    ## there are 446 million records
     - supportBatch: true
       inputSeparator: ","
-      parameters:
-        fields: dbsnp.gene.geneid
-      predicate: is_sequence_variant_of
-      source: "infores:dbsnp"
-      requestBody:
-        body:
-          q: "{inputs[0]}"  ## no prefix
-          ## example: put rs121913527 here
-          ##   should get 3845 (KRAS) in response
-          scopes: dbsnp.rsid
-        header: application/x-www-form-urlencoded
       inputs:
       - id: DBSNP
         semantic: SequenceVariant
+      requestBody:
+        body:
+          q: "{inputs[0]}"  ## no prefix
+          scopes: dbsnp.rsid
+        header: application/x-www-form-urlencoded
       outputs:
       - id: NCBIGene
         semantic: Gene
+      parameters:
+        fields: dbsnp.gene.geneid  ## no prefix
+      predicate: is_sequence_variant_of
+      source: "infores:dbsnp"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/dbsnp-gene"
-    geneAssociatedWithVariant:
+      ## https://myvariant.info/v1/query?q=_exists_:%22dbsnp.rsid%22%20AND%20_exists_:%22dbsnp.gene.geneid%22
+      # testExamples:
+      #   - qInput: "DBSNP:rs770112667"
+      #     oneOutput: "NCBIGene:55691"    ## FRMD4A
+    dbsnp-variantGene-rev:
     - supportBatch: true
       inputSeparator: ","
+      inputs:
+      - id: NCBIGene
+        semantic: Gene
+      requestBody:
+        body:
+          q: "{inputs[0]}"  ## no prefix
+          scopes: dbsnp.gene.geneid
+        header: application/x-www-form-urlencoded
+      outputs:
+      - id: DBSNP
+        semantic: SequenceVariant
       parameters:
         fields: dbsnp.rsid
       predicate: has_sequence_variant
       source: "infores:dbsnp"
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/dbsnp-rsid"
+      ## https://myvariant.info/v1/query?q=_exists_:%22dbsnp.rsid%22%20AND%20_exists_:%22dbsnp.gene.geneid%22
+      # testExamples:
+      #   - qInput: "NCBIGene:55691"          ## FRMD4A
+      #     oneOutput: "DBSNP:rs550898964"
+    clinvar-variantGene:
+    ## there are 43k records with clinvar.rsid but no dbsnp
+    ## https://myvariant.info/v1/query?q=_exists_:%22clinvar.rsid%22%20AND%20NOT%20_exists_:%22dbsnp.rsid%22
+    - supportBatch: true
+      inputSeparator: ","
+      inputs:
+      - id: DBSNP
+        semantic: SequenceVariant
       requestBody:
         body:
           q: "{inputs[0]}"  ## no prefix
-          ## example: put 55691 (FRMD4A) here
-          ##   should get rs770112667 in response
-          scopes: dbsnp.gene.geneid
+          scopes: clinvar.rsid
         header: application/x-www-form-urlencoded
+      outputs:
+      - id: NCBIGene
+        semantic: Gene
+      parameters:
+        fields: clinvar.gene.id  ## no prefix
+      predicate: is_sequence_variant_of
+      source: "infores:clinvar"
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/clinvar-gene"
+      # testExamples:
+      #   - qInput: "DBSNP:rs794727661"
+      #     oneOutput: "NCBIGene:1756"    ## DMD
+    clinvar-variantGene-rev:
+    - supportBatch: true
+      inputSeparator: ","
       inputs:
       - id: NCBIGene
         semantic: Gene
-      outputs:
-      - id: DBSNP
-        semantic: SequenceVariant
-      response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/dbsnp-rsid"
-    ## there are other ID namespaces, but they will return overlapping data...
-    ## some conditions have no IDs, some have multiple IDs (not all have OMIM). 
-    ##   Other IDs are under the keys: efo, human_phenotype_ontology, medgen, orphanet, mesh, mondo...
-    variantAssociatedWithCondition:
-    - supportBatch: true
-      inputSeparator: ","
-      parameters:
-        fields: clinvar.rcv
-      predicate: related_to
-      source: "infores:clinvar"
       requestBody:
         body:
           q: "{inputs[0]}"  ## no prefix
-          ## example: put rs1602177243 here
-          ##   should get 300299 (X-linked severe congenital neutropenia (SCNX)) in response
-          scopes: dbsnp.rsid
-          ## out of >497,000 records with clinvar.rcv.conditions.identifiers.omim field, 
-          ##        >405,000 records also have dbsnp.rsid field (which is more than the 340,000 records with clinvar.rsid)
+          scopes: clinvar.gene.id
         header: application/x-www-form-urlencoded
-      inputs:
+      outputs:
       - id: DBSNP
         semantic: SequenceVariant
+      parameters:
+        fields: clinvar.rsid  ## no prefix
+      predicate: has_sequence_variant
+      source: "infores:clinvar"
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/clinvar-rsid"
+      # testExamples:
+      #   - qInput: "NCBIGene:284098"          ## PIGW
+      #     oneOutput: "DBSNP:rs779029016"
+    clinvar-geneDisease:
+    ## - conditions.identifiers can include multiple kinds
+    ##   some conditions have no IDs, some have multiple IDs (not all have OMIM). 
+    ##   - omim: 497648 (no prefix)
+    ##   - orphanet: 416644 (no prefix)
+    ##   - human_phenotype_ontology: 74175
+    ##   - efo: 3637, has EFO_000 format (not ID or CURIE)
+    ##   - many medgen IDs but I don't think SRI ID resolver supports this...
+    ##   - not indexed: mesh, mondo
+    - supportBatch: true
+      inputSeparator: ","
+      inputs:
+      - id: NCBIGene
+        semantic: Gene
+      requestBody:
+        body:
+          q: "{inputs[0]}"  ## no prefix
+          scopes: clinvar.gene.id
+          ## out of >497,000 records with clinvar.rcv.conditions.identifiers.omim field, all have gene field...
+        header: application/x-www-form-urlencoded
       outputs:
       - id: OMIM
         semantic: Disease
+      parameters:
+      ## most should have dbsnp.rsid ID (see above)
+        fields: >-
+          clinvar.rcv.conditions.identifiers.omim,
+          clinvar.rcv.clinical_significance,
+          dbsnp.rsid,
+          clinvar.rcv.last_evaluated,
+          clinvar.rcv.number_submitters,
+          clinvar.rcv.origin,
+          clinvar.rcv.review_status
+        size: 1000  ## note size limit; added just in case
+      predicate: related_to
+      ## clinical significance is like a relation: 
+      ##   Uncertain significance, Pathogenic, Likely pathogenic, other
+      source: "infores:clinvar"
       response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/clinvar-rcv-omim"
-    conditionAssociatedWithVariant:
+        "$ref": "#/components/x-bte-response-mapping/clinvar-geneDisease"
+      # testExamples:
+      #   - qInput: "NCBIGene:55806"   ## HR
+      #     oneOutput: "OMIM:209500"   ## Atrichia with papular lesions (APL)
+    clinvar-geneDisease-rev:
     - supportBatch: true
       inputSeparator: ","
-      parameters:
-          ## out of >497,000 records with clinvar.rcv.conditions.identifiers.omim field, 
-          ##        >405,000 records also have dbsnp.rsid field (which is more than the 340,000 records with clinvar.rsid)
-        fields: dbsnp.rsid
-        size: '1000'  ## note size limit
-      predicate: related_to
-      source: "infores:clinvar"
+      inputs:
+      - id: OMIM
+        semantic: Disease
       requestBody:
         body:
           q: "{inputs[0]}"  ## no prefix
-          ## example: put 301000 (Wiskott-Aldrich syndrome (WAS)) here
-          ##   should get rs1602177243 in response
+          scopes: clinvar.rcv.conditions.identifiers.omim
+        header: application/x-www-form-urlencoded
+      outputs:
+      - id: NCBIGene
+        semantic: Gene
+      parameters:
+        fields: clinvar.gene.id
+        size: 1000  ## note size limit
+      predicate: related_to
+      source: "infores:clinvar"
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/clinvar-gene"
+      # testExamples:
+      #   - qInput: "OMIM:615592"        ## Immunodeficiency 15 (IMD15B)
+      #     oneOutput: "NCBIGene:3551"   ## IKBKB
+    clinvar-variantDisease:
+    - supportBatch: true
+      inputSeparator: ","
+      inputs:
+      - id: DBSNP
+        semantic: SequenceVariant
+      requestBody:
+        body:
+          q: "{inputs[0]}"  ## no prefix
+          scopes: dbsnp.rsid
+          ## out of >497,000 records with clinvar.rcv.conditions.identifiers.omim field, 
+          ##        >405,000 records also have dbsnp.rsid field (which is more than the 347,000 records with clinvar.rsid)
+        header: application/x-www-form-urlencoded
+      outputs:
+      - id: OMIM
+        semantic: Disease
+      parameters:
+      ## using gene symbol rather than gene.id so it's human-readable
+        fields: >-
+          clinvar.rcv.conditions.identifiers.omim,
+          clinvar.rcv.clinical_significance,
+          clinvar.gene.symbol,
+          clinvar.rcv.last_evaluated,
+          clinvar.rcv.number_submitters,
+          clinvar.rcv.origin,
+          clinvar.rcv.review_status
+        size: 1000  ## note size limit; added just in case
+      predicate: related_to
+      ## clinical significance is like a relation: 
+      ##   Uncertain significance, Pathogenic, Likely pathogenic, other
+      source: "infores:clinvar"
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/clinvar-variantDisease"
+      ## https://myvariant.info/v1/query?q=_exists_:%22clinvar.rcv.conditions.identifiers.omim%22%20AND%20_exists_:%22dbsnp.rsid%22
+      # testExamples:
+      #   - qInput: "DBSNP:rs1193171808"
+      #     oneOutput: "OMIM:615592"        ## Immunodeficiency 15 (IMD15B)
+    clinvar-variantDisease-rev:
+    - supportBatch: true
+      inputSeparator: ","
+      inputs:
+      - id: OMIM
+        semantic: Disease
+      requestBody:
+        body:
+          q: "{inputs[0]}"  ## no prefix
           scopes: clinvar.rcv.conditions.identifiers.omim
         header: application/x-www-form-urlencoded
       outputs:
       - id: DBSNP
         semantic: SequenceVariant
-      inputs:
-      - id: OMIM
-        semantic: Disease
+      parameters:
+        fields: dbsnp.rsid
+        size: 1000  ## note size limit
+      predicate: related_to
+      source: "infores:clinvar"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/dbsnp-rsid"
-    ## removing this operation since it depends on Drug name...
-    # variantAffectDrugResponse:
-    #   - supportBatch: true
-    #     inputSeparator: ","
-    #     parameters:
-    #       ## any way to improve retrieval of info with a variant ID?
-    #       ## out of 2648 records with civic.evidence_items field, 653 records also have dbsnp.rsid
-    #       ## note that some records' _id field is the CIVIC variant ID (not MYVARIANT_HG19)
-    #       fields: civic.evidence_items
-    #     predicate: affects_response_to
-    #     source: "infores:civic"
-    #     requestBody:
-    #       body:
-    #         q: "{inputs[0]}"  ## no prefix
-    #         ## example: put 301000 (Wiskott-Aldrich syndrome (WAS)) here
-    #         ##   should get rs1602177243 in response
-    #         scopes: dbsnp.rsid
-    #       header: application/x-www-form-urlencoded
-    #     inputs:
-    #     - id: DBSNP
-    #       semantic: SequenceVariant
-    #     outputs:
-    #     - id: name
-    #       semantic: SmallMolecule
-    #     response_mapping:
-    #       "$ref": "#/components/x-bte-response-mapping/variant_affect_drug_response"
-  
+      # testExamples:
+      #   - qInput: "OMIM:602629"             ## Torsion dystonia 6 (DYT6)
+      #     oneOutput: "DBSNP:rs1480200060"
+    docm-geneDisease:
+    - supportBatch: true
+      inputSeparator: ","
+      inputs:
+      - id: ENSEMBL
+        semantic: Gene
+      requestBody:
+        body:
+          q: "{inputs[0]}"  ## no prefix
+          scopes: docm.ensembl_gene_id
+          ## all 1119 records with docm field have the gene id
+        header: application/x-www-form-urlencoded
+      outputs:
+      - id: DOID
+        semantic: Disease
+      parameters:
+        fields: docm.doid  ## HAS PREFIX
+        size: 1000  ## note size limit; added just in case
+      predicate: related_to
+      ## it's curated but there's no relationship info...
+      ## looks like it's from http://www.docm.info/
+      source: "infores:docm"
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/docm-disease-only"
+      ## https://myvariant.info/v1/query?q=_exists_:%22docm.ensembl_gene_id%22
+      # testExamples:
+      #   - qInput: "ENSEMBL:ENSG00000171094"   ## ALK
+      #     oneOutput: "DOID:769"               ## Neuroblastoma
+    docm-geneDisease-rev:
+    - supportBatch: true
+      inputSeparator: ","
+      inputs:
+      - id: DOID
+        semantic: Disease
+      requestBody:
+        body:
+          q: "{inputs[0]}"  ## HAS PREFIX
+          scopes: docm.doid
+        header: application/x-www-form-urlencoded
+      outputs:
+      - id: ENSEMBL
+        semantic: Gene
+      parameters:
+        fields: docm.ensembl_gene_id  ## no prefix
+        size: 1000  ## note size limit
+      predicate: related_to
+      source: "infores:docm"
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/docm-gene"
+      ## https://myvariant.info/v1/query?q=_exists_:%22docm.ensembl_gene_id%22
+      # testExamples:
+      #   - qInput: "DOID:1909"                     ## Melanoma
+      #     oneOutput: "ENSEMBL:ENSG00000169032"    ## MAP2K1
+    docm-variantDisease:
+    - supportBatch: true
+      inputSeparator: ","
+      inputs:
+      - id: DBSNP
+        semantic: SequenceVariant
+      requestBody:
+        body:
+          q: "{inputs[0]}"  ## no prefix
+          scopes: dbsnp.rsid
+          ## out of 1119 records with docm field, 
+          ##        465 records also have dbsnp.rsid field
+        header: application/x-www-form-urlencoded
+      outputs:
+      - id: DOID
+        semantic: Disease
+      parameters:
+      ## DOID has prefix, using gene name so it's human readable rather than gene id
+        fields: >- 
+          docm.doid,
+          docm.genename
+        size: 1000  ## note size limit; added just in case
+      predicate: related_to
+      ## it's curated but there's no relationship info...
+      ## looks like it's from http://www.docm.info/
+      source: "infores:docm"
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/docm-disease-and-gene"
+      ## https://myvariant.info/v1/query?q=_exists_:%22docm.ensembl_gene_id%22%20AND%20_exists_:%22dbsnp.rsid%22
+      # testExamples:
+      #   - qInput: "DBSNP:rs759487569"    ## in GATA2
+      #     oneOutput: "DOID:9119"         ## AML
+    docm-variantDisease-rev:
+    - supportBatch: true
+      inputSeparator: ","
+      inputs:
+      - id: DOID
+        semantic: Disease
+      requestBody:
+        body:
+          q: "{inputs[0]}"  ## HAS PREFIX
+          scopes: docm.doid
+        header: application/x-www-form-urlencoded
+      outputs:
+      - id: DBSNP
+        semantic: SequenceVariant
+      parameters:
+        fields: dbsnp.rsid
+        size: 1000  ## note size limit
+      predicate: related_to
+      source: "infores:docm"
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/dbsnp-rsid"
+      ## https://myvariant.info/v1/query?q=_exists_:%22docm.ensembl_gene_id%22%20AND%20_exists_:%22dbsnp.rsid%22
+      # testExamples:
+      #   - qInput: "DOID:1781"              ## Thyroid Cancer
+      #     oneOutput: "DBSNP:rs121913254"   ## in NRAS
