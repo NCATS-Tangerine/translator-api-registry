@@ -163,6 +163,7 @@ paths:
       tags:
       - query
       x-bte-kgs-operations:
+      ## the two commented-out operations are hitting an object-object error in BTE...
       # - "$ref": "#/components/x-bte-kgs-operations/civic-geneDisease"
       - "$ref": "#/components/x-bte-kgs-operations/civic-geneDisease-rev"
       # - "$ref": "#/components/x-bte-kgs-operations/civic-variantDisease"
@@ -446,7 +447,8 @@ components:
   ## - grasp.publication.phenotype: looks like curation of publications for variants / phenotypes. string, no IDs...
   ## - gwassnps.trait: looks like curation of publications for variants / phenotypes. string, no IDs...
   x-bte-kgs-operations:
-  ## not working with object-object error
+  ## THIS OPERATION ISN'T WORKING and is commented out in the list above: 
+  ##   hitting an object-object error in BTE...
     ## CIVIC: 
     ## data seems to be connecting variant-disease, sometimes with a drug (although that drug may not have an ID)
     ##   having a drug means looking at drug response (given the disease...)
@@ -456,35 +458,35 @@ components:
     ##     - civic assertions (only 30 variant records https://myvariant.info/v1/query?q=_exists_:%22civic.assertions%22)
     ##     - civic evidence_items.phenotypes: 598 records, some seem to repeat the disease info
     ##     - civic variant_groups: 129 records, not clear how to structure / what the relationship is
-    # civic-geneDisease:
-    #   - supportBatch: true
-    #     inputSeparator: ","
-    #     inputs:
-    #     - id: NCBIGene
-    #       semantic: Gene
-    #     requestBody:
-    #       body:
-    #         q: "{inputs[0]}"  ## no prefix
-    #         scopes: civic.entrez_id
-    #       header: application/x-www-form-urlencoded
-    #     outputs:
-    #     - id: DOID
-    #       semantic: Disease
-    #     ## out of 2648 civic records, most (2610) have the doid disease field...only some have dbsnp.rsid...
-    #     parameters:
-    #     ## most fields below are categorical variables
-    #     ## description is free text, Disease ID has prefix (DOID), variant ID is CIVIC (no prefix)
-    #     ## only some records have drug information, and only some drugs have NCIT IDs
-    #       fields: civic.evidence_items
-    #       size: 1000        ## note size limit; added just in case
-    #     predicate: affects
-    #     source: "infores:civic"
-    #     response_mapping:
-    #       "$ref": "#/components/x-bte-response-mapping/civic-geneDisease"
-    #   ## this record has drug interaction: https://myvariant.info/v1/query?q=_exists_:%22civic.evidence_items.drug_interaction_type%22
-    #   # testExamples:
-    #   #   - qInput: "NCBIGene:1956"   ## EGFR
-    #   #     oneOutput: "DOID:3910"    ##  Lung Adenocarcinoma
+    civic-geneDisease:
+      - supportBatch: true
+        inputSeparator: ","
+        inputs:
+        - id: NCBIGene
+          semantic: Gene
+        requestBody:
+          body:
+            q: "{inputs[0]}"  ## no prefix
+            scopes: civic.entrez_id
+          header: application/x-www-form-urlencoded
+        outputs:
+        - id: DOID
+          semantic: Disease
+        ## out of 2648 civic records, most (2610) have the doid disease field...only some have dbsnp.rsid...
+        parameters:
+        ## most fields below are categorical variables
+        ## description is free text, Disease ID has prefix (DOID), variant ID is CIVIC (no prefix)
+        ## only some records have drug information, and only some drugs have NCIT IDs
+          fields: civic.evidence_items
+          size: 1000        ## note size limit; added just in case
+        predicate: affects
+        source: "infores:civic"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/civic-geneDisease"
+      ## this record has drug interaction: https://myvariant.info/v1/query?q=_exists_:%22civic.evidence_items.drug_interaction_type%22
+      # testExamples:
+      #   - qInput: "NCBIGene:1956"   ## EGFR
+      #     oneOutput: "DOID:3910"    ##  Lung Adenocarcinoma
     civic-geneDisease-rev:
       - supportBatch: true
         inputSeparator: ","
@@ -510,38 +512,40 @@ components:
       # testExamples:
       #   - qInput: "DOID:9256"            ## Colorectal Cancer
       #     oneOutput: "NCBIGene:5290"     ##  PIK3CA
-    # civic-variantDisease:
-    # ## out of 2648 civic records, only some (653) have the doid disease field...
-    #   - supportBatch: true
-    #     inputSeparator: ","
-    #     inputs:
-    #     - id: DBSNP
-    #       semantic: SequenceVariant
-    #     requestBody:
-    #       body:
-    #         q: "{inputs[0]}"  ## no prefix
-    #         scopes: dbsnp.rsid
-    #       header: application/x-www-form-urlencoded
-    #     outputs:
-    #     - id: DOID
-    #       semantic: Disease
-    #     parameters:
-    #     ## most fields below are categorical variables
-    #     ## description is free text, Disease ID has prefix (DOID), variant ID is CIVIC (no prefix)
-    #     ## only some records have drug information, and only some drugs have NCIT IDs
-    #     ## using entrez gene name for now (human-readable) rather than id
-    #       fields: >-
-    #         civic.evidence_items,
-    #         civic.entrez_name
-    #       size: 1000        ## note size limit; added just in case
-    #     predicate: affects
-    #     source: "infores:civic"
-    #     response_mapping:
-    #       "$ref": "#/components/x-bte-response-mapping/civic-variantDisease"
-    #   ## this record has drug interaction: https://myvariant.info/v1/query?q=_exists_:%22civic.evidence_items.drug_interaction_type%22%20AND%20_exists_:%22dbsnp.rsid%22
-    #   # testExamples:
-    #   #   - qInput: "DBSNP:rs121913521"   ## in KIT
-    #   #     oneOutput: "DOID:9253"        ##  Gastrointestinal Stromal Tumor
+  ## THIS OPERATION ISN'T WORKING and is commented out in the list above: 
+  ##   hitting an object-object error in BTE...
+    civic-variantDisease:
+    ## out of 2648 civic records, only some (653) have the doid disease field...
+      - supportBatch: true
+        inputSeparator: ","
+        inputs:
+        - id: DBSNP
+          semantic: SequenceVariant
+        requestBody:
+          body:
+            q: "{inputs[0]}"  ## no prefix
+            scopes: dbsnp.rsid
+          header: application/x-www-form-urlencoded
+        outputs:
+        - id: DOID
+          semantic: Disease
+        parameters:
+        ## most fields below are categorical variables
+        ## description is free text, Disease ID has prefix (DOID), variant ID is CIVIC (no prefix)
+        ## only some records have drug information, and only some drugs have NCIT IDs
+        ## using entrez gene name for now (human-readable) rather than id
+          fields: >-
+            civic.evidence_items,
+            civic.entrez_name
+          size: 1000        ## note size limit; added just in case
+        predicate: affects
+        source: "infores:civic"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/civic-variantDisease"
+      ## this record has drug interaction: https://myvariant.info/v1/query?q=_exists_:%22civic.evidence_items.drug_interaction_type%22%20AND%20_exists_:%22dbsnp.rsid%22
+      # testExamples:
+      #   - qInput: "DBSNP:rs121913521"   ## in KIT
+      #     oneOutput: "DOID:9253"        ##  Gastrointestinal Stromal Tumor
     civic-variantDisease-rev:
       - supportBatch: true
         inputSeparator: ","
