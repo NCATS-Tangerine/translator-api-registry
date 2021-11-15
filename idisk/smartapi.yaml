@@ -14,7 +14,7 @@ info:
     component: KP
     team:
       - Service Provider
-    biolink-version: "2.2.3"
+    biolink-version: "2.2.8"
 servers:
 - description: Encrypted Production server
   url: https://biothings.ncats.io/idisk
@@ -393,22 +393,21 @@ components:
     ## the dietary supplement has an adverse effect (that can be categorized into this class of diseases)
     - supportBatch: true
       inputSeparator: ","
-      parameters:
-        fields: has_adverse_effect_on
-        size: 1000
-      requestBody:
-        body:
-          q: '{inputs[0]}'
-          ## example: put C0000392 (beta-Alanine)
-          ##   should get 10017947 (gastrointestinal disorders) back
-          scopes: umls
-        header: application/x-www-form-urlencoded
       inputs:
       - id: UMLS
         semantic: SmallMolecule
+      requestBody:
+        body:
+          q: '{inputs[0]}'  ## no prefix
+          scopes: umls
+        header: application/x-www-form-urlencoded
       outputs:
       - id: MEDDRA
         semantic: Disease
+      parameters:
+        ## no prefix on output id
+        fields: has_adverse_effect_on.meddra,has_adverse_effect_on.source.name
+        size: 1000  ## size limit; just in case
       predicate: causes_adverse_event  ## closest biolink predicate?
       ## iDISK got all these relations from NMCD: Natural Medicines Comprehensive Database 
       ## ref:  Table 3 of the linked publication, or by comparing number of records total with 
@@ -416,53 +415,56 @@ components:
       source: "infores:idisk"
       response_mapping:
         $ref: '#/components/x-bte-response-mapping/has_adverse_effect_on'
+      # testExamples:
+      #   - qInput: "UMLS:C0000392"       ## beta-Alanine
+      #     oneOutput: "MEDDRA:10017947"  ## gastrointestinal disorders
     has_adverse_effect_on-rev:
     - supportBatch: true
       inputSeparator: ","
-      parameters:
-        fields: umls
-        size: 1000
-      requestBody:
-        body:
-          q: '{inputs[0]}'
-          ## example: put 10017947 (gastrointestinal disorders) 
-          ##   should get C0000392 (beta-Alanine) back
-          scopes: has_adverse_effect_on.meddra
-        header: application/x-www-form-urlencoded
       inputs:
       - id: MEDDRA
         semantic: Disease
+      requestBody:
+        body:
+          q: '{inputs[0]}'  ## no prefix
+          scopes: has_adverse_effect_on.meddra
+        header: application/x-www-form-urlencoded
       outputs:
       - id: UMLS
         semantic: SmallMolecule
+      parameters:
+        fields: umls  ## no prefix
+        size: 1000    ## note size limit
       predicate: adverse_event_caused_by
       source: "infores:idisk"
       response_mapping:
         $ref: '#/components/x-bte-response-mapping/rev'
+      # testExamples:
+      #   - qInput: "MEDDRA:10017947"     ## gastrointestinal disorders 
+      #     oneOutput: "UMLS:C0000392"    ## beta-Alanine
     has_adverse_reaction:
     ## there are 204 records with the has_adverse_reaction field
     ## the dietary supplement has an adverse effect/reaction (specific sign/symptom)
     - supportBatch: true
       inputSeparator: ","
-      parameters:
-        fields: has_adverse_reaction
-        size: 1000
-      requestBody:
-        body:
-          q: '{inputs[0]}'
-          ## example: put C0000578 (5-Hydroxytryptophan) 
-          ##   should get C0027497 (nausea) back
-          scopes: umls
-        header: application/x-www-form-urlencoded
       inputs:
       - id: UMLS
         semantic: SmallMolecule
+      requestBody:
+        body:
+          q: '{inputs[0]}'  ## no prefix
+          scopes: umls
+        header: application/x-www-form-urlencoded
       outputs:
       - id: UMLS
         semantic: PhenotypicFeature  ## use this or Disease?
         ## SRI-ID-resolver is resolving these to PhenotypicFeature
-        ##   examples: https://nodenormalization-sri-dev.renci.org/1.1/get_normalized_nodes?curie=UMLS%3AC0455384&curie=UMLS%3AC0018681
+        ##   example: https://nodenormalization-sri.renci.org/1.2/get_normalized_nodes?curie=UMLS%3AC0027497&conflate=true
         ## don't create two operations or records will duplicate for DiseaseOrPhenotypicFeature query
+      parameters:
+        ## no prefix on output id
+        fields: has_adverse_reaction.umls,has_adverse_reaction.source.name
+        size: 1000  ## size limit; just in case
       predicate: causes_adverse_event  ## closest biolink predicate?
       ## iDISK got all these relations from MSKCC: “About Herbs” page on the Memorial Sloan Kettering Cancer Center (MSKCC) website 
       ## ref:  Table 3 of the linked publication, or by comparing number of records total with 
@@ -470,147 +472,151 @@ components:
       source: "infores:idisk"
       response_mapping:
         $ref: '#/components/x-bte-response-mapping/has_adverse_reaction'
+      # testExamples:
+      #   - qInput: "UMLS:C0000578"     ## 5-Hydroxytryptophan
+      #     oneOutput: "UMLS:C0027497"  ## nausea
     has_adverse_reaction-rev:
     - supportBatch: true
       inputSeparator: ","
-      parameters:
-        fields: umls
-        size: 1000
-      requestBody:
-        body:
-          q: '{inputs[0]}'
-          ## example: put C0027497 (nausea) 
-          ##   should get C0000578 (5-Hydroxytryptophan) back
-          scopes: has_adverse_reaction.umls
-        header: application/x-www-form-urlencoded
       inputs:
       - id: UMLS
-        semantic: PhenotypicFeature  ## use this or Disease?
-        ## SRI-ID-resolver is resolving these to PhenotypicFeature
-        ##   examples: https://nodenormalization-sri-dev.renci.org/1.1/get_normalized_nodes?curie=UMLS%3AC0455384&curie=UMLS%3AC0018681
-        ## don't create two operations or records will duplicate for DiseaseOrPhenotypicFeature query
+        semantic: PhenotypicFeature
+      requestBody:
+        body:
+          q: '{inputs[0]}'  ## no prefix
+          scopes: has_adverse_reaction.umls
+        header: application/x-www-form-urlencoded
       outputs:
       - id: UMLS
         semantic: SmallMolecule
+      parameters:
+        fields: umls  ## no prefix
+        size: 1000    ## note size limit
       predicate: adverse_event_caused_by
       source: "infores:idisk"
       response_mapping:
         $ref: '#/components/x-bte-response-mapping/rev'
+      # testExamples:
+      #   - qInput: "UMLS:C0027497"       ## nausea 
+      #     oneOutput: "UMLS:C0000578"    ## 5-Hydroxytryptophan
     interacts_with:
     ## there are 673 records with the interacts_with field 
     ##   most use NMCD (604), but some use MSKCC (178). Some records must have both?
     ## the dietary supplement interacts with a pharmaceutical drug
     - supportBatch: true
       inputSeparator: ","
-      parameters:
-        fields: interacts_with
-        size: 1000
-      requestBody:
-        body:
-          q: '{inputs[0]}'
-          ## example: put C0000473 (4-Aminobenzoic Acid) 
-          ##   should get C0010137 (Cortisone) back
-          scopes: umls
-        header: application/x-www-form-urlencoded
       inputs:
       - id: UMLS
         semantic: SmallMolecule
+      requestBody:
+        body:
+          q: '{inputs[0]}'  ## no prefix
+          scopes: umls
+        header: application/x-www-form-urlencoded
       outputs:
       - id: UMLS
         semantic: SmallMolecule  
+      parameters:
+        ## no prefix on output id
+        fields: interacts_with.umls,interacts_with.source.name
+        size: 1000  ## size limit; just in case
       predicate: interacts_with  ## closest biolink predicate?
       source: "infores:idisk"
       response_mapping:
         $ref: '#/components/x-bte-response-mapping/interacts_with'
+      # testExamples:
+      #   - qInput: "UMLS:C0000473"     ## 4-Aminobenzoic Acid
+      #     oneOutput: "UMLS:C0010137"  ## Cortisone
     interacts_with-rev:
     - supportBatch: true
       inputSeparator: ","
-      parameters:
-        fields: umls
-        size: 1000
-      requestBody:
-        body:
-          q: '{inputs[0]}'
-          ## example: put C0010137 (Cortisone) 
-          ##   should get C0000473 (4-Aminobenzoic Acid) back
-          scopes: interacts_with.umls
-        header: application/x-www-form-urlencoded
       inputs:
       - id: UMLS
         semantic: SmallMolecule
+      requestBody:
+        body:
+          q: '{inputs[0]}'  ## no prefix
+          scopes: interacts_with.umls
+        header: application/x-www-form-urlencoded
       outputs:
       - id: UMLS
         semantic: SmallMolecule
+      parameters:
+        fields: umls
+        size: 1000  ## note size limit
       predicate: interacts_with
       source: "infores:idisk"
       response_mapping:
         $ref: '#/components/x-bte-response-mapping/rev'
+      # testExamples:
+      #   - qInput: "UMLS:C0010137"      ## Cortisone 
+      #     oneOutput: "UMLS:C0000473"   ## 4-Aminobenzoic Acid
     is_effective_for:
     ## there are 654 records with the is_effective_for field 
     ##   most use NMCD (552), but some use MSKCC (238). Some records must have both?
     ## the dietary supplement is said to treat disease/condition or may be used for it...
     - supportBatch: true
       inputSeparator: ","
-      parameters:
-        fields: is_effective_for
-        size: 1000
-      requestBody:
-        body:
-          q: '{inputs[0]}'
-          ## example: put C0000503 (gamma hydroxybutyrate) 
-          ##   should get C0016053 (Fibromyalgias) back
-          scopes: umls
-        header: application/x-www-form-urlencoded
       inputs:
       - id: UMLS
         semantic: SmallMolecule
+      requestBody:
+        body:
+          q: '{inputs[0]}'  ## no prefix
+          scopes: umls
+        header: application/x-www-form-urlencoded
       outputs:
       - id: UMLS
         semantic: Disease    ## use this or PhenotypicFeature?
+        ## this example is a Disease: https://nodenormalization-sri.renci.org/1.2/get_normalized_nodes?curie=UMLS%3AC0016053&conflate=true
         ## don't create two operations or records will duplicate for DiseaseOrPhenotypicFeature query
+      parameters:
+        fields: is_effective_for.umls,is_effective_for.source.name
+        size: 1000  ## size limit; just in case
       predicate: treats  ## closest biolink predicate?
       source: "infores:idisk"
       response_mapping:
         $ref: '#/components/x-bte-response-mapping/is_effective_for'
+      # testExamples:
+      #   - qInput: "UMLS:C0000503"      ## gamma hydroxybutyrate 
+      #     oneOutput: "UMLS:C0016053"   ## Fibromyalgias
     is_effective_for-rev:
     - supportBatch: true
       inputSeparator: ","
-      parameters:
-        fields: umls
-        size: 1000
-      requestBody:
-        body:
-          q: '{inputs[0]}'
-          ## example: put C0016053 (Fibromyalgias) 
-          ##   should get C0000503 (gamma hydroxybutyrate) back
-          scopes: is_effective_for.umls
-        header: application/x-www-form-urlencoded
       inputs:
       - id: UMLS
         semantic: Disease
+      requestBody:
+        body:
+          q: '{inputs[0]}'
+          scopes: is_effective_for.umls
+        header: application/x-www-form-urlencoded
       outputs:
       - id: UMLS
         semantic: SmallMolecule
+      parameters:
+        fields: umls
+        size: 1000  ## note size limit
       predicate: treated_by
       source: "infores:idisk"
       response_mapping:
         $ref: '#/components/x-bte-response-mapping/rev'
+      # testExamples:
+      #   - qInput: "UMLS:C0016053"   ## Fibromyalgias 
+      #     oneOutput: "UMLS:C0000503"      ## gamma hydroxybutyrate 
   x-bte-response-mapping:
+  ## name not included since BTE doesn't ingest it right now...
     has_adverse_effect_on:
       MEDDRA: has_adverse_effect_on.meddra
-      name: has_adverse_effect_on.name
       source: has_adverse_effect_on.source.name
     rev:
       UMLS: umls
     has_adverse_reaction:
       UMLS: has_adverse_reaction.umls
-      name: has_adverse_reaction.name
       source: has_adverse_reaction.source.name
     interacts_with:
       UMLS: interacts_with.umls
-      name: interacts_with.name
       source: interacts_with.source.name
     is_effective_for:
       UMLS: is_effective_for.umls
-      name: is_effective_for.name
       source: is_effective_for.source.name

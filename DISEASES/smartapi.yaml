@@ -11,7 +11,7 @@ info:
   title: DISEASES API
   version: '1.0'
   x-translator:
-    biolink-version: "2.2.3"
+    biolink-version: "2.2.8"
     infores: "infores:biothings-diseases"
     component: KP
     team:
@@ -381,66 +381,74 @@ components:
   ## look here for more details: https://diseases.jensenlab.org/Entity?order=textmining,knowledge,experiments&textmining=10&knowledge=10&experiments=10&type1=9606&type2=-26&id1=ENSP00000298910
   ## odd that no publications are in our API but perhaps one can see it in the website?  
     disease-gene:
-    - inputSeparator: ","
+    - supportBatch: true
+      inputSeparator: ","
       inputs:
       - id: DOID
         semantic: Disease
+      requestBody:
+        body:
+          q: "{inputs[0]}"  ## HAS PREFIX
+          scopes: DISEASES.doid
+        header: application/x-www-form-urlencoded
       outputs:
       - id: ENSEMBL
-        ## is using ENSP...so it will match to Protein with the SRI ID resolver
         semantic: Gene
       parameters:
-        fields: DISEASES.associatedWith
-        size: '1000'
+      ## no prefix on output
+        fields: >-
+          DISEASES.associatedWith.ensembl,
+          DISEASES.associatedWith.category,
+          DISEASES.associatedWith.confidence,
+          DISEASES.associatedWith.zscore,
+          DISEASES.associatedWith.source,
+          DISEASES.associatedWith.evidence
+        size: 1000  ## size limit; adding just in case
       predicate: condition_associated_with_gene
       ## can't be more specific because all data for the disease will be returned
       ##   (can't restrict based on DISEASES.associatedWith.category == "knowledge" vs "textmining")
       source: "infores:diseases"
-      requestBody:
-        body:
-          q: "{inputs[0]}"  ## HAS PREFIX: DOID
-          ## example: replace {inputs[0]} with DOID:0060041 (Autism spectrum disorder)
-          ##   should get ENSP00000482335 (MAP7) in response
-          scopes: DISEASES.doid
-        header: application/x-www-form-urlencoded
-      supportBatch: true
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/disease-gene"
+      # testExamples:
+      #   - qInput: "DOID:0060041"     ## Autism spectrum disorder
+      #     oneOutput: "ENSEMBL:ENSP00000482335"    ## MAP7
+      ## should be able to see results with all 3 methods/combos of edge attributes
     gene-disease:
-    - inputSeparator: ","
+    - supportBatch: true
+      inputSeparator: ","
+      inputs:
+      - id: ENSEMBL
+        semantic: Gene
+      requestBody:
+        body:
+          q: "{inputs[0]}"  ## no prefix
+          scopes: DISEASES.associatedWith.ensembl
+        header: application/x-www-form-urlencoded
       outputs:
       - id: DOID
         semantic: Disease
-      inputs:
-      - id: ENSEMBL
-        ## is using ENSP...so it will match to Protein with the SRI ID resolver
-        semantic: Gene
+      parameters:
+        fields: DISEASES.doid   ## HAS PREFIX
+        size: 1000              ## note size limit
       predicate: gene_associated_with_disease
       ## can't be more specific because all data for the disease will be returned
       ##   (can't restrict based on DISEASES.associatedWith.category == "knowledge" vs "textmining")
       source: "infores:diseases"
-      parameters:
-        fields: DISEASES.doid
-        size: '1000'
-      requestBody:
-        body:
-          q: "{inputs[0]}"
-          ## example: replace {inputs[0]} with ENSP00000298910 (LRRK2)
-          ##   should get DOID:1926 (Gaucher disease) in response
-          scopes: DISEASES.associatedWith.ensembl
-        header: application/x-www-form-urlencoded
-      supportBatch: true
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/gene-disease"
+      # testExamples:
+      #   - qInput: "ENSEMBL:ENSP00000298910"    ## LRRK2
+      #     oneOutput: "DOID:1926"               ## Gaucher disease
   x-bte-response-mapping:
     disease-gene:
       ENSEMBL: DISEASES.associatedWith.ensembl  ## no prefix
       ## how the knowledge was generated. Values seen so far are "textmining", "knowledge", "experiments"
       method: DISEASES.associatedWith.category
       ## all 3 methods show this value, higher is better
-      DISEASES-confidence-score: DISEASES.associatedWith.confidence
+      DISEASES_confidence_score: DISEASES.associatedWith.confidence
       ## I'm only seen z-score for text-mined results"
-      DISEASES-textmining-zscore: DISEASES.associatedWith.zscore
+      DISEASES_textmining_z-score: DISEASES.associatedWith.zscore
       ## I see source for knowledge / experiments results
       ##   for knowledge, I've seen: GHR, UniProtKB-KW, AmyCo
       ##   for experiments, I've seen: DistiLD
@@ -448,6 +456,6 @@ components:
       ## I see evidence for knowledge / experiments results
       ##   for knowledge, I've only seen "CURATED"
       ##   for experiments, I see things like "p-value = 3e-06"
-      DISEASES-experiment-evidence: DISEASES.associatedWith.evidence
+      DISEASES_evidence: DISEASES.associatedWith.evidence
     gene-disease:
       DOID: DISEASES.doid  ## HAS PREFIX (DOID)
