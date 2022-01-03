@@ -14,7 +14,7 @@ info:
     component: KP
     team:
       - Service Provider
-    biolink-version: "2.1.0"
+    biolink-version: "2.2.8"
 servers:
 - description: Encrypted Production server
   url: https://biothings.ncats.io/dgidb
@@ -180,8 +180,6 @@ paths:
         as well.
       tags:
       - query
-      x-bte-kgs-operations:
-      - $ref: '#/components/x-bte-kgs-operations/chemical-gene'
     post:
       parameters:
       - $ref: '#/components/parameters/dotfield'
@@ -226,7 +224,64 @@ paths:
       tags:
       - query
       x-bte-kgs-operations:
-      - $ref: '#/components/x-bte-kgs-operations/gene-chemical'
+      - $ref: '#/components/x-bte-kgs-operations/inhibitor'
+      - $ref: '#/components/x-bte-kgs-operations/inhibitor-rev'
+      - $ref: '#/components/x-bte-kgs-operations/antagonist'
+      - $ref: '#/components/x-bte-kgs-operations/antagonist-rev'
+      - $ref: '#/components/x-bte-kgs-operations/blocker'
+      - $ref: '#/components/x-bte-kgs-operations/blocker-rev'
+      - $ref: '#/components/x-bte-kgs-operations/inverse_agonist'
+      - $ref: '#/components/x-bte-kgs-operations/inverse_agonist-rev'
+      - $ref: '#/components/x-bte-kgs-operations/negative_modulator'
+      - $ref: '#/components/x-bte-kgs-operations/negative_modulator-rev'
+      - $ref: '#/components/x-bte-kgs-operations/vaccine'
+      - $ref: '#/components/x-bte-kgs-operations/vaccine-rev'
+      - $ref: '#/components/x-bte-kgs-operations/suppressor'
+      - $ref: '#/components/x-bte-kgs-operations/suppressor-rev'
+      - $ref: '#/components/x-bte-kgs-operations/inhibitory_allosteric_modulator'
+      - $ref: '#/components/x-bte-kgs-operations/inhibitory_allosteric_modulator-rev'
+      - $ref: '#/components/x-bte-kgs-operations/partial_antagonist'
+      - $ref: '#/components/x-bte-kgs-operations/partial_antagonist-rev'
+      - $ref: '#/components/x-bte-kgs-operations/agonist'
+      - $ref: '#/components/x-bte-kgs-operations/agonist-rev'
+      - $ref: '#/components/x-bte-kgs-operations/positive_modulator'
+      - $ref: '#/components/x-bte-kgs-operations/positive_modulator-rev'
+      - $ref: '#/components/x-bte-kgs-operations/partial_agonist'
+      - $ref: '#/components/x-bte-kgs-operations/partial_agonist-rev'
+      - $ref: '#/components/x-bte-kgs-operations/potentiator'
+      - $ref: '#/components/x-bte-kgs-operations/potentiator-rev'
+      - $ref: '#/components/x-bte-kgs-operations/inducer'
+      - $ref: '#/components/x-bte-kgs-operations/inducer-rev'
+      - $ref: '#/components/x-bte-kgs-operations/stimulator'
+      - $ref: '#/components/x-bte-kgs-operations/stimulator-rev'
+      - $ref: '#/components/x-bte-kgs-operations/ligand'
+      - $ref: '#/components/x-bte-kgs-operations/ligand-rev'
+      - $ref: '#/components/x-bte-kgs-operations/binder'
+      - $ref: '#/components/x-bte-kgs-operations/binder-rev'
+      - $ref: '#/components/x-bte-kgs-operations/cofactor'
+      - $ref: '#/components/x-bte-kgs-operations/cofactor-rev'
+      - $ref: '#/components/x-bte-kgs-operations/multitarget'
+      - $ref: '#/components/x-bte-kgs-operations/multitarget-rev'
+      - $ref: '#/components/x-bte-kgs-operations/chaperone'
+      - $ref: '#/components/x-bte-kgs-operations/chaperone-rev'
+      - $ref: '#/components/x-bte-kgs-operations/adduct'
+      - $ref: '#/components/x-bte-kgs-operations/adduct-rev'
+      - $ref: '#/components/x-bte-kgs-operations/modulator'
+      - $ref: '#/components/x-bte-kgs-operations/modulator-rev'
+      - $ref: '#/components/x-bte-kgs-operations/allosteric_modulator'
+      - $ref: '#/components/x-bte-kgs-operations/allosteric_modulator-rev'
+      - $ref: '#/components/x-bte-kgs-operations/activator'
+      - $ref: '#/components/x-bte-kgs-operations/activator-rev'
+      - $ref: '#/components/x-bte-kgs-operations/antibody'
+      - $ref: '#/components/x-bte-kgs-operations/antibody-rev'
+      - $ref: '#/components/x-bte-kgs-operations/substrate'
+      - $ref: '#/components/x-bte-kgs-operations/substrate-rev'
+      - $ref: '#/components/x-bte-kgs-operations/product_of'
+      - $ref: '#/components/x-bte-kgs-operations/product_of-rev'
+      - $ref: '#/components/x-bte-kgs-operations/antisense_oligonucleotide'
+      - $ref: '#/components/x-bte-kgs-operations/antisense_oligonucleotide-rev'
+      - $ref: '#/components/x-bte-kgs-operations/cleavage'
+      - $ref: '#/components/x-bte-kgs-operations/cleavage-rev'
 components:
   parameters:
     callback:
@@ -379,55 +434,1648 @@ components:
         type: array
       - type: string
   x-bte-kgs-operations:
-    ## current database has CHEMBL.COMPOUND curies. So input has to be prefixed, which can happen with 1 GET query (1 input object)).
-    ##   otherwise need logic in BTE to add prefix to each ID for the batch-querying. 
-    chemical-gene:
-    - inputs:
-      - id: CHEMBL.COMPOUND
-        semantic: SmallMolecule
-      outputs:
-      - id: NCBIGene
-        semantic: Gene
-      parameters:
-        q: object.CHEMBL_COMPOUND:"CHEMBL.COMPOUND:{inputs[0]}"
-        fields: subject.NCBIGene,association
-        size: 1000
-      predicate: physically_interacts_with
-      response_mapping:
-        $ref: '#/components/x-bte-response-mapping/chemical-gene'
-      source: "infores:dgidb"
-      supportBatch: false
-    gene-chemical:
-    - inputs:
-      - id: NCBIGene
-        semantic: Gene
-      outputs:
-      - id: CHEMBL.COMPOUND
-        semantic: SmallMolecule
-      parameters:
-        fields: object.CHEMBL_COMPOUND,association
-        size: 1000
-      predicate: physically_interacts_with
-      requestBody:
-        body:
-          q: '{inputs[0]}'
-          scopes: subject.NCBIGene
-        header: application/x-www-form-urlencoded
-      response_mapping:
-        $ref: '#/components/x-bte-response-mapping/gene-chemical'
-      source: "infores:dgidb"
-      supportBatch: true
-      inputSeparator: ","
+  ## - all records have subject.NCBIGene and object.CHEMBL_COMPOUND
+  ## - currently, BTE handles prefix (expects no prefixes for NCBIGene / CHEMBL.COMPOUND).  
+  ##   however, data keeps CHEMBL.COMPOUND prefix in its value for object.CHEMBL_COMPOUND field...
+  ##   data doesn't keep NCBIGene prefix in its value...
+  ##   in the future, could edit parser + queries to handle prefixes
+  ## - joinSafe is only needed if the delimiter isn't a comma
+  ## only some records have pubmed. all records have interaction_group_score, provided_by
+    inhibitor:
+    ## https://biothings.ncats.io/dgidb/query?q=association.relation_name:inhibitor
+    ## 9093 records
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: NCBIGene
+            semantic: Gene
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {
+              "q": [ {{ queryInputs | wrap( '["' , '","inhibitor"]') }} ],
+              "scopes": ["subject.NCBIGene", "association.relation_name"]
+            }
+        parameters:
+          fields: >-
+            object.CHEMBL_COMPOUND,association.interaction_group_score,
+            association.provided_by,association.pubmed,association.relation_name
+          size: 1000
+        outputs:
+          - id: "CHEMBL.COMPOUND"
+            semantic: SmallMolecule
+        ## for biolink 2.2.8, DGIdb:inhibitor maps to this predicate
+        predicate: decreases_activity_of
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/chem-object"
+        ## Examples:
+        ## - NCBIGene:8972 (MGAM) -> CHEMBL.COMPOUND:CHEMBL476960 (VOGLIBOSE)
+    inhibitor-rev:
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: "CHEMBL.COMPOUND"
+            semantic: SmallMolecule
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {
+              "q": [ {{ queryInputs | wrap( '["CHEMBL.COMPOUND:' , '","inhibitor"]') }} ],
+              "scopes": ["object.CHEMBL_COMPOUND", "association.relation_name"]
+            }
+        parameters:
+          fields: >-
+            subject.NCBIGene,association.interaction_group_score,
+            association.provided_by,association.pubmed,association.relation_name
+          size: 1000
+        outputs:
+          - id: NCBIGene
+            semantic: Gene
+        ## for biolink 2.2.8, DGIdb:inhibitor maps to the inverse of this predicate
+        predicate: activity_decreased_by
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/gene-subject"
+        ## Examples:
+        ## - CHEMBL.COMPOUND:CHEMBL622 (ETODOLAC) -> NCBIGene:5742 (PTGS1) 
+    antagonist:
+    ## https://biothings.ncats.io/dgidb/query?q=association.relation_name:antagonist
+    ## 3936 records
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: NCBIGene
+            semantic: Gene
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {
+              "q": [ {{ queryInputs | wrap( '["' , '","antagonist"]') }} ],
+              "scopes": ["subject.NCBIGene", "association.relation_name"]
+            }
+        parameters:
+          fields: >-
+            object.CHEMBL_COMPOUND,association.interaction_group_score,
+            association.provided_by,association.pubmed,association.relation_name
+          size: 1000
+        outputs:
+          - id: "CHEMBL.COMPOUND"
+            semantic: SmallMolecule
+        ## for biolink 2.2.8, DGIdb:antagonist maps to this predicate
+        predicate: decreases_activity_of
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/chem-object"
+        ## Examples:
+        ## - NCBIGene:4306 (NR3C2) -> CHEMBL.COMPOUND:CHEMBL1393 (SPIRONOLACTONE)
+    antagonist-rev:
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: "CHEMBL.COMPOUND"
+            semantic: SmallMolecule
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {
+              "q": [ {{ queryInputs | wrap( '["CHEMBL.COMPOUND:' , '","antagonist"]') }} ],
+              "scopes": ["object.CHEMBL_COMPOUND", "association.relation_name"]
+            }
+        parameters:
+          fields: >-
+            subject.NCBIGene,association.interaction_group_score,
+            association.provided_by,association.pubmed,association.relation_name
+          size: 1000
+        outputs:
+          - id: NCBIGene
+            semantic: Gene
+        ## for biolink 2.2.8, DGIdb:antagonist maps to the inverse of this predicate
+        predicate: activity_decreased_by
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/gene-subject"
+        ## Examples:
+        ## - CHEMBL.COMPOUND:CHEMBL651 (METHADONE) -> NCBIGene:3359 (HTR3A) 
+    blocker:
+    ## https://biothings.ncats.io/dgidb/query?q=association.relation_name:blocker
+    ## 1167 records
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: NCBIGene
+            semantic: Gene
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {
+              "q": [ {{ queryInputs | wrap( '["' , '","blocker"]') }} ],
+              "scopes": ["subject.NCBIGene", "association.relation_name"]
+            }
+        parameters:
+          fields: >-
+            object.CHEMBL_COMPOUND,association.interaction_group_score,
+            association.provided_by,association.pubmed,association.relation_name
+          size: 1000
+        outputs:
+          - id: "CHEMBL.COMPOUND"
+            semantic: SmallMolecule
+        ## for biolink 2.2.8, DGIdb:blocker maps to this predicate
+        predicate: decreases_activity_of
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/chem-object"
+        ## Examples:
+        ## - NCBIGene:6323 (SCN1A) -> CHEMBL.COMPOUND:CHEMBL1198 (PRAMOXINE)
+    blocker-rev:
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: "CHEMBL.COMPOUND"
+            semantic: SmallMolecule
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {
+              "q": [ {{ queryInputs | wrap( '["CHEMBL.COMPOUND:' , '","blocker"]') }} ],
+              "scopes": ["object.CHEMBL_COMPOUND", "association.relation_name"]
+            }
+        parameters:
+          fields: >-
+            subject.NCBIGene,association.interaction_group_score,
+            association.provided_by,association.pubmed,association.relation_name
+          size: 1000
+        outputs:
+          - id: NCBIGene
+            semantic: Gene
+        ## for biolink 2.2.8, DGIdb:blocker maps to the inverse of this predicate
+        predicate: activity_decreased_by
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/gene-subject"
+        ## Examples:
+        ## - CHEMBL.COMPOUND:CHEMBL629 (AMITRIPTYLINE) -> NCBIGene:3274 (HRH2) 
+    inverse_agonist:
+    ## https://biothings.ncats.io/dgidb/query?q=association.relation_name:inverse_agonist
+    ## 49 records
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: NCBIGene
+            semantic: Gene
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {
+              "q": [ {{ queryInputs | wrap( '["' , '","inverse_agonist"]') }} ],
+              "scopes": ["subject.NCBIGene", "association.relation_name"]
+            }
+        parameters:
+          fields: >-
+            object.CHEMBL_COMPOUND,association.interaction_group_score,
+            association.provided_by,association.pubmed,association.relation_name
+          size: 1000
+        outputs:
+          - id: "CHEMBL.COMPOUND"
+            semantic: SmallMolecule
+        ## for biolink 2.2.8, DGIdb:inverse_agonist maps to this predicate
+        predicate: decreases_activity_of
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/chem-object"
+        ## Examples:
+        ## - NCBIGene:3357 (HTR2B) -> CHEMBL.COMPOUND:CHEMBL1112 (ARIPIPRAZOLE)
+    inverse_agonist-rev:
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: "CHEMBL.COMPOUND"
+            semantic: SmallMolecule
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {
+              "q": [ {{ queryInputs | wrap( '["CHEMBL.COMPOUND:' , '","inverse_agonist"]') }} ],
+              "scopes": ["object.CHEMBL_COMPOUND", "association.relation_name"]
+            }
+        parameters:
+          fields: >-
+            subject.NCBIGene,association.interaction_group_score,
+            association.provided_by,association.pubmed,association.relation_name
+          size: 1000
+        outputs:
+          - id: NCBIGene
+            semantic: Gene
+        ## for biolink 2.2.8, DGIdb:inverse_agonist maps to the inverse of this predicate
+        predicate: activity_decreased_by
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/gene-subject"
+        ## Examples:
+        ## - CHEMBL.COMPOUND:CHEMBL462605 (PITOLISANT) -> NCBIGene:11255 (HRH3) 
+    negative_modulator:
+    ## https://biothings.ncats.io/dgidb/query?q=association.relation_name:negative_modulator
+    ## 41 records
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: NCBIGene
+            semantic: Gene
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {
+              "q": [ {{ queryInputs | wrap( '["' , '","negative_modulator"]') }} ],
+              "scopes": ["subject.NCBIGene", "association.relation_name"]
+            }
+        parameters:
+          fields: >-
+            object.CHEMBL_COMPOUND,association.interaction_group_score,
+            association.provided_by,association.pubmed,association.relation_name
+          size: 1000
+        outputs:
+          - id: "CHEMBL.COMPOUND"
+            semantic: SmallMolecule
+        ## for biolink 2.2.8, DGIdb:negative_modulator maps to this predicate
+        predicate: decreases_activity_of
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/chem-object"
+        ## Examples:
+        ## - NCBIGene:6530 (SLC6A2) -> CHEMBL.COMPOUND:CHEMBL43048 (MIDOMAFETAMINE)
+    negative_modulator-rev:
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: "CHEMBL.COMPOUND"
+            semantic: SmallMolecule
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {
+              "q": [ {{ queryInputs | wrap( '["CHEMBL.COMPOUND:' , '","negative_modulator"]') }} ],
+              "scopes": ["object.CHEMBL_COMPOUND", "association.relation_name"]
+            }
+        parameters:
+          fields: >-
+            subject.NCBIGene,association.interaction_group_score,
+            association.provided_by,association.pubmed,association.relation_name
+          size: 1000
+        outputs:
+          - id: NCBIGene
+            semantic: Gene
+        ## for biolink 2.2.8, DGIdb:negative_modulator maps to the inverse of this predicate
+        predicate: activity_decreased_by
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/gene-subject"
+        ## Examples:
+        ## - CHEMBL.COMPOUND:CHEMBL1434 (MINOCYCLINE) -> NCBIGene:836 (CASP3) 
+    vaccine:
+    ## https://biothings.ncats.io/dgidb/query?q=association.relation_name:vaccine
+    ## 8 records
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: NCBIGene
+            semantic: Gene
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {
+              "q": [ {{ queryInputs | wrap( '["' , '","vaccine"]') }} ],
+              "scopes": ["subject.NCBIGene", "association.relation_name"]
+            }
+        parameters:
+          fields: >-
+            object.CHEMBL_COMPOUND,association.interaction_group_score,
+            association.provided_by,association.pubmed,association.relation_name
+          size: 1000
+        outputs:
+          - id: "CHEMBL.COMPOUND"
+            semantic: SmallMolecule
+        ## for biolink 2.2.8, DGIdb:vaccine maps to this predicate. not sure why it's called vaccine...
+        predicate: decreases_activity_of
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/chem-object"
+        ## Examples:
+        ## - NCBIGene:4323 (MMP14) -> CHEMBL.COMPOUND:CHEMBL75094 (PRINOMASTAT)
+    vaccine-rev:
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: "CHEMBL.COMPOUND"
+            semantic: SmallMolecule
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {
+              "q": [ {{ queryInputs | wrap( '["CHEMBL.COMPOUND:' , '","vaccine"]') }} ],
+              "scopes": ["object.CHEMBL_COMPOUND", "association.relation_name"]
+            }
+        parameters:
+          fields: >-
+            subject.NCBIGene,association.interaction_group_score,
+            association.provided_by,association.pubmed,association.relation_name
+          size: 1000
+        outputs:
+          - id: NCBIGene
+            semantic: Gene
+        ## for biolink 2.2.8, DGIdb:vaccine maps to the inverse of this predicate. not sure why it's called vaccine...
+        predicate: activity_decreased_by
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/gene-subject"
+        ## Examples:
+        ## - CHEMBL.COMPOUND:CHEMBL75094 (PRINOMASTAT) -> NCBIGene:4314 (MMP3) 
+    suppressor:
+    ## https://biothings.ncats.io/dgidb/query?q=association.relation_name:suppressor
+    ## 6 records
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: NCBIGene
+            semantic: Gene
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {
+              "q": [ {{ queryInputs | wrap( '["' , '","suppressor"]') }} ],
+              "scopes": ["subject.NCBIGene", "association.relation_name"]
+            }
+        parameters:
+          fields: >-
+            object.CHEMBL_COMPOUND,association.interaction_group_score,
+            association.provided_by,association.pubmed,association.relation_name
+          size: 1000
+        outputs:
+          - id: "CHEMBL.COMPOUND"
+            semantic: SmallMolecule
+        ## biolink 2.2.8: using mapping for GAMMA:suppressor
+        predicate: decreases_activity_of
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/chem-object"
+        ## Examples:
+        ## - NCBIGene:8856 (NR1I2) -> CHEMBL.COMPOUND:CHEMBL522892 (DOVITINIB)
+    suppressor-rev:
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: "CHEMBL.COMPOUND"
+            semantic: SmallMolecule
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {
+              "q": [ {{ queryInputs | wrap( '["CHEMBL.COMPOUND:' , '","suppressor"]') }} ],
+              "scopes": ["object.CHEMBL_COMPOUND", "association.relation_name"]
+            }
+        parameters:
+          fields: >-
+            subject.NCBIGene,association.interaction_group_score,
+            association.provided_by,association.pubmed,association.relation_name
+          size: 1000
+        outputs:
+          - id: NCBIGene
+            semantic: Gene
+        ## biolink 2.2.8: using mapping for GAMMA:suppressor
+        predicate: activity_decreased_by
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/gene-subject"
+        ## Examples:
+        ## - CHEMBL.COMPOUND:CHEMBL1201827 (PANITUMUMAB) -> NCBIGene:1956 (EGFR) 
+    inhibitory_allosteric_modulator:
+    ## https://biothings.ncats.io/dgidb/query?q=association.relation_name:inhibitory_allosteric_modulator
+    ## 5 records
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: NCBIGene
+            semantic: Gene
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {
+              "q": [ {{ queryInputs | wrap( '["' , '","inhibitory_allosteric_modulator"]') }} ],
+              "scopes": ["subject.NCBIGene", "association.relation_name"]
+            }
+        parameters:
+          fields: >-
+            object.CHEMBL_COMPOUND,association.interaction_group_score,
+            association.provided_by,association.pubmed,association.relation_name
+          size: 1000
+        outputs:
+          - id: "CHEMBL.COMPOUND"
+            semantic: SmallMolecule
+        ## for biolink 2.2.8, DGIdb:inhibitory_allosteric_modulator maps to this predicate
+        predicate: decreases_activity_of
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/chem-object"
+        ## Examples:
+        ## - NCBIGene:207 (AKT1) -> CHEMBL.COMPOUND:CHEMBL1079175 (MK-2206)
+    inhibitory_allosteric_modulator-rev:
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: "CHEMBL.COMPOUND"
+            semantic: SmallMolecule
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {
+              "q": [ {{ queryInputs | wrap( '["CHEMBL.COMPOUND:' , '","inhibitory_allosteric_modulator"]') }} ],
+              "scopes": ["object.CHEMBL_COMPOUND", "association.relation_name"]
+            }
+        parameters:
+          fields: >-
+            subject.NCBIGene,association.interaction_group_score,
+            association.provided_by,association.pubmed,association.relation_name
+          size: 1000
+        outputs:
+          - id: NCBIGene
+            semantic: Gene
+        ## for biolink 2.2.8, DGIdb:inhibitory_allosteric_modulator maps to the inverse of this predicate
+        predicate: activity_decreased_by
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/gene-subject"
+        ## Examples:
+        ## - CHEMBL.COMPOUND:CHEMBL1496 (ROSUVASTATIN) -> NCBIGene:3683 (ITGAL) 
+    partial_antagonist:
+    ## https://biothings.ncats.io/dgidb/query?q=association.relation_name:partial_antagonist
+    ## 2 records
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: NCBIGene
+            semantic: Gene
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {
+              "q": [ {{ queryInputs | wrap( '["' , '","partial_antagonist"]') }} ],
+              "scopes": ["subject.NCBIGene", "association.relation_name"]
+            }
+        parameters:
+          fields: >-
+            object.CHEMBL_COMPOUND,association.interaction_group_score,
+            association.provided_by,association.pubmed,association.relation_name
+          size: 1000
+        outputs:
+          - id: "CHEMBL.COMPOUND"
+            semantic: SmallMolecule
+        ## biolink 2.2.8: using mapping for GAMMA:partial_antagonist
+        predicate: decreases_activity_of
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/chem-object"
+        ## Examples:
+        ## - NCBIGene:4988 (OPRM1) -> CHEMBL.COMPOUND:CHEMBL33986 (BUTORPHANOL)
+    partial_antagonist-rev:
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: "CHEMBL.COMPOUND"
+            semantic: SmallMolecule
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {
+              "q": [ {{ queryInputs | wrap( '["CHEMBL.COMPOUND:' , '","partial_antagonist"]') }} ],
+              "scopes": ["object.CHEMBL_COMPOUND", "association.relation_name"]
+            }
+        parameters:
+          fields: >-
+            subject.NCBIGene,association.interaction_group_score,
+            association.provided_by,association.pubmed,association.relation_name
+          size: 1000
+        outputs:
+          - id: NCBIGene
+            semantic: Gene
+        ## biolink 2.2.8: using mapping for GAMMA:partial_antagonist
+        predicate: activity_decreased_by
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/gene-subject"
+        ## Examples:
+        ## - CHEMBL.COMPOUND:CHEMBL1615438 (LEVOCABASTINE) -> NCBIGene:23620 (NTSR2) 
+    agonist:
+    ## https://biothings.ncats.io/dgidb/query?q=association.relation_name:agonist
+    ## 3304 records
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: NCBIGene
+            semantic: Gene
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {
+              "q": [ {{ queryInputs | wrap( '["' , '","agonist"]') }} ],
+              "scopes": ["subject.NCBIGene", "association.relation_name"]
+            }
+        parameters:
+          fields: >-
+            object.CHEMBL_COMPOUND,association.interaction_group_score,
+            association.provided_by,association.pubmed,association.relation_name
+          size: 1000
+        outputs:
+          - id: "CHEMBL.COMPOUND"
+            semantic: SmallMolecule
+        ## for biolink 2.2.8, DGIdb:agonist maps to this predicate
+        predicate: increases_activity_of
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/chem-object"
+        ## Examples:
+        ## - NCBIGene:150 (ADRA2A) -> CHEMBL.COMPOUND:CHEMBL778 (DEXMEDETOMIDINE)
+    agonist-rev:
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: "CHEMBL.COMPOUND"
+            semantic: SmallMolecule
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {
+              "q": [ {{ queryInputs | wrap( '["CHEMBL.COMPOUND:' , '","agonist"]') }} ],
+              "scopes": ["object.CHEMBL_COMPOUND", "association.relation_name"]
+            }
+        parameters:
+          fields: >-
+            subject.NCBIGene,association.interaction_group_score,
+            association.provided_by,association.pubmed,association.relation_name
+          size: 1000
+        outputs:
+          - id: NCBIGene
+            semantic: Gene
+        ## for biolink 2.2.8, DGIdb:agonist maps to the inverse of this predicate
+        predicate: activity_increased_by
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/gene-subject"
+        ## Examples:
+        ## - CHEMBL.COMPOUND:CHEMBL1201670 (SARGRAMOSTIM) -> NCBIGene:6383 (SDC2) 
+    positive_modulator:
+    ## https://biothings.ncats.io/dgidb/query?q=association.relation_name:positive_modulator
+    ## 667 records
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: NCBIGene
+            semantic: Gene
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {
+              "q": [ {{ queryInputs | wrap( '["' , '","positive_modulator"]') }} ],
+              "scopes": ["subject.NCBIGene", "association.relation_name"]
+            }
+        parameters:
+          fields: >-
+            object.CHEMBL_COMPOUND,association.interaction_group_score,
+            association.provided_by,association.pubmed,association.relation_name
+          size: 1000
+        outputs:
+          - id: "CHEMBL.COMPOUND"
+            semantic: SmallMolecule
+        ## biolink 2.2.8: using mapping to GAMMA / CHEMBL.MECHANISM positive_modulator term  
+        predicate: increases_activity_of
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/chem-object"
+        ## Examples:
+        ## - NCBIGene:2554 (GABRA1) -> CHEMBL.COMPOUND:CHEMBL22097 (LORMETAZEPAM)
+    positive_modulator-rev:
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: "CHEMBL.COMPOUND"
+            semantic: SmallMolecule
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {
+              "q": [ {{ queryInputs | wrap( '["CHEMBL.COMPOUND:' , '","positive_modulator"]') }} ],
+              "scopes": ["object.CHEMBL_COMPOUND", "association.relation_name"]
+            }
+        parameters:
+          fields: >-
+            subject.NCBIGene,association.interaction_group_score,
+            association.provided_by,association.pubmed,association.relation_name
+          size: 1000
+        outputs:
+          - id: NCBIGene
+            semantic: Gene
+        ## biolink 2.2.8: using mapping to GAMMA / CHEMBL.MECHANISM positive_modulator term  
+        predicate: activity_increased_by
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/gene-subject"
+        ## Examples:
+        ## - CHEMBL.COMPOUND:CHEMBL655 (MIDAZOLAM) -> NCBIGene:2554 (GABRA1)
+    partial_agonist:
+    ## https://biothings.ncats.io/dgidb/query?q=association.relation_name:partial_agonist
+    ## 158 records
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: NCBIGene
+            semantic: Gene
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {
+              "q": [ {{ queryInputs | wrap( '["' , '","partial_agonist"]') }} ],
+              "scopes": ["subject.NCBIGene", "association.relation_name"]
+            }
+        parameters:
+          fields: >-
+            object.CHEMBL_COMPOUND,association.interaction_group_score,
+            association.provided_by,association.pubmed,association.relation_name
+          size: 1000
+        outputs:
+          - id: "CHEMBL.COMPOUND"
+            semantic: SmallMolecule
+        ## for biolink 2.2.8, DGIdb:partial_agonist maps to this predicate
+        predicate: increases_activity_of
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/chem-object"
+        ## Examples:
+        ## - NCBIGene:3350 (HTR1A) -> CHEMBL.COMPOUND:CHEMBL15245 (YOHIMBINE)
+    partial_agonist-rev:
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: "CHEMBL.COMPOUND"
+            semantic: SmallMolecule
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {
+              "q": [ {{ queryInputs | wrap( '["CHEMBL.COMPOUND:' , '","partial_agonist"]') }} ],
+              "scopes": ["object.CHEMBL_COMPOUND", "association.relation_name"]
+            }
+        parameters:
+          fields: >-
+            subject.NCBIGene,association.interaction_group_score,
+            association.provided_by,association.pubmed,association.relation_name
+          size: 1000
+        outputs:
+          - id: NCBIGene
+            semantic: Gene
+        ## for biolink 2.2.8, DGIdb:partial_agonist maps to the inverse of this predicate
+        predicate: activity_increased_by
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/gene-subject"
+        ## Examples:
+        ## - CHEMBL.COMPOUND:CHEMBL2218896 (NABILONE) -> NCBIGene:1269 (CNR2)
+    potentiator:
+    ## https://biothings.ncats.io/dgidb/query?q=association.relation_name:potentiator
+    ## 136 records
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: NCBIGene
+            semantic: Gene
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {
+              "q": [ {{ queryInputs | wrap( '["' , '","potentiator"]') }} ],
+              "scopes": ["subject.NCBIGene", "association.relation_name"]
+            }
+        parameters:
+          fields: >-
+            object.CHEMBL_COMPOUND,association.interaction_group_score,
+            association.provided_by,association.pubmed,association.relation_name
+          size: 1000
+        outputs:
+          - id: "CHEMBL.COMPOUND"
+            semantic: SmallMolecule
+        ## biolink 2.2.8: using mapping to GAMMA:potentiator  
+        predicate: increases_activity_of
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/chem-object"
+        ## Examples:
+        ## - NCBIGene:2555 (GABRA2) -> CHEMBL.COMPOUND:CHEMBL1200802 (TALBUTAL)
+    potentiator-rev:
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: "CHEMBL.COMPOUND"
+            semantic: SmallMolecule
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {
+              "q": [ {{ queryInputs | wrap( '["CHEMBL.COMPOUND:' , '","potentiator"]') }} ],
+              "scopes": ["object.CHEMBL_COMPOUND", "association.relation_name"]
+            }
+        parameters:
+          fields: >-
+            subject.NCBIGene,association.interaction_group_score,
+            association.provided_by,association.pubmed,association.relation_name
+          size: 1000
+        outputs:
+          - id: NCBIGene
+            semantic: Gene
+        ## biolink 2.2.8: using mapping to GAMMA:potentiator  
+        predicate: activity_increased_by
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/gene-subject"
+        ## Examples:
+        ## - CHEMBL.COMPOUND:CHEMBL468837 (HEPTABARBITAL) -> NCBIGene:2557 (GABRA4)
+    inducer:
+    ## https://biothings.ncats.io/dgidb/query?q=association.relation_name:inducer
+    ## 78 records
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: NCBIGene
+            semantic: Gene
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {
+              "q": [ {{ queryInputs | wrap( '["' , '","inducer"]') }} ],
+              "scopes": ["subject.NCBIGene", "association.relation_name"]
+            }
+        parameters:
+          fields: >-
+            object.CHEMBL_COMPOUND,association.interaction_group_score,
+            association.provided_by,association.pubmed,association.relation_name
+          size: 1000
+        outputs:
+          - id: "CHEMBL.COMPOUND"
+            semantic: SmallMolecule
+        ## for biolink 2.2.8, DGIdb:inducer maps to this predicate
+        predicate: increases_activity_of
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/chem-object"
+        ## Examples:
+        ## - NCBIGene:3356 (HTR2A) -> CHEMBL.COMPOUND:CHEMBL502 (DONEPEZIL)
+    inducer-rev:
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: "CHEMBL.COMPOUND"
+            semantic: SmallMolecule
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {
+              "q": [ {{ queryInputs | wrap( '["CHEMBL.COMPOUND:' , '","inducer"]') }} ],
+              "scopes": ["object.CHEMBL_COMPOUND", "association.relation_name"]
+            }
+        parameters:
+          fields: >-
+            subject.NCBIGene,association.interaction_group_score,
+            association.provided_by,association.pubmed,association.relation_name
+          size: 1000
+        outputs:
+          - id: NCBIGene
+            semantic: Gene
+        ## for biolink 2.2.8, DGIdb:inducer maps to the inverse of this predicate
+        predicate: activity_increased_by
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/gene-subject"
+        ## Examples:
+        ## - CHEMBL.COMPOUND:CHEMBL59 (DOPAMINE) -> NCBIGene:6531 (SLC6A3)
+    stimulator:
+    ## https://biothings.ncats.io/dgidb/query?q=association.relation_name:stimulator
+    ## 22 records
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: NCBIGene
+            semantic: Gene
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {
+              "q": [ {{ queryInputs | wrap( '["' , '","stimulator"]') }} ],
+              "scopes": ["subject.NCBIGene", "association.relation_name"]
+            }
+        parameters:
+          fields: >-
+            object.CHEMBL_COMPOUND,association.interaction_group_score,
+            association.provided_by,association.pubmed,association.relation_name
+          size: 1000
+        outputs:
+          - id: "CHEMBL.COMPOUND"
+            semantic: SmallMolecule
+        ## for biolink 2.2.8, DGIdb:stimulator maps to this predicate
+        predicate: increases_activity_of
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/chem-object"
+        ## Examples:
+        ## - NCBIGene:2876 (GPX1) -> CHEMBL.COMPOUND:CHEMBL190461 (CANNABIDIOL)
+    stimulator-rev:
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: "CHEMBL.COMPOUND"
+            semantic: SmallMolecule
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {
+              "q": [ {{ queryInputs | wrap( '["CHEMBL.COMPOUND:' , '","stimulator"]') }} ],
+              "scopes": ["object.CHEMBL_COMPOUND", "association.relation_name"]
+            }
+        parameters:
+          fields: >-
+            subject.NCBIGene,association.interaction_group_score,
+            association.provided_by,association.pubmed,association.relation_name
+          size: 1000
+        outputs:
+          - id: NCBIGene
+            semantic: Gene
+        ## for biolink 2.2.8, DGIdb:stimulator maps to the inverse of this predicate
+        predicate: activity_increased_by
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/gene-subject"
+        ## Examples:
+        ## - CHEMBL.COMPOUND:CHEMBL405 (AMPHETAMINE) -> NCBIGene:6530 (SLC6A2)
+    ligand:
+    ## https://biothings.ncats.io/dgidb/query?q=association.relation_name:ligand
+    ## 286 records
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: NCBIGene
+            semantic: Gene
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {
+              "q": [ {{ queryInputs | wrap( '["' , '","ligand"]') }} ],
+              "scopes": ["subject.NCBIGene", "association.relation_name"]
+            }
+        parameters:
+          fields: >-
+            object.CHEMBL_COMPOUND,association.interaction_group_score,
+            association.provided_by,association.pubmed,association.relation_name
+          size: 1000
+        outputs:
+          - id: "CHEMBL.COMPOUND"
+            semantic: SmallMolecule
+        ## biolink 2.2.8: using mapping to GAMMA:ligand
+        predicate: directly_interacts_with
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/chem-object"
+        ## Examples:
+        ## - NCBIGene:3352 (HTR1D) -> CHEMBL.COMPOUND:CHEMBL716 (QUETIAPINE)
+    ligand-rev:
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: "CHEMBL.COMPOUND"
+            semantic: SmallMolecule
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {
+              "q": [ {{ queryInputs | wrap( '["CHEMBL.COMPOUND:' , '","ligand"]') }} ],
+              "scopes": ["object.CHEMBL_COMPOUND", "association.relation_name"]
+            }
+        parameters:
+          fields: >-
+            subject.NCBIGene,association.interaction_group_score,
+            association.provided_by,association.pubmed,association.relation_name
+          size: 1000
+        outputs:
+          - id: NCBIGene
+            semantic: Gene
+        ## biolink 2.2.8: using mapping to GAMMA:ligand
+        predicate: directly_interacts_with
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/gene-subject"
+        ## Examples:
+        ## - CHEMBL.COMPOUND:CHEMBL1457 (HYDROCODONE) -> NCBIGene:10280 (SIGMAR1)
+    binder:
+    ## https://biothings.ncats.io/dgidb/query?q=association.relation_name:binder
+    ## 254 records
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: NCBIGene
+            semantic: Gene
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {
+              "q": [ {{ queryInputs | wrap( '["' , '","binder"]') }} ],
+              "scopes": ["subject.NCBIGene", "association.relation_name"]
+            }
+        parameters:
+          fields: >-
+            object.CHEMBL_COMPOUND,association.interaction_group_score,
+            association.provided_by,association.pubmed,association.relation_name
+          size: 1000
+        outputs:
+          - id: "CHEMBL.COMPOUND"
+            semantic: SmallMolecule
+        ## for biolink 2.2.8, DGIdb:binder maps to this predicate
+        predicate: directly_interacts_with
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/chem-object"
+        ## Examples:
+        ## - NCBIGene:51305 (KCNK9) -> CHEMBL.COMPOUND:CHEMBL931 (HALOTHANE)
+    binder-rev:
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: "CHEMBL.COMPOUND"
+            semantic: SmallMolecule
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {
+              "q": [ {{ queryInputs | wrap( '["CHEMBL.COMPOUND:' , '","binder"]') }} ],
+              "scopes": ["object.CHEMBL_COMPOUND", "association.relation_name"]
+            }
+        parameters:
+          fields: >-
+            subject.NCBIGene,association.interaction_group_score,
+            association.provided_by,association.pubmed,association.relation_name
+          size: 1000
+        outputs:
+          - id: NCBIGene
+            semantic: Gene
+        ## for biolink 2.2.8, DGIdb:binder maps to this predicate
+        predicate: directly_interacts_with
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/gene-subject"
+        ## Examples:
+        ## - CHEMBL.COMPOUND:CHEMBL770 (TOLAZOLINE) -> NCBIGene:152 (ADRA2C)
+    cofactor:
+    ## https://biothings.ncats.io/dgidb/query?q=association.relation_name:cofactor
+    ## 142 records
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: NCBIGene
+            semantic: Gene
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {
+              "q": [ {{ queryInputs | wrap( '["' , '","cofactor"]') }} ],
+              "scopes": ["subject.NCBIGene", "association.relation_name"]
+            }
+        parameters:
+          fields: >-
+            object.CHEMBL_COMPOUND,association.interaction_group_score,
+            association.provided_by,association.pubmed,association.relation_name
+          size: 1000
+        outputs:
+          - id: "CHEMBL.COMPOUND"
+            semantic: SmallMolecule
+        ## for biolink 2.2.8, DGIdb:cofactor maps to this predicate
+        predicate: directly_interacts_with
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/chem-object"
+        ## Examples:
+        ## - NCBIGene:1312 (COMT) -> CHEMBL.COMPOUND:CHEMBL1088977 (ADEMETIONINE)
+    cofactor-rev:
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: "CHEMBL.COMPOUND"
+            semantic: SmallMolecule
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {
+              "q": [ {{ queryInputs | wrap( '["CHEMBL.COMPOUND:' , '","cofactor"]') }} ],
+              "scopes": ["object.CHEMBL_COMPOUND", "association.relation_name"]
+            }
+        parameters:
+          fields: >-
+            subject.NCBIGene,association.interaction_group_score,
+            association.provided_by,association.pubmed,association.relation_name
+          size: 1000
+        outputs:
+          - id: NCBIGene
+            semantic: Gene
+        ## for biolink 2.2.8, DGIdb:cofactor maps to this predicate
+        predicate: directly_interacts_with
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/gene-subject"
+        ## Examples:
+        ## - CHEMBL.COMPOUND:CHEMBL459 (METHYLDOPA) -> NCBIGene:443 (ASPA)
+    multitarget:
+    ## https://biothings.ncats.io/dgidb/query?q=association.relation_name:multitarget
+    ## 10 records
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: NCBIGene
+            semantic: Gene
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {
+              "q": [ {{ queryInputs | wrap( '["' , '","multitarget"]') }} ],
+              "scopes": ["subject.NCBIGene", "association.relation_name"]
+            }
+        parameters:
+          fields: >-
+            object.CHEMBL_COMPOUND,association.interaction_group_score,
+            association.provided_by,association.pubmed,association.relation_name
+          size: 1000
+        outputs:
+          - id: "CHEMBL.COMPOUND"
+            semantic: SmallMolecule
+        ## biolink 2.2.8: using mapping to GAMMA:multitarget
+        predicate: directly_interacts_with
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/chem-object"
+        ## Examples:
+        ## - NCBIGene:25 (ABL1) -> CHEMBL.COMPOUND:CHEMBL1421 (DASATINIB)
+    multitarget-rev:
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: "CHEMBL.COMPOUND"
+            semantic: SmallMolecule
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {
+              "q": [ {{ queryInputs | wrap( '["CHEMBL.COMPOUND:' , '","multitarget"]') }} ],
+              "scopes": ["object.CHEMBL_COMPOUND", "association.relation_name"]
+            }
+        parameters:
+          fields: >-
+            subject.NCBIGene,association.interaction_group_score,
+            association.provided_by,association.pubmed,association.relation_name
+          size: 1000
+        outputs:
+          - id: NCBIGene
+            semantic: Gene
+        ## biolink 2.2.8: using mapping to GAMMA:multitarget
+        predicate: directly_interacts_with
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/gene-subject"
+        ## Examples:
+        ## - CHEMBL.COMPOUND:CHEMBL1218 (RAMELTEON) -> NCBIGene:4544 (MTNR1B)
+    chaperone:
+    ## https://biothings.ncats.io/dgidb/query?q=association.relation_name:chaperone
+    ## 10 records
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: NCBIGene
+            semantic: Gene
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {
+              "q": [ {{ queryInputs | wrap( '["' , '","chaperone"]') }} ],
+              "scopes": ["subject.NCBIGene", "association.relation_name"]
+            }
+        parameters:
+          fields: >-
+            object.CHEMBL_COMPOUND,association.interaction_group_score,
+            association.provided_by,association.pubmed,association.relation_name
+          size: 1000
+        outputs:
+          - id: "CHEMBL.COMPOUND"
+            semantic: SmallMolecule
+        ## biolink 2.2.8: using mapping to GAMMA:chaperone
+        predicate: directly_interacts_with
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/chem-object"
+        ## Examples:
+        ## - NCBIGene:3630 (INS) -> CHEMBL.COMPOUND:CHEMBL1200679 (ZINC CHLORIDE)
+    chaperone-rev:
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: "CHEMBL.COMPOUND"
+            semantic: SmallMolecule
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {
+              "q": [ {{ queryInputs | wrap( '["CHEMBL.COMPOUND:' , '","chaperone"]') }} ],
+              "scopes": ["object.CHEMBL_COMPOUND", "association.relation_name"]
+            }
+        parameters:
+          fields: >-
+            subject.NCBIGene,association.interaction_group_score,
+            association.provided_by,association.pubmed,association.relation_name
+          size: 1000
+        outputs:
+          - id: NCBIGene
+            semantic: Gene
+        ## biolink 2.2.8: using mapping to GAMMA:chaperone
+        predicate: directly_interacts_with
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/gene-subject"
+        ## Examples:
+        ## - CHEMBL.COMPOUND:CHEMBL1200679 (ZINC CHLORIDE) -> NCBIGene:7161 (TP73)
+    adduct:
+    ## https://biothings.ncats.io/dgidb/query?q=association.relation_name:adduct
+    ## 10 records
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: NCBIGene
+            semantic: Gene
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {
+              "q": [ {{ queryInputs | wrap( '["' , '","adduct"]') }} ],
+              "scopes": ["subject.NCBIGene", "association.relation_name"]
+            }
+        parameters:
+          fields: >-
+            object.CHEMBL_COMPOUND,association.interaction_group_score,
+            association.provided_by,association.pubmed,association.relation_name
+          size: 1000
+        outputs:
+          - id: "CHEMBL.COMPOUND"
+            semantic: SmallMolecule
+        ## biolink 2.2.8: using mapping to GAMMA:adduct
+        predicate: directly_interacts_with
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/chem-object"
+        ## Examples:
+        ## - NCBIGene:7283 (TUBG1) -> CHEMBL.COMPOUND:CHEMBL159 (VINBLASTINE)
+    adduct-rev:
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: "CHEMBL.COMPOUND"
+            semantic: SmallMolecule
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {
+              "q": [ {{ queryInputs | wrap( '["CHEMBL.COMPOUND:' , '","adduct"]') }} ],
+              "scopes": ["object.CHEMBL_COMPOUND", "association.relation_name"]
+            }
+        parameters:
+          fields: >-
+            subject.NCBIGene,association.interaction_group_score,
+            association.provided_by,association.pubmed,association.relation_name
+          size: 1000
+        outputs:
+          - id: NCBIGene
+            semantic: Gene
+        ## biolink 2.2.8: using mapping to GAMMA:adduct
+        predicate: directly_interacts_with
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/gene-subject"
+        ## Examples:
+        ## - CHEMBL.COMPOUND:CHEMBL159 (VINBLASTINE) -> NCBIGene:7846 (TUBA1A)
+    modulator:
+    ## https://biothings.ncats.io/dgidb/query?q=association.relation_name:modulator
+    ## 288 records
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: NCBIGene
+            semantic: Gene
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {
+              "q": [ {{ queryInputs | wrap( '["' , '","modulator"]') }} ],
+              "scopes": ["subject.NCBIGene", "association.relation_name"]
+            }
+        parameters:
+          fields: >-
+            object.CHEMBL_COMPOUND,association.interaction_group_score,
+            association.provided_by,association.pubmed,association.relation_name
+          size: 1000
+        outputs:
+          - id: "CHEMBL.COMPOUND"
+            semantic: SmallMolecule
+        ## for biolink 2.2.8, DGIdb:modulator maps to this predicate
+        predicate: affects_activity_of
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/chem-object"
+        ## Examples:
+        ## - NCBIGene:9900 (SV2A) -> CHEMBL.COMPOUND:CHEMBL3918017 (SELETRACETAM)
+    modulator-rev:
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: "CHEMBL.COMPOUND"
+            semantic: SmallMolecule
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {
+              "q": [ {{ queryInputs | wrap( '["CHEMBL.COMPOUND:' , '","modulator"]') }} ],
+              "scopes": ["object.CHEMBL_COMPOUND", "association.relation_name"]
+            }
+        parameters:
+          fields: >-
+            subject.NCBIGene,association.interaction_group_score,
+            association.provided_by,association.pubmed,association.relation_name
+          size: 1000
+        outputs:
+          - id: NCBIGene
+            semantic: Gene
+        ## for biolink 2.2.8, DGIdb:modulator maps to the inverse of this predicate
+        predicate: activity_affected_by
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/gene-subject"
+        ## Examples:
+        ## - CHEMBL.COMPOUND:CHEMBL1788403 (BIOALLETHRIN) -> NCBIGene:6323 (SCN1A)
+    allosteric_modulator:
+    ## https://biothings.ncats.io/dgidb/query?q=association.relation_name:allosteric_modulator
+    ## 178 records
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: NCBIGene
+            semantic: Gene
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {
+              "q": [ {{ queryInputs | wrap( '["' , '","allosteric_modulator"]') }} ],
+              "scopes": ["subject.NCBIGene", "association.relation_name"]
+            }
+        parameters:
+          fields: >-
+            object.CHEMBL_COMPOUND,association.interaction_group_score,
+            association.provided_by,association.pubmed,association.relation_name
+          size: 1000
+        outputs:
+          - id: "CHEMBL.COMPOUND"
+            semantic: SmallMolecule
+        ## for biolink 2.2.8, DGIdb:allosteric_modulator maps to this predicate
+        predicate: affects_activity_of
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/chem-object"
+        ## Examples:
+        ## - NCBIGene:5148 (PDE6G) -> CHEMBL.COMPOUND:CHEMBL1520 (VARDENAFIL)
+    allosteric_modulator-rev:
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: "CHEMBL.COMPOUND"
+            semantic: SmallMolecule
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {
+              "q": [ {{ queryInputs | wrap( '["CHEMBL.COMPOUND:' , '","allosteric_modulator"]') }} ],
+              "scopes": ["object.CHEMBL_COMPOUND", "association.relation_name"]
+            }
+        parameters:
+          fields: >-
+            subject.NCBIGene,association.interaction_group_score,
+            association.provided_by,association.pubmed,association.relation_name
+          size: 1000
+        outputs:
+          - id: NCBIGene
+            semantic: Gene
+        ## for biolink 2.2.8, DGIdb:allosteric_modulator maps to the inverse of this predicate
+        predicate: activity_affected_by
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/gene-subject"
+        ## Examples:
+        ## - CHEMBL.COMPOUND:CHEMBL1200907 (TRILOSTANE) -> NCBIGene:2099 (ESR1)
+    activator:
+    ## https://biothings.ncats.io/dgidb/query?q=association.relation_name:activator
+    ## 311 records
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: NCBIGene
+            semantic: Gene
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {
+              "q": [ {{ queryInputs | wrap( '["' , '","activator"]') }} ],
+              "scopes": ["subject.NCBIGene", "association.relation_name"]
+            }
+        parameters:
+          fields: >-
+            object.CHEMBL_COMPOUND,association.interaction_group_score,
+            association.provided_by,association.pubmed,association.relation_name
+          size: 1000
+        outputs:
+          - id: "CHEMBL.COMPOUND"
+            semantic: SmallMolecule
+        ## for biolink 2.2.8, DGIdb:activator maps to the mixin positively_regulates
+        predicate: entity_positively_regulates_entity
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/chem-object"
+        ## Examples:
+        ## - NCBIGene:9970 (NR1I3) -> CHEMBL.COMPOUND:CHEMBL90593 (PRASTERONE)
+    activator-rev:
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: "CHEMBL.COMPOUND"
+            semantic: SmallMolecule
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {
+              "q": [ {{ queryInputs | wrap( '["CHEMBL.COMPOUND:' , '","activator"]') }} ],
+              "scopes": ["object.CHEMBL_COMPOUND", "association.relation_name"]
+            }
+        parameters:
+          fields: >-
+            subject.NCBIGene,association.interaction_group_score,
+            association.provided_by,association.pubmed,association.relation_name
+          size: 1000
+        outputs:
+          - id: NCBIGene
+            semantic: Gene
+        ## for biolink 2.2.8, DGIdb:activator maps to the mixin positively_regulates
+        predicate: entity_positively_regulated_by_entity
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/gene-subject"
+        ## Examples:
+        ## - CHEMBL.COMPOUND:CHEMBL533 (IBUTILIDE) -> NCBIGene:775 (CACNA1C)
+    antibody:
+    ## https://biothings.ncats.io/dgidb/query?q=association.relation_name:antibody
+    ## 266 records
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: NCBIGene
+            semantic: Gene
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {
+              "q": [ {{ queryInputs | wrap( '["' , '","antibody"]') }} ],
+              "scopes": ["subject.NCBIGene", "association.relation_name"]
+            }
+        parameters:
+          fields: >-
+            object.CHEMBL_COMPOUND,association.interaction_group_score,
+            association.provided_by,association.pubmed,association.relation_name
+          size: 1000
+        outputs:
+          - id: "CHEMBL.COMPOUND"
+            semantic: SmallMolecule
+        ## biolink 2.2.8: using the mapping for GAMMA:antibody, rather than mapping for the relation (molecularly_interacts_with)
+        predicate: directly_interacts_with
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/chem-object"
+        ## Examples:
+        ## - NCBIGene:3560 (IL2RB) -> CHEMBL.COMPOUND:CHEMBL1201439 (BASILIXIMAB)
+    antibody-rev:
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: "CHEMBL.COMPOUND"
+            semantic: SmallMolecule
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {
+              "q": [ {{ queryInputs | wrap( '["CHEMBL.COMPOUND:' , '","antibody"]') }} ],
+              "scopes": ["object.CHEMBL_COMPOUND", "association.relation_name"]
+            }
+        parameters:
+          fields: >-
+            subject.NCBIGene,association.interaction_group_score,
+            association.provided_by,association.pubmed,association.relation_name
+          size: 1000
+        outputs:
+          - id: NCBIGene
+            semantic: Gene
+        ## biolink 2.2.8: using the mapping for GAMMA:antibody, rather than mapping for the relation (molecularly_interacts_with)
+        predicate: directly_interacts_with
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/gene-subject"
+        ## Examples:
+        ## - CHEMBL.COMPOUND:CHEMBL1201587 (ALEMTUZUMAB) -> NCBIGene:1043 (CD52)
+    substrate:
+    ## https://biothings.ncats.io/dgidb/query?q=association.relation_name:substrate
+    ## 62 records
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: NCBIGene
+            semantic: Gene
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {
+              "q": [ {{ queryInputs | wrap( '["' , '","substrate"]') }} ],
+              "scopes": ["subject.NCBIGene", "association.relation_name"]
+            }
+        parameters:
+          fields: >-
+            object.CHEMBL_COMPOUND,association.interaction_group_score,
+            association.provided_by,association.pubmed,association.relation_name
+          size: 1000
+        outputs:
+          - id: "CHEMBL.COMPOUND"
+            semantic: SmallMolecule
+        ## biolink 2.2.8: using a predicate without mappings (no mapping for the relation)
+        predicate: has_substrate
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/chem-object"
+        ## Examples:
+        ## - NCBIGene:27010 (TPK1) -> CHEMBL.COMPOUND:CHEMBL1547 (THIAMINE)
+    substrate-rev:
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: "CHEMBL.COMPOUND"
+            semantic: SmallMolecule
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {
+              "q": [ {{ queryInputs | wrap( '["CHEMBL.COMPOUND:' , '","substrate"]') }} ],
+              "scopes": ["object.CHEMBL_COMPOUND", "association.relation_name"]
+            }
+        parameters:
+          fields: >-
+            subject.NCBIGene,association.interaction_group_score,
+            association.provided_by,association.pubmed,association.relation_name
+          size: 1000
+        outputs:
+          - id: NCBIGene
+            semantic: Gene
+        ## biolink 2.2.8: using a predicate without mappings (no mapping for the relation)
+        predicate: is_substrate_of
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/gene-subject"
+        ## Examples:
+        ## - CHEMBL.COMPOUND:CHEMBL773 (GLYCINE) -> NCBIGene:2841 (GPR18)
+    product_of:
+    ## https://biothings.ncats.io/dgidb/query?q=association.relation_name:product_of
+    ## 41 records
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: NCBIGene
+            semantic: Gene
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {
+              "q": [ {{ queryInputs | wrap( '["' , '","product_of"]') }} ],
+              "scopes": ["subject.NCBIGene", "association.relation_name"]
+            }
+        parameters:
+          fields: >-
+            object.CHEMBL_COMPOUND,association.interaction_group_score,
+            association.provided_by,association.pubmed,association.relation_name
+          size: 1000
+        outputs:
+          - id: "CHEMBL.COMPOUND"
+            semantic: SmallMolecule
+        ## biolink 2.2.8: using a predicate without mappings (no mapping for the relation)
+        predicate: catalyzes
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/chem-object"
+        ## Examples:
+        ## - NCBIGene:5337 (PLD1) -> CHEMBL.COMPOUND:CHEMBL920 (CHOLINE)
+    product_of-rev:
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: "CHEMBL.COMPOUND"
+            semantic: SmallMolecule
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {
+              "q": [ {{ queryInputs | wrap( '["CHEMBL.COMPOUND:' , '","product_of"]') }} ],
+              "scopes": ["object.CHEMBL_COMPOUND", "association.relation_name"]
+            }
+        parameters:
+          fields: >-
+            subject.NCBIGene,association.interaction_group_score,
+            association.provided_by,association.pubmed,association.relation_name
+          size: 1000
+        outputs:
+          - id: NCBIGene
+            semantic: Gene
+        ## biolink 2.2.8: using a predicate without mappings (no mapping for the relation)
+        predicate: has_catalyst
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/gene-subject"
+        ## Examples:
+        ## - CHEMBL.COMPOUND:CHEMBL42336 (METHIONINE) -> NCBIGene:4548 (MTR)
+    antisense_oligonucleotide:
+    ## https://biothings.ncats.io/dgidb/query?q=association.relation_name:antisense_oligonucleotide
+    ## 5 records
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: NCBIGene
+            semantic: Gene
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {
+              "q": [ {{ queryInputs | wrap( '["' , '","antisense_oligonucleotide"]') }} ],
+              "scopes": ["subject.NCBIGene", "association.relation_name"]
+            }
+        parameters:
+          fields: >-
+            object.CHEMBL_COMPOUND,association.interaction_group_score,
+            association.provided_by,association.pubmed,association.relation_name
+          size: 1000
+        outputs:
+          - id: "CHEMBL.COMPOUND"
+            semantic: SmallMolecule
+        ## for biolink 2.2.8, DGIdb:antisense_oligonucleotide maps to the inverse of this predicate
+        predicate: expression_decreased_by
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/chem-object"
+        ## Examples:
+        ## - NCBIGene:1191 (CLU) -> CHEMBL.COMPOUND:CHEMBL2108309 (CUSTIRSEN)
+    antisense_oligonucleotide-rev:
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: "CHEMBL.COMPOUND"
+            semantic: SmallMolecule
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {
+              "q": [ {{ queryInputs | wrap( '["CHEMBL.COMPOUND:' , '","antisense_oligonucleotide"]') }} ],
+              "scopes": ["object.CHEMBL_COMPOUND", "association.relation_name"]
+            }
+        parameters:
+          fields: >-
+            subject.NCBIGene,association.interaction_group_score,
+            association.provided_by,association.pubmed,association.relation_name
+          size: 1000
+        outputs:
+          - id: NCBIGene
+            semantic: Gene
+        ## for biolink 2.2.8, DGIdb:antisense_oligonucleotide maps to this predicate
+        predicate: decreases_expression_of
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/gene-subject"
+        ## Examples:
+        ## - CHEMBL.COMPOUND:CHEMBL2108324 (OBLIMERSEN) -> NCBIGene:596 (BCL2)
+    cleavage:
+    ## https://biothings.ncats.io/dgidb/query?q=association.relation_name:cleavage
+    ## 5 records
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: NCBIGene
+            semantic: Gene
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {
+              "q": [ {{ queryInputs | wrap( '["' , '","cleavage"]') }} ],
+              "scopes": ["subject.NCBIGene", "association.relation_name"]
+            }
+        parameters:
+          fields: >-
+            object.CHEMBL_COMPOUND,association.interaction_group_score,
+            association.provided_by,association.pubmed,association.relation_name
+          size: 1000
+        outputs:
+          - id: "CHEMBL.COMPOUND"
+            semantic: SmallMolecule
+        ## biolink 2.2.8: inverse mapped to CTD:affects_cleavage (no mapping for relation)
+        predicate: degradation_affected_by
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/chem-object"
+        ## Examples:
+        ## - NCBIGene:2335 (FN1) -> CHEMBL.COMPOUND:CHEMBL2095222 (OCRIPLASMIN)
+    cleavage-rev:
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: "CHEMBL.COMPOUND"
+            semantic: SmallMolecule
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {
+              "q": [ {{ queryInputs | wrap( '["CHEMBL.COMPOUND:' , '","cleavage"]') }} ],
+              "scopes": ["object.CHEMBL_COMPOUND", "association.relation_name"]
+            }
+        parameters:
+          fields: >-
+            subject.NCBIGene,association.interaction_group_score,
+            association.provided_by,association.pubmed,association.relation_name
+          size: 1000
+        outputs:
+          - id: NCBIGene
+            semantic: Gene
+        ## biolink 2.2.8: mapped to CTD:affects_cleavage (no mapping for relation)
+        predicate: affects_degradation_of
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/gene-subject"
+        ## Examples:
+        ## - CHEMBL.COMPOUND:CHEMBL4297953 (ANTI-INHIBITOR COAGULANT COMPLEX) -> NCBIGene:2243 (FGA)
   x-bte-response-mapping:
-    chemical-gene:
-      NCBIGene: hits.subject.NCBIGene
-      pubmed: hits.association.pubmed
-      source: hits.association.provided_by
-      relation: hits.association.relation_name
-      score: hits.association.interaction_group_score
-    gene-chemical:
-      CHEMBL.COMPOUND: object.CHEMBL_COMPOUND
+    chem-object:
+      "CHEMBL.COMPOUND": object.CHEMBL_COMPOUND
       pubmed: association.pubmed
       source: association.provided_by
       relation: association.relation_name
-      score: association.interaction_group_score
+      ## need to look up what this score means...
+      dgidb_interaction_group_score: association.interaction_group_score  
+    gene-subject:
+      NCBIGene: subject.NCBIGene
+      pubmed: association.pubmed
+      source: association.provided_by
+      relation: association.relation_name
+      dgidb_interaction_group_score: association.interaction_group_score
