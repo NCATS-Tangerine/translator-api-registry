@@ -232,7 +232,7 @@ paths:
       x-bte-kgs-operations:
       - "$ref": "#/components/x-bte-kgs-operations/aeolusTreats"
       ## try this out once aeolus.indications is indexed (next MyChem release)
-      - "$ref": "#/components/x-bte-kgs-operations/aeolusTreats-rev"
+      # - "$ref": "#/components/x-bte-kgs-operations/aeolusTreats-rev"
       - "$ref": "#/components/x-bte-kgs-operations/chebiToReactome"
       - "$ref": "#/components/x-bte-kgs-operations/chebiToReactome-rev"
       - "$ref": "#/components/x-bte-kgs-operations/chebiToRhea"
@@ -245,8 +245,7 @@ paths:
       - "$ref": "#/components/x-bte-kgs-operations/drugcentral-contraindication-rev"
       - "$ref": "#/components/x-bte-kgs-operations/drugcentral-indication"
       - "$ref": "#/components/x-bte-kgs-operations/drugcentral-indication-rev"
-      ## edit, try this out once spaces in fields are fixed (next MyChem release)
-      # - "$ref": "#/components/x-bte-kgs-operations/drugcentral-offlabel"
+      - "$ref": "#/components/x-bte-kgs-operations/drugcentral-offlabel"
       - "$ref": "#/components/x-bte-kgs-operations/drugcentral-offlabel-rev"
       - "$ref": "#/components/x-bte-kgs-operations/drugcentral-adverseEvent"
       - "$ref": "#/components/x-bte-kgs-operations/drugcentral-adverseEvent-rev"
@@ -439,7 +438,7 @@ components:
     drugcentral-unii:
       UNII: drugcentral.xrefs.unii  ## no prefix
     drugcentral-offlabel:
-      UMLS: "drugcentral.drug_use.off-label use.umls_cui"  ## no prefix
+      UMLS: "drugcentral.drug_use.off_label_use.umls_cui"  ## no prefix
     drugcentral-adverseEvent:
       MEDDRA: drugcentral.fda_adverse_event.meddra_code
       fda_count_had-drug_adverse-event: drugcentral.fda_adverse_event.drug_ae
@@ -492,30 +491,30 @@ components:
       #     oneOutput: "MEDDRA:10004446"  ## Benign prostatic hyperplasia
     ## once MyChem comes out (indexes the field) 
     ##   un-comment the operation in x-bte-kgs-operation list under post and try this out 
-    aeolusTreats-rev:
-    - supportBatch: true
-      inputSeparator: ","
-      inputs:
-      - id: MEDDRA
-        semantic: Disease
-      requestBody:
-        body:
-          q: "{inputs[0]}"  ## no prefix
-          scopes: aeolus.indications.meddra_code
-        header: application/x-www-form-urlencoded
-      outputs:
-      - id: UNII
-        semantic: SmallMolecule
-      parameters:
-        fields: aeolus.unii  ## no prefix
-        size: 1000  ## note size limit
-      predicate: treated_by  ## current biolink predicate
-      source: "infores:aeolus"
-      response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/aeolus-unii"
-      # testExamples:
-      #   - qInput: "MEDDRA:10012378"        ## Depression 
-      #     oneOutput: "UNII:OGG85SX4E4"     ## Imipramine
+    # aeolusTreats-rev:
+    # - supportBatch: true
+    #   inputSeparator: ","
+    #   inputs:
+    #   - id: MEDDRA
+    #     semantic: Disease
+    #   requestBody:
+    #     body:
+    #       q: "{inputs[0]}"  ## no prefix
+    #       scopes: aeolus.indications.meddra_code
+    #     header: application/x-www-form-urlencoded
+    #   outputs:
+    #   - id: UNII
+    #     semantic: SmallMolecule
+    #   parameters:
+    #     fields: aeolus.unii  ## no prefix
+    #     size: 1000  ## note size limit
+    #   predicate: treated_by  ## current biolink predicate
+    #   source: "infores:aeolus"
+    #   response_mapping:
+    #     "$ref": "#/components/x-bte-response-mapping/aeolus-unii"
+    #   # testExamples:
+    #   #   - qInput: "MEDDRA:10012378"        ## Depression 
+    #   #     oneOutput: "UNII:OGG85SX4E4"     ## Imipramine
   ## chebi xrefs actually include relationships to other bioentities...
   ## - note that truncation was done by MyChem for rhea...
   ##   see https://docs.mychem.info/en/latest/doc/data_source.html
@@ -600,7 +599,7 @@ components:
         "$ref": "#/components/x-bte-response-mapping/chebiXrefs-rhea"
       # testExamples:
       #   - qInput: "CHEBI:4885"      ## ethionamide
-      #     oneOutput: "RHEA:47616"   ## doesn't seem to have a name...
+      #     oneOutput: "RHEA:47616"   ## ethionamide + H(+) + NADPH + O2 = ethionamide S-oxide + H2O + NADP(+)
     chebiToRhea-rev:
     - supportBatch: true
       inputSeparator: ","
@@ -623,7 +622,7 @@ components:
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/chebi"
       # testExamples:
-      #   - qInput: "RHEA:23312"      ## doesn't seem to have a name...
+      #   - qInput: "RHEA:23312"      ## 2 sucrose = 1(F)-beta-D-fructosylsucrose + D-glucose
       #     oneOutput: "CHEBI:16885"  ## 1-kestose
     ## chembl
     ## - not including drug_mechanisms because 
@@ -691,8 +690,8 @@ components:
   ##   - drugcentral.approval (node properties?)
   ##   - drugcentral.drug_dosage (node properties?)
   ##   - drugcentral.drug_use.diagnosis (only has 1 matching record...)
-  ##   - drugcentral.drug_use.reduce risk (only has 1 matching record...)
-  ##   - drugcentral.drug_use.symptomatic treatment (only has 2 matching records...)
+  ##   - drugcentral.drug_use.reduce_risk (only has 1 matching record...)
+  ##   - drugcentral.drug_use.symptomatic_treatment (only has 2 matching records...)
     drugcentral-bioactivity:
       ## BIG NOTE: this endpoint actually gives genes from multiple organisms. 
       ##   for example, see: https://mychem.info/v1/chem/ONNOFKFOZAJDHT-UHFFFAOYSA-N : it says rat...
@@ -880,16 +879,15 @@ components:
       inputs:
       - id: "CHEMBL.COMPOUND"
         semantic: SmallMolecule
-      ## there are 638 records with "drugcentral.drug_use.off-label use" fields
-      ##   most of them (633) also have the drugcentral.xrefs.chembl_id field 
-      ## note: there were slightly less records (632) with the drugcentral.xrefs.unii field
+      ## there are 782 records with "drugcentral.drug_use.off_label_use" fields
+      ##   most of them (780) also have the drugcentral.xrefs.chembl_id field 
+      ## note: there were slightly less records (775) with the drugcentral.xrefs.unii field
       requestBodyType: object
       requestBody:
         body: >-
           { 
             "q": "{{ queryInputs }}",
-            "scopes": "drugcentral.xrefs.chembl_id",
-            "fields": ["drugcentral.drug_use.off-label use.umls_cui"]
+            "scopes": "drugcentral.xrefs.chembl_id"
           }
         header: application/x-www-form-urlencoded
       outputs:
@@ -897,6 +895,7 @@ components:
         semantic: Disease
       ## moved parameters (fields, size) to the request body to allow MyChem to handle field with space inside...
       parameters:
+        fields: drugcentral.drug_use.off_label_use.umls_cui
         size: 1000     ## note size limit; added just in case
       ## FYI: output could also be SNOMED (specifically SNOMED-CT US Edition). 
       ##     Looks like the native ID for DrugCentral, see https://drugcentral.org/drugcard/1768#druguse. 
@@ -919,7 +918,7 @@ components:
         body: >-
           {
             "q": "{{ queryInputs }}",
-            "scopes": ["drugcentral.drug_use.off-label use.umls_cui"]
+            "scopes": ["drugcentral.drug_use.off_label_use.umls_cui"]
           }
         header: application/x-www-form-urlencoded
       outputs:
