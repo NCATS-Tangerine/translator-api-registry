@@ -16,7 +16,7 @@ info:
     component: KP
     team:
     - Service Provider
-    biolink-version: "2.2.3"
+    biolink-version: "2.2.13"
 servers:
   - url: 'http://lincsportal.ccs.miami.edu/dcic/api/'
     description: Production server
@@ -393,6 +393,7 @@ components:
     drug-indication:
     - inputs:
     ## SRI-ID-Resolver doesn't support LINCS ID prefix...
+    ## note that there are two types of LINCS IDs. This is LINCS Small Molecule ID (vs HMS LINCS ID)
       - id: LINCS
         semantic: SmallMolecule
       method: get
@@ -401,16 +402,17 @@ components:
         semantic: Disease
       parameters:
         id: '{inputs[0]}'  ## no prefix
-        ## example: put LSM-1023 here (Imatinib)
-        ##   should get D046152 in response (GASTROINTESTINAL STROMAL TUMORS)
       ## This info is likely from CHEMBL.
       ##   See curated data tab, * note in http://lincsportal.ccs.miami.edu/SmallMolecules/view/LSM-1023
       predicate: treats
       response_mapping:
         $ref: '#/components/x-bte-response-mapping/drug-indication'
       supportBatch: false  ## no batch support (get operation)
+      # testExamples:
+      #   - qInput: "LINCS:LSM-1023"      ## Imatinib
+      #     oneOutput: "MESH:D046152"   ## GASTROINTESTINAL STROMAL TUMORS
+      ## example raw query: http://lincsportal.ccs.miami.edu/dcic/api/drugindication?id=LSM-1008
   x-bte-response-mapping:
     drug-indication:
       MESH: documents.mesh_id  ## no prefix
-      name: documents.mesh_heading
-      ## could include categoricalMeasure for FDA max phase (for the indication)
+      "biolink:highest_FDA_approval_status": documents.max_fda_phase_for_ind
