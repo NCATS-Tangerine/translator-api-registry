@@ -3,11 +3,12 @@ openapi: 3.0.0
 info:
   version: '1.0'
   title: QuickGO API
-  description: 'The QuickGO REST API provides access to key biological data from QuickGO
+  description: >-
+    The QuickGO REST API provides access to key biological data from QuickGO
     and GOA. The services provide a unified interface to query information about ontology
     terms from GO (the Gene Ontology) and ECO (the Evidence & Conclusion Ontology),
-    Gene Ontology annotations from the EBI''s GOA database, and gene products (proteins
-    from UniProt, RNA from RNAcentral and complexes from ComplexPortal). '
+    Gene Ontology annotations from the EBI's GOA database, and gene products (proteins
+    from UniProt, RNA from RNAcentral and complexes from ComplexPortal).
   termsOfService: https://www.ebi.ac.uk/QuickGO/services
   contact:
     name: pharmgkb help desk
@@ -18,6 +19,7 @@ info:
     component: KP
     team:
       - Service Provider
+    biolink-version: "2.2.13"
 servers:
 - url: https://www.ebi.ac.uk/QuickGO/services
   description: Production server
@@ -44,6 +46,7 @@ paths:
       - "$ref": "#/components/x-bte-kgs-operations/ma_has_subclass_ma"
 components:
   x-bte-kgs-operations:
+    ## BIG NOTE: there is likely more data in this API, but want to add stuff that would be helpful for use cases, that we regularly update
     ma_has_subclass_ma:
     - inputs:
       - id: GO
@@ -54,12 +57,14 @@ components:
       - id: GO
         semantic: MolecularActivity
       parameters:
-        goid: "{inputs[0]}"
+        goid: "{inputs[0]}"  ## has prefix (GO)
       supportBatch: false
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/ma_has_subclass_ma"
+      # testExamples:
+      #   - qInput: "GO:0000082"     ## G1/S transition of mitotic cell cycle
+      #     oneOutput: "GO:2000045"  ## regulation of G1/S transition of mitotic cell cycle
   x-bte-response-mapping:
     ma_has_subclass_ma:
-      GO: results.children.id
-      name: results.children.name
+      GO: results.children.id  ## has prefix (GO)
       relation: results.children.relation
