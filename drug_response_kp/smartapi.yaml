@@ -232,8 +232,9 @@ paths:
       - $ref: '#/components/x-bte-kgs-operations/gene-sensitivity-pubchem-2-rev'
       - $ref: '#/components/x-bte-kgs-operations/gene-sensitivity-hms_lincs'
       - $ref: '#/components/x-bte-kgs-operations/gene-sensitivity-hms_lincs-rev'
-      - $ref: '#/components/x-bte-kgs-operations/gene-sensitivity-chembl'
-      - $ref: '#/components/x-bte-kgs-operations/gene-sensitivity-chembl-rev'
+      ## waiting for parser fix
+      # - $ref: '#/components/x-bte-kgs-operations/gene-sensitivity-chembl'
+      # - $ref: '#/components/x-bte-kgs-operations/gene-sensitivity-chembl-rev'
       - $ref: '#/components/x-bte-kgs-operations/gene-sensitivity-chebi'
       - $ref: '#/components/x-bte-kgs-operations/gene-sensitivity-chebi-rev'
       - $ref: '#/components/x-bte-kgs-operations/gene-resistance-pubchem-1'
@@ -242,8 +243,9 @@ paths:
       - $ref: '#/components/x-bte-kgs-operations/gene-resistance-pubchem-2-rev'
       - $ref: '#/components/x-bte-kgs-operations/gene-resistance-hms_lincs'
       - $ref: '#/components/x-bte-kgs-operations/gene-resistance-hms_lincs-rev'
-      - $ref: '#/components/x-bte-kgs-operations/gene-resistance-chembl'
-      - $ref: '#/components/x-bte-kgs-operations/gene-resistance-chembl-rev'
+      ## waiting for parser fix
+      # - $ref: '#/components/x-bte-kgs-operations/gene-resistance-chembl'
+      # - $ref: '#/components/x-bte-kgs-operations/gene-resistance-chembl-rev'
       - $ref: '#/components/x-bte-kgs-operations/gene-resistance-chebi'
       - $ref: '#/components/x-bte-kgs-operations/gene-resistance-chebi-rev'
 components:
@@ -405,11 +407,11 @@ components:
   ##   - HMS_LINCS_ID (not in biolink-model, so no standard prefix...). https://lincs.hms.harvard.edu/db/sm/10076-101/
   ##     - note that LINCS isn't in biolink-model either
   ##     - also SRI ID resolver won't handle these 
-  ##   - CHEMBL.COMPOUND (using the prefix + field CHEMBL.COMPOUND)
-  ##   - CHEBI (using the prefix + field CHEBI)
+  ##   - CHEMBL.COMPOUND (field is CHEMBL_COMPOUND)
+  ##   - CHEBI (keeping prefix CHEBI)
   ## - predicates in association.edge_label:
-  ##   - biolink:associated with sensitivity to
-  ##   - biolink:associated with resistance to
+  ##   - biolink:associated_with_sensitivity_to
+  ##   - biolink:associated_with_resistance_to
   ## - for reverse operations, some edge attributes may seem odd (reversed subj/obj)
   ## - currently we can't express _exists_ with this kind of query: useful for setting the output
   ## - currently, BTE handles most prefix (CHEBI keeps prefixes, EMSEMBL / PUBCHEM.COMPOUND / CHEMBL.COMPOUND does not).  
@@ -417,7 +419,8 @@ components:
   ##   in the future, could edit parser + queries to handle prefixes
   ## - joinSafe is only needed if the delimiter isn't a comma
     gene-sensitivity-pubchem-1:
-    ##  https://pending.biothings.io/drug_response_kp/query?q=association.edge_label:%22biolink:associated%20with%20sensitivity%20to%22%20AND%20_exists_:%22object.PUBCHEM%22
+    ##  https://pending.biothings.io/drug_response_kp/query?q=association.edge_label:%22biolink:associated_with_sensitivity_to%22%20AND%20_exists_:%22object.PUBCHEM%22
+    ##  1495704 records  
       - supportBatch: true
         useTemplating: true ## flag to say templating is being used below
         inputs:
@@ -427,7 +430,7 @@ components:
         requestBody:
           body: >-
             {
-              "q": [ {{ queryInputs | wrap( '["ENSEMBL:' , '","biolink:associated with sensitivity to"]') }} ],
+              "q": [ {{ queryInputs | wrap( '["' , '","biolink:associated_with_sensitivity_to"]') }} ],
               "scopes": ["subject.ENSEMBL", "association.edge_label"]
             }
         parameters:
@@ -439,11 +442,12 @@ components:
         predicate: associated_with_sensitivity_to
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/pubchem-1-object"
+        ## note 3 records: https://pending.biothings.io/drug_response_kp/query?q=association.edge_label:%22biolink:associated_with_sensitivity_to%22%20AND%20subject.ENSEMBL:ENSG00000181991%20AND%20object.PUBCHEM:71271629
         # testExamples:
-        #   - qInput: "ENSEMBL:ENSG00000039319"     ## ZFYVE16
-        #     oneOutput: "PUBCHEM.COMPOUND:46224516"  ## UNC0638
+        #   - qInput: "ENSEMBL:ENSG00000181991"     ## MRPS11
+        #     oneOutput: "PUBCHEM.COMPOUND:71271629"  ## PFI-1
     gene-sensitivity-pubchem-1-rev:
-    ##  https://pending.biothings.io/drug_response_kp/query?q=association.edge_label:%22biolink:associated%20with%20sensitivity%20to%22%20AND%20_exists_:%22object.PUBCHEM%22
+    ##  https://pending.biothings.io/drug_response_kp/query?q=association.edge_label:%22biolink:associated_with_sensitivity_to%22%20AND%20_exists_:%22object.PUBCHEM%22
       - supportBatch: true
         useTemplating: true ## flag to say templating is being used below
         inputs:
@@ -453,7 +457,7 @@ components:
         requestBody:
           body: >-
             {
-              "q": [ {{ queryInputs | wrap( '["PUBCHEM:' , '","biolink:associated with sensitivity to"]') }} ],
+              "q": [ {{ queryInputs | wrap( '["' , '","biolink:associated_with_sensitivity_to"]') }} ],
               "scopes": ["object.PUBCHEM", "association.edge_label"]
             }
         parameters:
@@ -465,11 +469,13 @@ components:
         predicate: sensitivity_associated_with
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/ensembl-subject"
+        ## note 3 records: https://pending.biothings.io/drug_response_kp/query?q=association.edge_label:%22biolink:associated_with_sensitivity_to%22%20AND%20subject.ENSEMBL:ENSG00000162378%20AND%20object.PUBCHEM:6851740
         # testExamples:
-        #   - qInput: "PUBCHEM.COMPOUND:25222038"  ## JNK-9L 
-        #     oneOutput: "ENSEMBL:ENSG00000104884"     ## ERCC2
+        #   - qInput: "PUBCHEM.COMPOUND:6851740"  ## SB-715992
+        #     oneOutput: "ENSEMBL:ENSG00000162378"     ## ZYG11B
     gene-sensitivity-pubchem-2:
-    ##  https://pending.biothings.io/drug_response_kp/query?q=association.edge_label:%22biolink:associated%20with%20sensitivity%20to%22%20AND%20_exists_:%22object.CID%22
+    ##  https://pending.biothings.io/drug_response_kp/query?q=association.edge_label:%22biolink:associated_with_sensitivity_to%22%20AND%20_exists_:%22object.CID%22
+    ##  55102 records  
       - supportBatch: true
         useTemplating: true ## flag to say templating is being used below
         inputs:
@@ -479,7 +485,7 @@ components:
         requestBody:
           body: >-
             {
-              "q": [ {{ queryInputs | wrap( '["ENSEMBL:' , '","biolink:associated with sensitivity to"]') }} ],
+              "q": [ {{ queryInputs | wrap( '["' , '","biolink:associated_with_sensitivity_to"]') }} ],
               "scopes": ["subject.ENSEMBL", "association.edge_label"]
             }
         parameters:
@@ -491,11 +497,12 @@ components:
         predicate: associated_with_sensitivity_to
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/pubchem-2-object"
+        ## 1 record: https://pending.biothings.io/drug_response_kp/query?q=association.edge_label:%22biolink:associated_with_sensitivity_to%22%20AND%20subject.ENSEMBL:ENSG00000186788%20AND%20object.CID:6914657
         # testExamples:
-        #   - qInput: "ENSEMBL:ENSG00000152580"     ## IGSF10
-        #     oneOutput: "PUBCHEM.COMPOUND:135659062"  ## BIX02189
+        #   - qInput: "ENSEMBL:ENSG00000186788"     ## SPATA31D3
+        #     oneOutput: "PUBCHEM.COMPOUND:6914657"  ## FK866 / Daporinad
     gene-sensitivity-pubchem-2-rev:
-    ##  https://pending.biothings.io/drug_response_kp/query?q=association.edge_label:%22biolink:associated%20with%20sensitivity%20to%22%20AND%20_exists_:%22object.CID%22
+    ##  https://pending.biothings.io/drug_response_kp/query?q=association.edge_label:%22biolink:associated_with_sensitivity_to%22%20AND%20_exists_:%22object.CID%22
       - supportBatch: true
         useTemplating: true ## flag to say templating is being used below
         inputs:
@@ -505,7 +512,7 @@ components:
         requestBody:
           body: >-
             {
-              "q": [ {{ queryInputs | wrap( '["CID:' , '","biolink:associated with sensitivity to"]') }} ],
+              "q": [ {{ queryInputs | wrap( '["' , '","biolink:associated_with_sensitivity_to"]') }} ],
               "scopes": ["object.CID", "association.edge_label"]
             }
         parameters:
@@ -517,11 +524,13 @@ components:
         predicate: sensitivity_associated_with
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/ensembl-subject"
+        ## 1 record: https://pending.biothings.io/drug_response_kp/query?q=association.edge_label:%22biolink:associated_with_sensitivity_to%22%20AND%20subject.ENSEMBL:ENSG00000149506%20AND%20object.CID:644243
         # testExamples:
         #   - qInput: "PUBCHEM.COMPOUND:644243"  ## FMK
-        #     oneOutput: "ENSEMBL:ENSG00000152580"     ## IGSF10
+        #     oneOutput: "ENSEMBL:ENSG00000149506"     ## ZP1
     gene-sensitivity-hms_lincs:
-    ##  https://pending.biothings.io/drug_response_kp/query?q=association.edge_label:%22biolink:associated%20with%20sensitivity%20to%22%20AND%20_exists_:%22object.HMS_LINCS_ID%22
+    ##  https://pending.biothings.io/drug_response_kp/query?q=association.edge_label:%22biolink:associated_with_sensitivity_to%22%20AND%20_exists_:%22object.HMS_LINCS_ID%22
+    ##  119525 records
       - supportBatch: true
         useTemplating: true ## flag to say templating is being used below
         inputs:
@@ -531,7 +540,7 @@ components:
         requestBody:
           body: >-
             {
-              "q": [ {{ queryInputs | wrap( '["ENSEMBL:' , '","biolink:associated with sensitivity to"]') }} ],
+              "q": [ {{ queryInputs | wrap( '["' , '","biolink:associated_with_sensitivity_to"]') }} ],
               "scopes": ["subject.ENSEMBL", "association.edge_label"]
             }
         parameters:
@@ -543,11 +552,13 @@ components:
         predicate: associated_with_sensitivity_to
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/hms_lincs-object"
+        ## note 4 records: https://pending.biothings.io/drug_response_kp/query?q=association.edge_label:%22biolink:associated_with_sensitivity_to%22%20AND%20subject.ENSEMBL:ENSG00000198034%20AND%20object.HMS_LINCS_ID:12005-101
         # testExamples:
-        #   - qInput: "ENSEMBL:ENSG00000126895"     ## AVPR2
-        #     oneOutput: "HMS_LINCS_ID:10076-101"  ## QL-XI-92
+        #   - qInput: "ENSEMBL:ENSG00000198034"     ## RPS4X
+        #     oneOutput: "HMS_LINCS_ID:12005-101"  ## QL-VIII-58
     gene-sensitivity-hms_lincs-rev:
-    ##  https://pending.biothings.io/drug_response_kp/query?q=association.edge_label:%22biolink:associated%20with%20sensitivity%20to%22%20AND%20_exists_:%22object.HMS_LINCS_ID%22
+    ##  https://pending.biothings.io/drug_response_kp/query?q=association.edge_label:%22biolink:associated_with_sensitivity_to%22%20AND%20_exists_:%22object.HMS_LINCS_ID%22
+    ##  currently can't test due to SRI ID resolver error
       - supportBatch: true
         useTemplating: true ## flag to say templating is being used below
         inputs:
@@ -557,7 +568,7 @@ components:
         requestBody:
           body: >-
             {
-              "q": [ {{ queryInputs | wrap( '["HMS_LINCS_ID:' , '","biolink:associated with sensitivity to"]') }} ],
+              "q": [ {{ queryInputs | wrap( '["' , '","biolink:associated_with_sensitivity_to"]') }} ],
               "scopes": ["object.HMS_LINCS_ID", "association.edge_label"]
             }
         parameters:
@@ -569,63 +580,67 @@ components:
         predicate: sensitivity_associated_with
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/ensembl-subject"
+        ## note 2 records: https://pending.biothings.io/drug_response_kp/query?q=association.edge_label:%22biolink:associated_with_sensitivity_to%22%20AND%20subject.ENSEMBL:ENSG00000149218%20AND%20object.HMS_LINCS_ID:10089-101
         # testExamples:
         #   - qInput: "HMS_LINCS_ID:10089-101"  ## XMD14-99
-        #     oneOutput: "ENSEMBL:ENSG00000106804"     ## C5
-    gene-sensitivity-chembl:
-    ##  https://pending.biothings.io/drug_response_kp/query?q=association.edge_label:%22biolink:associated%20with%20sensitivity%20to%22%20AND%20_exists_:%22object.CHEMBL%22
-      - supportBatch: true
-        useTemplating: true ## flag to say templating is being used below
-        inputs:
-          - id: ENSEMBL
-            semantic: Gene
-        requestBodyType: object
-        requestBody:
-          body: >-
-            {
-              "q": [ {{ queryInputs | wrap( '["ENSEMBL:' , '","biolink:associated with sensitivity to"]') }} ],
-              "scopes": ["subject.ENSEMBL", "association.edge_label"]
-            }
-        parameters:
-          fields: object.CHEMBL,association.edge_attributes
-          size: 1000
-        outputs:
-          - id: "CHEMBL.COMPOUND"
-            semantic: SmallMolecule
-        predicate: associated_with_sensitivity_to
-        response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/chembl-object"
-        # testExamples:
-        #   - qInput: "ENSEMBL:ENSG00000126733"     ## DACH2
-        #     oneOutput: "CHEMBL.COMPOUND:CHEMBL2105734"  ## YM155
-    gene-sensitivity-chembl-rev:
-    ##  https://pending.biothings.io/drug_response_kp/query?q=association.edge_label:%22biolink:associated%20with%20sensitivity%20to%22%20AND%20_exists_:%22object.CHEMBL%22
-      - supportBatch: true
-        useTemplating: true ## flag to say templating is being used below
-        inputs:
-          - id: "CHEMBL.COMPOUND"
-            semantic: SmallMolecule
-        requestBodyType: object
-        requestBody:
-          body: >-
-            {
-              "q": [ {{ queryInputs | wrap( '["CHEMBL.COMPOUND:' , '","biolink:associated with sensitivity to"]') }} ],
-              "scopes": ["object.CHEMBL", "association.edge_label"]
-            }
-        parameters:
-          fields: subject.ENSEMBL,association.edge_attributes
-          size: 1000
-        outputs:
-          - id: ENSEMBL
-            semantic: Gene
-        predicate: sensitivity_associated_with
-        response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/ensembl-subject"
-        # testExamples:
-        #   - qInput: "CHEMBL.COMPOUND:CHEMBL591429"  ## PAC-1
-        #     oneOutput: "ENSEMBL:ENSG00000106078"     ## COBL
+        #     oneOutput: "ENSEMBL:ENSG00000149218"     ## ENDOD1
+    ## waiting for parser fix
+    # gene-sensitivity-chembl:
+    # ##  https://pending.biothings.io/drug_response_kp/query?q=association.edge_label:%22biolink:associated_with_sensitivity_to%22%20AND%20_exists_:%22object.CHEMBL_COMPOUND%22
+    # ##  404187 records
+    #   - supportBatch: true
+    #     useTemplating: true ## flag to say templating is being used below
+    #     inputs:
+    #       - id: ENSEMBL
+    #         semantic: Gene
+    #     requestBodyType: object
+    #     requestBody:
+    #       body: >-
+    #         {
+    #           "q": [ {{ queryInputs | wrap( '["' , '","biolink:associated_with_sensitivity_to"]') }} ],
+    #           "scopes": ["subject.ENSEMBL", "association.edge_label"]
+    #         }
+    #     parameters:
+    #       fields: object.CHEMBL_COMPOUND,association.edge_attributes
+    #       size: 1000
+    #     outputs:
+    #       - id: "CHEMBL.COMPOUND"
+    #         semantic: SmallMolecule
+    #     predicate: associated_with_sensitivity_to
+    #     response_mapping:
+    #       "$ref": "#/components/x-bte-response-mapping/chembl-object"
+    #     # testExamples:
+    #     #   - qInput: "ENSEMBL:ENSG00000163283"     ## ALPP
+    #     #     oneOutput: "CHEMBL.COMPOUND:CHEMBL571948"  ## Y-39983
+    # gene-sensitivity-chembl-rev:
+    # ##  https://pending.biothings.io/drug_response_kp/query?q=association.edge_label:%22biolink:associated_with_sensitivity_to%22%20AND%20_exists_:%22object.CHEMBL_COMPOUND%22
+    #   - supportBatch: true
+    #     useTemplating: true ## flag to say templating is being used below
+    #     inputs:
+    #       - id: "CHEMBL.COMPOUND"
+    #         semantic: SmallMolecule
+    #     requestBodyType: object
+    #     requestBody:
+    #       body: >-
+    #         {
+    #           "q": [ {{ queryInputs | wrap( '["' , '","biolink:associated_with_sensitivity_to"]') }} ],
+    #           "scopes": ["object.CHEMBL_COMPOUND", "association.edge_label"]
+    #         }
+    #     parameters:
+    #       fields: subject.ENSEMBL,association.edge_attributes
+    #       size: 1000
+    #     outputs:
+    #       - id: ENSEMBL
+    #         semantic: Gene
+    #     predicate: sensitivity_associated_with
+    #     response_mapping:
+    #       "$ref": "#/components/x-bte-response-mapping/ensembl-subject"
+    #     # testExamples:
+    #     #   - qInput: "CHEMBL.COMPOUND:CHEMBL399583"  ## AUY922
+    #     # oneOutput: "ENSEMBL:ENSG00000123411"     ## IKZF4
     gene-sensitivity-chebi:
-    ##  https://pending.biothings.io/drug_response_kp/query?q=association.edge_label:%22biolink:associated%20with%20sensitivity%20to%22%20AND%20_exists_:%22object.CHEBI%22
+    ##  https://pending.biothings.io/drug_response_kp/query?q=association.edge_label:%22biolink:associated_with_sensitivity_to%22%20AND%20_exists_:%22object.CHEBI%22
+    ##  748101 records
       - supportBatch: true
         useTemplating: true ## flag to say templating is being used below
         inputs:
@@ -635,7 +650,7 @@ components:
         requestBody:
           body: >-
             {
-              "q": [ {{ queryInputs | wrap( '["ENSEMBL:' , '","biolink:associated with sensitivity to"]') }} ],
+              "q": [ {{ queryInputs | wrap( '["' , '","biolink:associated_with_sensitivity_to"]') }} ],
               "scopes": ["subject.ENSEMBL", "association.edge_label"]
             }
         parameters:
@@ -647,12 +662,12 @@ components:
         predicate: associated_with_sensitivity_to
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/chebi-object"
+        ## 1 record: https://pending.biothings.io/drug_response_kp/query?q=association.edge_label:%22biolink:associated_with_sensitivity_to%22%20AND%20subject.ENSEMBL:ENSG00000178502%20AND%20object.CHEBI:%22CHEBI:144093%22
         # testExamples:
-        #   - qInput: "ENSEMBL:ENSG00000104884"     ## ERCC2
-        #     oneOutput: "CHEBI:137113"  ## JQ1
+        #   - qInput: "ENSEMBL:ENSG00000178502"     ## KLHL11
+        #     oneOutput: "CHEBI:144093"  ## Bicalutamide
     gene-sensitivity-chebi-rev:
-    ## needs prefix in q! BTE will automatically add??
-    ##  https://pending.biothings.io/drug_response_kp/query?q=association.edge_label:%22biolink:associated%20with%20sensitivity%20to%22%20AND%20_exists_:%22object.CHEBI%22
+    ##  https://pending.biothings.io/drug_response_kp/query?q=association.edge_label:%22biolink:associated_with_sensitivity_to%22%20AND%20_exists_:%22object.CHEBI%22
       - supportBatch: true
         useTemplating: true ## flag to say templating is being used below
         inputs:
@@ -662,7 +677,7 @@ components:
         requestBody:
           body: >-
             {
-              "q": [ {{ queryInputs | wrap( '["' , '","biolink:associated with sensitivity to"]') }} ],
+              "q": [ {{ queryInputs | wrap( '["' , '","biolink:associated_with_sensitivity_to"]') }} ],
               "scopes": ["object.CHEBI", "association.edge_label"]
             }
         parameters:
@@ -674,11 +689,13 @@ components:
         predicate: sensitivity_associated_with
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/ensembl-subject"
+        ## note 2 records:https://pending.biothings.io/drug_response_kp/query?q=association.edge_label:%22biolink:associated_with_sensitivity_to%22%20AND%20subject.ENSEMBL:ENSG00000162368%20AND%20object.CHEBI:%22CHEBI:141969%22
         # testExamples:
-        #   - qInput: "CHEBI:79369"  ## Elesclomol
-        #     oneOutput: "ENSEMBL:ENSG00000039537"     ## C6
+        #   - qInput: "CHEBI:141969"  ## Tipifarnib
+        #     oneOutput: "ENSEMBL:ENSG00000162368"     ## CMPK1
     gene-resistance-pubchem-1:
-    ##  https://pending.biothings.io/drug_response_kp/query?q=association.edge_label:%22biolink:associated%20with%20resistance%20to%22%20AND%20_exists_:%22object.PUBCHEM%22
+    ##  https://pending.biothings.io/drug_response_kp/query?q=association.edge_label:%22biolink:associated_with_resistance_to%22%20AND%20_exists_:%22object.PUBCHEM%22
+    ##  1504909 records
       - supportBatch: true
         useTemplating: true ## flag to say templating is being used below
         inputs:
@@ -688,7 +705,7 @@ components:
         requestBody:
           body: >-
             {
-              "q": [ {{ queryInputs | wrap( '["ENSEMBL:' , '","biolink:associated with resistance to"]') }} ],
+              "q": [ {{ queryInputs | wrap( '["' , '","biolink:associated_with_resistance_to"]') }} ],
               "scopes": ["subject.ENSEMBL", "association.edge_label"]
             }
         parameters:
@@ -700,11 +717,12 @@ components:
         predicate: associated_with_resistance_to
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/pubchem-1-object"
+        ## note 2 records: https://pending.biothings.io/drug_response_kp/query?q=association.edge_label:%22biolink:associated_with_resistance_to%22%20AND%20subject.ENSEMBL:ENSG00000005810%20AND%20object.PUBCHEM:704473
         # testExamples:
-        #   - qInput: "ENSEMBL:ENSG00000008130"     ## NADK
-        #     oneOutput: "PUBCHEM.COMPOUND:9914412"  ## ZM-447439
+        #   - qInput: "ENSEMBL:ENSG00000005810"     ## MYCBP2
+        #     oneOutput: "PUBCHEM.COMPOUND:704473"  ## STF-62247
     gene-resistance-pubchem-1-rev:
-    ##  https://pending.biothings.io/drug_response_kp/query?q=association.edge_label:%22biolink:associated%20with%20resistance%20to%22%20AND%20_exists_:%22object.PUBCHEM%22
+    ##  https://pending.biothings.io/drug_response_kp/query?q=association.edge_label:%22biolink:associated_with_resistance_to%22%20AND%20_exists_:%22object.PUBCHEM%22
       - supportBatch: true
         useTemplating: true ## flag to say templating is being used below
         inputs:
@@ -714,7 +732,7 @@ components:
         requestBody:
           body: >-
             {
-              "q": [ {{ queryInputs | wrap( '["PUBCHEM:' , '","biolink:associated with resistance to"]') }} ],
+              "q": [ {{ queryInputs | wrap( '["' , '","biolink:associated_with_resistance_to"]') }} ],
               "scopes": ["object.PUBCHEM", "association.edge_label"]
             }
         parameters:
@@ -726,11 +744,13 @@ components:
         predicate: resistance_associated_with
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/ensembl-subject"
+        ## note 2 records: https://pending.biothings.io/drug_response_kp/query?q=association.edge_label:%22biolink:associated_with_resistance_to%22%20AND%20subject.ENSEMBL:ENSG00000120658%20AND%20object.PUBCHEM:11647372
         # testExamples:
-        #   - qInput: "PUBCHEM.COMPOUND:6450551"  ## Axitinib 
-        #     oneOutput: "ENSEMBL:ENSG00000035499"     ## DEPDC1B
+        #   - qInput: "PUBCHEM.COMPOUND:11647372"  ## ZSTK474 
+        #     oneOutput: "ENSEMBL:ENSG00000120658"     ## ENOX1
     gene-resistance-pubchem-2:
-    ##  https://pending.biothings.io/drug_response_kp/query?q=association.edge_label:%22biolink:associated%20with%20resistance%20to%22%20AND%20_exists_:%22object.CID%22
+    ##  https://pending.biothings.io/drug_response_kp/query?q=association.edge_label:%22biolink:associated_with_resistance_to%22%20AND%20_exists_:%22object.CID%22
+    ##  62269 records
       - supportBatch: true
         useTemplating: true ## flag to say templating is being used below
         inputs:
@@ -740,7 +760,7 @@ components:
         requestBody:
           body: >-
             {
-              "q": [ {{ queryInputs | wrap( '["ENSEMBL:' , '","biolink:associated with resistance to"]') }} ],
+              "q": [ {{ queryInputs | wrap( '["' , '","biolink:associated_with_resistance_to"]') }} ],
               "scopes": ["subject.ENSEMBL", "association.edge_label"]
             }
         parameters:
@@ -752,11 +772,12 @@ components:
         predicate: associated_with_resistance_to
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/pubchem-2-object"
+        ## 1 record: https://pending.biothings.io/drug_response_kp/query?q=association.edge_label:%22biolink:associated_with_resistance_to%22%20AND%20subject.ENSEMBL:ENSG00000156453%20AND%20object.CID:16760646
         # testExamples:
-        #   - qInput: "ENSEMBL:ENSG00000036672"     ## USP2
-        #     oneOutput: "PUBCHEM.COMPOUND:644243"  ## FMK
+        #   - qInput: "ENSEMBL:ENSG00000156453"     ## PCDH1
+        #     oneOutput: "PUBCHEM.COMPOUND:16760646"  ## CID 16760646 
     gene-resistance-pubchem-2-rev:
-    ##  https://pending.biothings.io/drug_response_kp/query?q=association.edge_label:%22biolink:associated%20with%20resistance%20to%22%20AND%20_exists_:%22object.CID%22
+    ##  https://pending.biothings.io/drug_response_kp/query?q=association.edge_label:%22biolink:associated_with_resistance_to%22%20AND%20_exists_:%22object.CID%22
       - supportBatch: true
         useTemplating: true ## flag to say templating is being used below
         inputs:
@@ -766,7 +787,7 @@ components:
         requestBody:
           body: >-
             {
-              "q": [ {{ queryInputs | wrap( '["CID:' , '","biolink:associated with resistance to"]') }} ],
+              "q": [ {{ queryInputs | wrap( '["' , '","biolink:associated_with_resistance_to"]') }} ],
               "scopes": ["object.CID", "association.edge_label"]
             }
         parameters:
@@ -778,11 +799,13 @@ components:
         predicate: resistance_associated_with
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/ensembl-subject"
+        ## note 2 records: https://pending.biothings.io/drug_response_kp/query?q=association.edge_label:%22biolink:associated_with_resistance_to%22%20AND%20subject.ENSEMBL:ENSG00000156515%20AND%20object.CID:16760646
         # testExamples:
-        #   - qInput: "PUBCHEM.COMPOUND:21741774"  ## Z-LLNle-CHO
-        #     oneOutput: "ENSEMBL:ENSG00000058453"     ## CROCC
+        #   - qInput: "PUBCHEM.COMPOUND:16760646"  ## CID 16760646 
+        #     oneOutput: "ENSEMBL:ENSG00000156515"     ## HK1
     gene-resistance-hms_lincs:
-    ##  https://pending.biothings.io/drug_response_kp/query?q=association.edge_label:%22biolink:associated%20with%20resistance%20to%22%20AND%20_exists_:%22object.HMS_LINCS_ID%22
+    ##  https://pending.biothings.io/drug_response_kp/query?q=association.edge_label:%22biolink:associated_with_resistance_to%22%20AND%20_exists_:%22object.HMS_LINCS_ID%22
+    ##  112874 records
       - supportBatch: true
         useTemplating: true ## flag to say templating is being used below
         inputs:
@@ -792,7 +815,7 @@ components:
         requestBody:
           body: >-
             {
-              "q": [ {{ queryInputs | wrap( '["ENSEMBL:' , '","biolink:associated with resistance to"]') }} ],
+              "q": [ {{ queryInputs | wrap( '["' , '","biolink:associated_with_resistance_to"]') }} ],
               "scopes": ["subject.ENSEMBL", "association.edge_label"]
             }
         parameters:
@@ -804,11 +827,13 @@ components:
         predicate: associated_with_resistance_to
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/hms_lincs-object"
+        ## 1 record: https://pending.biothings.io/drug_response_kp/query?q=association.edge_label:%22biolink:associated_with_resistance_to%22%20AND%20subject.ENSEMBL:ENSG00000079841%20AND%20object.HMS_LINCS_ID:10088-101
         # testExamples:
-        #   - qInput: "ENSEMBL:ENSG00000041515"     ## MYO16
-        #     oneOutput: "HMS_LINCS_ID:10075-101"  ## QL-X-138
+        #   - qInput: "ENSEMBL:ENSG00000079841"     ## RIMS1
+        #     oneOutput: "HMS_LINCS_ID:10088-101"  ## XMD13-2
     gene-resistance-hms_lincs-rev:
-    ##  https://pending.biothings.io/drug_response_kp/query?q=association.edge_label:%22biolink:associated%20with%20resistance%20to%22%20AND%20_exists_:%22object.HMS_LINCS_ID%22
+    ##  https://pending.biothings.io/drug_response_kp/query?q=association.edge_label:%22biolink:associated_with_resistance_to%22%20AND%20_exists_:%22object.HMS_LINCS_ID%22
+    ##  currently can't test due to SRI ID resolver error
       - supportBatch: true
         useTemplating: true ## flag to say templating is being used below
         inputs:
@@ -818,7 +843,7 @@ components:
         requestBody:
           body: >-
             {
-              "q": [ {{ queryInputs | wrap( '["HMS_LINCS_ID:' , '","biolink:associated with resistance to"]') }} ],
+              "q": [ {{ queryInputs | wrap( '["' , '","biolink:associated_with_resistance_to"]') }} ],
               "scopes": ["object.HMS_LINCS_ID", "association.edge_label"]
             }
         parameters:
@@ -830,63 +855,67 @@ components:
         predicate: resistance_associated_with
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/ensembl-subject"
+        ## note 2 records: https://pending.biothings.io/drug_response_kp/query?q=association.edge_label:%22biolink:associated_with_resistance_to%22%20AND%20subject.ENSEMBL:ENSG00000116690%20AND%20object.HMS_LINCS_ID:10089-101
         # testExamples:
         #   - qInput: "HMS_LINCS_ID:10089-101"  ## XMD14-99
-        #     oneOutput: "ENSEMBL:ENSG00000122986"     ## HVCN1
-    gene-resistance-chembl:
-    ##  https://pending.biothings.io/drug_response_kp/query?q=association.edge_label:%22biolink:associated%20with%20resistance%20to%22%20AND%20_exists_:%22object.CHEMBL%22
-      - supportBatch: true
-        useTemplating: true ## flag to say templating is being used below
-        inputs:
-          - id: ENSEMBL
-            semantic: Gene
-        requestBodyType: object
-        requestBody:
-          body: >-
-            {
-              "q": [ {{ queryInputs | wrap( '["ENSEMBL:' , '","biolink:associated with resistance to"]') }} ],
-              "scopes": ["subject.ENSEMBL", "association.edge_label"]
-            }
-        parameters:
-          fields: object.CHEMBL,association.edge_attributes
-          size: 1000
-        outputs:
-          - id: "CHEMBL.COMPOUND"
-            semantic: SmallMolecule
-        predicate: associated_with_resistance_to
-        response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/chembl-object"
-        # testExamples:
-        #   - qInput: "ENSEMBL:ENSG00000007062"     ## PROM1
-        #     oneOutput: "CHEMBL.COMPOUND:CHEMBL598797"  ## CUDC-101
-    gene-resistance-chembl-rev:
-    ##  https://pending.biothings.io/drug_response_kp/query?q=association.edge_label:%22biolink:associated%20with%20resistance%20to%22%20AND%20_exists_:%22object.CHEMBL%22
-      - supportBatch: true
-        useTemplating: true ## flag to say templating is being used below
-        inputs:
-          - id: "CHEMBL.COMPOUND"
-            semantic: SmallMolecule
-        requestBodyType: object
-        requestBody:
-          body: >-
-            {
-              "q": [ {{ queryInputs | wrap( '["CHEMBL.COMPOUND:' , '","biolink:associated with resistance to"]') }} ],
-              "scopes": ["object.CHEMBL", "association.edge_label"]
-            }
-        parameters:
-          fields: subject.ENSEMBL,association.edge_attributes
-          size: 1000
-        outputs:
-          - id: ENSEMBL
-            semantic: Gene
-        predicate: resistance_associated_with
-        response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/ensembl-subject"
-        # testExamples:
-        #   - qInput: "CHEMBL.COMPOUND:CHEMBL1084546"  ## PF-562271
-        #     oneOutput: "ENSEMBL:ENSG00000007174"     ## DNAH9
+        #     oneOutput: "ENSEMBL:ENSG00000116690"     ## PRG4
+    ## waiting for parser fix
+    # gene-resistance-chembl:
+    # ##  https://pending.biothings.io/drug_response_kp/query?q=association.edge_label:%22biolink:associated_with_resistance_to%22%20AND%20_exists_:%22object.CHEMBL_COMPOUND%22
+    # ##  420179 records
+    #   - supportBatch: true
+    #     useTemplating: true ## flag to say templating is being used below
+    #     inputs:
+    #       - id: ENSEMBL
+    #         semantic: Gene
+    #     requestBodyType: object
+    #     requestBody:
+    #       body: >-
+    #         {
+    #           "q": [ {{ queryInputs | wrap( '["' , '","biolink:associated_with_resistance_to"]') }} ],
+    #           "scopes": ["subject.ENSEMBL", "association.edge_label"]
+    #         }
+    #     parameters:
+    #       fields: object.CHEMBL_COMPOUND,association.edge_attributes
+    #       size: 1000
+    #     outputs:
+    #       - id: "CHEMBL.COMPOUND"
+    #         semantic: SmallMolecule
+    #     predicate: associated_with_resistance_to
+    #     response_mapping:
+    #       "$ref": "#/components/x-bte-response-mapping/chembl-object"
+    #     # testExamples:
+    #     #   - qInput: "ENSEMBL:ENSG00000001626"     ## CFTR
+    #     #     oneOutput: "CHEMBL.COMPOUND:CHEMBL603469"  ## CEP-701
+    # gene-resistance-chembl-rev:
+    # ##  https://pending.biothings.io/drug_response_kp/query?q=association.edge_label:%22biolink:associated_with_resistance_to%22%20AND%20_exists_:%22object.CHEMBL_COMPOUND%22
+    #   - supportBatch: true
+    #     useTemplating: true ## flag to say templating is being used below
+    #     inputs:
+    #       - id: "CHEMBL.COMPOUND"
+    #         semantic: SmallMolecule
+    #     requestBodyType: object
+    #     requestBody:
+    #       body: >-
+    #         {
+    #           "q": [ {{ queryInputs | wrap( '["' , '","biolink:associated_with_resistance_to"]') }} ],
+    #           "scopes": ["object.CHEMBL_COMPOUND", "association.edge_label"]
+    #         }
+    #     parameters:
+    #       fields: subject.ENSEMBL,association.edge_attributes
+    #       size: 1000
+    #     outputs:
+    #       - id: ENSEMBL
+    #         semantic: Gene
+    #     predicate: resistance_associated_with
+    #     response_mapping:
+    #       "$ref": "#/components/x-bte-response-mapping/ensembl-subject"
+    #     # testExamples:
+    #     #   - qInput: "CHEMBL.COMPOUND:CHEMBL1084546"  ## PF-562271
+    #     #     oneOutput: "ENSEMBL:ENSG00000007174"     ## DNAH9
     gene-resistance-chebi:
-    ##  https://pending.biothings.io/drug_response_kp/query?q=association.edge_label:%22biolink:associated%20with%20resistance%20to%22%20AND%20_exists_:%22object.CHEBI%22
+    ##  https://pending.biothings.io/drug_response_kp/query?q=association.edge_label:%22biolink:associated_with_resistance_to%22%20AND%20_exists_:%22object.CHEBI%22
+    ##  762390 records
       - supportBatch: true
         useTemplating: true ## flag to say templating is being used below
         inputs:
@@ -896,7 +925,7 @@ components:
         requestBody:
           body: >-
             {
-              "q": [ {{ queryInputs | wrap( '["ENSEMBL:' , '","biolink:associated with resistance to"]') }} ],
+              "q": [ {{ queryInputs | wrap( '["' , '","biolink:associated_with_resistance_to"]') }} ],
               "scopes": ["subject.ENSEMBL", "association.edge_label"]
             }
         parameters:
@@ -908,12 +937,12 @@ components:
         predicate: associated_with_resistance_to
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/chebi-object"
+        ## 1 record: https://pending.biothings.io/drug_response_kp/query?q=association.edge_label:%22biolink:associated_with_resistance_to%22%20AND%20subject.ENSEMBL:ENSG00000005810%20AND%20object.CHEBI:%22CHEBI:94128%22
         # testExamples:
-        #   - qInput: "ENSEMBL:ENSG00000007062"     ## PROM1
-        #     oneOutput: "CHEBI:91351"  ## A-443654
+        #   - qInput: "ENSEMBL:ENSG00000005810"     ## MYCBP2
+        #     oneOutput: "CHEBI:94128"  ## ABT-263 / Navitoclax
     gene-resistance-chebi-rev:
-    ## needs prefix in q! BTE will automatically add??
-    ##  https://pending.biothings.io/drug_response_kp/query?q=association.edge_label:%22biolink:associated%20with%20resistance%20to%22%20AND%20_exists_:%22object.CHEBI%22
+    ##  https://pending.biothings.io/drug_response_kp/query?q=association.edge_label:%22biolink:associated_with_resistance_to%22%20AND%20_exists_:%22object.CHEBI%22
       - supportBatch: true
         useTemplating: true ## flag to say templating is being used below
         inputs:
@@ -923,7 +952,7 @@ components:
         requestBody:
           body: >-
             {
-              "q": [ {{ queryInputs | wrap( '["' , '","biolink:associated with resistance to"]') }} ],
+              "q": [ {{ queryInputs | wrap( '["' , '","biolink:associated_with_resistance_to"]') }} ],
               "scopes": ["object.CHEBI", "association.edge_label"]
             }
         parameters:
@@ -935,9 +964,10 @@ components:
         predicate: resistance_associated_with
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/ensembl-subject"
+        ## note 2 records: https://pending.biothings.io/drug_response_kp/query?q=association.edge_label:%22biolink:associated_with_resistance_to%22%20AND%20subject.ENSEMBL:ENSG00000005810%20AND%20object.CHEBI:%22CHEBI:79369%22
         # testExamples:
-        #   - qInput: "CHEBI:94128"  ## ABT-263
-        #     oneOutput: "ENSEMBL:ENSG00000008083"     ## JARID2
+        #   - qInput: "CHEBI:79369"  ## Elesclomol
+        #     oneOutput: "ENSEMBL:ENSG00000005810"     ## MYCBP2
   x-bte-response-mapping:
     pubchem-1-object:
       "PUBCHEM.COMPOUND": object.PUBCHEM
@@ -952,7 +982,7 @@ components:
       "HMS_LINCS_ID": object.HMS_LINCS_ID
       edge-attributes: association.edge_attributes
     chembl-object:
-      "CHEMBL.COMPOUND": object.CHEMBL
+      "CHEMBL.COMPOUND": "object.CHEMBL_COMPOUND"
       edge-attributes: association.edge_attributes
     chebi-object:
       CHEBI: object.CHEBI
