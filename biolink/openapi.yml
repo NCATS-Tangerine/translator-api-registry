@@ -38,10 +38,6 @@ paths:
 ## - there are more parameters in the endpoints below. Only included parameters we're using
 ## - potentially interesting operation to annotate:
 ##   - disease -> treatment: doesn't have same output format as the other endpoints...
-##   - disease -> variant, phenotype -> variant: 
-##     - need post-processing to handle the dbSNP prefix (biolink uses DBSNP)
-##     - some variants use BNODE prefix
-##     - also unclear what input/output ID prefixes can be used.
 ##   - function <-> gene: looks like MolecularActivity GO <-> Gene
 ##   - bioentity/gene/{id}/expression/anatomy: same as gene/anatomy endpoint (already annotated)?
 ##   - bioentity/gene/{id}/homologs: same as gene/anatomy endpoint (already annotated)
@@ -280,6 +276,58 @@ paths:
       - disease
       x-bte-kgs-operations:
       - "$ref": "#/components/x-bte-kgs-operations/disease-phenotype"
+  "/bioentity/disease/{id}/variants":
+    get:
+      parameters:
+      - description: CURIE identifier of disease IDs can be used with same results
+        in: path
+        name: id
+        required: true
+        example: "MONDO:0016575"
+        schema:
+          type: string
+      - description: number of rows
+        in: query
+        name: rows
+        required: false
+        ## default is 100
+        example: -1
+        schema:
+          type: integer
+      - description: If true, excludes evidence objects in response
+        in: query
+        name: unselect_evidence
+        required: false
+        ## default is false
+        example: false
+        schema:
+          type: boolean
+      - description: >-
+          Set true to only include direct associations, and false to include inferred 
+          (via subclass or subclass|part of), default=False
+        in: query
+        name: direct
+        required: false
+        ## default is false
+        example: false
+        schema:
+          type: boolean
+      - description: One or more taxon CURIE to filter associations by subject taxon; includes inferred associations by default
+        in: query
+        name: taxon
+        required: false
+        schema:
+          type: array
+          items:
+            type: string
+      responses:
+        '200':
+          description: Success
+      summary: Returns variants associated with a disease
+      tags:
+      - disease
+      x-bte-kgs-operations:
+      - "$ref": "#/components/x-bte-kgs-operations/disease-variant"
   "/bioentity/gene/{id}/anatomy":
     get:
       parameters:
@@ -489,6 +537,58 @@ paths:
       - gene
       x-bte-kgs-operations:
       - "$ref": "#/components/x-bte-kgs-operations/gene-phenotype"
+  "/bioentity/gene/{id}/variants":
+    get:
+      parameters:
+      - description: CURIE identifier of gene IDs can be used with same results
+        in: path
+        name: id
+        required: true
+        example: "NCBIGene:1017"
+        schema:
+          type: string
+      - description: number of rows
+        in: query
+        name: rows
+        required: false
+        ## default is 100
+        example: -1
+        schema:
+          type: integer
+      - description: If true, excludes evidence objects in response
+        in: query
+        name: unselect_evidence
+        required: false
+        ## default is false
+        example: false
+        schema:
+          type: boolean
+      - description: >-
+          Set true to only include direct associations, and false to include inferred 
+          (via subclass or subclass|part of), default=False
+        in: query
+        name: direct
+        required: false
+        ## default is false
+        example: false
+        schema:
+          type: boolean
+      - description: One or more taxon CURIE to filter associations by subject taxon; includes inferred associations by default
+        in: query
+        name: taxon
+        required: false
+        schema:
+          type: array
+          items:
+            type: string
+      responses:
+        '200':
+          description: Success
+      summary: Returns variants associated with a gene
+      tags:
+      - gene
+      x-bte-kgs-operations:
+      - "$ref": "#/components/x-bte-kgs-operations/gene-variant"
   "/bioentity/pathway/{id}/diseases":
     get:
       parameters:
@@ -646,111 +746,214 @@ paths:
       - phenotype
       x-bte-kgs-operations:
       - "$ref": "#/components/x-bte-kgs-operations/phenotype-gene"
-  ## commenting out due to SRI issue with unresolved objects: https://github.com/TranslatorSRI/NodeNormalization/issues/113
-  # "/bioentity/variant/{id}/diseases":
-  #   get:
-  #     parameters:
-  #     - description: CURIE identifier of variant, e.g. ClinVarVariant:14925
-  #       in: path
-  #       name: id
-  #       required: true
-  #       example: "dbSNP:rs11889341"
-  #       schema:
-  #         type: string
-  #     - description: number of rows
-  #       in: query
-  #       name: rows
-  #       required: false
-  #       ## default is 100
-  #       example: -1
-  #       schema:
-  #         type: integer
-  #     - description: If true, excludes evidence objects in response
-  #       in: query
-  #       name: unselect_evidence
-  #       required: false
-  #       ## default is false
-  #       example: false
-  #       schema:
-  #         type: boolean
-  #     - description: >-
-  #         Set true to only include direct associations, and false to include inferred 
-  #         (via subclass or subclass|part of), default=False
-  #       in: query
-  #       name: direct
-  #       required: false
-  #       ## default is false
-  #       example: false
-  #       schema:
-  #         type: boolean
-  #     - description: One or more taxon CURIE to filter associations by subject taxon; includes inferred associations by default
-  #       in: query
-  #       name: taxon
-  #       required: false
-  #       schema:
-  #         type: array
-  #         items:
-  #           type: string
-  #     responses:
-  #       '200':
-  #         description: Success
-  #     summary: Returns diseases associated with a variant
-  #     tags:
-  #     - variant
-  #     x-bte-kgs-operations:
-  #     - "$ref": "#/components/x-bte-kgs-operations/variant-disease"
-  # "/bioentity/variant/{id}/phenotypes":
-  #   get:
-  #     parameters:
-  #     - description: CURIE identifier of variant, e.g. ClinVarVariant:14925
-  #       in: path
-  #       name: id
-  #       required: true
-  #       example: "dbSNP:rs11889341"
-  #       schema:
-  #         type: string
-  #     - description: number of rows
-  #       in: query
-  #       name: rows
-  #       required: false
-  #       ## default is 100
-  #       example: -1
-  #       schema:
-  #         type: integer
-  #     - description: If true, excludes evidence objects in response
-  #       in: query
-  #       name: unselect_evidence
-  #       required: false
-  #       ## default is false
-  #       example: false
-  #       schema:
-  #         type: boolean
-  #     - description: >-
-  #         Set true to only include direct associations, and false to include inferred 
-  #         (via subclass or subclass|part of), default=False
-  #       in: query
-  #       name: direct
-  #       required: false
-  #       ## default is false
-  #       example: false
-  #       schema:
-  #         type: boolean
-  #     - description: One or more taxon CURIE to filter associations by subject taxon; includes inferred associations by default
-  #       in: query
-  #       name: taxon
-  #       required: false
-  #       schema:
-  #         type: array
-  #         items:
-  #           type: string
-  #     responses:
-  #       '200':
-  #         description: Success
-  #     summary: Returns phenotypes associated with a variant
-  #     tags:
-  #     - variant
-  #     x-bte-kgs-operations:
-  #     - "$ref": "#/components/x-bte-kgs-operations/variant-phenotype"
+  "/bioentity/phenotype/{id}/variants":
+    get:
+      parameters:
+      - description: CURIE identifier of phenotype IDs can be used with same results
+        in: path
+        name: id
+        required: true
+        example: "HP:0012265"
+        schema:
+          type: string
+      - description: number of rows
+        in: query
+        name: rows
+        required: false
+        ## default is 100
+        example: -1
+        schema:
+          type: integer
+      - description: If true, excludes evidence objects in response
+        in: query
+        name: unselect_evidence
+        required: false
+        ## default is false
+        example: false
+        schema:
+          type: boolean
+      - description: >-
+          Set true to only include direct associations, and false to include inferred 
+          (via subclass or subclass|part of), default=False
+        in: query
+        name: direct
+        required: false
+        ## default is false
+        example: false
+        schema:
+          type: boolean
+      - description: One or more taxon CURIE to filter associations by subject taxon; includes inferred associations by default
+        in: query
+        name: taxon
+        required: false
+        schema:
+          type: array
+          items:
+            type: string
+      responses:
+        '200':
+          description: Success
+      summary: Returns variants associated with a phenotype
+      tags:
+      - phenotype
+      x-bte-kgs-operations:
+      - "$ref": "#/components/x-bte-kgs-operations/phenotype-variant"
+  "/bioentity/variant/{id}/diseases":
+    get:
+      parameters:
+      - description: CURIE identifier of variant, e.g. ClinVarVariant:14925
+        in: path
+        name: id
+        required: true
+        example: "dbSNP:rs11889341"
+        schema:
+          type: string
+      - description: number of rows
+        in: query
+        name: rows
+        required: false
+        ## default is 100
+        example: -1
+        schema:
+          type: integer
+      - description: If true, excludes evidence objects in response
+        in: query
+        name: unselect_evidence
+        required: false
+        ## default is false
+        example: false
+        schema:
+          type: boolean
+      - description: >-
+          Set true to only include direct associations, and false to include inferred 
+          (via subclass or subclass|part of), default=False
+        in: query
+        name: direct
+        required: false
+        ## default is false
+        example: false
+        schema:
+          type: boolean
+      - description: One or more taxon CURIE to filter associations by subject taxon; includes inferred associations by default
+        in: query
+        name: taxon
+        required: false
+        schema:
+          type: array
+          items:
+            type: string
+      responses:
+        '200':
+          description: Success
+      summary: Returns diseases associated with a variant
+      tags:
+      - variant
+      x-bte-kgs-operations:
+      - "$ref": "#/components/x-bte-kgs-operations/variant-disease"
+  "/bioentity/variant/{id}/genes":
+    get:
+      parameters:
+      - description: CURIE identifier of variant, e.g. ClinVarVariant:14925
+        in: path
+        name: id
+        required: true
+        example: "dbSNP:rs11889341"
+        schema:
+          type: string
+      - description: number of rows
+        in: query
+        name: rows
+        required: false
+        ## default is 100
+        example: -1
+        schema:
+          type: integer
+      - description: If true, excludes evidence objects in response
+        in: query
+        name: unselect_evidence
+        required: false
+        ## default is false
+        example: false
+        schema:
+          type: boolean
+      - description: >-
+          Set true to only include direct associations, and false to include inferred 
+          (via subclass or subclass|part of), default=False
+        in: query
+        name: direct
+        required: false
+        ## default is false
+        example: false
+        schema:
+          type: boolean
+      - description: One or more taxon CURIE to filter associations by subject taxon; includes inferred associations by default
+        in: query
+        name: taxon
+        required: false
+        schema:
+          type: array
+          items:
+            type: string
+      responses:
+        '200':
+          description: Success
+      summary: Returns genes associated with a variant
+      tags:
+      - variant
+      x-bte-kgs-operations:
+      - "$ref": "#/components/x-bte-kgs-operations/variant-gene"
+  "/bioentity/variant/{id}/phenotypes":
+    get:
+      parameters:
+      - description: CURIE identifier of variant, e.g. ClinVarVariant:14925
+        in: path
+        name: id
+        required: true
+        example: "dbSNP:rs11889341"
+        schema:
+          type: string
+      - description: number of rows
+        in: query
+        name: rows
+        required: false
+        ## default is 100
+        example: -1
+        schema:
+          type: integer
+      - description: If true, excludes evidence objects in response
+        in: query
+        name: unselect_evidence
+        required: false
+        ## default is false
+        example: false
+        schema:
+          type: boolean
+      - description: >-
+          Set true to only include direct associations, and false to include inferred 
+          (via subclass or subclass|part of), default=False
+        in: query
+        name: direct
+        required: false
+        ## default is false
+        example: false
+        schema:
+          type: boolean
+      - description: One or more taxon CURIE to filter associations by subject taxon; includes inferred associations by default
+        in: query
+        name: taxon
+        required: false
+        schema:
+          type: array
+          items:
+            type: string
+      responses:
+        '200':
+          description: Success
+      summary: Returns phenotypes associated with a variant
+      tags:
+      - variant
+      x-bte-kgs-operations:
+      - "$ref": "#/components/x-bte-kgs-operations/variant-phenotype"
 components:
   ## there's a special api-response-transform. So object ID can be specified this way...
   x-bte-response-mapping:
@@ -768,6 +971,11 @@ components:
       pubmed: associations.publications.id
     phenotype-hp:
       HP: associations.object.HP
+      source: associations.provided_by
+      pubmed: associations.publications.id
+      relation: associations.relation.label
+    variant-dbsnp:
+      DBSNP: associations.object.dbSNP
       source: associations.provided_by
       pubmed: associations.publications.id
       relation: associations.relation.label
@@ -924,6 +1132,31 @@ components:
       # testExamples:
       #   - qInput: "MONDO:0008974"  ## Greenberg dysplasia
       #     oneOutput: "HP:0000272"  ## Malar flattening
+    disease-variant:
+    ## not using: 
+    ## - GENO:0000840 (pathogenic_for_condition). seems to use ClinVarVariant (ClinVarVariant:13417)
+    ## - GENO:0000841 (likely_pathogenic_for_condition). seems to use ClinVarVariant (ClinVarVariant:370820)
+    - parameters:
+        id: "{inputs[0]}"         ## current BTE automatically adds MONDO prefix to IDs
+        rows: -1
+        direct: true
+        unselect_evidence: true
+        taxon: "NCBITaxon:9606"    ## currently setting it to human-only
+        relation: "RO:0003304"    ## contributes to condition
+      inputs:
+      - id: MONDO
+        semantic: Disease
+      outputs:
+      - id: DBSNP
+        semantic: SequenceVariant
+      predicate: contribution_from
+      source: "infores:monarchinitiative"
+      supportBatch: false
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/variant-dbsnp"
+      # testExamples:
+      #   - qInput: "MONDO:0004747"  ## cleft lip (disease)
+      #     oneOutput: "DBSNP:rs227731"
     gene-anatomy:
     ## supposedly I could use this endpoint with CellularComponent (GO) and Cell (CL) terms
     ##   but I haven't been successful in getting results when trying this out
@@ -1057,6 +1290,27 @@ components:
       # testExamples:
       #   - qInput: "HGNC:2950"  ## DNAH5 
       #     oneOutput: "HP:0002643"  ## Neonatal respiratory distress
+    gene-variant:
+    ## can take human or non-human genes as input...
+    - parameters:
+        id: "HGNC:{inputs[0]}"    ## add prefix since Monarch expects this, while BTE automatically removes
+        rows: -1
+        direct: true
+        unselect_evidence: true
+      inputs:
+      - id: HGNC
+        semantic: Gene
+      outputs:
+      - id: DBSNP
+        semantic: SequenceVariant
+      predicate: has_sequence_variant
+      source: "infores:monarchinitiative"
+      supportBatch: false
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/variant-dbsnp"
+      # testExamples:
+      #   - qInput: "HGNC:2950"  ## DNAH5 
+      #     oneOutput: "dbSNP:rs795544"  
     pathway-disease:
     ## can include non-human pathways because Monarch doesn't include the taxon for pathways
     ##   but REACT prefixes show the species (MMU = mouse)
@@ -1125,6 +1379,30 @@ components:
       # testExamples:
       #   - qInput: "HP:0000183"  ## Difficulty in tongue movements
       #     oneOutput: "HGNC:4065"  ## GAA
+    phenotype-variant:
+    ## could also use OMIM IDs...
+    ## note: relation RO:0003304 (contributes to condition) seems to use EFO terms, rather than HP...
+    - parameters:
+        id: "{inputs[0]}"   ## current BTE automatically adds prefix for HP terms
+        rows: -1
+        direct: true
+        unselect_evidence: true
+        taxon: "NCBITaxon:9606"    ## currently setting it to human-only
+      inputs:
+      - id: HP
+        semantic: PhenotypicFeature
+      outputs:
+      - id: DBSNP
+        semantic: SequenceVariant
+      ## main relations: has phenotype, is marker for, contributes to condition...
+      predicate: related_to
+      source: "infores:monarchinitiative"
+      supportBatch: false
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/variant-dbsnp"
+      # testExamples:
+      #   - qInput: "HP:0002944"  ## Thoracolumbar scoliosis
+      #     oneOutput: "DBSNP:rs115165302" 
     variant-disease:
     ## not using: 
     ## - GENO:0000840 (pathogenic_for_condition). seems to use ClinVarVariant (ClinVarVariant:13417)
@@ -1151,6 +1429,28 @@ components:
       # testExamples:
       #   - qInput: "DBSNP:rs227731" 
       #     oneOutput: "MONDO:0004747"  ## cleft lip (disease)
+    variant-gene:
+    ## can take human or non-human genes as input...
+    - parameters:
+        id: "dbSNP:{inputs[0]}"
+        ## add prefix since Monarch expects this in this form, while BTE automatically removes
+        rows: -1
+        direct: true
+        unselect_evidence: true
+      inputs:
+      - id: DBSNP
+        semantic: SequenceVariant
+      outputs:
+      - id: HGNC
+        semantic: Gene
+      predicate: is_sequence_variant_of
+      source: "infores:monarchinitiative"
+      supportBatch: false
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/gene-hgnc"
+      # testExamples:
+      #   - qInput: "DBSNP:rs11879191" 
+      #     oneOutput: "HGNC:1735"  ## CDC37
     variant-phenotype:
     ## could also use OMIM IDs...
     ## note: relation RO:0003304 (contributes to condition) seems to use EFO terms, rather than HP...
