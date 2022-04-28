@@ -13,7 +13,7 @@ info:
     infores: "infores:biolink-api"
     component: KP
     team:
-    ## check what teams are involved
+    - "Service Provider"
     - "Standards Reference Implementation Team"  
     biolink-version: "2.2.13"
 servers:
@@ -54,49 +54,31 @@ paths:
   "/bioentity/anatomy/{id}/genes":
     get:
       parameters:
-      - description: >-
+      - name: id
+        description: >-
           CURIE identifier of anatomical entity, e.g. GO:0005634 (nucleus), UBERON:0002037 (cerebellum), 
           CL:0000540 (neuron). Equivalent IDs can be used with same results
         in: path
-        name: id
         required: true
         schema:
           type: string
-        example: "UBERON:0001817"
-      - description: number of rows
-        in: query
-        name: rows
-        required: false
-        ## default is 100
-        example: -1
-        schema:
-          type: integer
-      - description: If true, excludes evidence objects in response
-        in: query
-        name: unselect_evidence
-        required: false
-        ## default is false
-        example: false
-        schema:
-          type: boolean
-      - description: >-
-          Set true to only include direct associations, and false to include inferred 
-          (via subclass or subclass|part of), default=False
-        in: query
-        name: direct
-        required: false
-        ## default is false
-        example: false
-        schema:
-          type: boolean
-      - description: One or more taxon CURIE to filter associations by subject taxon; includes inferred associations by default
-        in: query
-        name: taxon
-        required: false
-        schema:
-          type: array
-          items:
-            type: string
+          example: "UBERON:0001817"  ## same as for anatomy-gene operation
+      - "$ref": "#/components/parameters/rows"
+      - "$ref": "#/components/parameters/start"
+      - "$ref": "#/components/parameters/facet"
+      - "$ref": "#/components/parameters/facet_fields"
+      - "$ref": "#/components/parameters/unselect_evidence"
+      - "$ref": "#/components/parameters/exclude_automatic_assertions"
+      - "$ref": "#/components/parameters/fetch_objects"
+      - "$ref": "#/components/parameters/use_compact_associations"
+      - "$ref": "#/components/parameters/slim"
+      - "$ref": "#/components/parameters/evidence"
+      - "$ref": "#/components/parameters/direct"
+      - "$ref": "#/components/parameters/taxon"
+      - "$ref": "#/components/parameters/direct_taxon"
+      - "$ref": "#/components/parameters/relation"
+      - "$ref": "#/components/parameters/sort"
+      - "$ref": "#/components/parameters/q"
       responses:
         '200':
           description: Success
@@ -108,61 +90,43 @@ paths:
   "/bioentity/disease/{id}/genes":
     get:
       parameters:
-      - description: CURIE identifier of disease IDs can be used with same results
+      - name: id
+        description: >-
+          CURIE identifier of disease, e.g. OMIM:605543, DOID:678. 
+          Equivalent IDs can be used with same results
         in: path
-        name: id
         required: true
-        example: "MONDO:0016575"
         schema:
           type: string
-      - description: number of rows
+          example: "MONDO:0011562"  ## same as for disease-gene-1 operation
+      - name: association_type
+        description: "Additional filters: causal, non_causal, both"
         in: query
-        name: rows
         required: false
-        ## default is 100
-        example: -1
-        schema:
-          type: integer
-      - description: "Additional filters: causal, non_causal, both"
-        in: query
-        name: association_type
-        required: false
-        example: "causal"
         schema:
           type: string
-      - description: A relation CURIE to filter associations
-        in: query
-        name: relation
-        required: false
-        example: "RO:0003304"
-        schema:
-          type: string
-      - description: If true, excludes evidence objects in response
-        in: query
-        name: unselect_evidence
-        required: false
-        ## default is false
-        example: false
-        schema:
-          type: boolean
-      - description: >-
-          Set true to only include direct associations, and false to include inferred 
-          (via subclass or subclass|part of), default=False
-        in: query
-        name: direct
-        required: false
-        ## default is false
-        example: false
-        schema:
-          type: boolean
-      - description: One or more taxon CURIE to filter associations by subject taxon; includes inferred associations by default
-        in: query
-        name: taxon
-        required: false
-        schema:
-          type: array
-          items:
-            type: string
+          enum:
+            - causal
+            - non_causal
+            - both
+          example: "causal"
+          default: "both"
+      - "$ref": "#/components/parameters/rows"
+      - "$ref": "#/components/parameters/start"
+      - "$ref": "#/components/parameters/facet"
+      - "$ref": "#/components/parameters/facet_fields"
+      - "$ref": "#/components/parameters/unselect_evidence"
+      - "$ref": "#/components/parameters/exclude_automatic_assertions"
+      - "$ref": "#/components/parameters/fetch_objects"
+      - "$ref": "#/components/parameters/use_compact_associations"
+      - "$ref": "#/components/parameters/slim"
+      - "$ref": "#/components/parameters/evidence"
+      - "$ref": "#/components/parameters/direct"
+      - "$ref": "#/components/parameters/taxon"
+      - "$ref": "#/components/parameters/direct_taxon"
+      - "$ref": "#/components/parameters/relation"
+      - "$ref": "#/components/parameters/sort"
+      - "$ref": "#/components/parameters/q"
       responses:
         '200':
           description: Success
@@ -175,47 +139,30 @@ paths:
   "/bioentity/disease/{id}/pathways":
     get:
       parameters:
-      - description: CURIE identifier of disease IDs can be used with same results
+      - name: id
+        description: >-
+          CURIE identifier of disease, e.g. DOID:4450. Equivalent IDs can be used with same results
         in: path
-        name: id
         required: true
-        example: "MONDO:0016575"
         schema:
           type: string
-      - description: number of rows
-        in: query
-        name: rows
-        required: false
-        ## default is 100
-        example: -1
-        schema:
-          type: integer
-      - description: If true, excludes evidence objects in response
-        in: query
-        name: unselect_evidence
-        required: false
-        ## default is false
-        example: false
-        schema:
-          type: boolean
-      - description: >-
-          Set true to only include direct associations, and false to include inferred 
-          (via subclass or subclass|part of), default=False
-        in: query
-        name: direct
-        required: false
-        ## default is false
-        example: false
-        schema:
-          type: boolean
-      - description: One or more taxon CURIE to filter associations by subject taxon; includes inferred associations by default
-        in: query
-        name: taxon
-        required: false
-        schema:
-          type: array
-          items:
-            type: string
+          example: "MONDO:0010524"  ## same as for disease-pathway operation
+      - "$ref": "#/components/parameters/rows"
+      - "$ref": "#/components/parameters/start"
+      - "$ref": "#/components/parameters/facet"
+      - "$ref": "#/components/parameters/facet_fields"
+      - "$ref": "#/components/parameters/unselect_evidence"
+      - "$ref": "#/components/parameters/exclude_automatic_assertions"
+      - "$ref": "#/components/parameters/fetch_objects"
+      - "$ref": "#/components/parameters/use_compact_associations"
+      - "$ref": "#/components/parameters/slim"
+      - "$ref": "#/components/parameters/evidence"
+      - "$ref": "#/components/parameters/direct"
+      - "$ref": "#/components/parameters/taxon"
+      - "$ref": "#/components/parameters/direct_taxon"
+      - "$ref": "#/components/parameters/relation"
+      - "$ref": "#/components/parameters/sort"
+      - "$ref": "#/components/parameters/q"
       responses:
         '200':
           description: Success
@@ -227,47 +174,31 @@ paths:
   "/bioentity/disease/{id}/phenotypes":
     get:
       parameters:
-      - description: CURIE identifier of disease IDs can be used with same results
+      - name: id
+        description: >-
+          CURIE identifier of disease, e.g. OMIM:605543, Orphanet:1934, DOID:678. 
+          Equivalent IDs can be used with same results
         in: path
-        name: id
         required: true
-        example: "MONDO:0016575"
         schema:
           type: string
-      - description: number of rows
-        in: query
-        name: rows
-        required: false
-        ## default is 100
-        example: -1
-        schema:
-          type: integer
-      - description: If true, excludes evidence objects in response
-        in: query
-        name: unselect_evidence
-        required: false
-        ## default is false
-        example: false
-        schema:
-          type: boolean
-      - description: >-
-          Set true to only include direct associations, and false to include inferred 
-          (via subclass or subclass|part of), default=False
-        in: query
-        name: direct
-        required: false
-        ## default is false
-        example: false
-        schema:
-          type: boolean
-      - description: One or more taxon CURIE to filter associations by subject taxon; includes inferred associations by default
-        in: query
-        name: taxon
-        required: false
-        schema:
-          type: array
-          items:
-            type: string
+          example: "MONDO:0008974"  ## same as for disease-phenotypes operation
+      - "$ref": "#/components/parameters/rows"
+      - "$ref": "#/components/parameters/start"
+      - "$ref": "#/components/parameters/facet"
+      - "$ref": "#/components/parameters/facet_fields"
+      - "$ref": "#/components/parameters/unselect_evidence"
+      - "$ref": "#/components/parameters/exclude_automatic_assertions"
+      - "$ref": "#/components/parameters/fetch_objects"
+      - "$ref": "#/components/parameters/use_compact_associations"
+      - "$ref": "#/components/parameters/slim"
+      - "$ref": "#/components/parameters/evidence"
+      - "$ref": "#/components/parameters/direct"
+      - "$ref": "#/components/parameters/taxon"
+      - "$ref": "#/components/parameters/direct_taxon"
+      - "$ref": "#/components/parameters/relation"
+      - "$ref": "#/components/parameters/sort"
+      - "$ref": "#/components/parameters/q"
       responses:
         '200':
           description: Success
@@ -279,47 +210,31 @@ paths:
   "/bioentity/disease/{id}/variants":
     get:
       parameters:
-      - description: CURIE identifier of disease IDs can be used with same results
+      - name: id
+        description: >-
+          CURIE identifier of disease, e.g. OMIM:605543, DOID:678. 
+          Equivalent IDs can be used with same results
         in: path
-        name: id
         required: true
-        example: "MONDO:0016575"
         schema:
           type: string
-      - description: number of rows
-        in: query
-        name: rows
-        required: false
-        ## default is 100
-        example: -1
-        schema:
-          type: integer
-      - description: If true, excludes evidence objects in response
-        in: query
-        name: unselect_evidence
-        required: false
-        ## default is false
-        example: false
-        schema:
-          type: boolean
-      - description: >-
-          Set true to only include direct associations, and false to include inferred 
-          (via subclass or subclass|part of), default=False
-        in: query
-        name: direct
-        required: false
-        ## default is false
-        example: false
-        schema:
-          type: boolean
-      - description: One or more taxon CURIE to filter associations by subject taxon; includes inferred associations by default
-        in: query
-        name: taxon
-        required: false
-        schema:
-          type: array
-          items:
-            type: string
+          example: "MONDO:0004747"  ## same as for disease-variant operation
+      - "$ref": "#/components/parameters/rows"
+      - "$ref": "#/components/parameters/start"
+      - "$ref": "#/components/parameters/facet"
+      - "$ref": "#/components/parameters/facet_fields"
+      - "$ref": "#/components/parameters/unselect_evidence"
+      - "$ref": "#/components/parameters/exclude_automatic_assertions"
+      - "$ref": "#/components/parameters/fetch_objects"
+      - "$ref": "#/components/parameters/use_compact_associations"
+      - "$ref": "#/components/parameters/slim"
+      - "$ref": "#/components/parameters/evidence"
+      - "$ref": "#/components/parameters/direct"
+      - "$ref": "#/components/parameters/taxon"
+      - "$ref": "#/components/parameters/direct_taxon"
+      - "$ref": "#/components/parameters/relation"
+      - "$ref": "#/components/parameters/sort"
+      - "$ref": "#/components/parameters/q"
       responses:
         '200':
           description: Success
@@ -331,47 +246,29 @@ paths:
   "/bioentity/gene/{id}/anatomy":
     get:
       parameters:
-      - description: CURIE identifier of gene IDs can be used with same results
+      - name: id
+        description: "CURIE identifier of gene, e.g. NCBIGene:13434"
         in: path
-        name: id
         required: true
-        example: "NCBIGene:1017"
         schema:
           type: string
-      - description: number of rows
-        in: query
-        name: rows
-        required: false
-        ## default is 100
-        example: -1
-        schema:
-          type: integer
-      - description: If true, excludes evidence objects in response
-        in: query
-        name: unselect_evidence
-        required: false
-        ## default is false
-        example: false
-        schema:
-          type: boolean
-      - description: >-
-          Set true to only include direct associations, and false to include inferred 
-          (via subclass or subclass|part of), default=False
-        in: query
-        name: direct
-        required: false
-        ## default is false
-        example: false
-        schema:
-          type: boolean
-      - description: One or more taxon CURIE to filter associations by subject taxon; includes inferred associations by default
-        in: query
-        name: taxon
-        required: false
-        schema:
-          type: array
-          items:
-            type: string
+          example: "HGNC:8548"  ## same as for gene-anatomy operation
+      - "$ref": "#/components/parameters/rows"
+      - "$ref": "#/components/parameters/start"
+      - "$ref": "#/components/parameters/facet"
+      - "$ref": "#/components/parameters/facet_fields"
+      - "$ref": "#/components/parameters/unselect_evidence"
+      - "$ref": "#/components/parameters/exclude_automatic_assertions"
+      - "$ref": "#/components/parameters/fetch_objects"
+      - "$ref": "#/components/parameters/use_compact_associations"
+      - "$ref": "#/components/parameters/slim"
+      - "$ref": "#/components/parameters/evidence"
+      - "$ref": "#/components/parameters/direct"
+      - "$ref": "#/components/parameters/taxon"
+      - "$ref": "#/components/parameters/direct_taxon"
+      - "$ref": "#/components/parameters/relation"
+      - "$ref": "#/components/parameters/sort"
+      - "$ref": "#/components/parameters/q"
       responses:
         '200':
           description: Success
@@ -383,47 +280,42 @@ paths:
   "/bioentity/gene/{id}/diseases":
     get:
       parameters:
-      - description: CURIE identifier of gene IDs can be used with same results
+      - name: id
+        description: >-
+          CURIE identifier of gene, e.g. NCBIGene:4750. Equivalent IDs can be used with same results
         in: path
-        name: id
         required: true
-        example: "NCBIGene:1017"
         schema:
           type: string
-      - description: number of rows
+          example: "HGNC:11138"  ## same as for gene-disease-1 operation
+      - name: association_type
+        description: "Additional filters: causal, non_causal, both"
         in: query
-        name: rows
-        required: false
-        ## default is 100
-        example: -1
-        schema:
-          type: integer
-      - description: If true, excludes evidence objects in response
-        in: query
-        name: unselect_evidence
-        required: false
-        ## default is false
-        example: false
-        schema:
-          type: boolean
-      - description: >-
-          Set true to only include direct associations, and false to include inferred 
-          (via subclass or subclass|part of), default=False
-        in: query
-        name: direct
-        required: false
-        ## default is false
-        example: false
-        schema:
-          type: boolean
-      - description: One or more taxon CURIE to filter associations by subject taxon; includes inferred associations by default
-        in: query
-        name: taxon
         required: false
         schema:
-          type: array
-          items:
-            type: string
+          type: string
+          enum:
+            - causal
+            - non_causal
+            - both
+          example: "causal"
+          default: "both"
+      - "$ref": "#/components/parameters/rows"
+      - "$ref": "#/components/parameters/start"
+      - "$ref": "#/components/parameters/facet"
+      - "$ref": "#/components/parameters/facet_fields"
+      - "$ref": "#/components/parameters/unselect_evidence"
+      - "$ref": "#/components/parameters/exclude_automatic_assertions"
+      - "$ref": "#/components/parameters/fetch_objects"
+      - "$ref": "#/components/parameters/use_compact_associations"
+      - "$ref": "#/components/parameters/slim"
+      - "$ref": "#/components/parameters/evidence"
+      - "$ref": "#/components/parameters/direct"
+      - "$ref": "#/components/parameters/taxon"
+      - "$ref": "#/components/parameters/direct_taxon"
+      - "$ref": "#/components/parameters/relation"
+      - "$ref": "#/components/parameters/sort"
+      - "$ref": "#/components/parameters/q"
       responses:
         '200':
           description: Success
@@ -436,47 +328,29 @@ paths:
   "/bioentity/gene/{id}/interactions":
     get:
       parameters:
-      - description: CURIE identifier of gene IDs can be used with same results
+      - name: id
+        description: "id, e.g. NCBIGene:3630. Equivalent IDs can be used with same results"
         in: path
-        name: id
         required: true
-        example: "NCBIGene:1017"
         schema:
           type: string
-      - description: number of rows
-        in: query
-        name: rows
-        required: false
-        ## default is 100
-        example: -1
-        schema:
-          type: integer
-      - description: If true, excludes evidence objects in response
-        in: query
-        name: unselect_evidence
-        required: false
-        ## default is false
-        example: false
-        schema:
-          type: boolean
-      - description: >-
-          Set true to only include direct associations, and false to include inferred 
-          (via subclass or subclass|part of), default=False
-        in: query
-        name: direct
-        required: false
-        ## default is false
-        example: false
-        schema:
-          type: boolean
-      - description: One or more taxon CURIE to filter associations by subject taxon; includes inferred associations by default
-        in: query
-        name: taxon
-        required: false
-        schema:
-          type: array
-          items:
-            type: string
+          example: "HGNC:2950"  ## same as for gene-disease-1 operation
+      - "$ref": "#/components/parameters/rows"
+      - "$ref": "#/components/parameters/start"
+      - "$ref": "#/components/parameters/facet"
+      - "$ref": "#/components/parameters/facet_fields"
+      - "$ref": "#/components/parameters/unselect_evidence"
+      - "$ref": "#/components/parameters/exclude_automatic_assertions"
+      - "$ref": "#/components/parameters/fetch_objects"
+      - "$ref": "#/components/parameters/use_compact_associations"
+      - "$ref": "#/components/parameters/slim"
+      - "$ref": "#/components/parameters/evidence"
+      - "$ref": "#/components/parameters/direct"
+      - "$ref": "#/components/parameters/taxon"
+      - "$ref": "#/components/parameters/direct_taxon"
+      - "$ref": "#/components/parameters/relation"
+      - "$ref": "#/components/parameters/sort"
+      - "$ref": "#/components/parameters/q"
       responses:
         '200':
           description: Success
@@ -488,47 +362,30 @@ paths:
   "/bioentity/gene/{id}/phenotypes":
     get:
       parameters:
-      - description: CURIE identifier of gene IDs can be used with same results
+      - name: id
+        description: >-
+          CURIE identifier of gene, e.g. NCBIGene:4750. Equivalent IDs can be used with same results
         in: path
-        name: id
         required: true
-        example: "NCBIGene:1017"
         schema:
           type: string
-      - description: number of rows
-        in: query
-        name: rows
-        required: false
-        ## default is 100
-        example: -1
-        schema:
-          type: integer
-      - description: If true, excludes evidence objects in response
-        in: query
-        name: unselect_evidence
-        required: false
-        ## default is false
-        example: false
-        schema:
-          type: boolean
-      - description: >-
-          Set true to only include direct associations, and false to include inferred 
-          (via subclass or subclass|part of), default=False
-        in: query
-        name: direct
-        required: false
-        ## default is false
-        example: false
-        schema:
-          type: boolean
-      - description: One or more taxon CURIE to filter associations by subject taxon; includes inferred associations by default
-        in: query
-        name: taxon
-        required: false
-        schema:
-          type: array
-          items:
-            type: string
+          example: "HGNC:2950"  ## same as for gene-phenotype operation
+      - "$ref": "#/components/parameters/rows"
+      - "$ref": "#/components/parameters/start"
+      - "$ref": "#/components/parameters/facet"
+      - "$ref": "#/components/parameters/facet_fields"
+      - "$ref": "#/components/parameters/unselect_evidence"
+      - "$ref": "#/components/parameters/exclude_automatic_assertions"
+      - "$ref": "#/components/parameters/fetch_objects"
+      - "$ref": "#/components/parameters/use_compact_associations"
+      - "$ref": "#/components/parameters/slim"
+      - "$ref": "#/components/parameters/evidence"
+      - "$ref": "#/components/parameters/direct"
+      - "$ref": "#/components/parameters/taxon"
+      - "$ref": "#/components/parameters/direct_taxon"
+      - "$ref": "#/components/parameters/relation"
+      - "$ref": "#/components/parameters/sort"
+      - "$ref": "#/components/parameters/q"
       responses:
         '200':
           description: Success
@@ -540,47 +397,29 @@ paths:
   "/bioentity/gene/{id}/variants":
     get:
       parameters:
-      - description: CURIE identifier of gene IDs can be used with same results
+      - name: id
+        description: "CURIE identifier of gene, e.g. HGNC:10896"
         in: path
-        name: id
         required: true
-        example: "NCBIGene:1017"
         schema:
           type: string
-      - description: number of rows
-        in: query
-        name: rows
-        required: false
-        ## default is 100
-        example: -1
-        schema:
-          type: integer
-      - description: If true, excludes evidence objects in response
-        in: query
-        name: unselect_evidence
-        required: false
-        ## default is false
-        example: false
-        schema:
-          type: boolean
-      - description: >-
-          Set true to only include direct associations, and false to include inferred 
-          (via subclass or subclass|part of), default=False
-        in: query
-        name: direct
-        required: false
-        ## default is false
-        example: false
-        schema:
-          type: boolean
-      - description: One or more taxon CURIE to filter associations by subject taxon; includes inferred associations by default
-        in: query
-        name: taxon
-        required: false
-        schema:
-          type: array
-          items:
-            type: string
+          example: "HGNC:2950"  ## same as for gene-variant operation
+      - "$ref": "#/components/parameters/rows"
+      - "$ref": "#/components/parameters/start"
+      - "$ref": "#/components/parameters/facet"
+      - "$ref": "#/components/parameters/facet_fields"
+      - "$ref": "#/components/parameters/unselect_evidence"
+      - "$ref": "#/components/parameters/exclude_automatic_assertions"
+      - "$ref": "#/components/parameters/fetch_objects"
+      - "$ref": "#/components/parameters/use_compact_associations"
+      - "$ref": "#/components/parameters/slim"
+      - "$ref": "#/components/parameters/evidence"
+      - "$ref": "#/components/parameters/direct"
+      - "$ref": "#/components/parameters/taxon"
+      - "$ref": "#/components/parameters/direct_taxon"
+      - "$ref": "#/components/parameters/relation"
+      - "$ref": "#/components/parameters/sort"
+      - "$ref": "#/components/parameters/q"
       responses:
         '200':
           description: Success
@@ -592,48 +431,29 @@ paths:
   "/bioentity/pathway/{id}/diseases":
     get:
       parameters:
-      - description: CURIE identifier of REACT pathway IDs can be used with same
-          results
+      - name: id
+        description: "CURIE any pathway element. E.g. REACT:R-HSA-5387390"
         in: path
-        name: id
         required: true
-        example: "REACT:R-HSA-5387390"
         schema:
           type: string
-      - description: number of rows
-        in: query
-        name: rows
-        required: false
-        ## default is 100
-        example: -1
-        schema:
-          type: integer
-      - description: If true, excludes evidence objects in response
-        in: query
-        name: unselect_evidence
-        required: false
-        ## default is false
-        example: false
-        schema:
-          type: boolean
-      - description: >-
-          Set true to only include direct associations, and false to include inferred 
-          (via subclass or subclass|part of), default=False
-        in: query
-        name: direct
-        required: false
-        ## default is false
-        example: false
-        schema:
-          type: boolean
-      - description: One or more taxon CURIE to filter associations by subject taxon; includes inferred associations by default
-        in: query
-        name: taxon
-        required: false
-        schema:
-          type: array
-          items:
-            type: string
+          example: "REACT:R-HSA-2644606"   ## same as for pathway-disease operation
+      - "$ref": "#/components/parameters/rows"
+      - "$ref": "#/components/parameters/start"
+      - "$ref": "#/components/parameters/facet"
+      - "$ref": "#/components/parameters/facet_fields"
+      - "$ref": "#/components/parameters/unselect_evidence"
+      - "$ref": "#/components/parameters/exclude_automatic_assertions"
+      - "$ref": "#/components/parameters/fetch_objects"
+      - "$ref": "#/components/parameters/use_compact_associations"
+      - "$ref": "#/components/parameters/slim"
+      - "$ref": "#/components/parameters/evidence"
+      - "$ref": "#/components/parameters/direct"
+      - "$ref": "#/components/parameters/taxon"
+      - "$ref": "#/components/parameters/direct_taxon"
+      - "$ref": "#/components/parameters/relation"
+      - "$ref": "#/components/parameters/sort"
+      - "$ref": "#/components/parameters/q"
       responses:
         '200':
           description: Success
@@ -645,47 +465,30 @@ paths:
   "/bioentity/phenotype/{id}/diseases":
     get:
       parameters:
-      - description: CURIE identifier of phenotype IDs can be used with same results
+      - name: id
+        description: >-
+          CURIE identifier of phenotype, e.g. HP:0007359. Equivalent IDs can be used with same results
         in: path
-        name: id
         required: true
-        example: "HP:0012265"
         schema:
           type: string
-      - description: number of rows
-        in: query
-        name: rows
-        required: false
-        ## default is 100
-        example: -1
-        schema:
-          type: integer
-      - description: If true, excludes evidence objects in response
-        in: query
-        name: unselect_evidence
-        required: false
-        ## default is false
-        example: false
-        schema:
-          type: boolean
-      - description: >-
-          Set true to only include direct associations, and false to include inferred 
-          (via subclass or subclass|part of), default=False
-        in: query
-        name: direct
-        required: false
-        ## default is false
-        example: false
-        schema:
-          type: boolean
-      - description: One or more taxon CURIE to filter associations by subject taxon; includes inferred associations by default
-        in: query
-        name: taxon
-        required: false
-        schema:
-          type: array
-          items:
-            type: string
+          example: "HP:0000272"   ## same as for phenotype-disease operation
+      - "$ref": "#/components/parameters/rows"
+      - "$ref": "#/components/parameters/start"
+      - "$ref": "#/components/parameters/facet"
+      - "$ref": "#/components/parameters/facet_fields"
+      - "$ref": "#/components/parameters/unselect_evidence"
+      - "$ref": "#/components/parameters/exclude_automatic_assertions"
+      - "$ref": "#/components/parameters/fetch_objects"
+      - "$ref": "#/components/parameters/use_compact_associations"
+      - "$ref": "#/components/parameters/slim"
+      - "$ref": "#/components/parameters/evidence"
+      - "$ref": "#/components/parameters/direct"
+      - "$ref": "#/components/parameters/taxon"
+      - "$ref": "#/components/parameters/direct_taxon"
+      - "$ref": "#/components/parameters/relation"
+      - "$ref": "#/components/parameters/sort"
+      - "$ref": "#/components/parameters/q"
       responses:
         '200':
           description: Success
@@ -697,47 +500,31 @@ paths:
   "/bioentity/phenotype/{id}/genes":
     get:
       parameters:
-      - description: CURIE identifier of phenotype IDs can be used with same results
+      - name: id
+        description: >-
+          Pheno class CURIE identifier, e.g  WBPhenotype:0000180 (axon morphology variant), 
+          MP:0001569 (abnormal circulating bilirubin level), 
         in: path
-        name: id
         required: true
-        example: "HP:0012265"
         schema:
           type: string
-      - description: number of rows
-        in: query
-        name: rows
-        required: false
-        ## default is 100
-        example: -1
-        schema:
-          type: integer
-      - description: If true, excludes evidence objects in response
-        in: query
-        name: unselect_evidence
-        required: false
-        ## default is false
-        example: false
-        schema:
-          type: boolean
-      - description: >-
-          Set true to only include direct associations, and false to include inferred 
-          (via subclass or subclass|part of), default=False
-        in: query
-        name: direct
-        required: false
-        ## default is false
-        example: false
-        schema:
-          type: boolean
-      - description: One or more taxon CURIE to filter associations by subject taxon; includes inferred associations by default
-        in: query
-        name: taxon
-        required: false
-        schema:
-          type: array
-          items:
-            type: string
+          example: "HP:0000183"   ## same as for phenotype-gene operation
+      - "$ref": "#/components/parameters/rows"
+      - "$ref": "#/components/parameters/start"
+      - "$ref": "#/components/parameters/facet"
+      - "$ref": "#/components/parameters/facet_fields"
+      - "$ref": "#/components/parameters/unselect_evidence"
+      - "$ref": "#/components/parameters/exclude_automatic_assertions"
+      - "$ref": "#/components/parameters/fetch_objects"
+      - "$ref": "#/components/parameters/use_compact_associations"
+      - "$ref": "#/components/parameters/slim"
+      - "$ref": "#/components/parameters/evidence"
+      - "$ref": "#/components/parameters/direct"
+      - "$ref": "#/components/parameters/taxon"
+      - "$ref": "#/components/parameters/direct_taxon"
+      - "$ref": "#/components/parameters/relation"
+      - "$ref": "#/components/parameters/sort"
+      - "$ref": "#/components/parameters/q"
       responses:
         '200':
           description: Success
@@ -749,47 +536,31 @@ paths:
   "/bioentity/phenotype/{id}/variants":
     get:
       parameters:
-      - description: CURIE identifier of phenotype IDs can be used with same results
+      - name: id
+        description: >-
+          Pheno class CURIE identifier, e.g  WBPhenotype:0000180 (axon morphology variant), 
+          MP:0001569 (abnormal circulating bilirubin level)
         in: path
-        name: id
         required: true
-        example: "HP:0012265"
         schema:
           type: string
-      - description: number of rows
-        in: query
-        name: rows
-        required: false
-        ## default is 100
-        example: -1
-        schema:
-          type: integer
-      - description: If true, excludes evidence objects in response
-        in: query
-        name: unselect_evidence
-        required: false
-        ## default is false
-        example: false
-        schema:
-          type: boolean
-      - description: >-
-          Set true to only include direct associations, and false to include inferred 
-          (via subclass or subclass|part of), default=False
-        in: query
-        name: direct
-        required: false
-        ## default is false
-        example: false
-        schema:
-          type: boolean
-      - description: One or more taxon CURIE to filter associations by subject taxon; includes inferred associations by default
-        in: query
-        name: taxon
-        required: false
-        schema:
-          type: array
-          items:
-            type: string
+          example: "HP:0002944"   ## same as for phenotype-variant operation
+      - "$ref": "#/components/parameters/rows"
+      - "$ref": "#/components/parameters/start"
+      - "$ref": "#/components/parameters/facet"
+      - "$ref": "#/components/parameters/facet_fields"
+      - "$ref": "#/components/parameters/unselect_evidence"
+      - "$ref": "#/components/parameters/exclude_automatic_assertions"
+      - "$ref": "#/components/parameters/fetch_objects"
+      - "$ref": "#/components/parameters/use_compact_associations"
+      - "$ref": "#/components/parameters/slim"
+      - "$ref": "#/components/parameters/evidence"
+      - "$ref": "#/components/parameters/direct"
+      - "$ref": "#/components/parameters/taxon"
+      - "$ref": "#/components/parameters/direct_taxon"
+      - "$ref": "#/components/parameters/relation"
+      - "$ref": "#/components/parameters/sort"
+      - "$ref": "#/components/parameters/q"
       responses:
         '200':
           description: Success
@@ -801,47 +572,29 @@ paths:
   "/bioentity/variant/{id}/diseases":
     get:
       parameters:
-      - description: CURIE identifier of variant, e.g. ClinVarVariant:14925
+      - name: id
+        description: CURIE identifier of variant, e.g. ClinVarVariant:14925
         in: path
-        name: id
         required: true
-        example: "dbSNP:rs11889341"
         schema:
           type: string
-      - description: number of rows
-        in: query
-        name: rows
-        required: false
-        ## default is 100
-        example: -1
-        schema:
-          type: integer
-      - description: If true, excludes evidence objects in response
-        in: query
-        name: unselect_evidence
-        required: false
-        ## default is false
-        example: false
-        schema:
-          type: boolean
-      - description: >-
-          Set true to only include direct associations, and false to include inferred 
-          (via subclass or subclass|part of), default=False
-        in: query
-        name: direct
-        required: false
-        ## default is false
-        example: false
-        schema:
-          type: boolean
-      - description: One or more taxon CURIE to filter associations by subject taxon; includes inferred associations by default
-        in: query
-        name: taxon
-        required: false
-        schema:
-          type: array
-          items:
-            type: string
+          example: "dbSNP:rs227731"   ## same as for variant-disease operation; but they use these as prefix
+      - "$ref": "#/components/parameters/rows"
+      - "$ref": "#/components/parameters/start"
+      - "$ref": "#/components/parameters/facet"
+      - "$ref": "#/components/parameters/facet_fields"
+      - "$ref": "#/components/parameters/unselect_evidence"
+      - "$ref": "#/components/parameters/exclude_automatic_assertions"
+      - "$ref": "#/components/parameters/fetch_objects"
+      - "$ref": "#/components/parameters/use_compact_associations"
+      - "$ref": "#/components/parameters/slim"
+      - "$ref": "#/components/parameters/evidence"
+      - "$ref": "#/components/parameters/direct"
+      - "$ref": "#/components/parameters/taxon"
+      - "$ref": "#/components/parameters/direct_taxon"
+      - "$ref": "#/components/parameters/relation"
+      - "$ref": "#/components/parameters/sort"
+      - "$ref": "#/components/parameters/q"
       responses:
         '200':
           description: Success
@@ -853,47 +606,30 @@ paths:
   "/bioentity/variant/{id}/genes":
     get:
       parameters:
-      - description: CURIE identifier of variant, e.g. ClinVarVariant:14925
+      - name: id
+        description: >-
+          CURIE identifier of variant, e.g. ZFIN:ZDB-ALT-010427-8, ClinVarVariant:39783
         in: path
-        name: id
         required: true
-        example: "dbSNP:rs11889341"
         schema:
           type: string
-      - description: number of rows
-        in: query
-        name: rows
-        required: false
-        ## default is 100
-        example: -1
-        schema:
-          type: integer
-      - description: If true, excludes evidence objects in response
-        in: query
-        name: unselect_evidence
-        required: false
-        ## default is false
-        example: false
-        schema:
-          type: boolean
-      - description: >-
-          Set true to only include direct associations, and false to include inferred 
-          (via subclass or subclass|part of), default=False
-        in: query
-        name: direct
-        required: false
-        ## default is false
-        example: false
-        schema:
-          type: boolean
-      - description: One or more taxon CURIE to filter associations by subject taxon; includes inferred associations by default
-        in: query
-        name: taxon
-        required: false
-        schema:
-          type: array
-          items:
-            type: string
+          example: "dbSNP:rs11879191"   ## same as for variant-gene operation; but they use these as prefix
+      - "$ref": "#/components/parameters/rows"
+      - "$ref": "#/components/parameters/start"
+      - "$ref": "#/components/parameters/facet"
+      - "$ref": "#/components/parameters/facet_fields"
+      - "$ref": "#/components/parameters/unselect_evidence"
+      - "$ref": "#/components/parameters/exclude_automatic_assertions"
+      - "$ref": "#/components/parameters/fetch_objects"
+      - "$ref": "#/components/parameters/use_compact_associations"
+      - "$ref": "#/components/parameters/slim"
+      - "$ref": "#/components/parameters/evidence"
+      - "$ref": "#/components/parameters/direct"
+      - "$ref": "#/components/parameters/taxon"
+      - "$ref": "#/components/parameters/direct_taxon"
+      - "$ref": "#/components/parameters/relation"
+      - "$ref": "#/components/parameters/sort"
+      - "$ref": "#/components/parameters/q"
       responses:
         '200':
           description: Success
@@ -905,47 +641,30 @@ paths:
   "/bioentity/variant/{id}/phenotypes":
     get:
       parameters:
-      - description: CURIE identifier of variant, e.g. ClinVarVariant:14925
+      - name: id
+        description: >-
+          CURIE identifier of variant, e.g. ZFIN:ZDB-ALT-010427-8, ClinVarVariant:39783
         in: path
-        name: id
         required: true
-        example: "dbSNP:rs11889341"
         schema:
           type: string
-      - description: number of rows
-        in: query
-        name: rows
-        required: false
-        ## default is 100
-        example: -1
-        schema:
-          type: integer
-      - description: If true, excludes evidence objects in response
-        in: query
-        name: unselect_evidence
-        required: false
-        ## default is false
-        example: false
-        schema:
-          type: boolean
-      - description: >-
-          Set true to only include direct associations, and false to include inferred 
-          (via subclass or subclass|part of), default=False
-        in: query
-        name: direct
-        required: false
-        ## default is false
-        example: false
-        schema:
-          type: boolean
-      - description: One or more taxon CURIE to filter associations by subject taxon; includes inferred associations by default
-        in: query
-        name: taxon
-        required: false
-        schema:
-          type: array
-          items:
-            type: string
+          example: "dbSNP:rs115165302"   ## same as for variant-phenotype operation; but they use these as prefix
+      - "$ref": "#/components/parameters/rows"
+      - "$ref": "#/components/parameters/start"
+      - "$ref": "#/components/parameters/facet"
+      - "$ref": "#/components/parameters/facet_fields"
+      - "$ref": "#/components/parameters/unselect_evidence"
+      - "$ref": "#/components/parameters/exclude_automatic_assertions"
+      - "$ref": "#/components/parameters/fetch_objects"
+      - "$ref": "#/components/parameters/use_compact_associations"
+      - "$ref": "#/components/parameters/slim"
+      - "$ref": "#/components/parameters/evidence"
+      - "$ref": "#/components/parameters/direct"
+      - "$ref": "#/components/parameters/taxon"
+      - "$ref": "#/components/parameters/direct_taxon"
+      - "$ref": "#/components/parameters/relation"
+      - "$ref": "#/components/parameters/sort"
+      - "$ref": "#/components/parameters/q"
       responses:
         '200':
           description: Success
@@ -955,6 +674,142 @@ paths:
       x-bte-kgs-operations:
       - "$ref": "#/components/x-bte-kgs-operations/variant-phenotype"
 components:
+  parameters:
+    rows:
+      name: rows
+      description: number of rows
+      in: query
+      required: false
+      schema:
+      ## default is 100; -1 should get everything back (not sure though)
+        type: integer
+        default: 100
+    start:
+      name: start
+      description: beginning row
+      in: query
+      required: false
+      schema:
+        type: integer
+    facet:
+      name: facet
+      description: Enable faceting
+      in: query
+      required: false
+      schema:
+        type: boolean
+    facet_fields:
+      name: facet_fields
+      description: Fields to facet on
+      in: query
+      required: false
+      schema:
+        type: array
+        items:
+          type: string
+    unselect_evidence:
+      name: unselect_evidence
+      description: If true, excludes evidence objects in response
+      in: query
+      required: false
+      schema:
+        type: boolean
+        default: false
+    exclude_automatic_assertions:
+      name: exclude_automatic_assertions
+      description: If true, excludes associations that involve IEAs (ECO:0000501)
+      in: query
+      required: false
+      schema:
+        type: boolean
+        default: false
+    fetch_objects:
+      name: fetch_objects
+      description: >-
+        If true, returns a distinct set of association.objects (typically ontology terms). 
+        This appears at the top level of the results payload
+      in: query
+      required: false
+      schema:
+        type: boolean
+        default: false
+    use_compact_associations:
+      name: use_compact_associations
+      description: If true, returns results in compact associations format
+      in: query
+      required: false
+      schema:
+        type: boolean
+        default: false
+    slim:
+      name: slim
+      description: >-
+        Map objects up (slim) to a higher level category. Value can be ontology class ID or subset ID
+      in: query
+      required: false
+      schema:
+        type: array
+        items:
+          type: string
+    evidence:
+      name: evidence
+      description: >-
+        Object id, e.g. ECO:0000501 (for IEA; Includes inferred by default) or 
+        a specific publication or other supporting object, e.g. ZFIN:ZDB-PUB-060503-2
+      in: query
+      required: false
+      schema:
+        type: string
+    direct:
+      name: direct
+      description: >-
+        Set true to only include direct associations, and false to include inferred 
+        (via subclass or subclass|part of), default=False
+      in: query
+      required: false
+      schema:
+        type: boolean
+        default: false
+    taxon:
+      name: taxon
+      description: >-
+        One or more taxon CURIE to filter associations by subject taxon; 
+        includes inferred associations by default
+      in: query
+      required: false
+      schema:
+        type: array
+        items:
+          type: string
+    direct_taxon:
+      name: direct_taxon
+      description: Set true to exclude inferred taxa
+      in: query
+      required: false
+      schema:
+        type: boolean
+        default: false
+    relation:
+      name: relation
+      description: A relation CURIE to filter associations
+      in: query
+      required: false
+      schema:
+        type: string
+    sort:
+      name: sort
+      description: "Sorting responses <field> <desc,asc>"
+      in: query
+      required: false
+      schema:
+        type: string
+    q:
+      name: q
+      description: Query string to filter documents
+      in: query
+      required: false
+      schema:
+        type: string
   ## there's a special api-response-transform. So object ID can be specified this way...
   x-bte-response-mapping:
     gene-hgnc:
