@@ -1,4 +1,15 @@
-
+openapi: 3.0.3
+info:
+  contact:
+    email: help@biothings.io
+    name: BioThings Team
+    x-id: https://github.com/biothings
+    x-role: responsible developers
+  description: Documentation of the BioThings SEMMEDDB query web services.
+  termsOfService: https://biothings.io/about
+  title: BioThings SEMMEDDB API
+  version: '2.0'
+  x-translator:
     infores: "infores:biothings-semmeddb"
     component: KP
     team:
@@ -18,6 +29,7 @@ tags:
 - name: query
 - name: translator
 - name: biothings
+- name: ngd
 paths:
   "/association/{id}":
     get:
@@ -108,6 +120,58 @@ paths:
       summary: Get metadata about the data fields available from a record
       tags:
       - metadata
+  "/query/ngd":
+    get:
+      parameters:
+      - name: umls
+        description: Query string.
+        in: query
+        required: true
+        example: 
+        - "C0003762,C0262587"
+        schema:
+          type: array
+          items:
+            type: string
+      - "$ref": "#/components/parameters/format"
+      responses:
+        '200':
+          description: Success
+      tags:
+      - ngd
+    post:
+      parameters:
+      - name: umls
+        description: Query string.
+        in: query
+        required: false
+        schema:
+          type: array
+          items:
+            type: string
+      - "$ref": "#/components/parameters/format"
+      requestBody:
+        content:
+          application/json:
+            example:
+              umls:
+              - 
+                - C0003762
+                - C0262587
+            schema:
+              type: object
+              properties:
+                umls:
+                  type: array
+                  items:
+                    type: array
+                    items:
+                      type: string
+      responses:
+        '200':
+          description: Success
+      tags:
+      - ngd
   "/query":
     get:
       parameters:
