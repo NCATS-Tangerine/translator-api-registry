@@ -454,14 +454,16 @@ components:
   ## relationship is somewhat captured by DDD_category (and allelic_requirement, mutation_consequence)
   ## not sure if "panel" is a "source"
     gene_to_phenotype:
-    - inputSeparator: ","
-      supportBatch: true
+    - supportBatch: true
+      useTemplating: true
       inputs:
       - id: HGNC
         semantic: Gene
       requestBody:
         body:
-          q: "{inputs[0]}"  ## no prefix
+          ## API data has no prefix
+          ## joinSafe is only needed if the delimiter isn't a comma
+          q: "{{ queryInputs }}"
           scopes: _id
         header: application/x-www-form-urlencoded
       outputs:
@@ -488,15 +490,17 @@ components:
       #   - qInput: "HGNC:3806"        ## FOXE1
       #     oneOutput: "HP:0010564"    ## Bifid epiglottis
     phenotype_to_gene:
-    - inputSeparator: ","
-      supportBatch: true
+    - supportBatch: true
+      useTemplating: true
       inputs:
       - id: HP
         semantic: PhenotypicFeature
       requestBody:
         body:
-          q: "{inputs[0]}"
-          scopes: gene2phenotype.phenotypes  ## has HP prefix
+          ## API data has prefix (HP)
+          ## joinSafe is only needed if the delimiter isn't a comma
+          q: "{{ queryInputs }}"
+          scopes: gene2phenotype.phenotypes
         header: application/x-www-form-urlencoded
       outputs:
       - id: HGNC
@@ -512,14 +516,16 @@ components:
       #   - qInput: "HP:0002808"      ## Kyphosis
       #     oneOutput: "HGNC:2213"    ## COL6A3
     gene_to_disease:
-    - inputSeparator: ","
-      supportBatch: true
+    - supportBatch: true
+      useTemplating: true
       inputs:
       - id: HGNC
         semantic: Gene
       requestBody:
         body:
-          q: "{inputs[0]}"  ## no prefix
+          ## API data has no prefix
+          ## joinSafe is only needed if the delimiter isn't a comma
+          q: "{{ queryInputs }}"
           scopes: _id
         header: application/x-www-form-urlencoded
       outputs:
@@ -546,15 +552,17 @@ components:
       #   - qInput: "HGNC:3806"         ## FOXE1
       #     oneOutput: "OMIM:241850"    ## Bamforth-Lazarus syndrome
     disease_to_gene:
-    - inputSeparator: ","
-      supportBatch: true
+    - supportBatch: true
+      useTemplating: true
       inputs:
       - id: OMIM
         semantic: Disease
       requestBody:
         body:
-          q: "{inputs[0]}"
-          scopes: gene2phenotype.disease.disease_mim  ## no prefix
+          ## API data has no prefix
+          ## joinSafe is only needed if the delimiter isn't a comma
+          q: "{{ queryInputs }}"
+          scopes: gene2phenotype.disease.disease_mim
         header: application/x-www-form-urlencoded
       outputs:
       - id: HGNC
