@@ -237,14 +237,14 @@ paths:
       x-bte-kgs-operations:
       - $ref: '#/components/x-bte-kgs-operations/has_subclass'
       - $ref: '#/components/x-bte-kgs-operations/subclass_of'
-      - $ref: '#/components/x-bte-kgs-operations/positively_regulates'
       - $ref: '#/components/x-bte-kgs-operations/negatively_regulates'
-      - $ref: '#/components/x-bte-kgs-operations/positively_regulated_by'
       - $ref: '#/components/x-bte-kgs-operations/negatively_regulated_by'
-      - $ref: '#/components/x-bte-kgs-operations/has_part'
-      - $ref: '#/components/x-bte-kgs-operations/part_of'
+      - $ref: '#/components/x-bte-kgs-operations/positively_regulates'
+      - $ref: '#/components/x-bte-kgs-operations/positively_regulated_by'
       - $ref: '#/components/x-bte-kgs-operations/regulates'
       - $ref: '#/components/x-bte-kgs-operations/regulated_by'
+      - $ref: '#/components/x-bte-kgs-operations/has_part'
+      - $ref: '#/components/x-bte-kgs-operations/part_of'
 components:
   parameters:
     _sorted:
@@ -440,205 +440,231 @@ components:
   #     - type: string
   x-bte-kgs-operations:
     has_subclass:
-    - inputSeparator: ','
+    ## 16883 records have children: https://pending.biothings.io/go_bp/query?q=_exists_:children
+    - supportBatch: true
+      useTemplating: true
       inputs:
       - id: GO
         semantic: BiologicalProcess
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"
+          scopes: _id
       outputs:
       - id: GO
         semantic: BiologicalProcess
       parameters:
         fields: children
       predicate: superclass_of  ## this is the inverse of subclass_of right now
-      requestBody:
-        body:
-          q: '{inputs[0]}'
-          scopes: _id
-        header: application/x-www-form-urlencoded
+      source: "infores:go"
       response_mapping:
         $ref: '#/components/x-bte-response-mapping/has_subclass'
-      source: "infores:go"
-      supportBatch: true
+      # testExamples:
+      #   - qInput: "GO:0089722"       ## phosphoenolpyruvate transmembrane transport
+      #     oneOutput: "GO:1990536"    ## phosphoenolpyruvate transmembrane import into Golgi lumen
     subclass_of:
-    - inputSeparator: ','
+    ## all records but one have a "parents" field
+    - supportBatch: true
+      useTemplating: true
       inputs:
       - id: GO
         semantic: BiologicalProcess
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"
+          scopes: _id
       outputs:
       - id: GO
         semantic: BiologicalProcess
       parameters:
         fields: parents
       predicate: subclass_of
-      requestBody:
-        body:
-          q: '{inputs[0]}'
-          scopes: _id
-        header: application/x-www-form-urlencoded
+      source: "infores:go"
       response_mapping:
         $ref: '#/components/x-bte-response-mapping/subclass_of'
-      source: "infores:go"
-      supportBatch: true
+      # testExamples:
+      #   - qInput: "GO:0150068"       ## positive regulation of tubulin deacetylase activity
+      #     oneOutput: "GO:0090044"    ## positive regulation of tubulin deacetylation
     negatively_regulates:
-    - inputSeparator: ','
+    ## 2774 records https://pending.biothings.io/go_bp/query?q=_exists_:negatively_regulates
+    - supportBatch: true
+      useTemplating: true
       inputs:
       - id: GO
         semantic: BiologicalProcess
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"
+          scopes: _id
       outputs:
       - id: GO
         semantic: BiologicalProcess
       parameters:
         fields: negatively_regulates.go
       predicate: process_negatively_regulates_process
-      requestBody:
-        body:
-          q: '{inputs[0]}'
-          scopes: _id
-        header: application/x-www-form-urlencoded
+      source: "infores:go"
       response_mapping:
         $ref: '#/components/x-bte-response-mapping/negatively_regulates'
-      source: "infores:go"
-      supportBatch: true
-    positively_regulates:
-    - inputSeparator: ','
-      inputs:
-      - id: GO
-        semantic: BiologicalProcess
-      outputs:
-      - id: GO
-        semantic: BiologicalProcess
-      parameters:
-        fields: positively_regulates.go
-      predicate: process_positively_regulates_process
-      requestBody:
-        body:
-          q: '{inputs[0]}'
-          scopes: _id
-        header: application/x-www-form-urlencoded
-      response_mapping:
-        $ref: '#/components/x-bte-response-mapping/positively_regulates'
-      source: "infores:go"
-      supportBatch: true
-    regulates:
-    - inputSeparator: ','
-      inputs:
-      - id: GO
-        semantic: BiologicalProcess
-      outputs:
-      - id: GO
-        semantic: BiologicalProcess
-      parameters:
-        fields: regulates.go
-      predicate: process_regulates_process
-      requestBody:
-        body:
-          q: '{inputs[0]}'
-          scopes: _id
-        header: application/x-www-form-urlencoded
-      response_mapping:
-        $ref: '#/components/x-bte-response-mapping/regulates'
-      source: "infores:go"
-      supportBatch: true
+      # testExamples:
+      #   - qInput: "GO:0090272"       ## negative regulation of fibroblast growth factor production
+      #     oneOutput: "GO:0090269"    ## fibroblast growth factor production
     negatively_regulated_by:
-      - inputSeparator: ','
+      - supportBatch: true
+        useTemplating: true
         inputs:
         - id: GO
           semantic: BiologicalProcess
+        requestBody:
+          body:
+            q: "{{ queryInputs }}"
+            scopes: negatively_regulates.go
         outputs:
         - id: GO
           semantic: BiologicalProcess
         parameters:
           fields: _id
         predicate: process_negatively_regulated_by_process
-        requestBody:
-          body:
-            q: '{inputs[0]}'
-            scopes: negatively_regulates.go
-          header: application/x-www-form-urlencoded
+        source: "infores:go"
         response_mapping:
           $ref: '#/components/x-bte-response-mapping/negatively_regulated_by'
-        source: "infores:go"
-        supportBatch: true
-    positively_regulated_by:
-    - inputSeparator: ','
+      # testExamples:
+      #   - qInput: "GO:0016126"       ## sterol biosynthetic process
+      #     oneOutput: "GO:0106119"    ## negative regulation of sterol biosynthetic process
+    positively_regulates:
+    ## 2761 records https://pending.biothings.io/go_bp/query?q=_exists_:positively_regulates
+    - supportBatch: true
+      useTemplating: true
       inputs:
       - id: GO
         semantic: BiologicalProcess
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"
+          scopes: _id
+      outputs:
+      - id: GO
+        semantic: BiologicalProcess
+      parameters:
+        fields: positively_regulates.go
+      predicate: process_positively_regulates_process
+      source: "infores:go"
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/positively_regulates'
+      # testExamples:
+      #   - qInput: "GO:0090129"       ## positive regulation of synapse maturation
+      #     oneOutput: "GO:0060074"    ## synapse maturation
+    positively_regulated_by:
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: GO
+        semantic: BiologicalProcess
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"
+          scopes: positively_regulates.go
       outputs:
       - id: GO
         semantic: BiologicalProcess
       parameters:
         fields: _id
       predicate: process_positively_regulated_by_process
-      requestBody:
-        body:
-          q: '{inputs[0]}'
-          scopes: positively_regulates.go
-        header: application/x-www-form-urlencoded
+      source: "infores:go"
       response_mapping:
         $ref: '#/components/x-bte-response-mapping/positively_regulated_by'
-      source: "infores:go"
-      supportBatch: true
-    regulated_by:
-    - inputSeparator: ','
+      # testExamples:
+      #   - qInput: "GO:0006641"       ## triglyceride metabolic process
+      #     oneOutput: "GO:0090208"    ## positive regulation of triglyceride metabolic process
+    regulates:
+    ## 3207 records https://pending.biothings.io/go_bp/query?q=_exists_:regulates
+    - supportBatch: true
+      useTemplating: true
       inputs:
       - id: GO
         semantic: BiologicalProcess
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"
+          scopes: _id
+      outputs:
+      - id: GO
+        semantic: BiologicalProcess
+      parameters:
+        fields: regulates.go
+      predicate: process_regulates_process
+      source: "infores:go"
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/regulates'
+      # testExamples:
+      #   - qInput: "GO:0090016"        ## regulation of leaflet formation 
+      #     oneOutput: "GO:0090014"     ## leaflet formation
+    regulated_by:
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: GO
+        semantic: BiologicalProcess
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"
+          scopes: regulates.go
       outputs:
       - id: GO
         semantic: BiologicalProcess
       parameters:
         fields: _id
       predicate: process_regulated_by_process
-      requestBody:
-        body:
-          q: '{inputs[0]}'
-          scopes: regulates.go
-        header: application/x-www-form-urlencoded
+      source: "infores:go"
       response_mapping:
         $ref: '#/components/x-bte-response-mapping/regulated_by'
-      source: "infores:go"
-      supportBatch: true
+      # testExamples:
+      #   - qInput: "GO:0001822"        ## kidney development
+      #     oneOutput: "GO:0090183"     ## regulation of kidney development
     part_of:
-    - inputSeparator: ','
+    ## 4928 records https://pending.biothings.io/go_bp/query?q=_exists_:part_of
+    - supportBatch: true
+      useTemplating: true
       inputs:
       - id: GO
         semantic: BiologicalProcess
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"
+          scopes: _id
       outputs:
       - id: GO
         semantic: BiologicalProcess
       parameters:
         fields: part_of.go
       predicate: part_of
-      requestBody:
-        body:
-          q: '{inputs[0]}'
-          scopes: _id
-        header: application/x-www-form-urlencoded
+      source: "infores:go"
       response_mapping:
         $ref: '#/components/x-bte-response-mapping/part_of'
-      source: "infores:go"
-      supportBatch: true
+      # testExamples:
+      #   - qInput: "GO:0090010"        ## transforming growth factor beta receptor signaling pathway involved in primitive streak formation
+      #     oneOutput: "GO:0090009"     ## primitive streak formation
     has_part:
-    - inputSeparator: ','
+    - supportBatch: true
+      useTemplating: true
       inputs:
       - id: GO
         semantic: BiologicalProcess
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"
+          scopes: part_of.go
       outputs:
       - id: GO
         semantic: BiologicalProcess
       parameters:
         fields: _id
       predicate: has_part
-      requestBody:
-        body:
-          q: '{inputs[0]}'
-          scopes: part_of.go
-        header: application/x-www-form-urlencoded
+      source: "infores:go"
       response_mapping:
         $ref: '#/components/x-bte-response-mapping/has_part'
-      source: "infores:go"
-      supportBatch: true
+      # testExamples:
+      #   - qInput: "GO:0048313"        ## Golgi inheritance
+      #     oneOutput: "GO:0090168"     ## Golgi reassembly
   x-bte-response-mapping:
     has_subclass:
       GO: children

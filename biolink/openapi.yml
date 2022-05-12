@@ -825,21 +825,21 @@ components:
     anatomy-gene:
     ## supposedly I could use this endpoint with CellularComponent (GO) and Cell (CL) terms
     ##   but I haven't been successful in getting results when trying this out
-    - parameters:
+    - supportBatch: false
+      inputs:
+      - id: UBERON
+        semantic: GrossAnatomicalStructure
+      parameters:
         id: "{inputs[0]}"          ## current BTE automatically adds UBERON prefix to IDs
         rows: -1                   ## should allow all results to be returned (above default max of 200)
         direct: true               ## don't traverse ontology for anatomy ID to find connection to its subclass terms
         unselect_evidence: true    ## don't include nested / verbose evidence info
         taxon: "NCBITaxon:9606"    ## currently setting it to human-only
-      inputs:
-      - id: UBERON
-        semantic: GrossAnatomicalStructure
       outputs:
       - id: HGNC  ## Monarch seems to prefer HGNC IDs for human genes
         semantic: Gene
       predicate: expresses
       source: "infores:monarchinitiative"
-      supportBatch: false
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/gene-hgnc"
       # testExamples:
@@ -847,7 +847,11 @@ components:
       #     oneOutput: "HGNC:8548"  ## P4HB
     disease-gene-1:
     ## put multiple causal relations here by using association_type parameter
-    - parameters:
+    - supportBatch: false
+      inputs:
+      - id: MONDO
+        semantic: Disease
+      parameters:
         id: "{inputs[0]}"         ## current BTE automatically adds MONDO prefix to IDs
         rows: -1
         direct: true
@@ -865,15 +869,11 @@ components:
         ##   (MONDO:0004948, B-cell chronic lymphocytic leukemia -> HGNC:17284, POT1)
         ## - is causal gain of function germline mutation of in
         ##   (MONDO:0013648, familial progressive hyperpigmentation -> HGNC:6343, KITLG)
-      inputs:
-      - id: MONDO
-        semantic: Disease
       outputs:
       - id: HGNC
         semantic: Gene
       predicate: caused_by
       source: "infores:monarchinitiative"
-      supportBatch: false
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/gene-hgnc"
       # testExamples:
@@ -881,7 +881,11 @@ components:
       #     oneOutput: "HGNC:11138"  ## SNCA
     disease-gene-2:
     ## put non-causal relations together here
-    - parameters:
+    - supportBatch: false
+      inputs:
+      - id: MONDO
+        semantic: Disease
+      parameters:
         id: "{inputs[0]}"         ## current BTE automatically adds MONDO prefix to IDs
         rows: -1
         direct: true
@@ -898,16 +902,12 @@ components:
         ##   (MONDO:0018875, Li-Fraumeni syndrome -> HGNC:6973, MDM2)
         ## - likely_pathogenic_for_condition 
         ##   (MONDO:0019497, nonsyndromic genetic deafness -> HGNC:7605, MYO6)
-      inputs:
-      - id: MONDO
-        semantic: Disease
       outputs:
       - id: HGNC
         semantic: Gene
       ## more specific than contribution_from
       predicate: condition_associated_with_gene
       source: "infores:monarchinitiative"
-      supportBatch: false
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/gene-hgnc"
       # testExamples:
@@ -918,21 +918,21 @@ components:
     ##   but REACT prefixes show the species (MMU = mouse)
     ## data has weird relation direction. says disease involved_in pathway...
     ##   I'm flipping it so disease involves pathway...
-    - parameters:
+    - supportBatch: false
+      inputs:
+      - id: MONDO
+        semantic: Disease
+      parameters:
         id: "{inputs[0]}"         ## current BTE automatically adds MONDO prefix to IDs
         rows: -1
         direct: true
         unselect_evidence: true
-      inputs:
-      - id: MONDO
-        semantic: Disease
       outputs:
       - id: REACT
         semantic: Pathway
       ## biolink 2.2.13 maps to RO:0002331 involved_in
       predicate: actively_involves
       source: "infores:monarchinitiative"
-      supportBatch: false
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/pathway-react"
       # testExamples:
@@ -941,20 +941,20 @@ components:
     disease-phenotype:
     ## will include non-human phenotypes because Monarch doesn't include the taxon for phenotypes
     ##   but prefixes show the species (MP = mouse)
-    - parameters:
+    - supportBatch: false
+      inputs:
+      - id: MONDO
+        semantic: Disease
+      parameters:
         id: "{inputs[0]}"         ## current BTE automatically adds MONDO prefix to IDs
         rows: -1
         direct: true
         unselect_evidence: true
-      inputs:
-      - id: MONDO
-        semantic: Disease
       outputs:
       - id: HP
         semantic: PhenotypicFeature
       predicate: has_phenotype
       source: "infores:monarchinitiative"
-      supportBatch: false
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/phenotype-hp"
       # testExamples:
@@ -964,22 +964,22 @@ components:
     ## not using: 
     ## - GENO:0000840 (pathogenic_for_condition). seems to use ClinVarVariant (ClinVarVariant:13417)
     ## - GENO:0000841 (likely_pathogenic_for_condition). seems to use ClinVarVariant (ClinVarVariant:370820)
-    - parameters:
+    - supportBatch: false
+      inputs:
+      - id: MONDO
+        semantic: Disease
+      parameters:
         id: "{inputs[0]}"         ## current BTE automatically adds MONDO prefix to IDs
         rows: -1
         direct: true
         unselect_evidence: true
         taxon: "NCBITaxon:9606"    ## currently setting it to human-only
         relation: "RO:0003304"    ## contributes to condition
-      inputs:
-      - id: MONDO
-        semantic: Disease
       outputs:
       - id: DBSNP
         semantic: SequenceVariant
       predicate: contribution_from
       source: "infores:monarchinitiative"
-      supportBatch: false
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/variant-dbsnp"
       # testExamples:
@@ -988,21 +988,21 @@ components:
     gene-anatomy:
     ## supposedly I could use this endpoint with CellularComponent (GO) and Cell (CL) terms
     ##   but I haven't been successful in getting results when trying this out
-    - parameters:
+    - supportBatch: false
+      inputs:
+      - id: HGNC   ## Monarch seems to prefer HGNC IDs for human genes
+        semantic: Gene
+      parameters:
         id: "HGNC:{inputs[0]}"    ## add prefix since Monarch expects this, while BTE automatically removes
         rows: -1
         direct: true
         unselect_evidence: true
         ## don't need to set anatomy to human-only...
-      inputs:
-      - id: HGNC   ## Monarch seems to prefer HGNC IDs for human genes
-        semantic: Gene
       outputs:
       - id: UBERON
         semantic: GrossAnatomicalStructure
       predicate: expressed_in
       source: "infores:monarchinitiative"
-      supportBatch: false
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/anatomy-uberon"
       # testExamples:
@@ -1010,7 +1010,11 @@ components:
       #     oneOutput: "UBERON:0000970"  ## eye
     gene-disease-1:
     ## put multiple causal relations here by using association_type parameter
-    - parameters:
+    - supportBatch: false
+      inputs:
+      - id: HGNC
+        semantic: Gene
+      parameters:
         id: "HGNC:{inputs[0]}"    ## add prefix since Monarch expects this, while BTE automatically removes
         rows: -1
         direct: true
@@ -1028,15 +1032,11 @@ components:
         ##   (MONDO:0004948, B-cell chronic lymphocytic leukemia <- HGNC:17284, POT1)
         ## - is causal gain of function germline mutation of in
         ##   (MONDO:0013648, familial progressive hyperpigmentation <- HGNC:6343, KITLG)
-      inputs:
-      - id: HGNC
-        semantic: Gene
       outputs:
       - id: MONDO
         semantic: Disease
       predicate: causes
       source: "infores:monarchinitiative"
-      supportBatch: false
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/disease-mondo"
       # testExamples:
@@ -1044,7 +1044,11 @@ components:
       #     oneOutput: "MONDO:0011562"  ## autosomal dominant Parkinson disease 4
     gene-disease-2:
     ## put non-causal relations together here
-    - parameters:
+    - supportBatch: false
+      inputs:
+      - id: HGNC
+        semantic: Gene
+      parameters:
         id: "HGNC:{inputs[0]}"    ## add prefix since Monarch expects this, while BTE automatically removes
         rows: -1
         direct: true
@@ -1061,36 +1065,32 @@ components:
         ##   (MONDO:0018875, Li-Fraumeni syndrome <- HGNC:6973, MDM2)
         ## - likely_pathogenic_for_condition 
         ##   (MONDO:0019497, nonsyndromic genetic deafness <- HGNC:7605, MYO6)
-      inputs:
-      - id: HGNC
-        semantic: Gene
       outputs:
       - id: MONDO
         semantic: Disease
       predicate: gene_associated_with_condition
       source: "infores:monarchinitiative"
-      supportBatch: false
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/disease-mondo"
       # testExamples:
       #   - qInput: "HGNC:2950"  ## DNAH5 
       #     oneOutput: "MONDO:0016575"  ## primary ciliary dyskinesia
     gene-interaction:
-    - parameters:
+    - supportBatch: false
+      inputs:
+      - id: HGNC
+        semantic: Gene
+      parameters:
         id: "HGNC:{inputs[0]}"    ## add prefix since Monarch expects this, while BTE automatically removes
         rows: -1
         direct: true
         unselect_evidence: true
         taxon: "NCBITaxon:9606"    ## currently setting it to human-only
-      inputs:
-      - id: HGNC
-        semantic: Gene
       outputs:
       - id: HGNC
         semantic: Gene
       predicate: interacts_with
       source: "infores:monarchinitiative"
-      supportBatch: false
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/gene-hgnc"
       # testExamples:
@@ -1099,20 +1099,20 @@ components:
     gene-phenotype:
     ## will include non-human phenotypes because Monarch doesn't include the taxon for phenotypes
     ##   but prefixes show the species (MP = mouse)
-    - parameters:
+    - supportBatch: false
+      inputs:
+      - id: HGNC
+        semantic: Gene
+      parameters:
         id: "HGNC:{inputs[0]}"    ## add prefix since Monarch expects this, while BTE automatically removes
         rows: -1
         direct: true
         unselect_evidence: true
-      inputs:
-      - id: HGNC
-        semantic: Gene
       outputs:
       - id: HP
         semantic: PhenotypicFeature
       predicate: gene_associated_with_condition
       source: "infores:monarchinitiative"
-      supportBatch: false
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/phenotype-hp"
       # testExamples:
@@ -1120,20 +1120,20 @@ components:
       #     oneOutput: "HP:0002643"  ## Neonatal respiratory distress
     gene-variant:
     ## can take human or non-human genes as input...
-    - parameters:
+    - supportBatch: false
+      inputs:
+      - id: HGNC
+        semantic: Gene
+      parameters:
         id: "HGNC:{inputs[0]}"    ## add prefix since Monarch expects this, while BTE automatically removes
         rows: -1
         direct: true
         unselect_evidence: true
-      inputs:
-      - id: HGNC
-        semantic: Gene
       outputs:
       - id: DBSNP
         semantic: SequenceVariant
       predicate: has_sequence_variant
       source: "infores:monarchinitiative"
-      supportBatch: false
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/variant-dbsnp"
       # testExamples:
@@ -1144,21 +1144,21 @@ components:
     ##   but REACT prefixes show the species (MMU = mouse)
     ## data has weird relation direction. says disease involved_in pathway...
     ##   I'm flipping it so disease involves pathway...
-    - parameters:
+    - supportBatch: false
+      inputs:
+      - id: REACT
+        semantic: Pathway
+      parameters:
         id: "REACT:{inputs[0]}"    ## add prefix since Monarch expects this, while BTE automatically removes
         rows: -1
         direct: true
         unselect_evidence: true
         ## don't need to set disease to human-only...
-      inputs:
-      - id: REACT
-        semantic: Pathway
       outputs:
       - id: MONDO
         semantic: Disease
       predicate: actively_involved_in
       source: "infores:monarchinitiative"
-      supportBatch: false
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/disease-mondo"
       # testExamples:
@@ -1167,41 +1167,41 @@ components:
     phenotype-disease:
     ## could include non-human phenotypes because Monarch doesn't include the taxon for phenotypes
     ##   but prefixes show the species (MP = mouse)
-    - parameters:
+    - supportBatch: false
+      inputs:
+      - id: HP
+        semantic: PhenotypicFeature
+      parameters:
         id: "{inputs[0]}"   ## current BTE automatically adds prefix for HP terms
         rows: -1
         direct: true
         unselect_evidence: true
-      inputs:
-      - id: HP
-        semantic: PhenotypicFeature
       outputs:
       - id: MONDO
         semantic: Disease
       predicate: phenotype_of
       source: "infores:monarchinitiative"
-      supportBatch: false
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/disease-mondo"
       # testExamples:
       #   - qInput: "HP:0000272"  ## Malar flattening
       #     oneOutput: "MONDO:0008974"  ## Greenberg dysplasia
     phenotype-gene:
-    - parameters:
+    - supportBatch: false
+      inputs:
+      - id: HP
+        semantic: PhenotypicFeature
+      parameters:
         id: "{inputs[0]}"   ## current BTE automatically adds prefix for HP terms
         rows: -1
         direct: true
         unselect_evidence: true
         taxon: "NCBITaxon:9606"    ## currently setting it to human-only
-      inputs:
-      - id: HP
-        semantic: PhenotypicFeature
       outputs:
       - id: HGNC
         semantic: Gene
       predicate: condition_associated_with_gene
       source: "infores:monarchinitiative"
-      supportBatch: false
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/gene-hgnc"
       # testExamples:
@@ -1210,22 +1210,22 @@ components:
     phenotype-variant:
     ## could also use OMIM IDs...
     ## note: relation RO:0003304 (contributes to condition) seems to use EFO terms, rather than HP...
-    - parameters:
+    - supportBatch: false
+      inputs:
+      - id: HP
+        semantic: PhenotypicFeature
+      parameters:
         id: "{inputs[0]}"   ## current BTE automatically adds prefix for HP terms
         rows: -1
         direct: true
         unselect_evidence: true
         taxon: "NCBITaxon:9606"    ## currently setting it to human-only
-      inputs:
-      - id: HP
-        semantic: PhenotypicFeature
       outputs:
       - id: DBSNP
         semantic: SequenceVariant
       ## main relations: has phenotype, is marker for, contributes to condition...
       predicate: related_to
       source: "infores:monarchinitiative"
-      supportBatch: false
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/variant-dbsnp"
       # testExamples:
@@ -1235,7 +1235,11 @@ components:
     ## not using: 
     ## - GENO:0000840 (pathogenic_for_condition). seems to use ClinVarVariant (ClinVarVariant:13417)
     ## - GENO:0000841 (likely_pathogenic_for_condition). seems to use ClinVarVariant (ClinVarVariant:370820)
-    - parameters:
+    - supportBatch: false
+      inputs:
+      - id: DBSNP
+        semantic: SequenceVariant
+      parameters:
         id: "dbSNP:{inputs[0]}"
         ## add prefix since Monarch expects this in this form, while BTE automatically removes
         rows: -1
@@ -1243,15 +1247,11 @@ components:
         unselect_evidence: true
         taxon: "NCBITaxon:9606"    ## currently setting it to human-only
         relation: "RO:0003304"    ## contributes to condition
-      inputs:
-      - id: DBSNP
-        semantic: SequenceVariant
       outputs:
       - id: MONDO
         semantic: Disease
       predicate: contributes_to
       source: "infores:monarchinitiative"
-      supportBatch: false
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/disease-mondo"
       # testExamples:
@@ -1259,21 +1259,21 @@ components:
       #     oneOutput: "MONDO:0004747"  ## cleft lip (disease)
     variant-gene:
     ## can take human or non-human genes as input...
-    - parameters:
+    - supportBatch: false
+      inputs:
+      - id: DBSNP
+        semantic: SequenceVariant
+      parameters:
         id: "dbSNP:{inputs[0]}"
         ## add prefix since Monarch expects this in this form, while BTE automatically removes
         rows: -1
         direct: true
         unselect_evidence: true
-      inputs:
-      - id: DBSNP
-        semantic: SequenceVariant
       outputs:
       - id: HGNC
         semantic: Gene
       predicate: is_sequence_variant_of
       source: "infores:monarchinitiative"
-      supportBatch: false
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/gene-hgnc"
       # testExamples:
@@ -1282,23 +1282,23 @@ components:
     variant-phenotype:
     ## could also use OMIM IDs...
     ## note: relation RO:0003304 (contributes to condition) seems to use EFO terms, rather than HP...
-    - parameters:
+    - supportBatch: false
+      inputs:
+      - id: DBSNP
+        semantic: SequenceVariant
+      parameters:
         id: "dbSNP:{inputs[0]}"
         ## add prefix since Monarch expects this in this form, while BTE automatically removes
         rows: -1
         direct: true
         unselect_evidence: true
         taxon: "NCBITaxon:9606"    ## currently setting it to human-only
-      inputs:
-      - id: DBSNP
-        semantic: SequenceVariant
       outputs:
       - id: HP
         semantic: PhenotypicFeature
       ## main relations: has phenotype, is marker for, contributes to condition...
       predicate: related_to
       source: "infores:monarchinitiative"
-      supportBatch: false
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/phenotype-hp"
       # testExamples:
