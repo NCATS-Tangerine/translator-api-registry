@@ -826,11 +826,12 @@ components:
     ## supposedly I could use this endpoint with CellularComponent (GO) and Cell (CL) terms
     ##   but I haven't been successful in getting results when trying this out
     - supportBatch: false
+      useTemplating: true
       inputs:
       - id: UBERON
         semantic: GrossAnatomicalStructure
       parameters:
-        id: "{inputs[0]}"          ## current BTE automatically adds UBERON prefix to IDs
+        id: "{{ queryInputs }}"          ## current BTE automatically adds UBERON prefix to IDs
         rows: -1                   ## should allow all results to be returned (above default max of 200)
         direct: true               ## don't traverse ontology for anatomy ID to find connection to its subclass terms
         unselect_evidence: true    ## don't include nested / verbose evidence info
@@ -848,11 +849,12 @@ components:
     disease-gene-1:
     ## put multiple causal relations here by using association_type parameter
     - supportBatch: false
+      useTemplating: true
       inputs:
       - id: MONDO
         semantic: Disease
       parameters:
-        id: "{inputs[0]}"         ## current BTE automatically adds MONDO prefix to IDs
+        id: "{{ queryInputs }}"         ## current BTE automatically adds MONDO prefix to IDs
         rows: -1
         direct: true
         unselect_evidence: true
@@ -882,11 +884,12 @@ components:
     disease-gene-2:
     ## put non-causal relations together here
     - supportBatch: false
+      useTemplating: true
       inputs:
       - id: MONDO
         semantic: Disease
       parameters:
-        id: "{inputs[0]}"         ## current BTE automatically adds MONDO prefix to IDs
+        id: "{{ queryInputs }}"         ## current BTE automatically adds MONDO prefix to IDs
         rows: -1
         direct: true
         unselect_evidence: true
@@ -919,11 +922,12 @@ components:
     ## data has weird relation direction. says disease involved_in pathway...
     ##   I'm flipping it so disease involves pathway...
     - supportBatch: false
+      useTemplating: true
       inputs:
       - id: MONDO
         semantic: Disease
       parameters:
-        id: "{inputs[0]}"         ## current BTE automatically adds MONDO prefix to IDs
+        id: "{{ queryInputs }}"         ## current BTE automatically adds MONDO prefix to IDs
         rows: -1
         direct: true
         unselect_evidence: true
@@ -942,11 +946,12 @@ components:
     ## will include non-human phenotypes because Monarch doesn't include the taxon for phenotypes
     ##   but prefixes show the species (MP = mouse)
     - supportBatch: false
+      useTemplating: true
       inputs:
       - id: MONDO
         semantic: Disease
       parameters:
-        id: "{inputs[0]}"         ## current BTE automatically adds MONDO prefix to IDs
+        id: "{{ queryInputs }}"         ## current BTE automatically adds MONDO prefix to IDs
         rows: -1
         direct: true
         unselect_evidence: true
@@ -965,11 +970,12 @@ components:
     ## - GENO:0000840 (pathogenic_for_condition). seems to use ClinVarVariant (ClinVarVariant:13417)
     ## - GENO:0000841 (likely_pathogenic_for_condition). seems to use ClinVarVariant (ClinVarVariant:370820)
     - supportBatch: false
+      useTemplating: true
       inputs:
       - id: MONDO
         semantic: Disease
       parameters:
-        id: "{inputs[0]}"         ## current BTE automatically adds MONDO prefix to IDs
+        id: "{{ queryInputs }}"         ## current BTE automatically adds MONDO prefix to IDs
         rows: -1
         direct: true
         unselect_evidence: true
@@ -989,11 +995,13 @@ components:
     ## supposedly I could use this endpoint with CellularComponent (GO) and Cell (CL) terms
     ##   but I haven't been successful in getting results when trying this out
     - supportBatch: false
+      useTemplating: true
       inputs:
       - id: HGNC   ## Monarch seems to prefer HGNC IDs for human genes
         semantic: Gene
       parameters:
-        id: "HGNC:{inputs[0]}"    ## add prefix since Monarch expects this, while BTE automatically removes
+        id: "{{ queryInputs | addPrefix('HGNC') }}"
+        # id: "HGNC:{inputs[0]}"    ## add prefix since Monarch expects this, while BTE automatically removes
         rows: -1
         direct: true
         unselect_evidence: true
@@ -1011,11 +1019,13 @@ components:
     gene-disease-1:
     ## put multiple causal relations here by using association_type parameter
     - supportBatch: false
+      useTemplating: true
       inputs:
       - id: HGNC
         semantic: Gene
       parameters:
-        id: "HGNC:{inputs[0]}"    ## add prefix since Monarch expects this, while BTE automatically removes
+        id: "{{ queryInputs | addPrefix('HGNC') }}"
+        # id: "HGNC:{inputs[0]}"    ## add prefix since Monarch expects this, while BTE automatically removes
         rows: -1
         direct: true
         unselect_evidence: true
@@ -1045,11 +1055,13 @@ components:
     gene-disease-2:
     ## put non-causal relations together here
     - supportBatch: false
+      useTemplating: true
       inputs:
       - id: HGNC
         semantic: Gene
       parameters:
-        id: "HGNC:{inputs[0]}"    ## add prefix since Monarch expects this, while BTE automatically removes
+        id: "{{ queryInputs | addPrefix('HGNC') }}"
+        # id: "HGNC:{inputs[0]}"    ## add prefix since Monarch expects this, while BTE automatically removes
         rows: -1
         direct: true
         unselect_evidence: true
@@ -1077,11 +1089,13 @@ components:
       #     oneOutput: "MONDO:0016575"  ## primary ciliary dyskinesia
     gene-interaction:
     - supportBatch: false
+      useTemplating: true
       inputs:
       - id: HGNC
         semantic: Gene
       parameters:
-        id: "HGNC:{inputs[0]}"    ## add prefix since Monarch expects this, while BTE automatically removes
+        id: "{{ queryInputs | addPrefix('HGNC') }}"
+        # id: "HGNC:{inputs[0]}"    ## add prefix since Monarch expects this, while BTE automatically removes
         rows: -1
         direct: true
         unselect_evidence: true
@@ -1100,11 +1114,13 @@ components:
     ## will include non-human phenotypes because Monarch doesn't include the taxon for phenotypes
     ##   but prefixes show the species (MP = mouse)
     - supportBatch: false
+      useTemplating: true
       inputs:
       - id: HGNC
         semantic: Gene
       parameters:
-        id: "HGNC:{inputs[0]}"    ## add prefix since Monarch expects this, while BTE automatically removes
+        id: "{{ queryInputs | addPrefix('HGNC') }}"
+        # id: "HGNC:{inputs[0]}"    ## add prefix since Monarch expects this, while BTE automatically removes
         rows: -1
         direct: true
         unselect_evidence: true
@@ -1121,11 +1137,13 @@ components:
     gene-variant:
     ## can take human or non-human genes as input...
     - supportBatch: false
+      useTemplating: true
       inputs:
       - id: HGNC
         semantic: Gene
       parameters:
-        id: "HGNC:{inputs[0]}"    ## add prefix since Monarch expects this, while BTE automatically removes
+        id: "{{ queryInputs | addPrefix('HGNC') }}"
+        # id: "HGNC:{inputs[0]}"    ## add prefix since Monarch expects this, while BTE automatically removes
         rows: -1
         direct: true
         unselect_evidence: true
@@ -1145,11 +1163,13 @@ components:
     ## data has weird relation direction. says disease involved_in pathway...
     ##   I'm flipping it so disease involves pathway...
     - supportBatch: false
+      useTemplating: true
       inputs:
       - id: REACT
         semantic: Pathway
       parameters:
-        id: "REACT:{inputs[0]}"    ## add prefix since Monarch expects this, while BTE automatically removes
+        id: "{{ queryInputs | addPrefix('REACT') }}"
+        # id: "REACT:{inputs[0]}"    ## add prefix since Monarch expects this, while BTE automatically removes
         rows: -1
         direct: true
         unselect_evidence: true
@@ -1168,11 +1188,12 @@ components:
     ## could include non-human phenotypes because Monarch doesn't include the taxon for phenotypes
     ##   but prefixes show the species (MP = mouse)
     - supportBatch: false
+      useTemplating: true
       inputs:
       - id: HP
         semantic: PhenotypicFeature
       parameters:
-        id: "{inputs[0]}"   ## current BTE automatically adds prefix for HP terms
+        id: "{{ queryInputs }}"   ## current BTE automatically adds prefix for HP terms
         rows: -1
         direct: true
         unselect_evidence: true
@@ -1188,11 +1209,12 @@ components:
       #     oneOutput: "MONDO:0008974"  ## Greenberg dysplasia
     phenotype-gene:
     - supportBatch: false
+      useTemplating: true
       inputs:
       - id: HP
         semantic: PhenotypicFeature
       parameters:
-        id: "{inputs[0]}"   ## current BTE automatically adds prefix for HP terms
+        id: "{{ queryInputs }}"   ## current BTE automatically adds prefix for HP terms
         rows: -1
         direct: true
         unselect_evidence: true
@@ -1211,11 +1233,12 @@ components:
     ## could also use OMIM IDs...
     ## note: relation RO:0003304 (contributes to condition) seems to use EFO terms, rather than HP...
     - supportBatch: false
+      useTemplating: true
       inputs:
       - id: HP
         semantic: PhenotypicFeature
       parameters:
-        id: "{inputs[0]}"   ## current BTE automatically adds prefix for HP terms
+        id: "{{ queryInputs }}"   ## current BTE automatically adds prefix for HP terms
         rows: -1
         direct: true
         unselect_evidence: true
@@ -1236,11 +1259,13 @@ components:
     ## - GENO:0000840 (pathogenic_for_condition). seems to use ClinVarVariant (ClinVarVariant:13417)
     ## - GENO:0000841 (likely_pathogenic_for_condition). seems to use ClinVarVariant (ClinVarVariant:370820)
     - supportBatch: false
+      useTemplating: true
       inputs:
       - id: DBSNP
         semantic: SequenceVariant
       parameters:
-        id: "dbSNP:{inputs[0]}"
+        id: "{{ queryInputs | addPrefix('dbSNP') }}"
+        # id: "dbSNP:{inputs[0]}"
         ## add prefix since Monarch expects this in this form, while BTE automatically removes
         rows: -1
         direct: true
@@ -1260,11 +1285,13 @@ components:
     variant-gene:
     ## can take human or non-human genes as input...
     - supportBatch: false
+      useTemplating: true
       inputs:
       - id: DBSNP
         semantic: SequenceVariant
       parameters:
-        id: "dbSNP:{inputs[0]}"
+        id: "{{ queryInputs | addPrefix('dbSNP') }}"
+        # id: "dbSNP:{inputs[0]}"
         ## add prefix since Monarch expects this in this form, while BTE automatically removes
         rows: -1
         direct: true
@@ -1283,11 +1310,13 @@ components:
     ## could also use OMIM IDs...
     ## note: relation RO:0003304 (contributes to condition) seems to use EFO terms, rather than HP...
     - supportBatch: false
+      useTemplating: true
       inputs:
       - id: DBSNP
         semantic: SequenceVariant
       parameters:
-        id: "dbSNP:{inputs[0]}"
+        id: "{{ queryInputs | addPrefix('dbSNP') }}"
+        # id: "dbSNP:{inputs[0]}"
         ## add prefix since Monarch expects this in this form, while BTE automatically removes
         rows: -1
         direct: true
