@@ -1,407 +1,641 @@
-openapi: 3.0.0
+openapi: 3.0.3
 info:
   contact:
     email: help@biothings.io
-    name: JIWEN XIN
-    x-id: https://github.com/kevinxin90
-    x-role: responsible developer
-  description: Documentation of the pfocr query web services.  
+    name: BioThings Team
+    x-id: https://github.com/biothings
+    x-role: responsible developers
+  description: >-
+    Documentation of the BioThings [Pathway Figure OCR (pfocr)](https://github.com/wikipathways/pathway-figure-ocr) 
+    query web services.
   termsOfService: https://biothings.io/about
-  title: pfocr API
-  version: '1.0'
+  title: BioThings pfocr API
+  version: '2022-04-05'
   x-translator:
+    infores: "infores:biothings-pfocr"
     component: KP
     team:
       - Service Provider
+    biolink-version: "2.2.13"
 servers:
 - description: Encrypted Production server
-  url: https://pending.biothings.io/pfocr
+  url: https://biothings.ncats.io/pfocr
+  x-maturity: production
 - description: Production server
-  url: http://pending.biothings.io/pfocr
+  url: http://biothings.ncats.io/pfocr
+  x-maturity: production
 tags:
 - name: geneset
 - name: gene
 - name: annotation
 - name: query
-# - name: translator
+- name: translator
 - name: biothings
 paths:
-  /geneset:
+  "/geneset/{id}":
+    get:
+      parameters:
+      - name: id
+        in: path
+        required: true
+        example: "PMC6063820__10815_2018_1180_Fig4_HTML.jpg"
+        schema:
+          type: string
+      - "$ref": "#/components/parameters/raw"
+      - "$ref": "#/components/parameters/rawquery"
+      - "$ref": "#/components/parameters/_source"
+      - "$ref": "#/components/parameters/size"
+      - "$ref": "#/components/parameters/dotfield"
+      - "$ref": "#/components/parameters/_sorted"
+      - "$ref": "#/components/parameters/always_list"
+      - "$ref": "#/components/parameters/allow_null"
+      - "$ref": "#/components/parameters/format"
+      responses:
+        '200':
+          description: "Success"
+      #     content:
+      #       application/json:
+      #         schema:
+      #           $ref: '#/components/schemas/pfocr_figure'
+      #   '404':
+      #     description: A response indicating an unknown Figure ID
+      summary: >-
+        Retrieve figure information based on ID. The endpoint name is misleading; 
+        genes, diseases, and chemicals that are mentioned in the figure are returned. 
+        Figure information also includes the figure title, name, and url. 
+      tags:
+      - geneset
+  "/geneset":
     post:
       parameters:
-      - $ref: '#/components/parameters/dotfield'
-        name: dotfield
-      - $ref: '#/components/parameters/fields'
-        name: fields
-      - $ref: '#/components/parameters/email'
-        name: email
-      - $ref: '#/components/parameters/format'
-        name: format
+      - "$ref": "#/components/parameters/raw"
+      - "$ref": "#/components/parameters/rawquery"
+      - "$ref": "#/components/parameters/_source"
+      - "$ref": "#/components/parameters/size"
+      - "$ref": "#/components/parameters/dotfield"
+      - "$ref": "#/components/parameters/_sorted"
+      - "$ref": "#/components/parameters/always_list"
+      - "$ref": "#/components/parameters/allow_null"
+      - "$ref": "#/components/parameters/format"
       requestBody:
         content:
-          application/x-www-form-urlencoded:
+          application/json:
+            example:
+              ids:
+              - "PMC6063820__10815_2018_1180_Fig4_HTML.jpg"
+              - "PMC6057828__nihms944638f9.jpg"
             schema:
+              type: object
               properties:
                 ids:
-                  description: 'multiple geneset IDs separated by comma. Note that
+                  description: 'multiple Figure IDs separated by comma. Note that
                     currently we only take the input ids up to 1000 maximum, the rest
                     will be omitted. Type: string (list). Max: 1000.'
-                  type: string
-              required:
-              - ids
+                  type: array
+                  items:
+                    type: string
       responses:
         '200':
-          # content:
-          #   application/json:
-          #     schema:
-          #       items:
-          #         $ref: '#/components/schemas/Geneset'
-          #       type: array
-          description: A list of matching geneset objects
-        '400':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResult'
-          description: A response indicating an improperly formatted query
-      summary: For a list of geneset IDs, return the matching geneset object
+          description: "Success"
+      summary: >-
+        Retrieve multiple figures' information based on ID. The endpoint name is misleading; 
+        genes, diseases, and chemicals that are mentioned in the figures are returned. 
+        Figure information also includes the figure title, name, and url. 
       tags:
       - geneset
-  /geneset/{genesetid}:
+  "/metadata":
     get:
       parameters:
-      - description: 'Retrieve geneset objects based on geneset ID  Supports
-          JSONP and CORS as well.'
-        example: "PMC2673547__nihms99366f8.jpg"
-        in: path
-        name: genesetid
-        required: true
-        schema:
-          type: string
-      - $ref: '#/components/parameters/dotfield'
-        name: dotfield
-      - $ref: '#/components/parameters/callback'
-        name: callback
-      - $ref: '#/components/parameters/fields'
-        name: fields
-      - $ref: '#/components/parameters/email'
-        name: email
-      - $ref: '#/components/parameters/format'
-        name: format
+      - "$ref": "#/components/parameters/format"
+      - "$ref": "#/components/parameters/raw"
+      - "$ref": "#/components/parameters/dev"
       responses:
         '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/geneset'
-          description: A matching geneset object
-        '404':
-          description: A response indicating an unknown geneset ID
-      summary: Retrieve geneset objects based on ID
-      tags:
-      - geneset
-  /metadata:
-    get:
-      parameters:
-      - $ref: '#/components/parameters/callback'
-        in: query
-        name: callback
-      responses:
-        '200':
-          description: pfocr metadata object
-      summary: Get metadata about the data available from pfocr
+          description: Success
+      summary: Get metadata about the data available from the API
       tags:
       - metadata
-  /metadata/fields:
+  "/metadata/fields":
     get:
       parameters:
-      - $ref: '#/components/parameters/search'
-        name: search
-      - $ref: '#/components/parameters/callback'
-        name: callback
-      - $ref: '#/components/parameters/prefix'
-        name: prefix
-      - $ref: '#/components/parameters/format'
-        name: format
+      - "$ref": "#/components/parameters/format"
+      - "$ref": "#/components/parameters/raw"
+      - "$ref": "#/components/parameters/search"
+      - "$ref": "#/components/parameters/prefix"
       responses:
         '200':
-          description: pfocr metadata fields object
-      summary: Get metadata about the data fields available from a pfocr geneset object
+          description: Success
+      summary: Get metadata about the data fields available from a record
       tags:
       - metadata
-  /query:
+  "/query":
     get:
       parameters:
-      - description: 'Query string.'
-        example: associatedWith.genes:1378
+      - name: q
+        description: Query string.
         in: query
-        name: q
         required: true
+        example: "associatedWith.mentions.genes.ncbigene:8740"
         schema:
           type: string
-      - $ref: '#/components/parameters/dotfield'
-        name: dotfield
-      - $ref: '#/components/parameters/fields'
-        name: fields
-      - $ref: '#/components/parameters/facet_size'
-        name: facet_size
-      - $ref: '#/components/parameters/sort'
-        name: sort
-      - $ref: '#/components/parameters/callback'
-        name: callback
-      - $ref: '#/components/parameters/email'
-        name: email
-      - $ref: '#/components/parameters/facets'
-        name: facets
-      - $ref: '#/components/parameters/size'
-        name: size
-      - $ref: '#/components/parameters/from'
-        name: from
-      - $ref: '#/components/parameters/format'
-        name: format
+      - "$ref": "#/components/parameters/aggs"
+      - "$ref": "#/components/parameters/facet_size"
+      - "$ref": "#/components/parameters/from"
+      - "$ref": "#/components/parameters/userquery"
+      - "$ref": "#/components/parameters/sort"
+      - "$ref": "#/components/parameters/explain"
+      - "$ref": "#/components/parameters/fetch_all"
+      - "$ref": "#/components/parameters/scroll_id"
+      - "$ref": "#/components/parameters/raw"
+      - "$ref": "#/components/parameters/rawquery"
+      - "$ref": "#/components/parameters/_source"
+      - "$ref": "#/components/parameters/size"
+      - "$ref": "#/components/parameters/dotfield"
+      - "$ref": "#/components/parameters/_sorted"
+      - "$ref": "#/components/parameters/always_list"
+      - "$ref": "#/components/parameters/allow_null"
+      - "$ref": "#/components/parameters/format"
       responses:
         '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/QueryResult'
-          description: A query response with the "hits" property
-        '400':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResult'
-          description: A response indicating an improperly formatted query
-      summary: Make queries and return matching geneset hits. Supports JSONP and CORS as well.
+          description: Success
+      #     content:
+      #       application/json:
+      #         schema:
+      #           "$ref": "#/components/schemas/QueryResult"
+      #   '400':
+      #     content:
+      #       application/json:
+      #         schema:
+      #           "$ref": "#/components/schemas/ErrorResult"
+      #     description: A response indicating an improperly formatted query
+      # summary: Make queries and return matching gene hits. Supports JSONP and CORS
+      #   as well.
       tags:
       - query
     post:
       parameters:
-      - $ref: '#/components/parameters/dotfield'
-        name: dotfield
-      - $ref: '#/components/parameters/email'
-        name: email
-      - $ref: '#/components/parameters/fields'
-        name: fields
-      - $ref: '#/components/parameters/size'
-        name: size
-      - $ref: '#/components/parameters/format'
-        name: format
+      - name: q
+        in: query
+        required: false
+        schema:
+          type: array
+          items:
+            type: string
+      - name: scopes
+        in: query
+        required: false
+        schema:
+          type: array
+          items:
+            type: string
+            default:
+            - _id
+      - "$ref": "#/components/parameters/from"
+      - "$ref": "#/components/parameters/sort"
+      - "$ref": "#/components/parameters/raw"
+      - "$ref": "#/components/parameters/rawquery"
+      - "$ref": "#/components/parameters/_source"
+      - "$ref": "#/components/parameters/size"
+      - "$ref": "#/components/parameters/dotfield"
+      - "$ref": "#/components/parameters/_sorted"
+      - "$ref": "#/components/parameters/always_list"
+      - "$ref": "#/components/parameters/allow_null"
+      - "$ref": "#/components/parameters/format"
       requestBody:
         content:
-          application/x-www-form-urlencoded:
+          application/json:
+            example:
+              q:
+              - "8740"
+              - "9771"
+              scopes:
+              - "associatedWith.mentions.genes.ncbigene"
             schema:
+              type: object
               properties:
                 q:
-                  description: multiple query terms separated by comma (also "+" or
-                    whitespace).  Does not support wildcard queries
-                  type: string
+                  type: array
+                  items:
+                    type: string
                 scopes:
-                  description: 'a comma-separated list of fields as the search "scopes"
-                    (fields to search through for query term). The available "fields"
-                    that can be passed to the "scopes" parameter are listed in the
-                    **/metadata/fields** endpoint.string Default: "scopes=_id".'
-                  type: string
+                  type: array
+                  items:
+                    type: string
+                from:
+                  type: integer
+                sort:
+                  type: array
+                  items:
+                    type: string
       responses:
         '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/QueryPOSTResult'
-          description: Query response objects with the "hits" property
-          x-bte-response-mapping:
-            $ref: '#/components/x-bte-response-mapping/query-post'
-        '400':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResult'
-          description: A response indicating an improperly formatted query
-      summary: Make batch geneset queries and return matching geneset hits
+          description: Success
+      #     content:
+      #       application/json:
+      #         schema:
+      #           "$ref": "#/components/schemas/QueryPOSTResult"
+      #   '400':
+      #     content:
+      #       application/json:
+      #         schema:
+      #           "$ref": "#/components/schemas/ErrorResult"
+      #     description: A response indicating an improperly formatted query
+      # summary: Make batch gene queries and return matching gene hits
       tags:
       - query
+      ## 6 operations
       x-bte-kgs-operations:
-        associatedWith:
-          $ref: '#/components/x-bte-kgs-operations/associatedWith'
-
+      - $ref: '#/components/x-bte-kgs-operations/gene-chem'
+      - $ref: '#/components/x-bte-kgs-operations/chem-gene'
+      - $ref: '#/components/x-bte-kgs-operations/disease-chem'
+      - $ref: '#/components/x-bte-kgs-operations/chem-disease'
+      - $ref: '#/components/x-bte-kgs-operations/disease-gene'
+      - $ref: '#/components/x-bte-kgs-operations/gene-disease'
 components:
   parameters:
-    callback:
-      description: 'you can pass a "callback" parameter to make a JSONP call. Type:
-        string.'
+    _sorted:
+      name: _sorted
       in: query
-      name: callback
-      schema:
-        type: string
-    dotfield:
-      description: 'control the format of the returned chem object. If "true" or "1",
-        all fields will be collapsed into a single level deep object (all nested objects
-        will be a single level deep, using dotfield notation to signify the nested
-        structure) Type: boolean. Default: false.'
-      in: query
-      name: dotfield
+      required: false
       schema:
         type: boolean
-    email:
-      description: If you are regular users of our services, we encourage you to provide
-        us with an email, so that we can better track the usage or follow up with
-        you.
+        default: true
+    _source:
+      name: _source
       in: query
-      name: email
+      required: false
       schema:
-        type: string
-    facet_size:
-      description: 'the number of facet buckets to return in the response. Type: integer.
-        Default: 10. Max: 1000.'
+        type: array
+        items:
+          type: string
+    aggs:
+      name: aggs
       in: query
+      required: false
+      schema:
+        type: array
+        items:
+          type: string
+    allow_null:
+      name: allow_null
+      in: query
+      required: false
+      schema:
+        type: array
+        items:
+          type: string
+    always_list:
+      name: always_list
+      in: query
+      required: false
+      schema:
+        type: array
+        items:
+          type: string
+    dev:
+      name: dev
+      in: query
+      required: false
+      schema:
+        type: boolean
+    dotfield:
+      name: dotfield
+      in: query
+      required: false
+      schema:
+        type: boolean
+    explain:
+      name: explain
+      in: query
+      required: false
+      schema:
+        type: boolean
+    facet_size:
       name: facet_size
+      in: query
+      required: false
       schema:
         type: integer
-    facets:
-      description: 'a comma-separated list of fields to return facets on.  In addition
-        to query hits, the fields notated in "facets" will be aggregated by value
-        and bucklet counts will be displayed in the "facets" field of the response
-        object. Type: string (list). Default: None. Max: 1000.'
+        default: 10
+    fetch_all:
+      name: fetch_all
       in: query
-      name: facets
+      required: false
       schema:
-        type: string
-    fields:
-      description: 'a comma-separated list of fields (in dotfield notation) used to
-        limit the fields returned from the matching chem hit(s). The supported field
-        names can be found from any chem object or from the /metadata/fields endpoint.
-        If "fields=all", all available fields will be returned. Type: string (list).
-        Default: all. Max: 1000.'
-      in: query
-      name: fields
-      schema:
-        type: string
+        type: boolean
     format:
+      name: format
       description: 'controls output format of server response, currently supports:
         "json", "jsonld", "html". Type: string. Default: json.'
       in: query
-      name: format
+      required: false
       schema:
         type: string
+        default: json
     from:
-      description: 'the number of matching chem hits to skip, starting from 0.  This
-        can be useful for paging in combination with the "size" parameter. Type: integer.
-        Default: None.'
-      in: query
       name: from
+      in: query
+      required: false
       schema:
         type: integer
     prefix:
-      description: 'Pass a prefix string to filter the available fields. Type: string.
-        Default: None.'
-      in: query
       name: prefix
+      in: query
+      required: false
+      schema:
+        type: string
+    raw:
+      name: raw
+      in: query
+      required: false
+      schema:
+        type: boolean
+    rawquery:
+      name: rawquery
+      in: query
+      required: false
+      schema:
+        type: boolean
+    scroll_id:
+      name: scroll_id
+      in: query
+      required: false
       schema:
         type: string
     search:
-      description: 'Pass a search term to filter the available fields. Type: string.
-        Default: None.'
-      in: query
       name: search
+      in: query
+      required: false
       schema:
         type: string
     size:
-      description: 'the maximum number of matching chem hits to return per batch.
-        Type: integer. Default: 10.'
-      in: query
       name: size
+      description: "default: 10 objects/records in response"
+      in: query
+      required: false
       schema:
         type: integer
     sort:
-      description: 'the comma-separated list of fields to sort on. Prefix each with
-        "-" for descending order, otherwise in ascending order. Default: sort by descending
-        score.'
-      in: query
       name: sort
+      in: query
+      required: false
+      schema:
+        type: array
+        items:
+          type: string
+    userquery:
+      name: userquery
+      in: query
+      required: false
       schema:
         type: string
-  schemas:
-    geneset:
-      properties:
-        _id:
-          type: string
-      required:
-      - _id
-      type: object
-    ErrorResult:
-      properties:
-        message:
-          type: string
-        success:
-          type: boolean
-      type: object
-    QueryPOSTResult:
-      items:
-        allOf:
-        - $ref: '#/components/schemas/geneset'
-        - properties:
-            _score:
-              format: float
-              type: number
-            query:
-              type: string
-          type: object
-      type: array
-    QueryResult:
-      properties:
-        # hits:
-        #   items:
-        #     $ref: '#/components/schemas/Chem'
-        #   type: array
-        max_score:
-          format: float
-          type: number
-        took:
-          type: integer
-        total:
-          type: integer
-      type: object
-    int64_or_array:
-      oneOf:
-      - items:
-          format: int64
-          type: integer
-        type: array
-      - format: int64
-        type: integer
-    string_or_array:
-      oneOf:
-      - items:
-          type: string
-        type: array
-      - type: string
+  # schemas:
+  #   pfocr_figure:
+  #     properties:
+  #       _id:
+  #         type: string
+  #     required:
+  #     - _id
+  #     type: object
+  #   ErrorResult:
+  #     properties:
+  #       message:
+  #         type: string
+  #       success:
+  #         type: boolean
+  #     type: object
+  #   QueryPOSTResult:
+  #     items:
+  #       allOf:
+  #       - $ref: '#/components/schemas/pfocr_figure'
+  #       - properties:
+  #           _score:
+  #             format: float
+  #             type: number
+  #           query:
+  #             type: string
+  #         type: object
+  #     type: array
+  #   QueryResult:
+  #     properties:
+  #       hits:
+  #         items:
+  #           $ref: '#/components/schemas/pfocr_figure'
+  #         type: array
+  #       max_score:
+  #         format: float
+  #         type: number
+  #       took:
+  #         type: integer
+  #       total:
+  #         type: integer
+  #     type: object
+  #   int64_or_array:
+  #     oneOf:
+  #     - items:
+  #         format: int64
+  #         type: integer
+  #       type: array
+  #     - format: int64
+  #       type: integer
+  #   string_or_array:
+  #     oneOf:
+  #     - items:
+  #         type: string
+  #       type: array
+  #     - type: string
   x-bte-kgs-operations:
-    associatedWith:
-      inputSeparator: ','
-      inputs:
-      - id: pathwayFigureID
-        semantic: Pathway
-      outputs:
-      - id: entrez
-        semantic: Gene
-      parameters:
-        dotfield: false
-        fields: associatedWith
-      requestBody:
-        body:
-          q: '{input1}'
-          scopes: _id
-        header: application/x-www-form-urlencoded
-      supportBatch: true
+  ## 3 potential types: Disease, Gene, SmallMolecule (chem)
+  ## - Pathways don't have formal IDs that can be used
+    gene-chem:
+    ## https://pending.biothings.io/pfocr/query?q=_exists_:associatedWith.mentions.chemicals%20AND%20_exists_:associatedWith.mentions.genes
+    ## 44081 documents. not clear how many gene-chem pairs there are. 
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: NCBIGene
+            semantic: Gene
+        requestBody:
+          body:
+            ## API data has no prefix
+            ## joinSafe is only needed if the delimiter isn't a comma
+            q: "{{ queryInputs }}"
+            scopes: associatedWith.mentions.genes.ncbigene
+        outputs:
+          - id: MESH
+            semantic: SmallMolecule
+        parameters:
+          fields: >-
+            associatedWith.mentions.chemicals.mesh,
+            associatedWith.figureUrl,associatedWith.pmc,associatedWith.title
+          size: 1000
+        predicate: occurs_together_in_literature_with
+        source: "infores:pfocr"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/chem"
+        # testExamples:
+        #   - qInput: "NCBIGene:3620"      ## IDO1
+        #     oneOutput: "MESH:D004958"    ## Estradiol
+        ## should have 2 figures: https://pending.biothings.io/pfocr/query?q=associatedWith.mentions.chemicals.mesh:D004958%20AND%20associatedWith.mentions.genes.ncbigene:3620
+    chem-gene:
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: MESH
+            semantic: SmallMolecule
+        requestBody:
+          body:
+            ## API data has no prefix
+            ## joinSafe is only needed if the delimiter isn't a comma
+            q: "{{ queryInputs }}"
+            scopes: associatedWith.mentions.chemicals.mesh
+        outputs:
+          - id: NCBIGene
+            semantic: Gene
+        parameters:
+          fields: >-
+            associatedWith.mentions.genes.ncbigene,
+            associatedWith.figureUrl,associatedWith.pmc,associatedWith.title
+          size: 1000
+        predicate: occurs_together_in_literature_with
+        source: "infores:pfocr"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/gene"
+        # testExamples:
+        #   - qInput: "MESH:C000541"       ## cyclopamine 
+        #     oneOutput: "NCBIGene:208"    ## AKT2
+        ## should have 9 figures: https://pending.biothings.io/pfocr/query?q=associatedWith.mentions.chemicals.mesh:C000541%20AND%20associatedWith.mentions.genes.ncbigene:208
+    disease-chem:
+    ## https://pending.biothings.io/pfocr/query?q=_exists_:associatedWith.mentions.diseases%20AND%20_exists_:associatedWith.mentions.chemicals
+    ## 9232 documents. not clear how many disease-chem pairs there are. 
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: MESH
+            semantic: Disease
+        requestBody:
+          body:
+            ## API data has no prefix
+            ## joinSafe is only needed if the delimiter isn't a comma
+            q: "{{ queryInputs }}"
+            scopes: associatedWith.mentions.diseases.mesh
+        outputs:
+          - id: MESH
+            semantic: SmallMolecule
+        parameters:
+          fields: >-
+            associatedWith.mentions.chemicals.mesh,
+            associatedWith.figureUrl,associatedWith.pmc,associatedWith.title
+          size: 1000
+        predicate: occurs_together_in_literature_with
+        source: "infores:pfocr"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/chem"
+        # testExamples:
+        #   - qInput: "MESH:D006623"       ## von Hippel-Lindau Disease
+        #     oneOutput: "MESH:C516667"    ## pazopanib
+        ## should have 9 figures: https://pending.biothings.io/pfocr/query?q=associatedWith.mentions.chemicals.mesh:C516667%20AND%20associatedWith.mentions.diseases.mesh:D006623
+    chem-disease:
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: MESH
+            semantic: SmallMolecule
+        requestBody:
+          body:
+            ## API data has no prefix
+            ## joinSafe is only needed if the delimiter isn't a comma
+            q: "{{ queryInputs }}"
+            scopes: associatedWith.mentions.chemicals.mesh
+        outputs:
+          - id: MESH
+            semantic: Disease
+        parameters:
+          fields: >-
+            associatedWith.mentions.diseases.mesh,
+            associatedWith.figureUrl,associatedWith.pmc,associatedWith.title
+          size: 1000
+        predicate: occurs_together_in_literature_with
+        source: "infores:pfocr"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/disease"
+        # testExamples:
+        #   - qInput: "MESH:D002945"       ## Cisplatin 
+        #     oneOutput: "MESH:D009369"    ## Neoplasms
+        ## should have 18 figures: https://pending.biothings.io/pfocr/query?q=associatedWith.mentions.chemicals.mesh:D002945%20AND%20associatedWith.mentions.diseases.mesh:D009369
+    disease-gene:
+    ## https://pending.biothings.io/pfocr/query?q=_exists_:associatedWith.mentions.diseases%20AND%20_exists_:associatedWith.mentions.genes
+    ## 13354 documents. not clear how many disease-gene pairs there are. 
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: MESH
+            semantic: Disease
+        requestBody:
+          body:
+            ## API data has no prefix
+            ## joinSafe is only needed if the delimiter isn't a comma
+            q: "{{ queryInputs }}"
+            scopes: associatedWith.mentions.diseases.mesh
+        outputs:
+          - id: NCBIGene
+            semantic: Gene
+        parameters:
+          fields: >-
+            associatedWith.mentions.genes.ncbigene,
+            associatedWith.figureUrl,associatedWith.pmc,associatedWith.title
+          size: 1000
+        predicate: occurs_together_in_literature_with
+        source: "infores:pfocr"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/gene"
+        # testExamples:
+        #   - qInput: "MESH:D005199"       ## Fanconi Anemia
+        #     oneOutput: "NCBIGene:672"    ## BRCA1
+        ## should have 7 figures: https://pending.biothings.io/pfocr/query?q=associatedWith.mentions.genes.ncbigene:672%20AND%20associatedWith.mentions.diseases.mesh:D005199
+    gene-disease:
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: NCBIGene
+            semantic: Gene
+        requestBody:
+          body:
+            ## API data has no prefix
+            ## joinSafe is only needed if the delimiter isn't a comma
+            q: "{{ queryInputs }}"
+            scopes: associatedWith.mentions.genes.ncbigene
+        outputs:
+          - id: MESH
+            semantic: Disease
+        parameters:
+          fields: >-
+            associatedWith.mentions.diseases.mesh,
+            associatedWith.figureUrl,associatedWith.pmc,associatedWith.title
+          size: 1000
+        predicate: occurs_together_in_literature_with
+        source: "infores:pfocr"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/disease"
+        # testExamples:
+        #   - qInput: "NCBIGene:3791"      ## KDR 
+        #     oneOutput: "MESH:D002318"    ## Cardiovascular Diseases
+        ## should have 1 figure: https://pending.biothings.io/pfocr/query?q=associatedWith.mentions.genes.ncbigene:3791%20AND%20associatedWith.mentions.diseases.mesh:D002318
   x-bte-response-mapping:
-    query-post:
-      "@context": http://schema.org
-      "@type": Pathway
-      bts:pathwayFigureID: _id
-      bts:associatedWith:
-        "@type": Gene
-        bts:entrez: associatedWith.genes
-        bts:pmc: associatedWith.pmc
-        "$input": bts:pathwayFigureID
-        "$source": PFOCR
-    
+    ## pmc_reference kinda matches "biolink:publication". However, it doesn't have a PMC prefix so it doesn't quite have the right value...
+    ## not easy to make it clear with biolink-model terms: the publication (PMC ID) vs the figure (title and url)
+    chem:
+      MESH: associatedWith.mentions.chemicals.mesh   ## no prefix
+      figure_url: associatedWith.figureUrl
+      figure_title: associatedWith.title
+      pmc_reference: associatedWith.pmc
+    gene:
+      NCBIGene: associatedWith.mentions.genes.ncbigene   ## no prefix
+      figure_url: associatedWith.figureUrl
+      figure_title: associatedWith.title
+      pmc_reference: associatedWith.pmc
+    disease:
+      MESH: associatedWith.mentions.diseases.mesh   ## no prefix
+      figure_url: associatedWith.figureUrl
+      figure_title: associatedWith.title
+      pmc_reference: associatedWith.pmc
