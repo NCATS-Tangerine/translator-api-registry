@@ -458,17 +458,16 @@ components:
         parameters:
           fields: >-
             subject.GENE_ID,
-            object.PATHWAY_NAME,object.PATHWAY_CATEGORIES,
-            subject.GENE_SYMBOL
+            object.PATHWAY_NAME,object.PATHWAY_CATEGORIES
           size: 1000
         ## using the same predicate that biolink (monarch) api uses
-        predicate: actively_involved_in
+        predicate: has_participant
         source: "infores:bioplanet"
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/gene"
         # testExamples:
-        #   - qInput: "BIOPLANET:bioplanet_276"     ## Alpha-hemoglobin stabilizing enzyme (AHSP) pathway
-        #     oneOutput: "OMIM:300751"              ## Anemia, sideroblastic, X-linked, 300751 (3)
+        #   - qInput: "BIOPLANET:bioplanet_869"     ## Chondroitin sulfate/dermatan sulfate metabolism
+        #     oneOutput: "NCBIGene:9672"            ## SDC3
     gene-pathway:
       - supportBatch: true
         useTemplating: true ## flag to say templating is being used below
@@ -487,25 +486,21 @@ components:
         parameters:
           fields: >-
             object.PATHWAY_ID,
-            object.PATHWAY_NAME,object.PATHWAY_CATEGORIES,
-            subject.GENE_SYMBOL
+            object.PATHWAY_NAME,object.PATHWAY_CATEGORIES
           size: 1000
-        predicate: actively_involved_in
+        predicate: participates_in
         source: "infores:bioplanet"
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/pathway"
         # testExamples:
-        #   - qInput: "OMIM:603909"                  ## Autoimmune lymphoproliferative syndrome, type II, 603909 (3) 
-        #     oneOutput: "BIOPLANET:bioplanet_26"    ## D4-GDI signaling pathway
+        #   - qInput: "NCBIGene:1463"                ## NCAN 
+        #     oneOutput: "BIOPLANET:bioplanet_789"   ## Dermatan sulfate biosynthesis
   x-bte-response-mapping:
     gene:
       NCBIGene: subject.GENE_ID   ## no prefix
       pathway_name: object.PATHWAY_NAME
       pathway_categories: object.PATHWAY_CATEGORIES
-      gene_symbol: subject.GENE_SYMBOL
     pathway:
       BIOPLANET: object.PATHWAY_ID
       pathway_name: object.PATHWAY_NAME
       pathway_categories: object.PATHWAY_CATEGORIES
-      gene_id: subject.GENE_ID
-      gene_symbol: subject.GENE_SYMBOL
