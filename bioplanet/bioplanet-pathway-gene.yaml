@@ -437,14 +437,12 @@ components:
   #       type: array
   #     - type: string
   x-bte-kgs-operations:
-  ## - BioPlanet IDs currently don't have a format in biolink model...
-  ##   current format we're using is BIOPLANET:bioplanet_90
-  ##   and API doesn't have the BIOPLANET prefix
+  ##   API pathway IDs don't have a bioplanet prefix on them (but they are in the format bioplanet_276)
     pathway-gene:
       - supportBatch: true
         useTemplating: true ## flag to say templating is being used below
         inputs:
-          - id: BIOPLANET
+          - id: "ncats.bioplanet"
             semantic: Pathway
         requestBody:
           body:
@@ -466,8 +464,8 @@ components:
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/gene"
         # testExamples:
-        #   - qInput: "BIOPLANET:bioplanet_869"     ## Chondroitin sulfate/dermatan sulfate metabolism
-        #     oneOutput: "NCBIGene:9672"            ## SDC3
+        #   - qInput: "ncats.bioplanet:bioplanet_869"     ## Chondroitin sulfate/dermatan sulfate metabolism
+        #     oneOutput: "NCBIGene:9672"                  ## SDC3
     gene-pathway:
       - supportBatch: true
         useTemplating: true ## flag to say templating is being used below
@@ -481,7 +479,7 @@ components:
             q: "{{ queryInputs }}"
             scopes: subject.GENE_ID
         outputs:
-          - id: BIOPLANET
+          - id: "ncats.bioplanet"
             semantic: Pathway
         parameters:
           fields: >-
@@ -493,14 +491,14 @@ components:
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/pathway"
         # testExamples:
-        #   - qInput: "NCBIGene:1463"                ## NCAN 
-        #     oneOutput: "BIOPLANET:bioplanet_789"   ## Dermatan sulfate biosynthesis
+        #   - qInput: "NCBIGene:1463"                         ## NCAN 
+        #     oneOutput: "ncats.bioplanet:bioplanet_789"      ## Dermatan sulfate biosynthesis
   x-bte-response-mapping:
     gene:
       NCBIGene: subject.GENE_ID   ## no prefix
       pathway_name: object.PATHWAY_NAME
       pathway_categories: object.PATHWAY_CATEGORIES
     pathway:
-      BIOPLANET: object.PATHWAY_ID
+      "ncats.bioplanet": object.PATHWAY_ID  ## no prefix
       pathway_name: object.PATHWAY_NAME
       pathway_categories: object.PATHWAY_CATEGORIES
