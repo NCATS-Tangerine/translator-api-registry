@@ -25,8 +25,8 @@ servers:
   x-maturity: production
 tags:
 - name: association
-- name: pathway
-- name: disease
+- name: protein
+- name: chemical
 - name: query
 - name: translator
 - name: biothings
@@ -240,8 +240,8 @@ paths:
       - query
       ## 2 operations
       x-bte-kgs-operations:
-      - $ref: '#/components/x-bte-kgs-operations/pathway-disease'
-      - $ref: '#/components/x-bte-kgs-operations/disease-pathway'
+      - $ref: '#/components/x-bte-kgs-operations/ligand-protein'
+      - $ref: '#/components/x-bte-kgs-operations/protein-ligand'
 components:
   parameters:
     _sorted:
@@ -454,13 +454,13 @@ components:
             semantic: Protein
         parameters:
           fields: >-
-            relation.bindingdb_set_id,object.smiles,object.monomer_id,object.name,subject.name,subject.organism,relation.ki_nm,relation.ic50_nm,relation.kd_nm,relation.ec50_nm,relation.kon,relation.koff,relation.ph,relation.temp_c,relation.curation_datasource,relation.article_doi,relation.pmid,relation.pubchem_aid,relation.patent_number,relation.authors,relation.institution,object.bindingdb_link,subject.bindingdb_link,relation.bindingdb_link,object.het_id_pdb,relation.pdb,object.pubchem_cid,object.pubchem_sid,object.chebi,object.chembl,object.drugbank,object.iuphar_grac_id,object.kegg,object.zinc,relation.num_protein_chains,subject.sequence,subject.pdb,subject.uniprot.fullname,subject.uniprot.id,subject.uniprot.accession,subject.uniprot.secondary_accession,subject.uniprot.alternative_accession,subject.uniprot.fullname,subject.uniprot.id,subject.uniprot.accession,subject.uniprot.secondary_accession,subject.uniprot.alternative_accession
+            subject.uniprot.accession,subject.name,subject.organism,relation.curation_datasource,relation.pmid,relation.bindingdb_link
           size: 1000
         ## using the same predicate that biolink (monarch) api uses
         predicate: actively_involved_in
         source: "infores:bioplanet"
         response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/disease"
+          "$ref": "#/components/x-bte-response-mapping/protein"
         # testExamples:
         #   - qInput: "ROYXDGLMJNEUEM-GOSISDBHSA-N"     ## InChI=1S/C36H37Cl2N3O6/c37-26-16-39-17-27(38)31(26)32-25(33(47-41-32)22-4-5-22)19-46-36-11-8-35(9-12-36,10-13-36)20-45-23-6-7-28-24(14-23)30(15-29(40-28)34(42)43)44-18-21-2-1-3-21/h6-7,14-17,21-22H,1-5,8-13,18-20H2,(H,42,43)
         #     oneOutput: "P35372"                    ## OPRM_HUMAN, Mu-type opioid receptor
@@ -481,28 +481,28 @@ components:
             semantic: SmallMolecule
         parameters:
           fields: >-
-            relation.bindingdb_set_id,object.smiles,object.inchi,object.inchikey,object.monomer_id,object.name,subject.name,subject.organism,relation.ki_nm,relation.ic50_nm,relation.kd_nm,relation.ec50_nm,relation.kon,relation.koff,relation.ph,relation.temp_c,relation.curation_datasource,relation.article_doi,relation.pmid,relation.pubchem_aid,relation.patent_number,relation.authors,relation.institution,object.bindingdb_link,subject.bindingdb_link,relation.bindingdb_link,object.het_id_pdb,relation.pdb,object.pubchem_cid,object.pubchem_sid,object.chebi,object.chembl,object.drugbank,object.iuphar_grac_id,object.kegg,object.zinc,relation.num_protein_chains,subject.sequence,subject.pdb,subject.uniprot.fullname,subject.uniprot.id,subject.uniprot.secondary_accession,subject.uniprot.alternative_accession,subject.uniprot.fullname,subject.uniprot.id,subject.uniprot.accession,subject.uniprot.secondary_accession,subject.uniprot.alternative_accession
+            object.inchikey,subject.name,subject.organism,relation.curation_datasource,relation.pmid,relation.bindingdb_link
           size: 1000
         ## inverse of actively_involved_in
         predicate: actively_involves
         source: "infores:bioplanet"
         response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/pathway"
+          "$ref": "#/components/x-bte-response-mapping/ligand"
         # testExamples:
         #   - qInput: "P35372"                    ## OPRM_HUMAN, Mu-type opioid receptor 
         #     oneOutput: "ROYXDGLMJNEUEM-GOSISDBHSA-N"     ## InChI=1S/C36H37Cl2N3O6/c37-26-16-39-17-27(38)31(26)32-25(33(47-41-32)22-4-5-22)19-46-36-11-8-35(9-12-36,10-13-36)20-45-23-6-7-28-24(14-23)30(15-29(40-28)34(42)43)44-18-21-2-1-3-21/h6-7,14-17,21-22H,1-5,8-13,18-20H2,(H,42,43)
   x-bte-response-mapping:
-    disease:
-      OMIM: subject.PHENO_TYPE   ## no prefix
-      pathway_name: object.PATHWAY_NAME
-      pathway_categories: object.PATHWAY_CATEGORIES
-      disease_name: subject.DISEASE_NAME
-      related_genes_symbol: relation.GENE_SYMBOL
-      related_genes_ncbigene: relation.GENE_ID
-    pathway:
-      "ncats.bioplanet": object.PATHWAY_ID   ## no prefix
-      pathway_name: object.PATHWAY_NAME
-      pathway_categories: object.PATHWAY_CATEGORIES
-      disease_name: subject.DISEASE_NAME
-      related_genes_symbol: relation.GENE_SYMBOL
-      related_genes_ncbigene: relation.GENE_ID
+    ligand:
+      INCHIKEY: object.inchikey   ## no prefix in the key
+      protein_name: subject.name
+      target_organism: subject.organism
+      datasource: relation.curation_datasource
+      pmid: relation.pmid
+      bindingdb_link: relation.bindingdb_link
+    protein:
+      UniProtKB: subject.uniprot.accession  ## no prefix
+      protein_name: subject.name
+      target_organism: subject.organism
+      datasource: relation.curation_datasource
+      pmid: relation.pmid
+      bindingdb_link: relation.bindingdb_link
