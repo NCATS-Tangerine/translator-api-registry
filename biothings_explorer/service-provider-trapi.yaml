@@ -1,4 +1,6 @@
 openapi: 3.0.3
+## made this document by copying https://github.com/NCATS-Tangerine/translator-api-registry/blob/master/biothings_explorer/smartapi.yaml
+##   section-by-section and adjusting when needed
 info:
   contact:
     email: cwu@scripps.edu
@@ -13,12 +15,15 @@ info:
   title: Service Provider TRAPI
   version: 2.8.1
   x-trapi:
-    version: 1.2.0
+    version: 1.2.0    ## will update to 1.3 once all instances have trapi1.3 code
     asyncquery: true
     operations:
-      - lookup
-    ## look at https://standards.ncats.io/operation.json for details
-    ## perhaps advertise "lookup_and_score"?
+    ## look at https://standards.ncats.io/operation.json for details. was previously lookup
+      - lookup_and_score
+    ## no batch_size_limit (BTE manages IDs for QNodes and sub-queries internally)
+    ## /query endpoints have a limit of 15 requests/client/min
+    ## /meta_knowledge_graph endpoints have a limit of 30 requests/client/min
+    ## other endpoints don't have rate limits
   x-translator:
     infores: "infores:service-provider-trapi"
     biolink-version: 2.4.8
@@ -39,17 +44,18 @@ servers:
   description: Non-ITRB dev (primary internal use)
   x-maturity: development
 tags:
-- name: 1.2.0
+- name: 1.2.0    ## will update to 1.3 once all instances have trapi1.3 code
 - name: meta_knowledge_graph
 - name: query
 - name: asyncquery
 - name: translator
 - name: trapi
 - name: biothings
-## Note: BTE has custom behavior so DO NOT blindly copy-paste the TRAPI specs / schemas below
+## Note: BTE has custom behavior so DO NOT blindly copy-paste the TRAPI specs / schemas into the document below
 ##       instead go through it and copy-paste in sections as-needed
 ## examples are using MyVariant-specific query
 paths:
+  ## copied directly from TRAPI spec
   /meta_knowledge_graph:
     get:
       tags:
@@ -63,6 +69,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MetaKnowledgeGraph'
+  ## modified TRAPI spec: example and BTE-specific parameters, used by developers running local instances of BTE
   /query:
     post:
       tags:
@@ -71,7 +78,6 @@ paths:
         Query Service Provider's SMARTAPI KP APIs (that have x-bte annotation) as an individual TRAPI
         service
       description: ''
-      operationId: queryTeam
       parameters:
         - description: option to choose whether or not to enable caching
           in: query
@@ -141,10 +147,19 @@ paths:
             application/json:
               schema:
                 type: string
-      x-swagger-router-controller: swagger_server.controllers.query_controller
   ## need to remove the extra stuff from server url to use this endpoint..
   ## example: https://api.bte.ncats.io/check_query_status/{id}
+  ## not TRAPI spec: BTE-specific endpoint related to asyncquery
   # /check_query_status/{id}:
+  # ## moved because smartapi-editor gave alert that a non-existent post endpoint wouldn't know what {id} is
+  #   parameters:
+  #     - description: job-id
+  #       in: path
+  #       name: id
+  #       required: true
+  #       ## Cache refreshing means this will be changing pretty often, so not including an example
+  #       schema:
+  #         type: string
   #   get:
   #     tags:
   #       - asyncquery
@@ -155,15 +170,7 @@ paths:
   #       the Response.
   #     description: ''
   #     parameters:
-  #       - description: job-id
-  #         ## could add example like hY2BrhJfcN (successfully completed) or ovllMzFfCe (failed)
-  #         in: path
-  #         name: id
-  #         required: true
-  #          ## Cache refreshing means this will be changing pretty often, so not including an example
-  #         schema:
-  #           type: string
-  #         - description: option to override original query log level
+  #       - description: option to override original query log level
   #         in: query
   #         name: log_level
   #         required: false
@@ -203,7 +210,7 @@ paths:
   #                   properties:
   #                     response:
   #                       $ref: '#/components/schemas/Response'
-  ## note that the AsyncQuery schema is changed to make callback optional
+  ## modified TRAPI spec: summary sections tell users that AsyncQuery schema was changed to make callback optional
   /asyncquery:
     post:
       tags:
@@ -295,6 +302,13 @@ paths:
               schema:
                 type: string
 components:
+  ## look for comments to see parts that have been modified for BTE
+  ## - Query: comment out workflow.allOf section since the $ref breaks execution of 
+  ##          BTE's api-schema-builder/openapi-validator-middleware
+  ## - AsyncQuery: callback property not required (commented it out of the 'required' field),
+  ##               comment out workflow.allOf section
+  ## - Response: comment out workflow.allOf section
+  ## - QNode: commented out an example for some reason
   schemas:
     Query:
       description: >-
