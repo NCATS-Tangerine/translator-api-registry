@@ -56,30 +56,28 @@ tags:
 ##       instead go through it and copy-paste in sections as-needed
 ## examples are using MyVariant-specific query
 paths:
-  ## copied directly from TRAPI spec
+  ## copied from BTE's /meta_knowledge_graph and modified summary/description
   /meta_knowledge_graph:
     get:
       tags:
         - meta_knowledge_graph
-      summary: Meta knowledge graph representation of this TRAPI web service.
+      summary: TRAPI-compliant meta-knowledge-graph representation for Service Provider's SmartAPI KP APIs (that have x-bte annotation)
       responses:
         '200':
           description: >-
-            Returns meta knowledge graph representation of this TRAPI web
-            service.
+            Returns a TRAPI-compliant meta-knowledge-graph representation for Service Provider's SmartAPI KP APIs (that have x-bte annotation)
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/MetaKnowledgeGraph'
-  ## modified TRAPI spec: example and BTE-specific parameters, used by developers running local instances of BTE
+  ## copied from BTE's /query and modified summary
   /query:
     post:
       tags:
         - query
-      summary: Initiate a TRAPI-format query to BTE (operating as an ARA) and wait to receive a Response
+      summary: Query Service Provider's SMARTAPI KP APIs (that have x-bte annotation) as an individual TRAPI service
       parameters:
         - description: option to choose whether or not to enable caching
-          ## not sure if this parameter still exists / works
           in: query
           name: caching
           required: false
@@ -227,12 +225,15 @@ paths:
   #                   properties:
   #                     response:
   #                       $ref: '#/components/schemas/Response'
-  ## modified TRAPI spec: summary sections tell users that AsyncQuery schema was changed to make callback optional
+  ## copied from BTE's /asyncquery and modified summary
   /asyncquery:
     post:
       tags:
         - asyncquery
       summary: >-
+        This endpoint is for asynchronously querying Service Provider's SMARTAPI KP APIs (that have x-bte annotation) 
+        as an individual TRAPI service.
+
         Initiate a query that will be handled in an asynchronous manner (there is a
         queue and queries will be executed in the order that they enter the queue).
         For BTE, it is optional to have a callback property in the request-body. If
@@ -241,7 +242,6 @@ paths:
         the Response using BTE's /v1/check_query_status/{id} endpoint.
       parameters:
         - description: option to choose whether or not to enable caching
-          ## not sure if this parameter still exists / works
           in: query
           name: caching
           required: false
