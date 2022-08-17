@@ -9,13 +9,13 @@ info:
     Documentation of the BioThings [BindingDB](https://www.bindingdb.org/rwd/bind/index.jsp) query web services.
   termsOfService: https://biothings.io/about
   title: BioThings BindingDB API
-  version: '1.0'
+  version: '2022-06-01'
   x-translator:
     infores: "infores:biothings-bindingdb"
     component: KP
     team:
       - Service Provider
-    biolink-version: "2.2.13"
+    biolink-version: "2.4.8"
 servers:
 - description: Encrypted Production server
   url: https://biothings.ncats.io/bindingdb
@@ -130,7 +130,7 @@ paths:
         description: Query string.
         in: query
         required: true
-        example: "subject.PHENO_TYPE:608446"
+        example: "object.pubchem_cid:134329991"
         schema:
           type: string
       - "$ref": "#/components/parameters/aggs"
@@ -201,10 +201,10 @@ paths:
           application/json:
             example:
               q:
-              - "455615"
-              - "453920"
+              - "134329991"
+              - "134330137"
               scopes:
-              - "object.monomer_id"
+              - "object.pubchem_cid"
             schema:
               type: object
               properties:
@@ -240,8 +240,8 @@ paths:
       - query
       ## 2 operations
       x-bte-kgs-operations:
-      - $ref: '#/components/x-bte-kgs-operations/ligand-protein'
       - $ref: '#/components/x-bte-kgs-operations/protein-ligand'
+      - $ref: '#/components/x-bte-kgs-operations/ligand-protein'
 components:
   parameters:
     _sorted:
@@ -436,40 +436,17 @@ components:
   #       type: array
   #     - type: string
   x-bte-kgs-operations:
-    ligand-protein:
-    ## 44,084 documents in the API 
-      - supportBatch: true
-        useTemplating: true ## flag to say templating is being used below
-        inputs:
-          - id: PUBCHEM.COMPOUND
-            semantic: SmallMolecule
-        requestBody:
-          body:
-            ## API data has no prefix
-            ## joinSafe is only needed if the delimiter isn't a comma
-            q: "{{ queryInputs }}"
-            scopes: object.pubchem_cid
-        outputs:
-          - id: UniProtKB
-            semantic: Protein
-        parameters:
-          fields: >-
-            subject.uniprot.accession,subject.name,subject.organism,relation.curation_datasource,relation.pmid,relation.bindingdb_link,relation.article_doi,relation.patent_number
-          size: 1000
-        ## using the same predicate that biolink (monarch) api uses
-        predicate: actively_involved_in
-        source: "infores:bindingdb"
-        response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/protein"
-        # testExamples:
-        #   - qInput: "44401763"                     ## (2R)-3-cyclobutyl-2-[(3S,4S)-3-phenyl-4-[[4-([1,2,4]triazolo[4,3-a]pyridin-3-yl)piperidin-1-yl]methyl]pyrrolidin-1-yl]propanoic acid  
-        #     oneOutput: "P51681"                    ## C-C chemokine receptor type 5
+    ## most (1413051 out of 1438909) documents in the API have a object.pubchem_cid field (all have the subject.uniprot.accession field). 
+    ##     25,858 documents don't have object.pubchem_cid field so they currently aren't in the API
+    ##     see analysis here https://github.com/biothings/pending.api/issues/70#issuecomment-1201574110
+    ## other fields that are interesting, but seem overly detailed (so not included)
+    ##   relation.ki_nm, relation.ic50_nm, relation.kd_nm, relation.ec50_nm, relation.kon, relation.koff, relation.ph, relation.temp_c, relation.num_protein_chains
     protein-ligand:
       - supportBatch: true
         useTemplating: true ## flag to say templating is being used below
         inputs:
           - id: UniProtKB
-            semantic: Protein
+            semantic: Gene
         requestBody:
           body:
             ## API data has no prefix
@@ -477,36 +454,64 @@ components:
             q: "{{ queryInputs }}"
             scopes: subject.uniprot.accession
         outputs:
-          - id: PUBCHEM.COMPOUND
+          - id: "PUBCHEM.COMPOUND"
             semantic: SmallMolecule
         parameters:
+        ## only some documents have: subject.organism, relation.pmid, relation.article_doi, relation.patent_number
           fields: >-
-            object.pubchem_cid,subject.name,subject.organism,relation.curation_datasource,relation.pmid,relation.bindingdb_link,relation.article_doi,relation.patent_number
+            object.pubchem_cid,
+            subject.name,subject.organism,
+            relation.curation_datasource,relation.pmid,relation.bindingdb_link,relation.article_doi,relation.patent_number
           size: 1000
-        ## inverse of actively_involved_in
-        predicate: actively_involves
+        predicate: physically_interacts_with
         source: "infores:bindingdb"
         response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/ligand"
+          "$ref": "#/components/x-bte-response-mapping/pubchem-object"
         # testExamples:
-        #   - qInput: "P51681"                    ## C-C chemokine receptor type 5
-        #     oneOutput: "44401763"               ## (2R)-3-cyclobutyl-2-[(3S,4S)-3-phenyl-4-[[4-([1,2,4]triazolo[4,3-a]pyridin-3-yl)piperidin-1-yl]methyl]pyrrolidin-1-yl]propanoic acid  
+        #   - qInput: "UniProtKB:P51681"                    ## C-C chemokine receptor type 5
+        #     oneOutput: "PUBCHEM.COMPOUND:44401763"        ## (2R)-3-cyclobutyl-2-[(3S,4S)-3-phenyl-4-[[4-([1,2,4]triazolo[4,3-a]pyridin-3-yl)piperidin-1-yl]methyl]pyrrolidin-1-yl]propanoic acid 
+    ligand-protein:
+      - supportBatch: true
+        useTemplating: true
+        inputs:
+          - id: "PUBCHEM.COMPOUND"
+            semantic: SmallMolecule
+        requestBody:
+          body:
+            q: "{{ queryInputs }}"
+            scopes: object.pubchem_cid
+        outputs:
+          - id: UniProtKB
+            semantic: Gene
+        parameters:
+          fields: >-
+            subject.uniprot.accession,
+            subject.name,subject.organism,
+            relation.curation_datasource,relation.pmid,relation.bindingdb_link,relation.article_doi,relation.patent_number
+          size: 1000
+        predicate: physically_interacts_with
+        source: "infores:bindingdb"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/uniprot-subject"
+        # testExamples:
+        #   - qInput: "PUBCHEM.COMPOUND:134553288"     ## US10736883, Example 387.0
+        #     oneOutput: "UniProtKB:P35414"            ## Apelin receptor
   x-bte-response-mapping:
-    ligand:
-      PUBCHEM.COMPOUND: object.pubchem_cid   ## no prefix
-      protein_name: subject.name
-      target_organism: subject.organism
-      datasource: relation.curation_datasource
-      pmid: relation.pmid
-      bindingdb_link: relation.bindingdb_link
+    pubchem-object:
+      "PUBCHEM.COMPOUND": object.pubchem_cid       ## no prefix
+      "biolink:original_subject": subject.name     ## was called "Target Name Assigned by Curator or DataSource"
+      "in_taxon": subject.organism                 ## was called "Target Source Organism According to Curator or DataSource"
+      "bindingdb_curation_datasource": relation.curation_datasource    ## Curation/DataSource
+      pubmed: relation.pmid
+      bindingdb_url: relation.bindingdb_link
       article_doi: relation.article_doi
       patent_number: relation.patent_number
-    protein:
+    uniprot-subject:
       UniProtKB: subject.uniprot.accession  ## no prefix
-      protein_name: subject.name
-      target_organism: subject.organism
-      datasource: relation.curation_datasource
-      pmid: relation.pmid
-      bindingdb_link: relation.bindingdb_link
+      "biolink:original_subject": subject.name
+      "in_taxon": subject.organism
+      "bindingdb_curation_datasource": relation.curation_datasource
+      pubmed: relation.pmid
+      bindingdb_url: relation.bindingdb_link
       article_doi: relation.article_doi
       patent_number: relation.patent_number
