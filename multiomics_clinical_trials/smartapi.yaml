@@ -12,7 +12,7 @@ info:
     provides up-to-date information from ClinicalTrials.gov. 
   termsOfService: https://biothings.io/about
   title: Multiomics ClinicalTrials KP
-  version: '2022-08-10'
+  version: '2022-08-22'
   x-translator:
     infores: "infores:biothings-multiomics-clinicaltrials"
     component: KP
@@ -22,10 +22,10 @@ info:
     biolink-version: "2.4.8"
 servers:
 - description: Encrypted Production server
-  url: https://pending.biothings.io/clinical_trials_aact
+  url: https://pending.biothings.io/multiomics_clinicaltrials_kp
   x-maturity: production
 - description: Production server
-  url: http://pending.biothings.io/clinical_trials_aact
+  url: http://pending.biothings.io/multiomics_clinicaltrials_kp
   x-maturity: production
 tags:
 - name: association
@@ -41,8 +41,7 @@ paths:
       - name: id
         in: path
         required: true
-        ## EDIT with umls ID update?
-        example: "00065273_c0025362_c0009079"
+        example: "00065273_C0025362_C0009079"
         schema:
           type: string
       - "$ref": "#/components/parameters/raw"
@@ -85,8 +84,8 @@ paths:
             example:
             ## EDIT with umls ID update?
               ids:
-              - "00065273_c0025362_c0009079"
-              - "00065273_c0025362_c0171023"
+              - "00065273_C0025362_C0009079"
+              - "00065273_C0025362_C0171023"
             schema:
               type: object
               properties:
@@ -136,8 +135,7 @@ paths:
         description: Query string.
         in: query
         required: true
-        ## EDIT/CHECK with umls ID update
-        example: "subject.umls:C0006012"
+        example: "subject.UMLS:C0006012"
         schema:
           type: string
       - "$ref": "#/components/parameters/aggs"
@@ -206,13 +204,12 @@ paths:
       requestBody:
         content:
           application/json:
-            ## EDIT/CHECK with umls ID update
             example:
               q:
               - "C0006012"
               - "C0524620"
               scopes:
-              - "subject.umls"
+              - "subject.UMLS"
             schema:
               type: object
               properties:
@@ -445,10 +442,10 @@ components:
   #     - type: string
   x-bte-kgs-operations:
   ## currently 2 potential types: Disease and Treatment
-  ##   see biolink-model's Treatment section https://github.com/biolink/biolink-model/blob/60f6e885216376230ae28580029f306dfe164330/biolink-model.yaml#L9588
+  ##   see biolink-model's Treatment section https://github.com/biolink/biolink-model/blob/v2.4.8/biolink-model.yaml#L9588
   ##   can sometimes be a drug/chemical administered or a procedure (diagnostic, therapeutic, etc). maybe even observation?
     disease-intervention:
-    ## 55,313 documents in the API 
+    ## 35,313 documents in the API 
       - supportBatch: true
         useTemplating: true ## flag to say templating is being used below
         inputs:
@@ -459,19 +456,18 @@ components:
             ## API data has no prefix
             ## joinSafe is only needed if the delimiter isn't a comma
             q: "{{ queryInputs }}"
-            scopes: subject.umls
+            scopes: subject.UMLS
         outputs:
           - id: UMLS
             semantic: Treatment
         parameters:
           fields: >-
-            object.umls,
+            object.UMLS,
             association.edge_attributes
           size: 1000
         predicate: related_to
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/treatment"
-        ## EDIT/CHECK with umls id change
         # testExamples:
         #   - qInput: "UMLS:C0006012"        ## borderline personality disorder
         #     oneOutput: "UMLS:C0171023"     ## olanzapine
@@ -484,26 +480,25 @@ components:
         requestBody:
           body:
             q: "{{ queryInputs }}"
-            scopes: object.umls
+            scopes: object.UMLS
         outputs:
           - id: UMLS
             semantic: Disease
         parameters:
           fields: >-
-            subject.umls,
+            subject.UMLS,
             association.edge_attributes
           size: 1000
         predicate: related_to
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/disease"
-        ## EDIT/CHECK with umls id change
         # testExamples:
         #   - qInput: "UMLS:C0994515"         ## talampanel
         #     oneOutput: "UMLS:C0334579"      ## anaplastic astrocytoma
   x-bte-response-mapping:
     treatment:
-      UMLS: object.umls   ## no prefix
+      UMLS: object.UMLS   ## no prefix
       edge-attributes: association.edge_attributes
     disease:
-      UMLS: subject.umls   ## no prefix
+      UMLS: subject.UMLS   ## no prefix
       edge-attributes: association.edge_attributes
