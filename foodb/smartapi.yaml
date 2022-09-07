@@ -1,0 +1,124 @@
+openapi: 3.0.3
+info:
+  contact:
+    email: help@biothings.io
+    name: BioThings Team
+    x-id: https://github.com/biothings
+    x-role: responsible developers
+  description: >-
+    Documentation of the Foodb (https://github.com/yichuanma95/foodb_json)
+    query web services.
+  termsOfService: https://biothings.io/about
+  title: BioThings Foodb API
+  version: '2022-04-07'
+  x-translator:
+    infores: "infores:biothings-foodb"
+    component: KP
+    team:
+      - Service Provider
+    biolink-version: "2.2.13"
+servers:
+- description: Encrypted Production server
+  url: https://biothings.ncats.io/foodb
+  x-maturity: production
+- description: Production server
+  url: https://biothings.ncats.io/foodb
+  x-maturity: production
+tags:
+- name: biothings
+- name: query
+- name: translator
+- name: food
+paths:
+  "/food/{id}":
+    get:
+      parameters:
+      - name: id
+        in: path
+        required: true
+        example: "FOOD00967"
+        schema:
+          type: string
+      - "$ref": "#/components/parameters/raw"
+      - "$ref": "#/components/parameters/rawquery"
+      - "$ref": "#/components/parameters/_source"
+      - "$ref": "#/components/parameters/size"
+      - "$ref": "#/components/parameters/dotfield"
+      - "$ref": "#/components/parameters/_sorted"
+      - "$ref": "#/components/parameters/always_list"
+      - "$ref": "#/components/parameters/allow_null"
+      - "$ref": "#/components/parameters/format"
+      responses:
+        '200':
+          description: "Success"
+      #     content:
+      #       application/json:
+      #         schema:
+      #           $ref: '#/components/schemas/Association'
+      #   '404':
+      #     description: A response indicating an unknown association ID
+      summary: >-
+        Retrieve food based on ID
+      tags:
+      - food
+  "/food":
+    post:
+      parameters:
+      - "$ref": "#/components/parameters/raw"
+      - "$ref": "#/components/parameters/rawquery"
+      - "$ref": "#/components/parameters/_source"
+      - "$ref": "#/components/parameters/size"
+      - "$ref": "#/components/parameters/dotfield"
+      - "$ref": "#/components/parameters/_sorted"
+      - "$ref": "#/components/parameters/always_list"
+      - "$ref": "#/components/parameters/allow_null"
+      - "$ref": "#/components/parameters/format"
+      requestBody:
+        content:
+          application/json:
+            example:
+              ids:
+              - "FOOD00967"
+              - "FOOD00944"
+            schema:
+              type: object
+              properties:
+                ids:
+                  description: 'multiple Food IDs separated by comma. Note that
+                    currently we only take the input ids up to 1000 maximum, the rest
+                    will be omitted. Type: string (list). Max: 1000.'
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '200':
+          description: "Success"
+      summary: >-
+        Retrieve multiple foods' information based on ID
+      tags:
+      - food
+  "/metadata":
+    get:
+      parameters:
+      - "$ref": "#/components/parameters/format"
+      - "$ref": "#/components/parameters/raw"
+      - "$ref": "#/components/parameters/dev"
+      responses:
+        '200':
+          description: Success
+      summary: Get metadata about the data available from the API
+      tags:
+      - metadata
+  "/metadata/fields":
+    get:
+      parameters:
+      - "$ref": "#/components/parameters/format"
+      - "$ref": "#/components/parameters/raw"
+      - "$ref": "#/components/parameters/search"
+      - "$ref": "#/components/parameters/prefix"
+      responses:
+        '200':
+          description: Success
+      summary: Get metadata about the data fields available from a record
+      tags:
+      - metadata
