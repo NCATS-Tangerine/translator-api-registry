@@ -9,7 +9,7 @@ info:
     This KP contains associations from multiple sources.
   termsOfService: https://biothings.io/about
   title: Multiomics BigGIM-DrugResponse KP API
-  version: '1.0'
+  version: '2.0'
   x-translator:
     infores: "infores:biothings-multiomics-biggim-drugresponse"
     component: KP
@@ -83,7 +83,7 @@ paths:
             example:
               ids:
               - "Disease_biolink:has_biomarker_Gene_GDSC_cancer_specific_signatures.csv_2998"
-              - "Disease_biolink:has_biomarker_Gene_GDSC_cancer_specific_signatures.csv_3025"
+              - "Protein_biolink:physically_interacts_with_Protein_Biogrid_formated.csv_170247"
             schema:
               type: object
               properties:
@@ -462,7 +462,7 @@ components:
   ## - currently, BTE will also accept response with Translator-prefix (api-response-transform module).
   ## - joinSafe is only needed if the delimiter isn't a comma
     gene-sensitivity-chem:
-    ##  https://pending.biothings.io/biggim_drugresponse_kp/query?q=association.edge_label:"biolink\:associated_with_sensitivity_to"
+    ##  https://pending.biothings.io/biggim_drugresponse_kp/query?q=association.edge_label:"biolink:associated_with_sensitivity_to"
     ##  95994 records  
       - supportBatch: true
         useTemplating: true ## flag to say templating is being used below
@@ -512,9 +512,9 @@ components:
           "$ref": "#/components/x-bte-response-mapping/ncbigene-subject"
         # testExamples:
         #   - qInput: "PUBCHEM.COMPOUND:24856436"       ## JNK-9L (Adavosertib)
-        #     oneOutput: "NCBIGene:51465"               ## UBE2J1
+        #     oneOutput: "NCBIGene:59352"               ## LGR6
     gene-resistance-chem:
-    ##  https://pending.biothings.io/biggim_drugresponse_kp/query?q=association.edge_label:"biolink\:associated_with_resistance_to"
+    ##  https://pending.biothings.io/biggim_drugresponse_kp/query?q=association.edge_label:"biolink:associated_with_resistance_to"
     ##  107719 records
       - supportBatch: true
         useTemplating: true ## flag to say templating is being used below
@@ -566,7 +566,7 @@ components:
         #   - qInput: "PUBCHEM.COMPOUND:46844147"       ## AZD8055 (Erk5-IN-1)
         #     oneOutput: "NCBIGene:26119"               ## LDLRAP1
     gene-associated-disease:
-    ##  https://pending.biothings.io/biggim_drugresponse_kp/query?q=association.edge_label:"biolink\:gene_associated_with_condition"
+    ##  https://pending.biothings.io/biggim_drugresponse_kp/query?q=association.edge_label:"biolink:gene_associated_with_condition"
     ##  922 records  
       - supportBatch: true
         useTemplating: true ## flag to say templating is being used below
@@ -618,7 +618,7 @@ components:
         #   - qInput: "MONDO:0004056"         ## TCGA-BLCA (bladder papillary urothelial carcinoma)
         #     oneOutput: "NCBIGene:7157"      ## TP53
     disease-biomarker-gene:
-    ##  https://pending.biothings.io/biggim_drugresponse_kp/query?q=association.edge_label:"biolink\:has_biomarker"
+    ##  https://pending.biothings.io/biggim_drugresponse_kp/query?q=association.edge_label:"biolink:has_biomarker"
     ##  13811 records  
       - supportBatch: true
         useTemplating: true ## flag to say templating is being used below
@@ -669,10 +669,9 @@ components:
         # testExamples:
         #   - qInput: "NCBIGene:1145"         ## CHRNE
         #     oneOutput: "MONDO:0018874"      ## LAML (acute myeloid leukemia)
-## HAS ERROR with 'Pubchem.compound' capitalization
-## edit this once it is fixed
+## error around indexing subject.PUBCHEM_COMPOUND field. using subject.id until it's fixed
     chem-targets-gene:
-    ##  https://pending.biothings.io/biggim_drugresponse_kp/query?q=association.edge_label:"biolink\:has_target"
+    ##  https://pending.biothings.io/biggim_drugresponse_kp/query?q=association.edge_label:"biolink:has_target"
     ##  14806 records
       - supportBatch: true
         useTemplating: true ## flag to say templating is being used below
@@ -683,8 +682,8 @@ components:
         requestBody:
           body: >-
             {
-              "q": [ {{ queryInputs | addPrefix('Pubchem.compound') | wrap( '["' , '","biolink:has_target"]') }} ],
-              "scopes": ["subject.Pubchem_compound", "association.edge_label"]
+              "q": [ {{ queryInputs | addPrefix('PUBCHEM.COMPOUND') | wrap( '["' , '","biolink:has_target"]') }} ],
+              "scopes": ["subject.id", "association.edge_label"]
             }
         parameters:
           fields: object.NCBIGene,association.edge_attributes
@@ -696,8 +695,8 @@ components:
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/ncbigene-object"
         # testExamples:
-        #   - qInput: "PUBCHEM.COMPOUND:444"        ## Bupropion
-        #     oneOutput: "NCBIGene:1557"            ## CYP2C19
+        #   - qInput: "PUBCHEM.COMPOUND:444"     ## Bupropion
+        #     oneOutput: "NCBIGene:6530"         ## SLC6A2
     chem-targets-gene-rev:
       - supportBatch: true
         useTemplating: true ## flag to say templating is being used below
@@ -712,7 +711,7 @@ components:
               "scopes": ["object.NCBIGene", "association.edge_label"]
             }
         parameters:
-          fields: subject.Pubchem_compound,association.edge_attributes
+          fields: subject.id,association.edge_attributes
           size: 1000
         outputs:
           - id: "PUBCHEM.COMPOUND"
@@ -725,8 +724,8 @@ components:
         #     oneOutput: "PUBCHEM.COMPOUND:5455"      ## Thiram
 ## data has errors, so edit this after update
     gene-physicallyInteracts-gene:
-    ##  https://pending.biothings.io/biggim_drugresponse_kp/query?q=association.edge_label:"biolink\:physically_interacts_with"
-    ##  889067 records  
+    ##  https://pending.biothings.io/biggim_drugresponse_kp/query?q=association.edge_label:"biolink:physically_interacts_with"
+    ##  888994 records  
       - supportBatch: true
         useTemplating: true ## flag to say templating is being used below
         inputs:
@@ -749,8 +748,8 @@ components:
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/ncbigene-object"
         # testExamples:
-        #   - qInput: "NCBIGene:134353"        ## LSM11
-        #     oneOutput: "NCBIGene:127703"     ## C1orf216  (maybe? This ID seems wrong...)
+        #   - qInput: "NCBIGene:9282"        ## MED14
+        #     oneOutput: "NCBIGene:55588"     ## MED29
     gene-physicallyInteracts-gene-rev:
       - supportBatch: true
         useTemplating: true ## flag to say templating is being used below
@@ -774,10 +773,10 @@ components:
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/ncbigene-subject"
         # testExamples:
-        #   - qInput: "NCBIGene:111493"       ## PPP1CA (maybe? This ID seems wrong...)
-        #     oneOutput: "NCBIGene:5514"      ## PPP1R10
+        #   - qInput: "NCBIGene:6874"       ## TAF4
+        #     oneOutput: "NCBIGene:6881"    ## TAF10
     gene-geneticallyInteracts-gene:
-    ##  https://pending.biothings.io/biggim_drugresponse_kp/query?q=association.edge_label:"biolink\:genetically_interacts_with"
+    ##  https://pending.biothings.io/biggim_drugresponse_kp/query?q=association.edge_label:"biolink:genetically_interacts_with"
     ##  10754 records  
       - supportBatch: true
         useTemplating: true ## flag to say templating is being used below
@@ -801,8 +800,8 @@ components:
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/ncbigene-object"
         # testExamples:
-        #   - qInput: "NCBIGene:10556"        ## RPP30
-        #     oneOutput: "NCBIGene:117104"    ## GTPBP4 (maybe? Node Normalizer says it's Ppp2r2a)
+        #   - qInput: "NCBIGene:5980"        ## REV3L
+        #     oneOutput: "NCBIGene:7295"     ## TXN
     gene-geneticallyInteracts-gene-rev:
       - supportBatch: true
         useTemplating: true ## flag to say templating is being used below
@@ -826,10 +825,10 @@ components:
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/ncbigene-subject"
         # testExamples:
-        #   - qInput: "NCBIGene:109596"         ## HUS1 (maybe? This ID seems wrong...)
-        #     oneOutput: "NCBIGene:123169"      ## LEO1
+        #   - qInput: "NCBIGene:2081"         ## ERN1
+        #     oneOutput: "NCBIGene:4609"      ## MYC
     gene-negativelyCorrelated-gene:
-    ##  https://pending.biothings.io/biggim_drugresponse_kp/query?q=association.edge_label:"biolink\:negatively_correlated_with"
+    ##  https://pending.biothings.io/biggim_drugresponse_kp/query?q=association.edge_label:"biolink:negatively_correlated_with"
     ##  565 records  
       - supportBatch: true
         useTemplating: true ## flag to say templating is being used below
@@ -853,8 +852,8 @@ components:
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/ncbigene-object"
         # testExamples:
-        #   - qInput: "NCBIGene:23130"        ## ATG2A
-        #     oneOutput: "NCBIGene:54923"    ## LIME1
+        #   - qInput: "NCBIGene:823"        ## CAPN1
+        #     oneOutput: "NCBIGene:4539"    ## MT-ND4L (ND4L)
     gene-negativelyCorrelated-gene-rev:
       - supportBatch: true
         useTemplating: true ## flag to say templating is being used below
@@ -878,10 +877,10 @@ components:
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/ncbigene-subject"
         # testExamples:
-        #   - qInput: "NCBIGene:4513"         ## MT-CO2 (COX2)
-        #     oneOutput: "NCBIGene:4041"      ## LRP5
+        #   - qInput: "NCBIGene:6540"         ## SLC6A13
+        #     oneOutput: "NCBIGene:1072"      ## CFL1
     gene-positivelyCorrelated-gene:
-    ##  https://pending.biothings.io/biggim_drugresponse_kp/query?q=association.edge_label:"biolink\:positively_correlated_with"
+    ##  https://pending.biothings.io/biggim_drugresponse_kp/query?q=association.edge_label:"biolink:positively_correlated_with"
     ##  437054 records  
       - supportBatch: true
         useTemplating: true ## flag to say templating is being used below
@@ -905,8 +904,8 @@ components:
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/ncbigene-object"
         # testExamples:
-        #   - qInput: "NCBIGene:3326"        ## HSP90AB1
-        #     oneOutput: "NCBIGene:3685"     ## ITGAV
+        #   - qInput: "NCBIGene:988"        ## CDC5L
+        #     oneOutput: "NCBIGene:6197"    ## RPS6KA3
     gene-positivelyCorrelated-gene-rev:
       - supportBatch: true
         useTemplating: true ## flag to say templating is being used below
@@ -930,8 +929,8 @@ components:
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/ncbigene-subject"
         # testExamples:
-        #   - qInput: "NCBIGene:9221"         ## NOLC1
-        #     oneOutput: "NCBIGene:3326"      ## HSP90AB1
+        #   - qInput: "NCBIGene:7094"         ## TLN1
+        #     oneOutput: "NCBIGene:7941"      ## PLA2G7
   x-bte-response-mapping:
   ## all have prefix
     pubchem-subject:
@@ -953,5 +952,5 @@ components:
       MONDO: object.MONDO
       edge-attributes: association.edge_attributes
     pubchem-subject-error:
-      "PUBCHEM.COMPOUND": subject.Pubchem_compound
+      "PUBCHEM.COMPOUND": subject.id
       edge-attributes: association.edge_attributes
