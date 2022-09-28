@@ -237,8 +237,10 @@ paths:
     # summary: Make batch gene queries and return matching gene hits
     tags:
     - query
+    ## 2 operations
     x-bte-kgs-operations:
-    # TODO
+    - $ref: '#/components/x-bte-kgs-operations/food-chemical'
+    - $ref: '#/components/x-bte-kgs-operations/chemical-food'
 components:
   parameters:
     _sorted:
@@ -377,3 +379,62 @@ components:
       required: false
       schema:
         type: string
+  x-bte-kgs-operations:
+  ## 2 potential types: food, chemical
+    food-chemical:
+    ## 992 foods. 70477 chemicals. not clear how many food-chemical pairs there are.
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: food
+            semantic: food
+        requestBody:
+          body:
+            q: "{{ queryInputs }}"
+            scopes: name
+        outputs:
+          - id: chemical
+            semantic: SmallMolecule
+        parameters:
+          fields: >-
+            compounds.cas_number,
+            compounds.moldb_inchi,
+            compounds.moldb_inchikey
+          size: 1000
+        predicate: has_nutrient
+        source: "infores:foodb"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/chemical"
+    chemical-food:
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: chemical
+            semantic: SmallMolecule
+        requestBody:
+          body:
+            q: "{{ queryInputs }}"
+            scopes: compounds.cas_number
+        outputs:
+          - id: name
+            semantic: food
+        parameters:
+          fields: >-
+            name,
+            food_group,
+            food_subgroup,
+            food_type
+          size: 1000
+        predicate: nutrient_of
+        source: "infores:foodb"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/food"
+  x-bte-response-mapping:
+    chemical:
+      cas_number: compounds.cas_number
+      inchi: compounds.moldb_inchi
+      inchikey: compounds.moldb_inchikey
+    food:
+      cas_number: compounds.cas_number
+      inchi: compounds.moldb_inchi
+      inchikey: compounds.moldb_inchikey
