@@ -1,0 +1,532 @@
+openapi: 3.0.3
+info:
+  contact:
+    email: help@biothings.io
+    name: BioThings Team
+    x-id: https://github.com/biothings
+    x-role: responsible developers
+  description: Documentation of the DDInter query web services.
+  termsOfService: https://biothings.io/about
+  title: BioThings DDInter API
+  version: '1.0'
+  x-translator:
+    infores: "infores:ddinter"
+    component: KP
+    team:
+      - Service Provider
+    biolink-version: "2.2.13"
+servers:
+- description: Encrypted Production server
+  url: https://biothings.ncats.io/ddinter
+  x-maturity: production
+- description: Production server
+  url: https://biothings.ncats.io/ddinter
+  x-maturity: production
+tags:
+- name: interaction
+- name: drug
+- name: metadata
+- name: query
+- name: translator
+- name: biothings
+paths:
+  "/interaction/{id}":
+    get:
+      parameters:
+      - name: id
+        in: path
+        required: true
+        example: "DDInter1414_DDInter1004_Moderate"
+        schema:
+          type: string
+      - "$ref": "#/components/parameters/raw"
+      - "$ref": "#/components/parameters/rawquery"
+      - "$ref": "#/components/parameters/_source"
+      - "$ref": "#/components/parameters/size"
+      - "$ref": "#/components/parameters/dotfield"
+      - "$ref": "#/components/parameters/_sorted"
+      - "$ref": "#/components/parameters/always_list"
+      - "$ref": "#/components/parameters/allow_null"
+      - "$ref": "#/components/parameters/format"
+      responses:
+        '200':
+          description: "Success"
+      #     content:
+      #       application/json:
+      #         schema:
+      #           $ref: '#/components/schemas/Association'
+      #   '404':
+      #     description: A response indicating an unknown association ID
+      summary: >-
+        Retrieve interaction based on ID
+      tags:
+      - interaction
+  "/interaction":
+    post:
+      parameters:
+      - "$ref": "#/components/parameters/raw"
+      - "$ref": "#/components/parameters/rawquery"
+      - "$ref": "#/components/parameters/_source"
+      - "$ref": "#/components/parameters/size"
+      - "$ref": "#/components/parameters/dotfield"
+      - "$ref": "#/components/parameters/_sorted"
+      - "$ref": "#/components/parameters/always_list"
+      - "$ref": "#/components/parameters/allow_null"
+      - "$ref": "#/components/parameters/format"
+      requestBody:
+        content:
+          application/json:
+            example:
+              ids:
+              - "DDInter1214_DDInter100_Moderate"
+              - "DDInter1214_DDInter1017_Moderate"
+            schema:
+              type: object
+              properties:
+                ids:
+                  description: 'multiple Interaction IDs separated by comma. Note that
+                    currently we only take the input ids up to 1000 maximum, the rest
+                    will be omitted. Type: string (list). Max: 1000.'
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '200':
+          description: "Success"
+      summary: >-
+        Retrieve multiple interactions' information based on ID
+      tags:
+      - interaction
+  "/metadata":
+    get:
+      parameters:
+      - "$ref": "#/components/parameters/format"
+      - "$ref": "#/components/parameters/raw"
+      - "$ref": "#/components/parameters/dev"
+      responses:
+        '200':
+          description: Success
+      summary: Get metadata about the data available from the API
+      tags:
+      - metadata
+  "/metadata/fields":
+    get:
+      parameters:
+      - "$ref": "#/components/parameters/format"
+      - "$ref": "#/components/parameters/raw"
+      - "$ref": "#/components/parameters/search"
+      - "$ref": "#/components/parameters/prefix"
+      responses:
+        '200':
+          description: Success
+      summary: Get metadata about the data fields available from a record
+      tags:
+      - metadata
+  "/query":
+    get:
+      parameters:
+      - name: q
+        description: Query string.
+        in: query
+        required: true
+        example: "drug_a.ddinter:DDInter1771"
+        schema:
+          type: string
+      - "$ref": "#/components/parameters/aggs"
+      - "$ref": "#/components/parameters/facet_size"
+      - "$ref": "#/components/parameters/from"
+      - "$ref": "#/components/parameters/userquery"
+      - "$ref": "#/components/parameters/sort"
+      - "$ref": "#/components/parameters/explain"
+      - "$ref": "#/components/parameters/fetch_all"
+      - "$ref": "#/components/parameters/scroll_id"
+      - "$ref": "#/components/parameters/raw"
+      - "$ref": "#/components/parameters/rawquery"
+      - "$ref": "#/components/parameters/_source"
+      - "$ref": "#/components/parameters/size"
+      - "$ref": "#/components/parameters/dotfield"
+      - "$ref": "#/components/parameters/_sorted"
+      - "$ref": "#/components/parameters/always_list"
+      - "$ref": "#/components/parameters/allow_null"
+      - "$ref": "#/components/parameters/format"
+      responses:
+        '200':
+          description: Success
+      #     content:
+      #       application/json:
+      #         schema:
+      #           "$ref": "#/components/schemas/QueryResult"
+      #   '400':
+      #     content:
+      #       application/json:
+      #         schema:
+      #           "$ref": "#/components/schemas/ErrorResult"
+      #     description: A response indicating an improperly formatted query
+      # summary: Make queries and return matching gene hits. Supports JSONP and CORS
+      #   as well.
+      tags:
+      - query
+    post:
+      parameters:
+      - name: q
+        in: query
+        required: false
+        schema:
+          type: array
+          items:
+            type: string
+      - name: scopes
+        in: query
+        required: false
+        schema:
+          type: array
+          items:
+            type: string
+            default:
+            - _id
+      - "$ref": "#/components/parameters/from"
+      - "$ref": "#/components/parameters/sort"
+      - "$ref": "#/components/parameters/raw"
+      - "$ref": "#/components/parameters/rawquery"
+      - "$ref": "#/components/parameters/_source"
+      - "$ref": "#/components/parameters/size"
+      - "$ref": "#/components/parameters/dotfield"
+      - "$ref": "#/components/parameters/_sorted"
+      - "$ref": "#/components/parameters/always_list"
+      - "$ref": "#/components/parameters/allow_null"
+      - "$ref": "#/components/parameters/format"
+      requestBody:
+        content:
+          application/json:
+            example:
+              q:
+              - "DDInter1493"
+              - "DDInter596"
+              scopes:
+              - "drug_a.ddinter"
+            schema:
+              type: object
+              properties:
+                q:
+                  type: array
+                  items:
+                    type: string
+                scopes:
+                  type: array
+                  items:
+                    type: string
+                from:
+                  type: integer
+                sort:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '200':
+          description: Success
+      #     content:
+      #       application/json:
+      #         schema:
+      #           "$ref": "#/components/schemas/QueryPOSTResult"
+      #   '400':
+      #     content:
+      #       application/json:
+      #         schema:
+      #           "$ref": "#/components/schemas/ErrorResult"
+      #     description: A response indicating an improperly formatted query
+      # summary: Make batch gene queries and return matching gene hits
+      tags:
+      - query
+      ## 2 operations
+      x-bte-kgs-operations:
+      - $ref: '#/components/x-bte-kgs-operations/pathway-disease'
+      - $ref: '#/components/x-bte-kgs-operations/disease-pathway'
+components:
+  parameters:
+    _sorted:
+      name: _sorted
+      in: query
+      required: false
+      schema:
+        type: boolean
+        default: true
+    _source:
+      name: _source
+      in: query
+      required: false
+      schema:
+        type: array
+        items:
+          type: string
+    aggs:
+      name: aggs
+      in: query
+      required: false
+      schema:
+        type: array
+        items:
+          type: string
+    allow_null:
+      name: allow_null
+      in: query
+      required: false
+      schema:
+        type: array
+        items:
+          type: string
+    always_list:
+      name: always_list
+      in: query
+      required: false
+      schema:
+        type: array
+        items:
+          type: string
+    dev:
+      name: dev
+      in: query
+      required: false
+      schema:
+        type: boolean
+    dotfield:
+      name: dotfield
+      in: query
+      required: false
+      schema:
+        type: boolean
+    explain:
+      name: explain
+      in: query
+      required: false
+      schema:
+        type: boolean
+    facet_size:
+      name: facet_size
+      in: query
+      required: false
+      schema:
+        type: integer
+        default: 10
+    fetch_all:
+      name: fetch_all
+      in: query
+      required: false
+      schema:
+        type: boolean
+    format:
+      name: format
+      description: 'controls output format of server response, currently supports:
+        "json", "jsonld", "html". Type: string. Default: json.'
+      in: query
+      required: false
+      schema:
+        type: string
+        default: json
+    from:
+      name: from
+      in: query
+      required: false
+      schema:
+        type: integer
+    prefix:
+      name: prefix
+      in: query
+      required: false
+      schema:
+        type: string
+    raw:
+      name: raw
+      in: query
+      required: false
+      schema:
+        type: boolean
+    rawquery:
+      name: rawquery
+      in: query
+      required: false
+      schema:
+        type: boolean
+    scroll_id:
+      name: scroll_id
+      in: query
+      required: false
+      schema:
+        type: string
+    search:
+      name: search
+      in: query
+      required: false
+      schema:
+        type: string
+    size:
+      name: size
+      description: "default: 10 objects/records in response"
+      in: query
+      required: false
+      schema:
+        type: integer
+    sort:
+      name: sort
+      in: query
+      required: false
+      schema:
+        type: array
+        items:
+          type: string
+    userquery:
+      name: userquery
+      in: query
+      required: false
+      schema:
+        type: string
+  # schemas:
+  #   Interaction:
+  #     properties:
+  #       _id:
+  #         type: string
+  #     required:
+  #     - _id
+  #     type: object
+  #   ErrorResult:
+  #     properties:
+  #       message:
+  #         type: string
+  #       success:
+  #         type: boolean
+  #     type: object
+  #   QueryPOSTResult:
+  #     items:
+  #       allOf:
+  #       - $ref: '#/components/schemas/Interaction'
+  #       - properties:
+  #           _score:
+  #             format: float
+  #             type: number
+  #           query:
+  #             type: string
+  #         type: object
+  #     type: array
+  #   QueryResult:
+  #     properties:
+  #       hits:
+  #         items:
+  #           $ref: '#/components/schemas/Interaction'
+  #         type: array
+  #       max_score:
+  #         format: float
+  #         type: number
+  #       took:
+  #         type: integer
+  #       total:
+  #         type: integer
+  #     type: object
+  #   int64_or_array:
+  #     oneOf:
+  #     - items:
+  #         format: int64
+  #         type: integer
+  #       type: array
+  #     - format: int64
+  #       type: integer
+  #   string_or_array:
+  #     oneOf:
+  #     - items:
+  #         type: string
+  #       type: array
+  #     - type: string
+  x-bte-kgs-operations:
+  ## Bioentities: Drug, Interaction
+  ## - small molecules: DDInterID (drug_a.ddinter or drug_b.ddinter), ChEMBL ID (drug_a.chembl),
+  ##   PubChem ID (drug_a.pubchem or drug_b.pubchem), or DrugBang ID (drug_a.drugbank or drug_b.drugbank)
+  ##   none of these ids have prefixes
+  ## - Since the interaction is an 
+    drug_a-drug_b:
+    ## 160,235 records 
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: DDInter
+            semantic: SmallMolecule
+        requestBody:
+          body:
+            ## API data has no prefix
+            ## joinSafe is only needed if the delimiter isn't a comma
+            q: "{{ queryInputs }}"
+            scopes: >-
+              drug_a.ddinter,
+              drug_a.chembl,
+              drug_a.drugbank,
+              drug_a.pubchem,
+              drug_a.name
+        outputs:
+          - id: >-
+              drug_b.ddinter,
+              drug_b.chembl,
+              drug_b.drugbank,
+              drug_b.pubchem
+              drug_b.name
+            semantic: SmallMolecule
+        parameters:
+          fields: >-
+            level,
+            drug_a.ddinter,
+            drug_a.chembl,
+            drug_a.drugbank,
+            drug_a.pubchem,
+            drug_a.name,
+            drug_b.ddinter,
+            drug_b.chembl,
+            drug_b.drugbank,
+            drug_b.pubchem
+            drug_b.name
+          size: 1000
+        predicate: interacts_with
+        source: "infores:ddinter"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/disease"
+    drug_b-drug_a:
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: Interaction
+            semantic: Disease
+        requestBody:
+          body:
+            ## API data has no prefix
+            ## joinSafe is only needed if the delimiter isn't a comma
+            q: "{{ queryInputs }}"
+            scopes: level
+        outputs:
+          - id: >-
+              drug_b.ddinter,
+              drug_b.chembl,
+              drug_b.drugbank,
+              drug_b.pubchem
+              drug_b.name
+            semantic: SmallMolecule
+        parameters:
+          fields: >-
+            drug_a.ddinter,
+            drug_a.chembl,
+            drug_a.drugbank,
+            drug_a.pubchem,
+            drug_a.name,
+          size: 1000
+        predicate: interacts_with
+        source: "infores:ddinter"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/pathway"
+        # testExamples:
+  x-bte-response-mapping:
+    drug_a:
+      CHEMBL: drug_a.chembl  
+      ddinter: drug_a.ddinter
+      DRUGBANK: drug_a.drugbank
+      PUBCHEM: drug_a.pubchem
+      drug_name: drug_a.name
+    drug_b:
+      CHEMBL: drug_bchembl  
+      ddinter: drug_b.ddinter
+      DRUGBANK: drug_b.drugbank
+      PUBCHEM: drug_b.pubchem
+      Drug_: drug_b.name
