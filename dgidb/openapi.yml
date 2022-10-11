@@ -573,8 +573,15 @@ components:
         outputs:
           - id: NCBIGene
             semantic: Gene
-        ## for biolink 2.2.8, DGIdb:agonist maps to this predicate
-        predicate: increases_activity_of
+        ## for biolink 2.2.8, DGIdb:agonist maps to increases_activity_of
+        predicate: affects
+        ## nesting allows this main key to stay the same even with future changes
+        qualifiers:
+        ## key is the "qualifier_type_id", value is the "qualifier_value" in the TRAPI Edge.qualifiers spec
+          qualified_predicate: causes
+          object_aspect_qualifier: activity
+          object_direction_qualifier: increased
+          causal_mechanism_qualifier: agonism   ## extra since DGIdb labels these as "agonist"
         source: "infores:dgidb"
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/forward"
@@ -605,8 +612,14 @@ components:
         outputs:
           - id: "CHEMBL.COMPOUND"
             semantic: SmallMolecule
-        ## for biolink 2.2.8, DGIdb:agonist maps to the inverse of this predicate
-        predicate: activity_increased_by
+        ## for biolink 2.2.8, DGIdb:agonist maps to the inverse of increases_activity_of
+        predicate: affected_by
+        qualifiers:
+        ## odd because of the not-canonical direction
+          qualified_predicate: causes
+          subject_aspect_qualifier: activity
+          subject_direction_qualifier: increased
+          causal_mechanism_qualifier: agonism   ## extra since DGIdb labels these as "agonist"
         source: "infores:dgidb"
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/reverse"
