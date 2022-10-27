@@ -501,7 +501,12 @@ components:
         semantic: BiologicalProcess
       parameters:
         fields: negatively_regulates.go
-      predicate: process_negatively_regulates_process
+      ## biolink 3.0.3: this is a mixin. Is this an issue?
+      ##   interpretation: X "regulates" Y's "downregulated" state
+      ## biolink 2.4.8: used process_negatively_regulates_process
+      predicate: regulates
+      qualifiers:
+        object_direction_qualifier: downregulated
       source: "infores:go"
       response_mapping:
         $ref: '#/components/x-bte-response-mapping/negatively_regulates'
@@ -509,27 +514,32 @@ components:
       #   - qInput: "GO:0090272"       ## negative regulation of fibroblast growth factor production
       #     oneOutput: "GO:0090269"    ## fibroblast growth factor production
     negatively_regulated_by:
-      - supportBatch: true
-        useTemplating: true
-        inputs:
-        - id: GO
-          semantic: BiologicalProcess
-        requestBody:
-          body:
-            q: "{{ queryInputs }}"
-            scopes: negatively_regulates.go
-        outputs:
-        - id: GO
-          semantic: BiologicalProcess
-        parameters:
-          fields: _id
-        predicate: process_negatively_regulated_by_process
-        source: "infores:go"
-        response_mapping:
-          $ref: '#/components/x-bte-response-mapping/negatively_regulated_by'
-      # testExamples:
-      #   - qInput: "GO:0016126"       ## sterol biosynthetic process
-      #     oneOutput: "GO:0106119"    ## negative regulation of sterol biosynthetic process
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: GO
+        semantic: BiologicalProcess
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"
+          scopes: negatively_regulates.go
+      outputs:
+      - id: GO
+        semantic: BiologicalProcess
+      parameters:
+        fields: _id
+      ## biolink 3.0.3: this is a mixin. Is this an issue?
+      ##   interpretation: Y's "downregulated" state "regulated_by" X
+      ## biolink 2.4.8: used process_negatively_regulated_by_process
+      predicate: regulated_by
+    qualifiers:
+      subject_direction_qualifier: downregulated
+      source: "infores:go"
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/negatively_regulated_by'
+    # testExamples:
+    #   - qInput: "GO:0016126"       ## sterol biosynthetic process
+    #     oneOutput: "GO:0106119"    ## negative regulation of sterol biosynthetic process
     positively_regulates:
     ## 2761 records https://biothings.ncats.io/go_bp/query?q=_exists_:positively_regulates
     - supportBatch: true
@@ -546,7 +556,12 @@ components:
         semantic: BiologicalProcess
       parameters:
         fields: positively_regulates.go
-      predicate: process_positively_regulates_process
+      ## biolink 3.0.3: this is a mixin. Is this an issue?
+      ##   interpretation: X "regulates" Y's "upregulated" state
+      ## biolink 2.4.8: used process_positively_regulates_process
+      predicate: regulates
+      qualifiers:
+        object_direction_qualifier: upregulated
       source: "infores:go"
       response_mapping:
         $ref: '#/components/x-bte-response-mapping/positively_regulates'
@@ -568,7 +583,12 @@ components:
         semantic: BiologicalProcess
       parameters:
         fields: _id
-      predicate: process_positively_regulated_by_process
+      ## biolink 3.0.3: this is a mixin. Is this an issue?
+      ##   interpretation: Y's "upregulated" state "regulated_by" X
+      ## biolink 2.4.8: used process_positively_regulated_by_process
+      predicate: regulated_by
+      qualifiers:
+        subject_direction_qualifier: upregulated
       source: "infores:go"
       response_mapping:
         $ref: '#/components/x-bte-response-mapping/positively_regulated_by'
@@ -591,7 +611,9 @@ components:
         semantic: BiologicalProcess
       parameters:
         fields: regulates.go
-      predicate: process_regulates_process
+      ## biolink 3.0.3: this is a mixin. Is this an issue?
+      ## biolink 2.4.8: used process_regulates_process
+      predicate: regulates   
       source: "infores:go"
       response_mapping:
         $ref: '#/components/x-bte-response-mapping/regulates'
@@ -613,7 +635,9 @@ components:
         semantic: BiologicalProcess
       parameters:
         fields: _id
-      predicate: process_regulated_by_process
+      ## biolink 3.0.3: this is a mixin. Is this an issue?
+      ## biolink 2.4.8: used process_regulated_by_process
+      predicate: regulated_by
       source: "infores:go"
       response_mapping:
         $ref: '#/components/x-bte-response-mapping/regulated_by'
