@@ -509,10 +509,12 @@ components:
         outputs:
           - id: NCBIGene
             semantic: Gene
-        ## for biolink 2.2.8, DGIdb:activator and CHEMBL.MECHANISM:activator map to the mixin positively_regulates (under regulates)
-        ##                    vs GAMMA:activator maps to increases_activity_of (under affects)
-        ## CX decided to use the entity-entity version of positively_regulates, after reading some triples' linked pubmed papers
-        predicate: entity_positively_regulates_entity
+        ## biolink 3.0.3: this is a mixin. Is this an issue?
+        ##   interpretation: X "regulates" Y's "upregulated" state
+        ## biolink 2.4.8: used entity_positively_regulates_entity
+        predicate: regulates
+        qualifiers:
+          object_direction_qualifier: upregulated
         source: "infores:dgidb"
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/forward"
@@ -540,10 +542,12 @@ components:
         outputs:
           - id: "CHEMBL.COMPOUND"
             semantic: SmallMolecule
-        ## for biolink 2.2.8, DGIdb:activator and CHEMBL.MECHANISM:activator map to the mixin positively_regulates (under regulates)
-        ##                    vs GAMMA:activator maps to increases_activity_of (under affects)
-        ## CX decided to use the entity-entity version of positively_regulates, after reading some triples' linked pubmed papers
-        predicate: entity_positively_regulated_by_entity
+        ## biolink 3.0.3: this is a mixin. Is this an issue?
+        ##   interpretation: Y's "upregulated" state "regulated_by" X
+        ## biolink 2.4.8: used entity_positively_regulated_by_entity
+        predicate: regulated_by
+        qualifiers:
+          subject_direction_qualifier: upregulated
         source: "infores:dgidb"
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/reverse"
