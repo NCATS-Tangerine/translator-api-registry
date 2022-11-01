@@ -451,8 +451,10 @@ components:
   #     - type: string
   x-bte-kgs-operations:
   ## not all records have phenotypes or disease IDs...
-  ## relationship is somewhat captured by DDD_category (and allelic_requirement, mutation_consequence)
-  ## not sure if "panel" is a "source"
+  ## the main relationship seems to be gene-disease, not gene-phenotype
+  ## vocab: our data is old so we are still using old terms https://www.ebi.ac.uk/gene2phenotype/updates_to_our_terms
+  ##   other vocab links: https://www.ebi.ac.uk/gene2phenotype/README, https://www.ebi.ac.uk/gene2phenotype/terminology
+  ## see response-mapping for notes on specific fields
     gene_to_phenotype:
     - supportBatch: true
       useTemplating: true
@@ -578,26 +580,39 @@ components:
       #   - qInput: "OMIM:255200"      ## myopathy, centronuclear, 2
       #     oneOutput: "HGNC:1052"    ## BIN1
   x-bte-response-mapping:
+  ## data:
+  ## - DDD_category seems to be "gene-disease association confidence category": https://www.ebi.ac.uk/gene2phenotype/create_panel
+  ## - allelic_requirement seems similar to "inheritance" but focused on the affected individual 
+  ##   (rather than inheritance from a parent) and with a bit more genetic info
+  ## - organ_specificity_list seems to be "organ specificity for gene-disease association": https://www.ebi.ac.uk/gene2phenotype/create_panel  
+  ## - panels aka datasets in G2P: https://www.ebi.ac.uk/gene2phenotype/create_panel
     pheno-object:
       HP: gene2phenotype.phenotypes  ## has HP prefix
       pubmed: gene2phenotype.pmids   ## no prefix
-      DDD_category: gene2phenotype.DDD_category
-      allelic_requirement: gene2phenotype.allelic_requirement
-      context_disease_omim_id: gene2phenotype.disease.disease_mim   ## no prefix
-      context_disease_name: gene2phenotype.disease.disease_name
-      gene_disease_pair_entry_date: gene2phenotype.gene_disease_pair_entry_date
-      mutation_consequence: gene2phenotype.mutation_consequence
-      context_organ_specificity_list: gene2phenotype.organ_specificity_list     ## array of keywords (not ids or curies)
-      panel: gene2phenotype.panel
+      ## similar to "biolink:has_confidence_level" (association slot) but doesn't use the expected ontology terms
+      g2p_gene-disease_confidence: gene2phenotype.DDD_category
+      ## similar to "biolink:has_mode_of_inheritance" (predicate) but doesn't use the expected ontology terms and seems a bit different
+      g2p_allelic_requirement: gene2phenotype.allelic_requirement
+      ## disease context? although gene-disease is the main relationship...
+      g2p_associated_disease_omim: gene2phenotype.disease.disease_mim   ## no prefix
+      g2p_associated_disease_name: gene2phenotype.disease.disease_name
+      ## using creation_date (node property) because it seems to match well
+      "biolink:creation_date": gene2phenotype.gene_disease_pair_entry_date
+      ## similar to "biolink:has_molecular_consequence" (predicate)
+      g2p_mutation_consequence: gene2phenotype.mutation_consequence
+      ## seems a bit different from a biolink:anatomical_context_qualifier
+      g2p_organ_specificity_for_gene-disease_association: gene2phenotype.organ_specificity_list     ## array of keywords (not ids or curies)
+      g2p_panel: gene2phenotype.panel
     gene-object:
       HGNC: _id   ## no prefix
     disease-object:
       OMIM: gene2phenotype.disease.disease_mim   ## no prefix
       pubmed: gene2phenotype.pmids   ## no prefix
-      DDD_category: gene2phenotype.DDD_category
-      allelic_requirement: gene2phenotype.allelic_requirement
-      gene_disease_pair_entry_date: gene2phenotype.gene_disease_pair_entry_date
-      mutation_consequence: gene2phenotype.mutation_consequence
-      context_organ_specificity_list: gene2phenotype.organ_specificity_list     ## array of keywords (not ids or curies)
-      panel: gene2phenotype.panel
-      related_phenotypes: gene2phenotype.phenotypes  ## has HP prefix
+      g2p_gene-disease_confidence: gene2phenotype.DDD_category
+      g2p_allelic_requirement: gene2phenotype.allelic_requirement
+      ## using creation_date (node property) because it seems to match well
+      "biolink:creation_date": gene2phenotype.gene_disease_pair_entry_date
+      g2p_mutation_consequence: gene2phenotype.mutation_consequence
+      g2p_organ_specificity_for_gene-disease_association: gene2phenotype.organ_specificity_list     ## array of keywords (not ids or curies)
+      g2p_panel: gene2phenotype.panel
+      g2p_related_phenotypes: gene2phenotype.phenotypes  ## has HP prefix
