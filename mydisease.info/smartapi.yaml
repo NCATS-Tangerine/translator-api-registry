@@ -253,8 +253,8 @@ paths:
       - "$ref": "#/components/x-bte-kgs-operations/phenotype-disease2"
       - "$ref": "#/components/x-bte-kgs-operations/chemical-disease"
       - "$ref": "#/components/x-bte-kgs-operations/chemical-disease2"
-      - "$ref": "#/components/x-bte-kgs-operations/has_subclass"
-      - "$ref": "#/components/x-bte-kgs-operations/subclass_of"
+      # - "$ref": "#/components/x-bte-kgs-operations/has_subclass"
+      # - "$ref": "#/components/x-bte-kgs-operations/subclass_of"
       - "$ref": "#/components/x-bte-kgs-operations/predisposes_towards"
       - "$ref": "#/components/x-bte-kgs-operations/predisposes_towards-rev"
       - "$ref": "#/components/x-bte-kgs-operations/disease_shares_features_of"
@@ -522,10 +522,10 @@ components:
       MESH: ctd.mesh  ## no prefix
     ctd-omim-disease:  ## added for chemical-disease2 operation
       OMIM: ctd.omim  ## no prefix
-    has_subclass:
-      MONDO: mondo.children    ## HAS PREFIX (MONDO)
-    subclass_of:
-      MONDO: mondo.parents    ## HAS PREFIX (MONDO)
+    # has_subclass:
+    #   MONDO: mondo.children    ## HAS PREFIX (MONDO)
+    # subclass_of:
+    #   MONDO: mondo.parents    ## HAS PREFIX (MONDO)
     predisposes_towards:
       MONDO: mondo.predisposes_towards.mondo    ## HAS PREFIX (MONDO)
     disease_shares_features_of:
@@ -919,56 +919,57 @@ components:
     ##     - has_modifier (something is off here, shouldn't be mondo prefix...)
     ##     - excluded_subClassOf (something is off here, I'm not sure what that means)
     ##     - disjoint from (this is a negation / NOT relationship)
-    has_subclass:
-      - supportBatch: true
-        inputSeparator: ","
-        parameters:
-          fields: mondo.children
-          size: 1000  ## note the size limit
-        requestBody:
-          body:
-            q: "{inputs[0]}"  ## HAS PREFIX (MONDO)
-            scopes: mondo.mondo
-          header: application/x-www-form-urlencoded
-        inputs:
-        - id: MONDO
-          semantic: Disease
-        outputs:
-        - id: MONDO
-          semantic: Disease
-        predicate: superclass_of  ## this is the inverse of subclass_of right now
-        ## relation: "has children"?
-        source: "infores:mondo"
-        response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/has_subclass"
-        # testExamples:
-        #   - qInput: "MONDO:0002494"      ## substance-related disorder
-        #     oneOutput: "MONDO:0021698"   ## alcohol-related disorders          
-    subclass_of:
-      - supportBatch: true
-        inputSeparator: ","
-        parameters:
-          fields: mondo.parents
-          size: 1000  ## note the size limit
-        requestBody:
-          body:
-            q: "{inputs[0]}"   ## HAS PREFIX (MONDO)
-            scopes: mondo.mondo
-          header: application/x-www-form-urlencoded
-        inputs:
-        - id: MONDO
-          semantic: Disease
-        outputs:
-        - id: MONDO
-          semantic: Disease
-        predicate: subclass_of
-        ## relation: "has parents"?
-        source: "infores:mondo"
-        response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/subclass_of"
-        # testExamples:
-        #   - qInput: "MONDO:0002494"      ## substance-related disorder
-        #     oneOutput: "MONDO:0002025"   ## psychiatric disorder
+    ## commenting out subclass relationships due to automatic ID/node-expansion for MONDO terms
+    # has_subclass:
+    #   - supportBatch: true
+    #     inputSeparator: ","
+    #     parameters:
+    #       fields: mondo.children
+    #       size: 1000  ## note the size limit
+    #     requestBody:
+    #       body:
+    #         q: "{inputs[0]}"  ## HAS PREFIX (MONDO)
+    #         scopes: mondo.mondo
+    #       header: application/x-www-form-urlencoded
+    #     inputs:
+    #     - id: MONDO
+    #       semantic: Disease
+    #     outputs:
+    #     - id: MONDO
+    #       semantic: Disease
+    #     predicate: superclass_of  ## this is the inverse of subclass_of right now
+    #     ## relation: "has children"?
+    #     source: "infores:mondo"
+    #     response_mapping:
+    #       "$ref": "#/components/x-bte-response-mapping/has_subclass"
+    #     # testExamples:
+    #     #   - qInput: "MONDO:0002494"      ## substance-related disorder
+    #     #     oneOutput: "MONDO:0021698"   ## alcohol-related disorders          
+    # subclass_of:
+    #   - supportBatch: true
+    #     inputSeparator: ","
+    #     parameters:
+    #       fields: mondo.parents
+    #       size: 1000  ## note the size limit
+    #     requestBody:
+    #       body:
+    #         q: "{inputs[0]}"   ## HAS PREFIX (MONDO)
+    #         scopes: mondo.mondo
+    #       header: application/x-www-form-urlencoded
+    #     inputs:
+    #     - id: MONDO
+    #       semantic: Disease
+    #     outputs:
+    #     - id: MONDO
+    #       semantic: Disease
+    #     predicate: subclass_of
+    #     ## relation: "has parents"?
+    #     source: "infores:mondo"
+    #     response_mapping:
+    #       "$ref": "#/components/x-bte-response-mapping/subclass_of"
+    #     # testExamples:
+    #     #   - qInput: "MONDO:0002494"      ## substance-related disorder
+    #     #     oneOutput: "MONDO:0002025"   ## psychiatric disorder
     predisposes_towards:
       - supportBatch: true
         inputSeparator: ","

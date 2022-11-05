@@ -235,8 +235,8 @@ paths:
       tags:
       - query
       x-bte-kgs-operations:
-      - $ref: '#/components/x-bte-kgs-operations/has_subclass'
-      - $ref: '#/components/x-bte-kgs-operations/subclass_of'
+      # - $ref: '#/components/x-bte-kgs-operations/has_subclass'
+      # - $ref: '#/components/x-bte-kgs-operations/subclass_of'
       - $ref: '#/components/x-bte-kgs-operations/negatively_regulates'
       - $ref: '#/components/x-bte-kgs-operations/negatively_regulated_by'
       - $ref: '#/components/x-bte-kgs-operations/positively_regulates'
@@ -439,52 +439,53 @@ components:
   #       type: array
   #     - type: string
   x-bte-kgs-operations:
-    has_subclass:
-    ## 16883 records have children: https://biothings.ncats.io/go_bp/query?q=_exists_:children
-    - supportBatch: true
-      useTemplating: true
-      inputs:
-      - id: GO
-        semantic: BiologicalProcess
-      requestBody:
-        body:
-          q: "{{ queryInputs }}"
-          scopes: _id
-      outputs:
-      - id: GO
-        semantic: BiologicalProcess
-      parameters:
-        fields: children
-      predicate: superclass_of  ## this is the inverse of subclass_of right now
-      source: "infores:go"
-      response_mapping:
-        $ref: '#/components/x-bte-response-mapping/has_subclass'
-      # testExamples:
-      #   - qInput: "GO:0089722"       ## phosphoenolpyruvate transmembrane transport
-      #     oneOutput: "GO:1990536"    ## phosphoenolpyruvate transmembrane import into Golgi lumen
-    subclass_of:
-    ## all records but one have a "parents" field
-    - supportBatch: true
-      useTemplating: true
-      inputs:
-      - id: GO
-        semantic: BiologicalProcess
-      requestBody:
-        body:
-          q: "{{ queryInputs }}"
-          scopes: _id
-      outputs:
-      - id: GO
-        semantic: BiologicalProcess
-      parameters:
-        fields: parents
-      predicate: subclass_of
-      source: "infores:go"
-      response_mapping:
-        $ref: '#/components/x-bte-response-mapping/subclass_of'
-      # testExamples:
-      #   - qInput: "GO:0150068"       ## positive regulation of tubulin deacetylase activity
-      #     oneOutput: "GO:0090044"    ## positive regulation of tubulin deacetylation
+  ## commenting out subclass relationships due to automatic ID/node-expansion for GO terms
+    # has_subclass:
+    # ## 16883 records have children: https://biothings.ncats.io/go_bp/query?q=_exists_:children
+    # - supportBatch: true
+    #   useTemplating: true
+    #   inputs:
+    #   - id: GO
+    #     semantic: BiologicalProcess
+    #   requestBody:
+    #     body:
+    #       q: "{{ queryInputs }}"
+    #       scopes: _id
+    #   outputs:
+    #   - id: GO
+    #     semantic: BiologicalProcess
+    #   parameters:
+    #     fields: children
+    #   predicate: superclass_of  ## this is the inverse of subclass_of right now
+    #   source: "infores:go"
+    #   response_mapping:
+    #     $ref: '#/components/x-bte-response-mapping/has_subclass'
+    #   # testExamples:
+    #   #   - qInput: "GO:0089722"       ## phosphoenolpyruvate transmembrane transport
+    #   #     oneOutput: "GO:1990536"    ## phosphoenolpyruvate transmembrane import into Golgi lumen
+    # subclass_of:
+    # ## all records but one have a "parents" field
+    # - supportBatch: true
+    #   useTemplating: true
+    #   inputs:
+    #   - id: GO
+    #     semantic: BiologicalProcess
+    #   requestBody:
+    #     body:
+    #       q: "{{ queryInputs }}"
+    #       scopes: _id
+    #   outputs:
+    #   - id: GO
+    #     semantic: BiologicalProcess
+    #   parameters:
+    #     fields: parents
+    #   predicate: subclass_of
+    #   source: "infores:go"
+    #   response_mapping:
+    #     $ref: '#/components/x-bte-response-mapping/subclass_of'
+    #   # testExamples:
+    #   #   - qInput: "GO:0150068"       ## positive regulation of tubulin deacetylase activity
+    #   #     oneOutput: "GO:0090044"    ## positive regulation of tubulin deacetylation
     negatively_regulates:
     ## 2774 records https://biothings.ncats.io/go_bp/query?q=_exists_:negatively_regulates
     - supportBatch: true
@@ -666,10 +667,10 @@ components:
       #   - qInput: "GO:0048313"        ## Golgi inheritance
       #     oneOutput: "GO:0090168"     ## Golgi reassembly
   x-bte-response-mapping:
-    has_subclass:
-      GO: children
-    subclass_of:
-      GO: parents
+    # has_subclass:
+    #   GO: children
+    # subclass_of:
+    #   GO: parents
     negatively_regulates:
       GO: negatively_regulates.go
     positively_regulates:
