@@ -434,16 +434,16 @@ components:
   #     - type: string
   x-bte-kgs-operations:
     has_subclass:
+    ## 2014 records https://biothings.ncats.io/go_mf/query?q=_exists_:children
     - supportBatch: true
-      inputSeparator: ','
+      useTemplating: true
       inputs:
       - id: GO
         semantic: MolecularActivity
       requestBody:
         body:
-          q: '{inputs[0]}'
+          q: "{{ queryInputs }}"
           scopes: _id
-        header: application/x-www-form-urlencoded
       outputs:
       - id: GO
         semantic: MolecularActivity
@@ -453,17 +453,19 @@ components:
       source: "infores:go"
       response_mapping:
         $ref: '#/components/x-bte-response-mapping/has_subclass'
+      # testExamples:
+      #   - qInput: "GO:0120013"        ## lipid transfer activity
+      #     oneOutput: "GO:0017089"     ## glycolipid transfer activity
     subclass_of:
     - supportBatch: true
-      inputSeparator: ','
+      useTemplating: true
       inputs:
       - id: GO
         semantic: MolecularActivity
       requestBody:
         body:
-          q: '{inputs[0]}'
+          q: "{{ queryInputs }}"
           scopes: _id
-        header: application/x-www-form-urlencoded
       outputs:
       - id: GO
         semantic: MolecularActivity
@@ -473,17 +475,20 @@ components:
       source: "infores:go"
       response_mapping:
         $ref: '#/components/x-bte-response-mapping/subclass_of'
+      # testExamples:
+      #   - qInput: "GO:0102505"        ## apigeninidin 5-O-glucosyltransferase activity
+      #     oneOutput: "GO:0016758"     ## hexosyltransferase activity
     part_of:
+    ## 11 records https://biothings.ncats.io/go_mf/query?q=_exists_:part_of
     - supportBatch: true
-      inputSeparator: ','
+      useTemplating: true
       inputs:
       - id: GO
         semantic: MolecularActivity
       requestBody:
         body:
-          q: '{inputs[0]}'
+          q: "{{ queryInputs }}"
           scopes: _id
-        header: application/x-www-form-urlencoded
       outputs:
       - id: GO
         semantic: MolecularActivity
@@ -493,26 +498,31 @@ components:
       source: "infores:go"
       response_mapping:
         $ref: '#/components/x-bte-response-mapping/part_of'
+      # testExamples:
+      #   - qInput: "GO:0000332"        ## template for synthesis of G-rich strand of telomere DNA activity
+      #     oneOutput: "GO:0003720"     ## telomerase activity
     has_part:
-      - supportBatch: true
-        inputSeparator: ','
-        inputs:
-        - id: GO
-          semantic: MolecularActivity
-        requestBody:
-          body:
-            q: '{inputs[0]}'
-            scopes: part_of.go
-          header: application/x-www-form-urlencoded
-        outputs:
-        - id: GO
-          semantic: MolecularActivity
-        parameters:
-          fields: _id
-        predicate: has_part
-        source: "infores:go"
-        response_mapping:
-          $ref: '#/components/x-bte-response-mapping/has_part'
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: GO
+        semantic: MolecularActivity
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"
+          scopes: part_of.go
+      outputs:
+      - id: GO
+        semantic: MolecularActivity
+      parameters:
+        fields: _id
+      predicate: has_part
+      source: "infores:go"
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/has_part'
+      # testExamples:
+      #   - qInput: "GO:0044823"        ## retroviral integrase activity
+      #     oneOutput: "GO:0044824"     ## retroviral 3' processing activity
   x-bte-response-mapping:
     has_subclass:
       GO: children
