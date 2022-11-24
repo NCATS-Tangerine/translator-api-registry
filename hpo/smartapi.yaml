@@ -430,16 +430,16 @@ components:
   #     - type: string
   x-bte-kgs-operations:
     has_subclass:
+    ## 5160 records: https://biothings.ncats.io/hpo/query?q=_exists_:children
     - supportBatch: true
-      inputSeparator: ','
+      useTemplating: true
       inputs:
       - id: HP
         semantic: PhenotypicFeature
       requestBody:
         body:
-          q: '{inputs[0]}'
+          q: "{{ queryInputs }}"
           scopes: _id
-        header: application/x-www-form-urlencoded
       outputs:
       - id: HP
         semantic: PhenotypicFeature
@@ -449,17 +449,19 @@ components:
       source: "infores:hpo"
       response_mapping:
         $ref: '#/components/x-bte-response-mapping/has_subclass'
+      # testExamples:
+      #   - qInput: "HP:0025598"        ## Inferior oblique muscle weakness
+      #     oneOutput: "HP:0025597"     ## Inferior oblique muscle restriction
     subclass_of:
     - supportBatch: true
-      inputSeparator: ','
+      useTemplating: true
       inputs:
       - id: HP
         semantic: PhenotypicFeature
       requestBody:
         body:
-          q: '{inputs[0]}'
+          q: "{{ queryInputs }}"
           scopes: _id
-        header: application/x-www-form-urlencoded
       outputs:
       - id: HP
         semantic: PhenotypicFeature
@@ -469,6 +471,9 @@ components:
       source: "infores:hpo"
       response_mapping:
         $ref: '#/components/x-bte-response-mapping/subclass_of'
+      # testExamples:
+      #   - qInput: "HP:0025532"        ## Positive pathergy test
+      #     oneOutput: "HP:0011122"     ## Abnormality of skin physiology
   x-bte-response-mapping:
     has_subclass:
       HP: children
