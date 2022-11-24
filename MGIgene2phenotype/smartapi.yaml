@@ -435,10 +435,16 @@ components:
   #     - type: string
   x-bte-kgs-operations:
     gene_related_to_disease:
-    - inputSeparator: ","
+    - supportBatch: true
+      inputSeparator: ","
       inputs:
       - id: MGI
         semantic: Gene
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: _id
+        header: application/x-www-form-urlencoded
       outputs:
       - id: DOID
         semantic: Disease
@@ -446,73 +452,67 @@ components:
         fields: mgi.associated_with_disease
       predicate: related_to
       source: "infores:mgi"
-      requestBody:
-        body:
-          q: "{inputs[0]}"
-          scopes: _id
-        header: application/x-www-form-urlencoded
-      supportBatch: true
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/gene_related_to_disease"
     gene_related_to_phenotype:
-    - inputSeparator: ","
+    - supportBatch: true
+      inputSeparator: ","
       inputs:
       - id: MGI
         semantic: Gene
-      outputs:
-      - id: MP
-        semantic: PhenotypicFeature
-      predicate: related_to
-      source: "infores:mgi"
-      parameters:
-        fields: mgi.associated_with_phenotype
       requestBody:
         body:
           q: "{inputs[0]}"
           scopes: _id
         header: application/x-www-form-urlencoded
-      supportBatch: true
+      outputs:
+      - id: MP
+        semantic: PhenotypicFeature
+      parameters:
+        fields: mgi.associated_with_phenotype
+      predicate: related_to
+      source: "infores:mgi"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/gene_related_to_phenotype"
     disease_related_to_gene:
-    - inputSeparator: ","
-      outputs:
-      - id: MGI
-        semantic: Gene
+    - supportBatch: true
+      inputSeparator: ","
       inputs:
       - id: DOID
         semantic: Disease
-      parameters:
-        fields: _id
-        size: '300'
-      predicate: related_to
-      source: "infores:mgi"
       requestBody:
         body:
           q: "{inputs[0]}"
           scopes: mgi.associated_with_disease.doid
         header: application/x-www-form-urlencoded
-      supportBatch: true
-      response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/mgi"
-    phenotype_related_to_gene:
-    - inputSeparator: ","
       outputs:
       - id: MGI
         semantic: Gene
-      inputs:
-      - id: MP
-        semantic: PhenotypicFeature
-      predicate: related_to
-      source: "infores:mgi"
       parameters:
         fields: _id
         size: '300'
+      predicate: related_to
+      source: "infores:mgi"
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/mgi"
+    phenotype_related_to_gene:
+    - supportBatch: true
+      inputSeparator: ","
+      inputs:
+      - id: MP
+        semantic: PhenotypicFeature
       requestBody:
         body:
           q: "{inputs[0]}"
           scopes: mgi.associated_with_phenotype.mp
-      supportBatch: true
+      outputs:
+      - id: MGI
+        semantic: Gene
+      parameters:
+        fields: _id
+        size: '300'
+      predicate: related_to
+      source: "infores:mgi"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/mgi"
   x-bte-response-mapping:
