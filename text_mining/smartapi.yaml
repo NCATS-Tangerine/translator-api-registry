@@ -8,7 +8,7 @@ info:
   description: Documentation of the Text Mining Targeted Association query web services.
   termsOfService: https://biothings.io/about
   title: Text Mining Targeted Association API
-  version: '2022-09-01'
+  version: '2022-11-28'
   x-translator:
     infores: "infores:text-mining-provider-targeted"
     component: KP
@@ -1113,15 +1113,396 @@ components:
         ## Examples:
         ## - HP:0001510 (Growth delay) -> UniProtKB:Q76L83 (ASXL2) 
         ## - HP:0002197 (Generalized-onset seizure) -> UniProtKB:P17677 (GAP43) 
+    drugbank-contributes_to-hp:
+    ##  https://biothings.ncats.io/text_mining_targeted_association/query?q=_exists_:subject.DRUGBANK AND association.edge_label:contributes_to AND _exists_:object.HP
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: DRUGBANK
+            semantic: SmallMolecule
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {
+              "q": [ {{ queryInputs | wrap( '["' , '","contributes_to"]') }} ],
+              "scopes": ["subject.DRUGBANK", "association.edge_label"]
+            }
+        parameters:
+          fields: object.HP,association.edge_attributes
+          size: 1000
+        outputs:
+          - id: HP
+            semantic: PhenotypicFeature
+        predicate: contributes_to
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/hp-object"
+    drugbank-contributes_to-hp-rev:
+    ##  https://biothings.ncats.io/text_mining_targeted_association/query?q=_exists_:subject.DRUGBANK AND association.edge_label:contributes_to AND _exists_:object.HP
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: HP
+            semantic: PhenotypicFeature
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {
+              "q": [ {{ queryInputs | wrap( '["' , '","contributes_to"]') }} ],
+              "scopes": ["object.HP", "association.edge_label"]
+            }
+        parameters:
+          fields: subject.DRUGBANK,association.edge_attributes
+          size: 1000
+        outputs:
+          - id: DRUGBANK
+            semantic: SmallMolecule
+        predicate: contribution_from
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/drugbank-subject"
+    chebi-contributes_to-hp:
+    ##  https://biothings.ncats.io/text_mining_targeted_association/query?q=_exists_:subject.CHEBI AND association.edge_label:contributes_to AND _exists_:object.HP
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: CHEBI
+            semantic: SmallMolecule
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {
+              "q": [ {{ queryInputs | wrap( '["' , '","contributes_to"]') }} ],
+              "scopes": ["subject.CHEBI", "association.edge_label"]
+            }
+        parameters:
+          fields: object.HP,association.edge_attributes
+          size: 1000
+        outputs:
+          - id: HP
+            semantic: PhenotypicFeature
+        predicate: contributes_to
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/hp-object"
+    chebi-contributes_to-hp-rev:
+    ##  https://biothings.ncats.io/text_mining_targeted_association/query?q=_exists_:subject.CHEBI AND association.edge_label:contributes_to AND _exists_:object.HP
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: HP
+            semantic: PhenotypicFeature
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {
+              "q": [ {{ queryInputs | wrap( '["' , '","contributes_to"]') }} ],
+              "scopes": ["object.HP", "association.edge_label"]
+            }
+        parameters:
+          fields: subject.CHEBI,association.edge_attributes
+          size: 1000
+        outputs:
+          - id: CHEBI
+            semantic: SmallMolecule
+        predicate: contribution_from
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/chebi-subject"
+    drugbank-contributes_to-mondo:
+    ##  https://biothings.ncats.io/text_mining_targeted_association/query?q=_exists_:subject.DRUGBANK AND association.edge_label:contributes_to AND _exists_:object.MONDO
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: DRUGBANK
+            semantic: SmallMolecule
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {
+              "q": [ {{ queryInputs | wrap( '["' , '","contributes_to"]') }} ],
+              "scopes": ["subject.DRUGBANK", "association.edge_label"]
+            }
+        parameters:
+          fields: object.MONDO,association.edge_attributes
+          size: 1000
+        outputs:
+          - id: MONDO
+            semantic: Disease
+        predicate: contributes_to
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/mondo-object"
+    drugbank-contributes_to-mondo-rev:
+    ##  https://biothings.ncats.io/text_mining_targeted_association/query?q=_exists_:subject.DRUGBANK AND association.edge_label:contributes_to AND _exists_:object.MONDO
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: MONDO
+            semantic: Disease
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {
+              "q": [ {{ queryInputs | wrap( '["' , '","contributes_to"]') }} ],
+              "scopes": ["object.MONDO", "association.edge_label"]
+            }
+        parameters:
+          fields: subject.DRUGBANK,association.edge_attributes
+          size: 1000
+        outputs:
+          - id: DRUGBANK
+            semantic: SmallMolecule
+        predicate: contribution_from
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/drugbank-subject"
+    chebi-contributes_to-mondo:
+    ##  https://biothings.ncats.io/text_mining_targeted_association/query?q=_exists_:subject.CHEBI AND association.edge_label:contributes_to AND _exists_:object.MONDO
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: CHEBI
+            semantic: SmallMolecule
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {
+              "q": [ {{ queryInputs | wrap( '["' , '","contributes_to"]') }} ],
+              "scopes": ["subject.CHEBI", "association.edge_label"]
+            }
+        parameters:
+          fields: object.MONDO,association.edge_attributes
+          size: 1000
+        outputs:
+          - id: MONDO
+            semantic: Disease
+        predicate: contributes_to
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/mondo-object"
+    chebi-contributes_to-mondo-rev:
+    ##  https://biothings.ncats.io/text_mining_targeted_association/query?q=_exists_:subject.CHEBI AND association.edge_label:contributes_to AND _exists_:object.MONDO
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: MONDO
+            semantic: Disease
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {
+              "q": [ {{ queryInputs | wrap( '["' , '","contributes_to"]') }} ],
+              "scopes": ["object.MONDO", "association.edge_label"]
+            }
+        parameters:
+          fields: subject.CHEBI,association.edge_attributes
+          size: 1000
+        outputs:
+          - id: CHEBI
+            semantic: SmallMolecule
+        predicate: contribution_from
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/chebi-subject"
+
+    hp-contributes_to-drugbank:
+    ##  https://biothings.ncats.io/text_mining_targeted_association/query?q=_exists_:subject.HP AND association.edge_label:contributes_to AND _exists_:object.DRUGBANK
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: HP
+            semantic: PhenotypicFeature
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {
+              "q": [ {{ queryInputs | wrap( '["' , '","contributes_to"]') }} ],
+              "scopes": ["subject.HP", "association.edge_label"]
+            }
+        parameters:
+          fields: object.DRUGBANK,association.edge_attributes
+          size: 1000
+        outputs:
+          - id: DRUGBANK
+            semantic: SmallMolecule
+        predicate: contributes_to
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/drugbank-object"
+    hp-contributes_to-drugbank-rev:
+    ##  https://biothings.ncats.io/text_mining_targeted_association/query?q=_exists_:subject.HP AND association.edge_label:contributes_to AND _exists_:object.DRUGBANK
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: DRUGBANK
+            semantic: SmallMolecule
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {
+              "q": [ {{ queryInputs | wrap( '["' , '","contributes_to"]') }} ],
+              "scopes": ["object.DRUGBANK", "association.edge_label"]
+            }
+        parameters:
+          fields: subject.HP,association.edge_attributes
+          size: 1000
+        outputs:
+          - id: HP
+            semantic: PhenotypicFeature
+        predicate: contribution_from
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/hp-subject"
+    hp-contributes_to-chebi:
+    ##  https://biothings.ncats.io/text_mining_targeted_association/query?q=_exists_:subject.HP AND association.edge_label:contributes_to AND _exists_:object.CHEBI
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: HP
+            semantic: PhenotypicFeature
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {
+              "q": [ {{ queryInputs | wrap( '["' , '","contributes_to"]') }} ],
+              "scopes": ["subject.HP", "association.edge_label"]
+            }
+        parameters:
+          fields: object.CHEBI,association.edge_attributes
+          size: 1000
+        outputs:
+          - id: CHEBI
+            semantic: SmallMolecule
+        predicate: contributes_to
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/chebi-object"
+    hp-contributes_to-chebi-rev:
+    ##  https://biothings.ncats.io/text_mining_targeted_association/query?q=_exists_:subject.HP AND association.edge_label:contributes_to AND _exists_:object.CHEBI
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: CHEBI
+            semantic: SmallMolecule
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {
+              "q": [ {{ queryInputs | wrap( '["' , '","contributes_to"]') }} ],
+              "scopes": ["object.CHEBI", "association.edge_label"]
+            }
+        parameters:
+          fields: subject.HP,association.edge_attributes
+          size: 1000
+        outputs:
+          - id: HP
+            semantic: PhenotypicFeature
+        predicate: contribution_from
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/hp-subject"
+    mondo-contributes_to-drugbank:
+    ##  https://biothings.ncats.io/text_mining_targeted_association/query?q=_exists_:subject.MONDO AND association.edge_label:contributes_to AND _exists_:object.DRUGBANK
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: MONDO
+            semantic: Disease
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {
+              "q": [ {{ queryInputs | wrap( '["' , '","contributes_to"]') }} ],
+              "scopes": ["subject.MONDO", "association.edge_label"]
+            }
+        parameters:
+          fields: object.DRUGBANK,association.edge_attributes
+          size: 1000
+        outputs:
+          - id: DRUGBANK
+            semantic: SmallMolecule
+        predicate: contributes_to
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/drugbank-object"
+    mondo-contributes_to-drugbank-rev:
+    ##  https://biothings.ncats.io/text_mining_targeted_association/query?q=_exists_:subject.MONDO AND association.edge_label:contributes_to AND _exists_:object.DRUGBANK
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: DRUGBANK
+            semantic: SmallMolecule
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {
+              "q": [ {{ queryInputs | wrap( '["' , '","contributes_to"]') }} ],
+              "scopes": ["object.DRUGBANK", "association.edge_label"]
+            }
+        parameters:
+          fields: subject.MONDO,association.edge_attributes
+          size: 1000
+        outputs:
+          - id: MONDO
+            semantic: Disease
+        predicate: contribution_from
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/mondo-subject"
+    mondo-contributes_to-chebi:
+    ##  https://biothings.ncats.io/text_mining_targeted_association/query?q=_exists_:subject.MONDO AND association.edge_label:contributes_to AND _exists_:object.CHEBI
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: MONDO
+            semantic: Disease
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {
+              "q": [ {{ queryInputs | wrap( '["' , '","contributes_to"]') }} ],
+              "scopes": ["subject.MONDO", "association.edge_label"]
+            }
+        parameters:
+          fields: object.CHEBI,association.edge_attributes
+          size: 1000
+        outputs:
+          - id: CHEBI
+            semantic: SmallMolecule
+        predicate: contributes_to
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/chebi-object"
+    mondo-contributes_to-chebi-rev:
+    ##  https://biothings.ncats.io/text_mining_targeted_association/query?q=_exists_:subject.MONDO AND association.edge_label:contributes_to AND _exists_:object.CHEBI
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: CHEBI
+            semantic: SmallMolecule
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {
+              "q": [ {{ queryInputs | wrap( '["' , '","contributes_to"]') }} ],
+              "scopes": ["object.CHEBI", "association.edge_label"]
+            }
+        parameters:
+          fields: subject.MONDO,association.edge_attributes
+          size: 1000
+        outputs:
+          - id: MONDO
+            semantic: Disease
+        predicate: contribution_from
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/mondo-subject"
   x-bte-response-mapping:
     mondo-object:
       MONDO: object.MONDO
+      edge-attributes: association.edge_attributes
+    mondo-subject:
+      MONDO: subject.MONDO
+      edge-attributes: association.edge_attributes
+    chebi-object:
+      CHEBI: object.CHEBI
       edge-attributes: association.edge_attributes
     chebi-subject:
       CHEBI: subject.CHEBI
       edge-attributes: association.edge_attributes
     hp-object:
       HP: object.HP
+      edge-attributes: association.edge_attributes
+    hp-subject:
+      HP: subject.HP
+      edge-attributes: association.edge_attributes
+    drugbank-object:
+      DRUGBANK: object.DRUGBANK
       edge-attributes: association.edge_attributes
     drugbank-subject:
       DRUGBANK: subject.DRUGBANK
