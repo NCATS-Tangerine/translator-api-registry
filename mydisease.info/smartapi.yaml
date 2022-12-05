@@ -548,7 +548,19 @@ components:
     disease-gene:
     ## 22942 / 27762 disgenet.genes_related_to_disease records have disgenet.xrefs.umls
       - supportBatch: true
-        inputSeparator: ","
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+        - id: UMLS
+          semantic: Disease
+        requestBody:
+          body:
+            ## currently, BTE already strips prefix...
+            # q: "{{ queryInputs | rmPrefix }}"
+            q: "{{ queryInputs }}"  ## no prefix
+            scopes: disgenet.xrefs.umls
+        outputs:
+        - id: NCBIGene
+          semantic: Gene
         parameters:
         ## see https://www.disgenet.org/dbinfo#section44
         ## not including YearFinal, YearInitial, gene_name 
@@ -560,17 +572,6 @@ components:
             disgenet.genes_related_to_disease.DSI,
             disgenet.genes_related_to_disease.EI,
             disgenet.genes_related_to_disease.score
-        requestBody:
-          body:
-            q: "{inputs[0]}"  ## no prefix
-            scopes: disgenet.xrefs.umls
-          header: application/x-www-form-urlencoded
-        inputs:
-        - id: UMLS
-          semantic: Disease
-        outputs:
-        - id: NCBIGene
-          semantic: Gene
         ## can't be more specific because we can't restrict (see note above)
         predicate: condition_associated_with_gene 
         source: "infores:disgenet"
@@ -582,7 +583,19 @@ components:
     disease-variant:
     ## 11200 / 12605 disgenet.variants_related_to_disease records have disgenet.xrefs.umls
       - supportBatch: true
-        inputSeparator: ","
+        useTemplating: true
+        inputs:
+        - id: UMLS
+          semantic: Disease
+        requestBody:
+          body:
+            ## currently, BTE already strips prefix...
+            # q: "{{ queryInputs | rmPrefix }}"
+            q: "{{ queryInputs }}"  ## no prefix
+            scopes: disgenet.xrefs.umls
+        outputs:
+        - id: DBSNP
+          semantic: SequenceVariant
         parameters:
         ## see https://www.disgenet.org/dbinfo#section45
         ## not including YearFinal, YearInitial, chrom, pos 
@@ -594,17 +607,6 @@ components:
             disgenet.variants_related_to_disease.DSI,
             disgenet.variants_related_to_disease.EI,
             disgenet.variants_related_to_disease.score
-        requestBody:
-          body:
-            q: "{inputs[0]}"  ## no prefix
-            scopes: disgenet.xrefs.umls
-          header: application/x-www-form-urlencoded
-        inputs:
-        - id: UMLS
-          semantic: Disease
-        outputs:
-        - id: DBSNP
-          semantic: SequenceVariant
         ## can't be more specific because we can't restrict (see note above)
         predicate: related_to
         source: "infores:disgenet"
@@ -621,7 +623,19 @@ components:
   ##   however, this is not much info (~22 diseases) and we don't have mappings from SRI-based ID resolver
     disease-phenotype:
       - supportBatch: true
-        inputSeparator: ","
+        useTemplating: true
+        inputs:
+        - id: OMIM
+          semantic: Disease
+        requestBody:
+          body:
+            ## currently, BTE already strips prefix...
+            # q: "{{ queryInputs | rmPrefix }}"
+            q: "{{ queryInputs }}"  ## no prefix
+            scopes: hpo.omim
+        outputs:
+        - id: HP
+          semantic: PhenotypicFeature
         parameters:
         ## not including biocuration field
           fields: >-
@@ -640,17 +654,6 @@ components:
             hpo.phenotype_related_to_disease.modifier,
             hpo.phenotype_related_to_disease.onset,
             hpo.phenotype_related_to_disease.sex
-        requestBody:
-          body:
-            q: "{inputs[0]}"  ## no prefix
-            scopes: hpo.omim
-          header: application/x-www-form-urlencoded
-        inputs:
-        - id: OMIM
-          semantic: Disease
-        outputs:
-        - id: HP
-          semantic: PhenotypicFeature
         predicate: has_phenotype
         ## includes annotations with aspect == "P"
         ##   (aspect as "I" became hpo.inheritance, "C" became hpo.course, "M" became hpo.modifier)
@@ -662,7 +665,19 @@ components:
         #     oneOutput: "HP:0001254"   ## Lethargy
     disease-phenotype2:
       - supportBatch: true
-        inputSeparator: ","
+        useTemplating: true
+        inputs:
+        - id: ORPHANET
+          semantic: Disease
+        requestBody:
+          body:
+            ## currently, BTE already strips prefix...
+            # q: "{{ queryInputs | rmPrefix }}"
+            q: "{{ queryInputs }}"  ## no prefix
+            scopes: hpo.orphanet
+        outputs:
+        - id: HP
+          semantic: PhenotypicFeature
         parameters:
           fields: >-
             hpo.phenotype_related_to_disease.hpo_id,
@@ -680,17 +695,6 @@ components:
             hpo.phenotype_related_to_disease.modifier,
             hpo.phenotype_related_to_disease.onset,
             hpo.phenotype_related_to_disease.sex
-        requestBody:
-          body:
-            q: "{inputs[0]}"  ## no prefix
-            scopes: hpo.orphanet
-          header: application/x-www-form-urlencoded
-        inputs:
-        - id: ORPHANET
-          semantic: Disease
-        outputs:
-        - id: HP
-          semantic: PhenotypicFeature
         predicate: has_phenotype
         source: "infores:hpo-annotations"
         response_mapping:
@@ -708,7 +712,20 @@ components:
   ## - we removed CTD disease-pathway data because that info is all indirect
     disease-chemical:
       - supportBatch: true
-        inputSeparator: ","
+        useTemplating: true
+        inputs:
+        - id: MESH
+          semantic: Disease
+        requestBody:
+          body:
+            ## currently, BTE already strips prefix...
+            # q: "{{ queryInputs | rmPrefix }}"
+            q: "{{ queryInputs }}"  ## no prefix
+            scopes: ctd.mesh
+        outputs:
+        - id: MESH
+          semantic: SmallMolecule
+          ## note that 3085 / 3253 have cas_registry_number field that can be used as well
         parameters:
         ## not including: cas_registry_number, source, name
         ## BTE currently isn't ingesting name correctly
@@ -716,18 +733,6 @@ components:
             ctd.chemical_related_to_disease.mesh_chemical_id,
             ctd.chemical_related_to_disease.direct_evidence,
             ctd.chemical_related_to_disease.pubmed
-        requestBody:
-          body:
-            q: "{inputs[0]}"  ## no prefix
-            scopes: ctd.mesh
-          header: application/x-www-form-urlencoded
-        inputs:
-        - id: MESH
-          semantic: Disease
-        outputs:
-        - id: MESH
-          semantic: SmallMolecule
-          ## note that 3085 / 3253 have cas_registry_number field that can be used as well
         predicate: related_to
         ## direct_evidence is kinda like a relation....
         ##   can have value "marker/mechanism" or "therapeutic").
@@ -739,23 +744,24 @@ components:
         #     oneOutput: "MESH:C448659"   ## Geldanamycin, monohydrochloride
     disease-chemical2:
       - supportBatch: true
-        inputSeparator: ","
+        useTemplating: true
+        inputs:
+        - id: OMIM
+          semantic: Disease
+        requestBody:
+          body:
+            ## currently, BTE already strips prefix...
+            # q: "{{ queryInputs | rmPrefix }}"
+            q: "{{ queryInputs }}"  ## no prefix
+            scopes: ctd.omim
+        outputs:
+        - id: MESH
+          semantic: SmallMolecule
         parameters:
           fields: >-
             ctd.chemical_related_to_disease.mesh_chemical_id,
             ctd.chemical_related_to_disease.direct_evidence,
             ctd.chemical_related_to_disease.pubmed
-        requestBody:
-          body:
-            q: "{inputs[0]}"  ## no prefix
-            scopes: ctd.omim
-          header: application/x-www-form-urlencoded
-        inputs:
-        - id: OMIM
-          semantic: Disease
-        outputs:
-        - id: MESH
-          semantic: SmallMolecule
         predicate: related_to
         source: "infores:ctd"
         response_mapping:
@@ -768,21 +774,22 @@ components:
 ##   so we can't retrieve the subset of data for the specific gene / variant / etc's record 
     gene-disease:
       - supportBatch: true
-        inputSeparator: ","
-        parameters:
-          fields: disgenet.xrefs.umls
-          size: 1000  ## note the size limit
-        requestBody:
-          body:
-            q: "{inputs[0]}"   ## no prefix
-            scopes: disgenet.genes_related_to_disease.gene_id
-          header: application/x-www-form-urlencoded
+        useTemplating: true
         inputs:
         - id: NCBIGene
           semantic: Gene
+        requestBody:
+          body:
+            ## currently, BTE already strips prefix...
+            # q: "{{ queryInputs | rmPrefix }}"
+            q: "{{ queryInputs }}"   ## no prefix
+            scopes: disgenet.genes_related_to_disease.gene_id
         outputs:
         - id: UMLS
           semantic: Disease
+        parameters:
+          fields: disgenet.xrefs.umls
+          size: 1000  ## note the size limit
         predicate: gene_associated_with_condition
         source: "infores:disgenet"
         response_mapping:
@@ -792,21 +799,22 @@ components:
         #     oneOutput: "UMLS:C3658290"    ## Drug-Induced Acute Liver Injury
     variant-disease:
       - supportBatch: true
-        inputSeparator: ","
-        parameters:
-          fields: disgenet.xrefs.umls
-          size: 1000  ## note the size limit
-        requestBody:
-          body:
-            q: "{inputs[0]}"   ## no prefix
-            scopes: disgenet.variants_related_to_disease.rsid
-          header: application/x-www-form-urlencoded
+        useTemplating: true
         inputs:
         - id: DBSNP
           semantic: SequenceVariant
+        requestBody:
+          body:
+            ## currently, BTE already strips prefix...
+            # q: "{{ queryInputs | rmPrefix }}"
+            q: "{{ queryInputs }}"   ## no prefix
+            scopes: disgenet.variants_related_to_disease.rsid
         outputs:
         - id: UMLS
           semantic: Disease
+        parameters:
+          fields: disgenet.xrefs.umls
+          size: 1000  ## note the size limit
         predicate: related_to
         source: "infores:disgenet"
         response_mapping:
@@ -816,21 +824,22 @@ components:
         #     oneOutput: "UMLS:C4021107"    ## Non-obstructive azoospermia
     phenotype-disease:
       - supportBatch: true
-        inputSeparator: ","
-        parameters:
-          fields: hpo.omim
-          size: 1000  ## note the size limit
-        requestBody:
-          body:
-            q: "{inputs[0]}"   ## HAS PREFIX (HP)
-            scopes: hpo.phenotype_related_to_disease.hpo_id
-          header: application/x-www-form-urlencoded
+        useTemplating: true
         inputs:
         - id: HP
           semantic: PhenotypicFeature
+        requestBody:
+          body:
+            ## HAS PREFIX (HP): currently a bit redundant to do this (BTE handles it)
+            # q: "{{ queryInputs | replPrefix('HP', ':') }}"
+            q: "{{ queryInputs }}"
+            scopes: hpo.phenotype_related_to_disease.hpo_id
         outputs:
         - id: OMIM
           semantic: Disease
+        parameters:
+          fields: hpo.omim
+          size: 1000  ## note the size limit
         predicate: phenotype_of
         source: "infores:hpo-annotations"
         response_mapping:
@@ -840,21 +849,22 @@ components:
         #     oneOutput: "OMIM:608720"   ## Neuropathy, Hereditary Sensory And Autonomic, Adult-onset, With Anosmia
     phenotype-disease2:
       - supportBatch: true
-        inputSeparator: ","
-        parameters:
-          fields: hpo.orphanet
-          size: 1000  ## note the size limit
-        requestBody:
-          body:
-            q: "{inputs[0]}"   ## HAS PREFIX (HP)  
-            scopes: hpo.phenotype_related_to_disease.hpo_id
-          header: application/x-www-form-urlencoded
+        useTemplating: true
         inputs:
         - id: HP
           semantic: PhenotypicFeature
+        requestBody:
+          body:
+            ## HAS PREFIX (HP): currently a bit redundant to do this (BTE handles it)
+            # q: "{{ queryInputs | replPrefix('HP', ':') }}"
+            q: "{{ queryInputs }}"
+            scopes: hpo.phenotype_related_to_disease.hpo_id
         outputs:
         - id: ORPHANET
           semantic: Disease
+        parameters:
+          fields: hpo.orphanet
+          size: 1000  ## note the size limit
         predicate: phenotype_of
         source: "infores:hpo-annotations"
         response_mapping:
@@ -864,21 +874,22 @@ components:
         #     oneOutput: "ORPHANET:99857"   ## Secondary Syringomyelia
     chemical-disease:
       - supportBatch: true
-        inputSeparator: ","
-        parameters:
-          fields: ctd.mesh
-          size: 1000  ## note the size limit
-        requestBody:
-          body:
-            q: "{inputs[0]}"  ## no prefix
-            scopes: ctd.chemical_related_to_disease.mesh_chemical_id
-          header: application/x-www-form-urlencoded
+        useTemplating: true
         inputs:
         - id: MESH
           semantic: SmallMolecule
+        requestBody:
+          body:
+            ## currently, BTE already strips prefix...
+            # q: "{{ queryInputs | rmPrefix }}"
+            q: "{{ queryInputs }}"  ## no prefix
+            scopes: ctd.chemical_related_to_disease.mesh_chemical_id
         outputs:
         - id: MESH
           semantic: Disease
+        parameters:
+          fields: ctd.mesh
+          size: 1000  ## note the size limit
         predicate: related_to
         source: "infores:ctd"
         response_mapping:
@@ -888,21 +899,22 @@ components:
         #     oneOutput: "MESH:D008288"   ## Malaria (maps to MONDO:0005136)
     chemical-disease2:
       - supportBatch: true
-        inputSeparator: ","
-        parameters:
-          fields: ctd.omim
-          size: 1000  ## note the size limit
-        requestBody:
-          body:
-            q: "{inputs[0]}"    ## no prefix
-            scopes: ctd.chemical_related_to_disease.mesh_chemical_id
-          header: application/x-www-form-urlencoded
+        useTemplating: true
         inputs:
         - id: MESH
           semantic: SmallMolecule
+        requestBody:
+          body:
+            ## currently, BTE already strips prefix...
+            # q: "{{ queryInputs | rmPrefix }}"
+            q: "{{ queryInputs }}"    ## no prefix
+            scopes: ctd.chemical_related_to_disease.mesh_chemical_id
         outputs:
         - id: OMIM
           semantic: Disease
+        parameters:
+          fields: ctd.omim
+          size: 1000  ## note the size limit
         predicate: related_to
         source: "infores:ctd"
         response_mapping: 
@@ -921,21 +933,22 @@ components:
     ##     - disjoint from (this is a negation / NOT relationship)
     has_subclass:
       - supportBatch: true
-        inputSeparator: ","
-        parameters:
-          fields: mondo.children
-          size: 1000  ## note the size limit
-        requestBody:
-          body:
-            q: "{inputs[0]}"  ## HAS PREFIX (MONDO)
-            scopes: mondo.mondo
-          header: application/x-www-form-urlencoded
+        useTemplating: true
         inputs:
         - id: MONDO
           semantic: Disease
+        requestBody:
+          body:
+            ## HAS PREFIX (MONDO): currently a bit redundant to do this (BTE handles it)
+            # q: "{{ queryInputs | replPrefix('MONDO', ':') }}"
+            q: "{{ queryInputs }}"
+            scopes: mondo.mondo
         outputs:
         - id: MONDO
           semantic: Disease
+        parameters:
+          fields: mondo.children
+          size: 1000  ## note the size limit
         predicate: superclass_of  ## this is the inverse of subclass_of right now
         ## relation: "has children"?
         source: "infores:mondo"
@@ -946,21 +959,22 @@ components:
         #     oneOutput: "MONDO:0021698"   ## alcohol-related disorders          
     subclass_of:
       - supportBatch: true
-        inputSeparator: ","
-        parameters:
-          fields: mondo.parents
-          size: 1000  ## note the size limit
-        requestBody:
-          body:
-            q: "{inputs[0]}"   ## HAS PREFIX (MONDO)
-            scopes: mondo.mondo
-          header: application/x-www-form-urlencoded
+        useTemplating: true
         inputs:
         - id: MONDO
           semantic: Disease
+        requestBody:
+          body:
+            ## HAS PREFIX (MONDO): currently a bit redundant to do this (BTE handles it)
+            # q: "{{ queryInputs | replPrefix('MONDO', ':') }}"
+            q: "{{ queryInputs }}"
+            scopes: mondo.mondo
         outputs:
         - id: MONDO
           semantic: Disease
+        parameters:
+          fields: mondo.parents
+          size: 1000  ## note the size limit
         predicate: subclass_of
         ## relation: "has parents"?
         source: "infores:mondo"
@@ -971,21 +985,22 @@ components:
         #     oneOutput: "MONDO:0002025"   ## psychiatric disorder
     predisposes_towards:
       - supportBatch: true
-        inputSeparator: ","
-        parameters:
-          fields: mondo.predisposes_towards.mondo
-          size: 1000  ## note the size limit
-        requestBody:
-          body:
-            q: "{inputs[0]}"   ## HAS PREFIX (MONDO)
-            scopes: mondo.mondo
-          header: application/x-www-form-urlencoded
+        useTemplating: true
         inputs:
         - id: MONDO
           semantic: Disease
+        requestBody:
+          body:
+            ## HAS PREFIX (MONDO): currently a bit redundant to do this (BTE handles it)
+            # q: "{{ queryInputs | replPrefix('MONDO', ':') }}"
+            q: "{{ queryInputs }}"
+            scopes: mondo.mondo
         outputs:
         - id: MONDO
           semantic: Disease
+        parameters:
+          fields: mondo.predisposes_towards.mondo
+          size: 1000  ## note the size limit
         predicate: contributes_to  ## maps to "MONDO:predisposes_towards"
         ## could use more specific biolink predicate like predisposes??
         source: "infores:mondo"
@@ -996,21 +1011,22 @@ components:
         #     oneOutput: "MONDO:0004979"   ## asthma
     predisposes_towards-rev:
       - supportBatch: true
-        inputSeparator: ","
-        parameters:
-          fields: mondo.mondo
-          size: 1000  ## note the size limit
-        requestBody:
-          body:
-            q: "{inputs[0]}"   ## HAS PREFIX (MONDO)
-            scopes: mondo.predisposes_towards.mondo
-          header: application/x-www-form-urlencoded
+        useTemplating: true
         inputs:
         - id: MONDO
           semantic: Disease
+        requestBody:
+          body:
+            ## HAS PREFIX (MONDO): currently a bit redundant to do this (BTE handles it)
+            # q: "{{ queryInputs | replPrefix('MONDO', ':') }}"
+            q: "{{ queryInputs }}"
+            scopes: mondo.predisposes_towards.mondo
         outputs:
         - id: MONDO
           semantic: Disease
+        parameters:
+          fields: mondo.mondo
+          size: 1000  ## note the size limit
         predicate: contribution_from
         ## inverse of contributes_to, which is mapped to "MONDO:predisposes_towards"
         ## no relation then...
@@ -1022,21 +1038,22 @@ components:
         #     oneOutput: "MONDO:0010940"   ## inherited susceptibility to asthma
     disease_shares_features_of:
       - supportBatch: true
-        inputSeparator: ","
-        parameters:
-          fields: mondo.disease_shares_features_of.mondo
-          size: 1000  ## note the size limit
-        requestBody:
-          body:
-            q: "{inputs[0]}"   ## HAS PREFIX (MONDO)
-            scopes: mondo.mondo
-          header: application/x-www-form-urlencoded
+        useTemplating: true
         inputs:
         - id: MONDO
           semantic: Disease
+        requestBody:
+          body:
+            ## HAS PREFIX (MONDO): currently a bit redundant to do this (BTE handles it)
+            # q: "{{ queryInputs | replPrefix('MONDO', ':') }}"
+            q: "{{ queryInputs }}"
+            scopes: mondo.mondo
         outputs:
         - id: MONDO
           semantic: Disease
+        parameters:
+          fields: mondo.disease_shares_features_of.mondo
+          size: 1000  ## note the size limit
         predicate: similar_to  ## could biolink have a more specific predicate?
         ##   note that relation maps to biolink:related_to right now...
         source: "infores:mondo"
@@ -1049,21 +1066,22 @@ components:
     ## checked and inverse relationship doesn't exist already in the data
     ##   for example, the record for Carpenter syndrome doesn't have disease_shares_features_of
       - supportBatch: true
-        inputSeparator: ","
-        parameters:
-          fields: mondo.mondo
-          size: 1000  ## note the size limit
-        requestBody:
-          body:
-            q: "{inputs[0]}"   ## HAS PREFIX (MONDO)
-            scopes: mondo.disease_shares_features_of.mondo
-          header: application/x-www-form-urlencoded
+        useTemplating: true
         inputs:
         - id: MONDO
           semantic: Disease
+        requestBody:
+          body:
+            ## HAS PREFIX (MONDO): currently a bit redundant to do this (BTE handles it)
+            # q: "{{ queryInputs | replPrefix('MONDO', ':') }}"
+            q: "{{ queryInputs }}"
+            scopes: mondo.disease_shares_features_of.mondo
         outputs:
         - id: MONDO
           semantic: Disease
+        parameters:
+          fields: mondo.mondo
+          size: 1000  ## note the size limit
         predicate: similar_to  ## could biolink have a more specific predicate?
         source: "infores:mondo"
         response_mapping:
@@ -1073,21 +1091,22 @@ components:
         #     oneOutput: "MONDO:0008711"   ## Goodman syndrome
     disease_has_major_feature:
       - supportBatch: true
-        inputSeparator: ","
-        parameters:
-          fields: mondo.disease_has_major_feature.mondo
-          size: 1000  ## note the size limit
-        requestBody:
-          body:
-            q: "{inputs[0]}"   ## HAS PREFIX (MONDO)
-            scopes: mondo.mondo
-          header: application/x-www-form-urlencoded
+        useTemplating: true
         inputs:
         - id: MONDO
           semantic: Disease
+        requestBody:
+          body:
+            ## HAS PREFIX (MONDO): currently a bit redundant to do this (BTE handles it)
+            # q: "{{ queryInputs | replPrefix('MONDO', ':') }}"
+            q: "{{ queryInputs }}"
+            scopes: mondo.mondo
         outputs:
         - id: MONDO
           semantic: Disease
+        parameters:
+          fields: mondo.disease_has_major_feature.mondo
+          size: 1000  ## note the size limit
         predicate: has_part  ## maps to "MONDO:disease_has_major_feature"
         source: "infores:mondo"
         response_mapping:
@@ -1097,21 +1116,22 @@ components:
         #     oneOutput: "MONDO:0001627"   ## dementia (disease)
     disease_has_major_feature-rev:
       - supportBatch: true
-        inputSeparator: ","
-        parameters:
-          fields: mondo.mondo
-          size: 1000  ## note the size limit
-        requestBody:
-          body:
-            q: "{inputs[0]}"   ## HAS PREFIX (MONDO)
-            scopes: mondo.disease_has_major_feature.mondo
-          header: application/x-www-form-urlencoded
+        useTemplating: true
         inputs:
         - id: MONDO
           semantic: Disease
+        requestBody:
+          body:
+            ## HAS PREFIX (MONDO): currently a bit redundant to do this (BTE handles it)
+            # q: "{{ queryInputs | replPrefix('MONDO', ':') }}"
+            q: "{{ queryInputs }}"
+            scopes: mondo.disease_has_major_feature.mondo
         outputs:
         - id: MONDO
           semantic: Disease
+        parameters:
+          fields: mondo.mondo
+          size: 1000  ## note the size limit
         predicate: part_of  ## could biolink have a more specific predicate?
         source: "infores:mondo"
         response_mapping:
@@ -1121,21 +1141,22 @@ components:
         #     oneOutput: "MONDO:0015140"   ## early-onset autosomal dominant Alzheimer disease
     disease_has_feature:
       - supportBatch: true
-        inputSeparator: ","
-        parameters:
-          fields: mondo.disease_has_feature.mondo
-          size: 1000  ## note the size limit
-        requestBody:
-          body:
-            q: "{inputs[0]}"   ## HAS PREFIX (MONDO)
-            scopes: mondo.mondo
-          header: application/x-www-form-urlencoded
+        useTemplating: true
         inputs:
         - id: MONDO
           semantic: Disease
+        requestBody:
+          body:
+            ## HAS PREFIX (MONDO): currently a bit redundant to do this (BTE handles it)
+            # q: "{{ queryInputs | replPrefix('MONDO', ':') }}"
+            q: "{{ queryInputs }}"
+            scopes: mondo.mondo
         outputs:
         - id: MONDO
           semantic: Disease
+        parameters:
+          fields: mondo.disease_has_feature.mondo
+          size: 1000  ## note the size limit
         predicate: has_part  ## no biolink mapping...
         source: "infores:mondo"
         response_mapping:
@@ -1145,21 +1166,22 @@ components:
         #     oneOutput: "MONDO:0005020"   ## intestinal disease
     disease_has_feature-rev:
       - supportBatch: true
-        inputSeparator: ","
-        parameters:
-          fields: mondo.mondo
-          size: 1000  ## note the size limit
-        requestBody:
-          body:
-            q: "{inputs[0]}"   ## HAS PREFIX (MONDO)
-            scopes: mondo.disease_has_feature.mondo
-          header: application/x-www-form-urlencoded
+        useTemplating: true
         inputs:
         - id: MONDO
           semantic: Disease
+        requestBody:
+          body:
+            ## HAS PREFIX (MONDO): currently a bit redundant to do this (BTE handles it)
+            # q: "{{ queryInputs | replPrefix('MONDO', ':') }}"
+            q: "{{ queryInputs }}"
+            scopes: mondo.disease_has_feature.mondo
         outputs:
         - id: MONDO
           semantic: Disease
+        parameters:
+          fields: mondo.mondo
+          size: 1000  ## note the size limit
         predicate: part_of
         source: "infores:mondo"
         response_mapping:
@@ -1169,21 +1191,22 @@ components:
         #     oneOutput: "MONDO:0005796"   ## HIV enteropathy
     disease_causes_feature:
       - supportBatch: true
-        inputSeparator: ","
-        parameters:
-          fields: mondo.disease_causes_feature.mondo
-          size: 1000  ## note the size limit
-        requestBody:
-          body:
-            q: "{inputs[0]}"   ## HAS PREFIX (MONDO)
-            scopes: mondo.mondo
-          header: application/x-www-form-urlencoded
+        useTemplating: true
         inputs:
         - id: MONDO
           semantic: Disease
+        requestBody:
+          body:
+            ## HAS PREFIX (MONDO): currently a bit redundant to do this (BTE handles it)
+            # q: "{{ queryInputs | replPrefix('MONDO', ':') }}"
+            q: "{{ queryInputs }}"
+            scopes: mondo.mondo
         outputs:
         - id: MONDO
           semantic: Disease
+        parameters:
+          fields: mondo.disease_causes_feature.mondo
+          size: 1000  ## note the size limit
         predicate: causes  ## maps to "MONDO:disease_causes_feature"
         source: "infores:mondo"
         response_mapping:
@@ -1193,21 +1216,22 @@ components:
         #     oneOutput: "MONDO:0001106"   ## kidney failure
     disease_causes_feature-rev:
       - supportBatch: true
-        inputSeparator: ","
-        parameters:
-          fields: mondo.mondo
-          size: 1000  ## note the size limit
-        requestBody:
-          body:
-            q: "{inputs[0]}"   ## HAS PREFIX (MONDO)
-            scopes: mondo.disease_causes_feature.mondo
-          header: application/x-www-form-urlencoded
+        useTemplating: true
         inputs:
         - id: MONDO
           semantic: Disease
+        requestBody:
+          body:
+            ## HAS PREFIX (MONDO): currently a bit redundant to do this (BTE handles it)
+            # q: "{{ queryInputs | replPrefix('MONDO', ':') }}"
+            q: "{{ queryInputs }}"
+            scopes: mondo.disease_causes_feature.mondo
         outputs:
         - id: MONDO
           semantic: Disease
+        parameters:
+          fields: mondo.mondo
+          size: 1000  ## note the size limit
         predicate: caused_by
         source: "infores:mondo"
         response_mapping:
@@ -1217,21 +1241,22 @@ components:
         #     oneOutput: "MONDO:0000490"   ## glomerulosclerosis
     disease_arises_from_feature:
       - supportBatch: true
-        inputSeparator: ","
-        parameters:
-          fields: mondo.disease_arises_from_feature.mondo
-          size: 1000  ## note the size limit
-        requestBody:
-          body:
-            q: "{inputs[0]}"   ## HAS PREFIX (MONDO)
-            scopes: mondo.mondo
-          header: application/x-www-form-urlencoded
+        useTemplating: true
         inputs:
         - id: MONDO
           semantic: Disease
+        requestBody:
+          body:
+            ## HAS PREFIX (MONDO): currently a bit redundant to do this (BTE handles it)
+            # q: "{{ queryInputs | replPrefix('MONDO', ':') }}"
+            q: "{{ queryInputs }}"
+            scopes: mondo.mondo
         outputs:
         - id: MONDO
           semantic: Disease
+        parameters:
+          fields: mondo.disease_arises_from_feature.mondo
+          size: 1000  ## note the size limit
         predicate: caused_by
         source: "infores:mondo"
         response_mapping:
@@ -1241,21 +1266,20 @@ components:
           #     oneOutput: "MONDO:0021568"   ## renal tubule disease
     disease_arises_from_feature-rev:
       - supportBatch: true
-        inputSeparator: ","
-        parameters:
-          fields: mondo.mondo
-          size: 1000  ## note the size limit
-        requestBody:
-          body:
-            q: "{inputs[0]}"   ## HAS PREFIX (MONDO)
-            scopes: mondo.disease_arises_from_feature.mondo
-          header: application/x-www-form-urlencoded
+        useTemplating: true
         inputs:
         - id: MONDO
           semantic: Disease
+        requestBody:
+          body:
+            q: "{{ queryInputs }}"   ## HAS PREFIX (MONDO)
+            scopes: mondo.disease_arises_from_feature.mondo
         outputs:
         - id: MONDO
           semantic: Disease
+        parameters:
+          fields: mondo.mondo
+          size: 1000  ## note the size limit
         predicate: causes
         source: "infores:mondo"
         response_mapping:
