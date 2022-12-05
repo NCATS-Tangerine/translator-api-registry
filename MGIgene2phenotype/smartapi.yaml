@@ -434,36 +434,71 @@ components:
   #       type: array
   #     - type: string
   x-bte-kgs-operations:
+  ## most of the API has mouse gene ID crossref (from MGI -> NCBIGene). incorrectly labeled "has homolog"
     gene_related_to_disease:
+    ## there are 2949 records with mgi.associated_with_disease field
+    ##   only 1838 of these records also have mgi.has_homolog field (NCBIGene ID for mouse gene)
+    ##   all have DOID field. Don't use OMIM field since its value is an empty string in some records
     - supportBatch: true
-      inputSeparator: ","
+      useTemplating: true
       inputs:
       - id: MGI
         semantic: Gene
       requestBody:
         body:
-          q: "{inputs[0]}"
-          scopes: _id
+          q: "{{ queryInputs }}"
+          scopes: _id  ## has prefix
         header: application/x-www-form-urlencoded
       outputs:
       - id: DOID
         semantic: Disease
       parameters:
-        fields: mgi.associated_with_disease
+        fields: mgi.associated_with_disease.doid  ## has prefix
       predicate: related_to
       source: "infores:mgi"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/gene_related_to_disease"
-    gene_related_to_phenotype:
+      # testExamples:
+      #   - qInput: "MGI:104511"        ## Tnfsf4
+      #     oneOutput: "DOID:14557"     ## primary pulmonary hypertension
+    disease_related_to_gene:
+    ## "reverse-type" operation
     - supportBatch: true
-      inputSeparator: ","
+      useTemplating: true
+      inputs:
+      - id: DOID
+        semantic: Disease
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"
+          scopes: mgi.associated_with_disease.doid  ## has prefix
+        header: application/x-www-form-urlencoded
+      outputs:
+      - id: MGI
+        semantic: Gene
+      parameters:
+        fields: _id  ## has prefix
+        size: 1000
+      predicate: related_to
+      source: "infores:mgi"
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/mgi"
+      # testExamples:
+      #   - qInput: "DOID:0110731"      ## neuronal ceroid lipofuscinosis 3
+      #     oneOutput: "MGI:103555"     ## Clcn3
+    gene_related_to_phenotype:
+    ## there are 1447 records with mgi.associated_with_phenotype field
+    ##   1359 of these records also have mgi.has_homolog field (NCBIGene ID for mouse gene)
+    ##   all have MP field (mouse phenotype)
+    - supportBatch: true
+      useTemplating: true
       inputs:
       - id: MGI
         semantic: Gene
       requestBody:
         body:
-          q: "{inputs[0]}"
-          scopes: _id
+          q: "{{ queryInputs }}"
+          scopes: _id  ## has prefix
         header: application/x-www-form-urlencoded
       outputs:
       - id: MP
@@ -474,53 +509,42 @@ components:
       source: "infores:mgi"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/gene_related_to_phenotype"
-    disease_related_to_gene:
-    - supportBatch: true
-      inputSeparator: ","
-      inputs:
-      - id: DOID
-        semantic: Disease
-      requestBody:
-        body:
-          q: "{inputs[0]}"
-          scopes: mgi.associated_with_disease.doid
-        header: application/x-www-form-urlencoded
-      outputs:
-      - id: MGI
-        semantic: Gene
-      parameters:
-        fields: _id
-        size: '300'
-      predicate: related_to
-      source: "infores:mgi"
-      response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/mgi"
+      # testExamples:
+      #   - qInput: "MGI:102539"        ## Tbx6
+      #     oneOutput: "MP:0002151"     ## abnormal neural tube morphology
     phenotype_related_to_gene:
+    ## "reverse-type" operation
     - supportBatch: true
-      inputSeparator: ","
+      useTemplating: true
       inputs:
       - id: MP
         semantic: PhenotypicFeature
       requestBody:
         body:
-          q: "{inputs[0]}"
-          scopes: mgi.associated_with_phenotype.mp
+          q: "{{ queryInputs }}"
+          scopes: mgi.associated_with_phenotype.mp  ## has prefix
       outputs:
       - id: MGI
         semantic: Gene
       parameters:
-        fields: _id
-        size: '300'
+        fields: _id  ## has prefix
+        size: 1000
       predicate: related_to
       source: "infores:mgi"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/mgi"
+      # testExamples: 
+      #   - qInput: "MP:0000623"         ## decreased salivation
+      #     oneOutput: "MGI:88398"       ## Chrm3
   x-bte-response-mapping:
     gene_related_to_disease:
-      DOID: mgi.associated_with_disease.doid
-      name: mgi.associated_with_disease.name
+      DOID: mgi.associated_with_disease.doid  ## has prefix
     gene_related_to_phenotype:
-      MP: mgi.associated_with_phenotype.mp
-      pubmed: mgi.associated_with_phenotype.pubmed
+      MP: mgi.associated_with_phenotype.mp  ## has prefix
+      pubmed: mgi.associated_with_phenotype.pubmed  ## no prefix
+      mgi_allele_id: mgi.associated_with_phenotype.allele_id  ## curie
+      mgi_allele_symbol: mgi.associated_with_phenotype.allele_symbol  ## free text?
+      mgi_allelic_composition: mgi.associated_with_phenotype.allelic_composition  ## free text?
+      mgi_genetic_background: mgi.associated_with_phenotype.genetic_background  ## free text?
     mgi:
-      MGI: _id
+      MGI: _id  ## has prefix
