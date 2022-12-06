@@ -525,16 +525,15 @@ components:
     ##   https://nodenormalization-sri.renci.org/1.2/get_normalized_nodes?curie=MEDDRA%3A10021639&conflate=true
     ##   But some seem like PhenotypicFeatures...
     - supportBatch: true
-      inputSeparator: ","
+      useTemplating: true
       inputs:
       - id: UNII
         semantic: SmallMolecule
       requestBody:
         body:
-          q: "{inputs[0]}"  ## no prefix
+          q: "{{ queryInputs }}"  ## no prefix
           scopes: aeolus.unii
           ## all 3044 records have unii, only 1931 have inchikey
-        header: application/x-www-form-urlencoded
       outputs:
       - id: MEDDRA
         semantic: Disease
@@ -552,15 +551,14 @@ components:
     ##   un-comment the operation in x-bte-kgs-operation list under post and try this out 
     aeolusTreats-rev:
     - supportBatch: true
-      inputSeparator: ","
+      useTemplating: true
       inputs:
       - id: MEDDRA
         semantic: Disease
       requestBody:
         body:
-          q: "{inputs[0]}"  ## no prefix
+          q: "{{ queryInputs }}"  ## no prefix
           scopes: aeolus.indications.meddra_code
-        header: application/x-www-form-urlencoded
       outputs:
       - id: UNII
         semantic: SmallMolecule
@@ -587,15 +585,14 @@ components:
     chebiToReactome:
     ## there are 1941 records with chebi.xrefs.reactome
     - supportBatch: true
-      inputSeparator: ","
+      useTemplating: true
       inputs:
       - id: CHEBI
         semantic: SmallMolecule
       requestBody:
         body:
-          q: "{inputs[0]}"  ## HAS PREFIX!
+          q: "{{ queryInputs }}"  ## HAS PREFIX!
           scopes: chebi.id
-        header: application/x-www-form-urlencoded
       outputs:
       ## uses Reactome Reaction, not pathway...
       - id: REACT
@@ -612,15 +609,14 @@ components:
       #     oneOutput: "REACT:R-HSA-139970"  ##  FMO3:FAD N-oxidises TMA to TMAO 
     chebiToReactome-rev:
     - supportBatch: true
-      inputSeparator: ","
+      useTemplating: true
       inputs:
       - id: REACT
         semantic: MolecularActivity
       requestBody:
         body:
-          q: "{inputs[0]}"  ## no prefix
+          q: "{{ queryInputs }}"  ## no prefix
           scopes: chebi.xrefs.reactome
-        header: application/x-www-form-urlencoded
       outputs:
       - id: CHEBI
         semantic: SmallMolecule
@@ -637,15 +633,14 @@ components:
     chebiToRhea:
     ## there are 11079 records with chebi.xrefs.rhea
     - supportBatch: true
-      inputSeparator: ","
+      useTemplating: true
       inputs:
       - id: CHEBI
         semantic: SmallMolecule
       requestBody:
         body:
-          q: "{inputs[0]}"  ## HAS PREFIX!
+          q: "{{ queryInputs }}"  ## HAS PREFIX!
           scopes: chebi.id
-        header: application/x-www-form-urlencoded
       outputs:
       - id: RHEA
         semantic: MolecularActivity
@@ -661,15 +656,14 @@ components:
       #     oneOutput: "RHEA:47616"   ## ethionamide + H(+) + NADPH + O2 = ethionamide S-oxide + H2O + NADP(+)
     chebiToRhea-rev:
     - supportBatch: true
-      inputSeparator: ","
+      useTemplating: true
       inputs:
       - id: RHEA
         semantic: MolecularActivity
       requestBody:
         body:
-          q: "{inputs[0]}"  ## HAS PREFIX (RHEA)
+          q: "{{ queryInputs }}"  ## HAS PREFIX (RHEA)
           scopes: chebi.xrefs.rhea
-        header: application/x-www-form-urlencoded
       outputs:
       - id: CHEBI
         semantic: SmallMolecule
@@ -682,7 +676,7 @@ components:
         "$ref": "#/components/x-bte-response-mapping/chebi"
       # testExamples:
       #   - qInput: "RHEA:23312"      ## 2 sucrose = 1(F)-beta-D-fructosylsucrose + D-glucose
-      #     oneOutput: "CHEBI:16885"  ## 1-kestose
+      #     oneOutput: "CHEBI:16885"  ## 1-kestose / 1(F)-beta-D-fructosylsucrose
     ## chembl
     ## - not including drug_mechanisms because 
     ##   * it uses CHEMBL.TARGET IDs and SRI ID resolver doesn't support that yet...
@@ -690,15 +684,14 @@ components:
     treatsChembl:
     ## all drug_indication records have a mesh ID for the indication...
     - supportBatch: true
-      inputSeparator: ","
+      useTemplating: true
       inputs:
       - id: CHEMBL.COMPOUND
         semantic: SmallMolecule
       requestBody:
         body:
-          q: "{inputs[0]}"  ## no prefix
+          q: "{{ queryInputs }}"  ## no prefix
           scopes: chembl.molecule_chembl_id
-        header: application/x-www-form-urlencoded
       outputs:
       - id: MESH
         semantic: Disease
@@ -722,15 +715,14 @@ components:
       #     oneOutput: "MESH:D000072658"             ## Non-ST Elevated Myocardial Infarction
     treatsChembl-rev:
     - supportBatch: true
-      inputSeparator: ","
+      useTemplating: true
       inputs:
       - id: MESH
         semantic: Disease
       requestBody:
         body:
-          q: "{inputs[0]}"  ## no prefix
+          q: "{{ queryInputs }}"  ## no prefix
           scopes: chembl.drug_indications.mesh_id
-        header: application/x-www-form-urlencoded
       outputs:
       - id: CHEMBL.COMPOUND
         semantic: SmallMolecule
@@ -757,7 +749,7 @@ components:
       ##   possible values: "Homo sapiens", "Rattus norvegicus", "Bos taurus", "Mus musculus"...
       ## I'm not clear on how to get only human genes to return...
     - supportBatch: true
-      inputSeparator: ","
+      useTemplating: true
       inputs:
       ## there are 2382 records with drugcentral.bioactivity fields
       ##   most of them (2362) also have the drugcentral.xrefs.chembl_id field
@@ -765,9 +757,8 @@ components:
         semantic: SmallMolecule
       requestBody:
         body:
-          q: "{inputs[0]}"  ## no prefix
+          q: "{{ queryInputs }}"  ## no prefix
           scopes: drugcentral.xrefs.chembl_id
-        header: application/x-www-form-urlencoded
       outputs:
       - id: UniProtKB
         semantic: Gene
@@ -798,15 +789,14 @@ components:
       #     oneOutput: "UniProtKB:Q07869"              ## PPARA
     drugcentral-bioactivity-rev:
     - supportBatch: true
-      inputSeparator: ","
+      useTemplating: true
       inputs:
       - id: UniProtKB
         semantic: Gene
       requestBody:
         body:
-          q: "{inputs[0]}"  ## no prefix
+          q: "{{ queryInputs }}"  ## no prefix
           scopes: drugcentral.bioactivity.uniprot.uniprot_id
-        header: application/x-www-form-urlencoded
       outputs:
       - id: CHEMBL.COMPOUND
         semantic: SmallMolecule
@@ -822,7 +812,7 @@ components:
       #     oneOutput: "CHEMBL.COMPOUND:CHEMBL1252"    ## abarelix
     drugcentral-contraindication:
     - supportBatch: true
-      inputSeparator: ","
+      useTemplating: true
       inputs:
       - id: CHEMBL.COMPOUND
         semantic: SmallMolecule
@@ -830,9 +820,8 @@ components:
       ##   most of them (1365) also have the drugcentral.xrefs.chembl_id field
       requestBody:
         body:
-          q: "{inputs[0]}"  ## no prefix
+          q: "{{ queryInputs }}"  ## no prefix
           scopes: drugcentral.xrefs.chembl_id
-        header: application/x-www-form-urlencoded
       outputs:
       - id: UMLS
         semantic: Disease
@@ -851,15 +840,14 @@ components:
       #     oneOutput: "UMLS:C0001973"              ## Alcoholism
     drugcentral-contraindication-rev:
     - supportBatch: true
-      inputSeparator: ","
+      useTemplating: true
       inputs:
       - id: UMLS
         semantic: Disease
       requestBody:
         body:
-          q: "{inputs[0]}"  ## no prefix
+          q: "{{ queryInputs }}"  ## no prefix
           scopes: drugcentral.drug_use.contraindication.umls_cui
-        header: application/x-www-form-urlencoded
       outputs:
       - id: CHEMBL.COMPOUND
         semantic: SmallMolecule
@@ -876,7 +864,7 @@ components:
     drugcentral-indication:
     ## note: some records don't have the needed output IDs...only a concept name...
     - supportBatch: true
-      inputSeparator: ","
+      useTemplating: true
       inputs:
       - id: UNII
         semantic: SmallMolecule
@@ -885,9 +873,8 @@ components:
       ## note: there were slightly less records (2320) with the drugcentral.xrefs.chembl_id field
       requestBody:
         body:
-          q: "{inputs[0]}"  ## no prefix
+          q: "{{ queryInputs }}"  ## no prefix
           scopes: drugcentral.xrefs.unii
-        header: application/x-www-form-urlencoded
       outputs:
       - id: UMLS
         semantic: Disease
@@ -907,17 +894,16 @@ components:
       #     oneOutput: "UMLS:C0242339"   ## Dyslipidemia
     drugcentral-indication-rev:
     - supportBatch: true
-      inputSeparator: ","
+      useTemplating: true
       inputs:
       - id: UMLS
         semantic: Disease
       requestBody:
         body:
-          q: "{inputs[0]}"  ## no prefix
+          q: "{{ queryInputs }}"  ## no prefix
           ## example: put C0038013 here (Ankylosing spondylitis)
           ##   should get CHEMBL650 (METHYLPREDNISOLONE) in response
           scopes: drugcentral.drug_use.indication.umls_cui
-        header: application/x-www-form-urlencoded
       outputs:
       - id: UNII
         semantic: SmallMolecule
@@ -930,7 +916,7 @@ components:
         "$ref": "#/components/x-bte-response-mapping/drugcentral-unii"
       # testExamples:
       #   - qInput: "UMLS:C0234974"    ## Simple partial seizure
-      #     oneOutput: "UNII:44YRR34555"   ## keppra
+      #     oneOutput: "UNII:44YRR34555"   ## keppra / Levetiracetam
     ## edit, try this out once spaces in fields are fixed (next MyChem release)
     drugcentral-offlabel:
     - supportBatch: true
@@ -941,18 +927,13 @@ components:
       ## there are 782 records with "drugcentral.drug_use.off_label_use" fields
       ##   most of them (780) also have the drugcentral.xrefs.chembl_id field 
       ## note: there were slightly less records (775) with the drugcentral.xrefs.unii field
-      requestBodyType: object
       requestBody:
-        body: >-
-          { 
-            "q": "{{ queryInputs }}",
-            "scopes": "drugcentral.xrefs.chembl_id"
-          }
-        header: application/x-www-form-urlencoded
+        body:
+          q: "{{ queryInputs }}"  ## no prefix
+          scopes: drugcentral.xrefs.chembl_id
       outputs:
       - id: UMLS
         semantic: Disease
-      ## moved parameters (fields, size) to the request body to allow MyChem to handle field with space inside...
       parameters:
         fields: drugcentral.drug_use.off_label_use.umls_cui
         size: 1000     ## note size limit; added just in case
@@ -965,21 +946,17 @@ components:
         "$ref": "#/components/x-bte-response-mapping/drugcentral-offlabel"
       # testExamples:
       #   - qInput: "CHEMBL.COMPOUND:CHEMBL11"    ## imipramine
-      #     oneOutput: "UMLS:C0027796"   ## Neuropathic pain
+      #     oneOutput: "UMLS:C0027796"   ## Neuropathic pain / neuralgia
     drugcentral-offlabel-rev:
     - supportBatch: true
       useTemplating: true
       inputs:
       - id: UMLS
         semantic: Disease
-      requestBodyType: object  
       requestBody:
-        body: >-
-          {
-            "q": "{{ queryInputs }}",
-            "scopes": ["drugcentral.drug_use.off_label_use.umls_cui"]
-          }
-        header: application/x-www-form-urlencoded
+        body:
+          q: "{{ queryInputs }}"  ## no prefix
+          scopes: drugcentral.drug_use.off_label_use.umls_cui
       outputs:
       - id: "CHEMBL.COMPOUND"
         semantic: SmallMolecule
@@ -998,7 +975,7 @@ components:
     ##   https://nodenormalization-sri.renci.org/1.2/get_normalized_nodes?curie=MEDDRA%3A10035528&conflate=true
     ##   But some are definitely PhenotypicFeatures...
     - supportBatch: true
-      inputSeparator: ","
+      useTemplating: true
       inputs:
       - id: CHEMBL.COMPOUND
         semantic: SmallMolecule
@@ -1006,9 +983,8 @@ components:
       ##   most of them (1994) also have the drugcentral.xrefs.chembl_id field
       requestBody:
         body:
-          q: "{inputs[0]}"  ## no prefix
+          q: "{{ queryInputs }}"  ## no prefix
           scopes: drugcentral.xrefs.chembl_id
-        header: application/x-www-form-urlencoded
       outputs:
       - id: MEDDRA
         semantic: Disease
@@ -1033,15 +1009,14 @@ components:
       #     oneOutput: "MEDDRA:10006093"           ## Bradycardia
     drugcentral-adverseEvent-rev:
     - supportBatch: true
-      inputSeparator: ","
+      useTemplating: true
       inputs:
       - id: MEDDRA
         semantic: Disease
       requestBody:
         body:
-          q: "{inputs[0]}"  ## no prefix
+          q: "{{ queryInputs }}"  ## no prefix
           scopes: drugcentral.fda_adverse_event.meddra_code
-        header: application/x-www-form-urlencoded
       outputs:
       - id: CHEMBL.COMPOUND
         semantic: SmallMolecule
@@ -1058,7 +1033,7 @@ components:
       #     oneOutput: "CHEMBL.COMPOUND:CHEMBL395091"      ## esketamine HCl
     fdaOrphanData:
     - supportBatch: true
-      inputSeparator: ","
+      useTemplating: true
       inputs:
       - id: PUBCHEM.COMPOUND
         semantic: SmallMolecule
@@ -1067,9 +1042,8 @@ components:
       ##   same amount have inchikey field...
       requestBody:
         body:
-          q: "{inputs[0]}"  ## no prefix
+          q: "{{ queryInputs }}"  ## no prefix
           scopes: fda_orphan_drug.pubchem_cid
-        header: application/x-www-form-urlencoded
       outputs:
       - id: UMLS
         semantic: Disease
@@ -1100,15 +1074,14 @@ components:
       #     oneOutput: "UMLS:C0023467"             ## Acute myeloid leukemia
     fdaOrphanData-rev:
     - supportBatch: true
-      inputSeparator: ","
+      useTemplating: true
       inputs:
       - id: UMLS
         semantic: Disease
       requestBody:
         body:
-          q: "{inputs[0]}"  ## no prefix
+          q: "{{ queryInputs }}"  ## no prefix
           scopes: fda_orphan_drug.orphan_designation.umls
-        header: application/x-www-form-urlencoded
       outputs:
       - id: PUBCHEM.COMPOUND
         semantic: SmallMolecule
