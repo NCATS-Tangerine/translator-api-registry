@@ -710,15 +710,14 @@ components:
     ##     - civic variant_groups: 129 records, not clear how to structure / what the relationship is
     civic-geneDisease:
       - supportBatch: true
-        inputSeparator: ","
+        useTemplating: true
         inputs:
         - id: NCBIGene
           semantic: Gene
         requestBody:
           body:
-            q: "{inputs[0]}"  ## no prefix
+            q: "{{ queryInputs }}"  ## no prefix
             scopes: civic.entrez_id
-          header: application/x-www-form-urlencoded
         outputs:
         - id: DOID
           semantic: Disease
@@ -739,15 +738,14 @@ components:
       #     oneOutput: "DOID:3910"    ##  Lung Adenocarcinoma
     civic-geneDisease-rev:
       - supportBatch: true
-        inputSeparator: ","
+        useTemplating: true
         inputs:
         - id: DOID
           semantic: Disease
         requestBody:
           body:
-            q: "{inputs[0]}"  ## HAS PREFIX
+            q: "{{ queryInputs }}"  ## HAS PREFIX
             scopes: civic.evidence_items.disease.doid
-          header: application/x-www-form-urlencoded
         outputs:
         - id: NCBIGene
           semantic: Gene
@@ -765,15 +763,14 @@ components:
     civic-variantDisease:
     ## out of 2648 civic records, only some (653) have the doid disease field...
       - supportBatch: true
-        inputSeparator: ","
+        useTemplating: true
         inputs:
         - id: DBSNP
           semantic: SequenceVariant
         requestBody:
           body:
-            q: "{inputs[0]}"  ## no prefix
+            q: "{{ queryInputs }}"  ## no prefix
             scopes: dbsnp.rsid
-          header: application/x-www-form-urlencoded
         outputs:
         - id: DOID
           semantic: Disease
@@ -796,15 +793,14 @@ components:
       #     oneOutput: "DOID:9253"        ##  Gastrointestinal Stromal Tumor
     civic-variantDisease-rev:
       - supportBatch: true
-        inputSeparator: ","
+        useTemplating: true
         inputs:
         - id: DOID
           semantic: Disease
         requestBody:
           body:
-            q: "{inputs[0]}"  ## HAS PREFIX
+            q: "{{ queryInputs }}"  ## HAS PREFIX
             scopes: civic.evidence_items.disease.doid
-          header: application/x-www-form-urlencoded
         outputs:
         - id: DBSNP
           semantic: SequenceVariant
@@ -823,15 +819,14 @@ components:
     ## note: there may be redundant results in the response
     ## there are 446 million records
     - supportBatch: true
-      inputSeparator: ","
+      useTemplating: true
       inputs:
       - id: DBSNP
         semantic: SequenceVariant
       requestBody:
         body:
-          q: "{inputs[0]}"  ## no prefix
+          q: "{{ queryInputs }}"  ## no prefix
           scopes: dbsnp.rsid
-        header: application/x-www-form-urlencoded
       outputs:
       - id: NCBIGene
         semantic: Gene
@@ -847,15 +842,14 @@ components:
       #     oneOutput: "NCBIGene:55691"    ## FRMD4A
     dbsnp-variantGene-rev:
     - supportBatch: true
-      inputSeparator: ","
+      useTemplating: true
       inputs:
       - id: NCBIGene
         semantic: Gene
       requestBody:
         body:
-          q: "{inputs[0]}"  ## no prefix
+          q: "{{ queryInputs }}"  ## no prefix
           scopes: dbsnp.gene.geneid
-        header: application/x-www-form-urlencoded
       outputs:
       - id: DBSNP
         semantic: SequenceVariant
@@ -868,20 +862,19 @@ components:
       ## https://myvariant.info/v1/query?q=_exists_:%22dbsnp.rsid%22%20AND%20_exists_:%22dbsnp.gene.geneid%22
       # testExamples:
       #   - qInput: "NCBIGene:55691"          ## FRMD4A
-      #     oneOutput: "DBSNP:rs550898964"
+      #     oneOutput: "DBSNP:rs767038114"
     clinvar-variantGene:
     ## there are 43k records with clinvar.rsid but no dbsnp
     ## https://myvariant.info/v1/query?q=_exists_:%22clinvar.rsid%22%20AND%20NOT%20_exists_:%22dbsnp.rsid%22
     - supportBatch: true
-      inputSeparator: ","
+      useTemplating: true
       inputs:
       - id: DBSNP
         semantic: SequenceVariant
       requestBody:
         body:
-          q: "{inputs[0]}"  ## no prefix
+          q: "{{ queryInputs }}"  ## no prefix
           scopes: clinvar.rsid
-        header: application/x-www-form-urlencoded
       outputs:
       - id: NCBIGene
         semantic: Gene
@@ -896,15 +889,14 @@ components:
       #     oneOutput: "NCBIGene:1756"    ## DMD
     clinvar-variantGene-rev:
     - supportBatch: true
-      inputSeparator: ","
+      useTemplating: true
       inputs:
       - id: NCBIGene
         semantic: Gene
       requestBody:
         body:
-          q: "{inputs[0]}"  ## no prefix
+          q: "{{ queryInputs }}"  ## no prefix
           scopes: clinvar.gene.id
-        header: application/x-www-form-urlencoded
       outputs:
       - id: DBSNP
         semantic: SequenceVariant
@@ -916,7 +908,7 @@ components:
         "$ref": "#/components/x-bte-response-mapping/clinvar-rsid"
       # testExamples:
       #   - qInput: "NCBIGene:284098"          ## PIGW
-      #     oneOutput: "DBSNP:rs779029016"
+      #     oneOutput: "DBSNP:rs915498700"
     clinvar-geneDisease:
     ## - conditions.identifiers can include multiple kinds
     ##   some conditions have no IDs, some have multiple IDs (not all have OMIM). 
@@ -927,16 +919,15 @@ components:
     ##   - many medgen IDs but I don't think SRI ID resolver supports this...
     ##   - not indexed: mesh, mondo
     - supportBatch: true
-      inputSeparator: ","
+      useTemplating: true
       inputs:
       - id: NCBIGene
         semantic: Gene
       requestBody:
         body:
-          q: "{inputs[0]}"  ## no prefix
+          q: "{{ queryInputs }}"  ## no prefix
           scopes: clinvar.gene.id
           ## out of >497,000 records with clinvar.rcv.conditions.identifiers.omim field, all have gene field...
-        header: application/x-www-form-urlencoded
       outputs:
       - id: OMIM
         semantic: Disease
@@ -962,15 +953,14 @@ components:
       #     oneOutput: "OMIM:209500"   ## Atrichia with papular lesions (APL)
     clinvar-geneDisease-rev:
     - supportBatch: true
-      inputSeparator: ","
+      useTemplating: true
       inputs:
       - id: OMIM
         semantic: Disease
       requestBody:
         body:
-          q: "{inputs[0]}"  ## no prefix
+          q: "{{ queryInputs }}"  ## no prefix
           scopes: clinvar.rcv.conditions.identifiers.omim
-        header: application/x-www-form-urlencoded
       outputs:
       - id: NCBIGene
         semantic: Gene
@@ -986,17 +976,16 @@ components:
       #     oneOutput: "NCBIGene:3551"   ## IKBKB
     clinvar-variantDisease:
     - supportBatch: true
-      inputSeparator: ","
+      useTemplating: true
       inputs:
       - id: DBSNP
         semantic: SequenceVariant
       requestBody:
         body:
-          q: "{inputs[0]}"  ## no prefix
+          q: "{{ queryInputs }}"  ## no prefix
           scopes: dbsnp.rsid
           ## out of >497,000 records with clinvar.rcv.conditions.identifiers.omim field, 
           ##        >405,000 records also have dbsnp.rsid field (which is more than the 347,000 records with clinvar.rsid)
-        header: application/x-www-form-urlencoded
       outputs:
       - id: OMIM
         semantic: Disease
@@ -1020,18 +1009,17 @@ components:
       ## https://myvariant.info/v1/query?q=_exists_:%22clinvar.rcv.conditions.identifiers.omim%22%20AND%20_exists_:%22dbsnp.rsid%22
       # testExamples:
       #   - qInput: "DBSNP:rs1193171808"
-      #     oneOutput: "OMIM:615592"        ## Immunodeficiency 15 (IMD15B)
+      #     oneOutput: "OMIM:615592"        ## severe combined immunodeficiency due to IKK2 deficiency
     clinvar-variantDisease-rev:
     - supportBatch: true
-      inputSeparator: ","
+      useTemplating: true
       inputs:
       - id: OMIM
         semantic: Disease
       requestBody:
         body:
-          q: "{inputs[0]}"  ## no prefix
+          q: "{{ queryInputs }}"  ## no prefix
           scopes: clinvar.rcv.conditions.identifiers.omim
-        header: application/x-www-form-urlencoded
       outputs:
       - id: DBSNP
         semantic: SequenceVariant
@@ -1047,16 +1035,15 @@ components:
       #     oneOutput: "DBSNP:rs1480200060"
     docm-geneDisease:
     - supportBatch: true
-      inputSeparator: ","
+      useTemplating: true
       inputs:
       - id: ENSEMBL
         semantic: Gene
       requestBody:
         body:
-          q: "{inputs[0]}"  ## no prefix
+          q: "{{ queryInputs }}"  ## no prefix
           scopes: docm.ensembl_gene_id
           ## all 1119 records with docm field have the gene id
-        header: application/x-www-form-urlencoded
       outputs:
       - id: DOID
         semantic: Disease
@@ -1075,15 +1062,14 @@ components:
       #     oneOutput: "DOID:769"               ## Neuroblastoma
     docm-geneDisease-rev:
     - supportBatch: true
-      inputSeparator: ","
+      useTemplating: true
       inputs:
       - id: DOID
         semantic: Disease
       requestBody:
         body:
-          q: "{inputs[0]}"  ## HAS PREFIX
+          q: "{{ queryInputs }}"  ## HAS PREFIX
           scopes: docm.doid
-        header: application/x-www-form-urlencoded
       outputs:
       - id: ENSEMBL
         semantic: Gene
@@ -1100,17 +1086,16 @@ components:
       #     oneOutput: "ENSEMBL:ENSG00000169032"    ## MAP2K1
     docm-variantDisease:
     - supportBatch: true
-      inputSeparator: ","
+      useTemplating: true
       inputs:
       - id: DBSNP
         semantic: SequenceVariant
       requestBody:
         body:
-          q: "{inputs[0]}"  ## no prefix
+          q: "{{ queryInputs }}"  ## no prefix
           scopes: dbsnp.rsid
           ## out of 1119 records with docm field, 
           ##        465 records also have dbsnp.rsid field
-        header: application/x-www-form-urlencoded
       outputs:
       - id: DOID
         semantic: Disease
@@ -1129,18 +1114,17 @@ components:
       ## https://myvariant.info/v1/query?q=_exists_:%22docm.ensembl_gene_id%22%20AND%20_exists_:%22dbsnp.rsid%22
       # testExamples:
       #   - qInput: "DBSNP:rs759487569"    ## in GATA2
-      #     oneOutput: "DOID:9119"         ## AML
+      #     oneOutput: "DOID:9119"         ## acute myeloid leukemia (AML)
     docm-variantDisease-rev:
     - supportBatch: true
-      inputSeparator: ","
+      useTemplating: true
       inputs:
       - id: DOID
         semantic: Disease
       requestBody:
         body:
-          q: "{inputs[0]}"  ## HAS PREFIX
+          q: "{{ queryInputs }}"  ## HAS PREFIX
           scopes: docm.doid
-        header: application/x-www-form-urlencoded
       outputs:
       - id: DBSNP
         semantic: SequenceVariant
