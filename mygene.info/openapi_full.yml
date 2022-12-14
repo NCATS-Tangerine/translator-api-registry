@@ -1,220 +1,713 @@
---- 
+openapi: 3.0.3
+info: 
+  contact: 
+    email: help@mygene.info
+    name: Chunlei Wu
+    x-id: https://github.com/newgene
+    x-role: responsible developer
+  description: Documentation of the MyGene.info Gene Query web services. Learn more about [MyGene.info](https://docs.mygene.info/en/latest/index.html)
+  termsOfService: "http://mygene.info/terms/"
+  title: MyGene.info API
+  version: "3.0"
+  x-translator: 
+    infores: "infores:mygene-info"
+    component: KP
+    team: 
+      - "Service Provider"
+    biolink-version: "2.4.8"
+servers: 
+  - description: Encrypted Production server
+    url: https://mygene.info/v3
+    x-maturity: production
+  - description: Production server
+    url: http://mygene.info/v3
+    x-maturity: production
+tags: 
+  - name: gene
+  - name: annotation
+  - name: query
+  - name: translator
+  - name: biothings
+paths:
+  "/gene/{id}":
+    get:
+      description: >-
+        By default, this will return the complete gene annotation object in JSON format. 
+        See [here](https://docs.mygene.info/en/latest/doc/annotation_service.html#returned-object) 
+        for an example and [here](https://docs.mygene.info/en/latest/doc/data.html#gene-object)
+        for more details. If the input gene ID is not valid, 404 (NOT FOUND) will be returned.
+        
+
+        Optionally, you can pass a "fields" parameter to return only the annotation you want 
+        (by filtering returned object fields). "fields" accepts any attributes (a.k.a fields) available 
+        from the gene object. Multiple attributes should be separated by commas. If an attribute is not 
+        available for a specific gene object, it will be ignored. Note that the attribute names are 
+        case-sensitive.
+
+
+        Just like the gene query service, you can also pass a "callback" parameter to make a JSONP call.
+      parameters:
+      ## these are provided in the docs https://docs.mygene.info/en/latest/doc/annotation_service.html
+      - name: id
+        description: >-
+          Entrez ("1017") or Ensembl gene id ("ENSG00000123374"). A retired Entrez Gene id works too if it is 
+          replaced by a new one, e.g., 245794. But a "discontinued" gene id will not return any hit, e.g., 138.
+        in: path
+        required: true
+        example: "1017"
+        schema:
+          type: string
+      ## species, species_facet_filter are special parameters for MyGene
+      - "$ref": "#/components/parameters/species"
+      - "$ref": "#/components/parameters/fields"
+      - "$ref": "#/components/parameters/callback"
+      - "$ref": "#/components/parameters/dotfield"
+      - "$ref": "#/components/parameters/email"
+      ## this is useful even when it's not noted in the docs
+      - "$ref": "#/components/parameters/size"
+      ## these are noted in the https://mygene.info/v3/spec endpoint; commenting out for now
+      # - "$ref": "#/components/parameters/species_facet_filter"
+      # - "$ref": "#/components/parameters/raw"
+      # - "$ref": "#/components/parameters/rawquery"
+      # - "$ref": "#/components/parameters/_sorted"
+      # - "$ref": "#/components/parameters/always_list"
+      # - "$ref": "#/components/parameters/allow_null"
+      # - "$ref": "#/components/parameters/format"
+      responses:
+        '200':
+          ## description from https://docs.mygene.info/en/latest/doc/response_status_codes.html
+          description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
+      ## commenting out schemas and other status codes for now
+      #     content:
+      #       application/json:
+      #         schema:
+      #           $ref: '#/components/schemas/Chem'
+      #   '404':
+      #     description: A response indicating an unknown chemical ID
+      tags:
+      - gene
+  "/gene":
+    post:
+      description: >-
+        Although making simple GET requests above to our gene query service is sufficient in most use cases, 
+        there are some times you might find it easier to batch query (e.g., retrieving gene annotations for 
+        multiple genes). Fortunately, you can also make batch queries via POST requests when you need to.
+      parameters:
+      ## these are provided in the docs https://docs.mygene.info/en/latest/doc/chem_annotation_service.html
+      - name: ids
+        description: >-
+          Accept multiple geneids (either Entrez or Ensembl gene ids) seperated by comma, e.g., 
+          "ids=1017,1018" or "ids=695,ENSG00000123374".
+          Note that currently we only take the input ids up to 1000 maximum, the rest will be omitted.
+
+
+          The request body can also be used to provide these ids.
+        in: query
+        ## setting to false since putting this info in the request body seems to work as well
+        required: false
+        schema:
+          type: string
+      - "$ref": "#/components/parameters/fields"
+      - "$ref": "#/components/parameters/species"
+      - "$ref": "#/components/parameters/dotfield"
+      - "$ref": "#/components/parameters/email"
+      ## this is useful even when it's not noted in the docs
+      - "$ref": "#/components/parameters/size"
+      ## these are noted in the https://mygene.info/v3/spec endpoint; commenting out for now
+      # - "$ref": "#/components/parameters/species_facet_filter"
+      # - "$ref": "#/components/parameters/raw"
+      # - "$ref": "#/components/parameters/rawquery"
+      # - "$ref": "#/components/parameters/dotfield"
+      # - "$ref": "#/components/parameters/_sorted"
+      # - "$ref": "#/components/parameters/always_list"
+      # - "$ref": "#/components/parameters/allow_null"
+      # - "$ref": "#/components/parameters/format"
+      requestBody:
+        content:
+          application/json:
+            example:
+              ids:
+              - "1017"
+              - "1018"
+            schema:
+              type: object
+              properties:
+                ids:
+                  description: >-
+                    Accepts multiple gene ids. Note that currently we only take the input ids 
+                    up to 1000 maximum, the rest will be omitted.
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '200':
+          description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
+      tags:
+      - gene
+  "/metadata":
+    get:
+      description: Get metadata about the data available from the API
+      ## these are noted in the https://mygene.info/v3/spec endpoint; commenting out for now
+      # parameters:
+      # - "$ref": "#/components/parameters/format"
+      # - "$ref": "#/components/parameters/raw"
+      responses:
+        '200':
+          description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
+      tags:
+      - metadata
+  "/metadata/fields":
+    get:
+      description: Get metadata about the data fields available from the API
+      ## these are noted in the https://mygene.info/v3/spec endpoint; commenting out for now
+      # parameters:
+      # - "$ref": "#/components/parameters/format"
+      # - "$ref": "#/components/parameters/raw"
+      # - "$ref": "#/components/parameters/search"
+      # - "$ref": "#/components/parameters/prefix"
+      responses:
+        '200':
+          description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
+      tags:
+      - metadata
+  "/query":
+    get:
+      description: >-
+        MyGene.info chemical query web service. In the output, "total" in the output gives the total number 
+        of matching hits, while the actual hits are returned under "hits" field.
+      parameters:
+      - name: q
+        ## description partially from https://docs.mygene.info/en/latest/doc/query_service.html#query-syntax
+        description: >-
+          Required, passing user query. The detailed query syntax for parameter is explained 
+          [here](https://docs.mygene.info/en/latest/doc/query_service.html#query-syntax).
+        in: query
+        required: true
+        example: CDK2
+        schema:
+          type: string
+      ## species, species_facet_filter, entrezonly, ensemblonly,
+      ##   exists, missing, post_filter, include_tax_tree
+      ##   are special parameters for MyGene
+      - "$ref": "#/components/parameters/fields"
+      - "$ref": "#/components/parameters/species"
+      - "$ref": "#/components/parameters/size"
+      - "$ref": "#/components/parameters/from"
+      - "$ref": "#/components/parameters/fetch_all"
+      - "$ref": "#/components/parameters/scroll_id"
+      - "$ref": "#/components/parameters/sort"
+      - "$ref": "#/components/parameters/facets"
+      - "$ref": "#/components/parameters/facet_size"
+      - "$ref": "#/components/parameters/species_facet_filter"
+      - "$ref": "#/components/parameters/entrezonly"
+      - "$ref": "#/components/parameters/ensemblonly"
+      - "$ref": "#/components/parameters/callback"
+      - "$ref": "#/components/parameters/dotfield"
+      - "$ref": "#/components/parameters/email"
+      ## these are noted in the https://mygene.info/v3/spec endpoint; commenting out for now
+      # - "$ref": "#/components/parameters/exists"
+      # - "$ref": "#/components/parameters/missing"
+      # - "$ref": "#/components/parameters/post_filter"
+      # - "$ref": "#/components/parameters/include_tax_tree"
+      # - "$ref": "#/components/parameters/aggs"
+      # - "$ref": "#/components/parameters/userquery"
+      # - "$ref": "#/components/parameters/explain"
+      # - "$ref": "#/components/parameters/raw"
+      # - "$ref": "#/components/parameters/rawquery"
+      # - "$ref": "#/components/parameters/_sorted"
+      # - "$ref": "#/components/parameters/always_list"
+      # - "$ref": "#/components/parameters/allow_null"
+      # - "$ref": "#/components/parameters/format
+      responses:
+        '200':
+          description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
+      ## commenting out schemas and other status codes for now
+      #     content:
+      #       application/json:
+      #         schema:
+      #           "$ref": "#/components/schemas/QueryResult"
+      #   '400':
+      #     content:
+      #       application/json:
+      #         schema:
+      #           "$ref": "#/components/schemas/ErrorResult"
+      #     description: A response indicating an improperly formatted query
+      # description: Make queries and return matching gene hits. Supports JSONP and CORS
+      #   as well.
+      tags:
+      - query
+    post: 
+      description: >-
+        Although making simple GET requests above to our chemical query service is sufficient for most use cases, 
+        there are times you might find it more efficient to make batch queries (e.g., retrieving gene annotation 
+        for multiple genes). Fortunately, you can also make batch queries via POST requests when you need to.
+
+
+        The "query" field in the returned object indicates the matching query term. If a query term has no match, 
+        it will return with a "notfound" field with the value "true".
+      parameters:
+      ## these are provided in the docs https://docs.mygene.info/en/latest/doc/query_service.html#batch-queries-via-post
+      - name: q
+        description: >-
+          Accepts multiple values separated by commas. Note that currently we only take the input values up to 1000 
+          maximum, the rest will be omitted.
+
+
+          The request body can also be used to provide these ids.
+        in: query
+        ## setting to false since putting this info in the request body seems to work as well
+        required: false
+        schema:
+          type: array
+          items:
+            type: string
+      - name: scopes
+        description: >-
+          Optional, specify one or more fields (separated by commas) to search. 
+          The available "fields" can be passed to "scopes" parameter are listed 
+          [here](https://docs.mygene.info/en/latest/doc/data.html#available-fields). Default: _id
+
+
+          The request body can also be used to provide this information.
+        in: query
+        ## setting to false since putting this info in the request body seems to work as well
+        required: false
+        schema:
+          type: string
+      ## species, species_facet_filter, entrezonly, ensemblonly,
+      ##   exists, missing, post_filter, include_tax_tree
+      ##   are special parameters for MyGene
+      - "$ref": "#/components/parameters/species"
+      - "$ref": "#/components/parameters/fields"
+      - "$ref": "#/components/parameters/dotfield"
+      - "$ref": "#/components/parameters/email"
+      ## these aren't noted in the docs for POST, but they are in GET or are useful
+      - "$ref": "#/components/parameters/size"
+      - "$ref": "#/components/parameters/from"
+      - "$ref": "#/components/parameters/fetch_all"
+      - "$ref": "#/components/parameters/scroll_id"
+      - "$ref": "#/components/parameters/sort"
+      - "$ref": "#/components/parameters/facets"
+      - "$ref": "#/components/parameters/facet_size"
+      - "$ref": "#/components/parameters/species_facet_filter"
+      - "$ref": "#/components/parameters/entrezonly"
+      - "$ref": "#/components/parameters/ensemblonly"
+      - "$ref": "#/components/parameters/callback"
+      ## these are noted in the https://mygene.info/v3/spec endpoint; commenting out for now
+      ##   others haven't been written down here: with_total, analyzer
+      # - "$ref": "#/components/parameters/exists"
+      # - "$ref": "#/components/parameters/missing"
+      # - "$ref": "#/components/parameters/post_filter"
+      # - "$ref": "#/components/parameters/include_tax_tree"
+      # - "$ref": "#/components/parameters/aggs"
+      # - "$ref": "#/components/parameters/userquery"
+      # - "$ref": "#/components/parameters/explain"
+      # - "$ref": "#/components/parameters/raw"
+      # - "$ref": "#/components/parameters/rawquery"
+      # - "$ref": "#/components/parameters/_sorted"
+      # - "$ref": "#/components/parameters/always_list"
+      # - "$ref": "#/components/parameters/allow_null"
+      # - "$ref": "#/components/parameters/format
+      requestBody:
+        content:
+          application/json:
+            example:
+              q:
+              - "1017"
+              - "1018"
+              scopes:
+              - "entrezgene"
+            schema:
+              type: object
+              properties:
+                q:
+                  description: >-
+                    Accepts multiple values separated by commas. Note that currently we only take the input values 
+                    up to 1000 maximum, the rest will be omitted.
+                  type: array
+                  items:
+                    type: string
+                scopes:
+                  description: >-
+                    Specify one or more fields (separated by commas) to search. 
+                    The available "fields" can be passed to "scopes" parameter are listed 
+                    [here](https://docs.mygene.info/en/latest/doc/data.html#available-fields). Default: _id
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '200':
+          description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
+      ## commenting out schemas and other status codes for now
+      #     content:
+      #       application/json:
+      #         schema:
+      #           "$ref": "#/components/schemas/QueryPOSTResult"
+      #   '400':
+      #     content:
+      #       application/json:
+      #         schema:
+      #           "$ref": "#/components/schemas/ErrorResult"
+      #     description: A response indicating an improperly formatted query
+      # description: Make batch gene queries and return matching gene hits
+      tags:
+      - query
+      ## 18 operations (9 sets)
+      x-bte-kgs-operations: 
+        - $ref: "#/components/x-bte-kgs-operations/PathwayHasGene1"
+        - $ref: "#/components/x-bte-kgs-operations/PathwayHasGene2"
+        - $ref: "#/components/x-bte-kgs-operations/PathwayHasGene3"
+        - $ref: "#/components/x-bte-kgs-operations/PathwayHasGene4"
+        - $ref: "#/components/x-bte-kgs-operations/involvedInPathway1"
+        - $ref: "#/components/x-bte-kgs-operations/involvedInPathway2"
+        - $ref: "#/components/x-bte-kgs-operations/involvedInPathway3"
+        - $ref: "#/components/x-bte-kgs-operations/involvedInPathway4"
+        - $ref: "#/components/x-bte-kgs-operations/involvedInBP"
+        - $ref: "#/components/x-bte-kgs-operations/BPToGene"
+        - $ref: "#/components/x-bte-kgs-operations/enablesMF"
+        - $ref: "#/components/x-bte-kgs-operations/MFToGene"
+        - $ref: "#/components/x-bte-kgs-operations/involvedInCC"
+        - $ref: "#/components/x-bte-kgs-operations/CCToGene"
+        - $ref: "#/components/x-bte-kgs-operations/geneToDisease"
+        - $ref: "#/components/x-bte-kgs-operations/diseaseToGene"
+        - $ref: "#/components/x-bte-kgs-operations/hasHomolog-MGI"
+        - $ref: "#/components/x-bte-kgs-operations/hasHomolog-MGI-rev"
 components: 
   parameters: 
-    callback: 
-      description: "you can pass a \"callback\" parameter to make a JSONP call."
+    ## these are specific to MyGene
+    ensemblonly: 
+      name: ensemblonly
+      description: >-
+        Optional. When passed as “true” or “1”, the query returns only the hits with valid Ensembl gene ids. Default: false.
       in: query
-      name: callback
-      schema: 
-        type: string
-    dotfield: 
-      description: "control the format of the returned fields when passed \"fields\" parameter contains dot notation, e.g. \"fields=refseq.rna\". If \"True\" or \"1\", the returned data object contains a single \"refseq.rna\" field, otherwise (\"False\" or \"0\"), a single \"refseq\" field with a sub-field of \"rna\". Default: True."
-      in: query
-      name: dotfield
       schema: 
         type: boolean
-    email: 
-      description: "If you are regular users of our services, we encourage you to provide us an email, so that we can better track the usage or follow up with you."
+        default: false
+    entrezonly: 
+      name: entrezonly
+      description: >-
+        Optional. When passed as “true” or “1”, the query returns only the hits with valid Entrez gene ids. Default: false.
       in: query
-      name: email
       schema: 
-        type: string
-    fields: 
-      description: "a comma-separated fields to limit the fields returned from the matching gene hits. The supported field names can be found from any gene object (e.g. http://mygene.info/v3/gene/1017). Note that it supports dot notation as well, e.g., you can pass \"refseq.rna\". If \"fields=all\", all available fields will be returned. Default: \"symbol,name,taxid,entrezgene\"."
-      in: query
-      name: fields
-      schema: 
-        type: string
-    from: 
-      description: "the number of matching gene hits to skip, starting from 0. Combining with \"size\" parameter, this can be useful for paging. Default: 0."
-      in: query
-      name: from
-      schema: 
-        type: integer
-    size: 
-      description: "the maximum number of matching gene hits to return (with a cap of 1000 at the moment). Default: 10."
-      in: query
-      name: size
-      schema: 
-        type: integer
-    sort: 
-      description: "the comma-separated fields to sort on. Prefix with \"-\" for descending order, otherwise in ascending order. Default: sort by matching scores in decending order."
-      in: query
-      name: sort
-      schema: 
-        type: string
+        type: boolean
+        default: false
     species: 
-      description: "can be used to limit the gene hits from given species. You can use \"common names\" for nine common species (human, mouse, rat, fruitfly, nematode, zebrafish, thale-cress, frog and pig). All other species, you can provide their taxonomy ids. Multiple species can be passed using comma as a separator. Default: human,mouse,rat."
-      in: query
       name: species
-      schema: 
+      description: >-
+        Optional, can be used to limit the gene hits from given species. 
+        You can use "common names" for nine common species (human, mouse, 
+        rat, fruitfly, nematode, zebrafish, thale-cress, frog and pig). 
+        All other species, you can provide their taxonomy ids from 
+        [NCBI Taxonomy](https://www.ncbi.nlm.nih.gov/taxonomy). See more details 
+        [here](https://docs.mygene.info/en/latest/doc/data.html#species). 
+        Multiple species can be passed using comma as a separator. Passing "all" will 
+        query against all available species. Default: all.
+      in: query
+      required: false
+      schema:
+        type: array
+        items:
+          type: string
+          default: all
+    species_facet_filter: 
+      name: species_facet_filter
+      description: >-
+        Optional, relevant when faceting on species (i.e., "facets=taxid" are passed). 
+        It's used to pass species filter without changing the scope of faceting, 
+        so that the returned facet counts won't change. Either species name or taxonomy id 
+        can be used, just like "species" parameter above. See examples of faceted queries 
+        [here](https://docs.mygene.info/en/latest/doc/query_service.html#faceted-queries).
+      in: query
+      required: false
+      schema:
+        type: array
+        items:
+          type: string
+    ## these are specific to MyGene, but only noted in the https://mychem.info/v1/spec endpoint; commenting out for now
+    # exists: 
+    #   name: exists
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: array
+    #     items:
+    #       type: string
+    # include_tax_tree: 
+    #   name: include_tax_tree
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: boolean
+    # missing: 
+    #   name: missing
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: array
+    #     items:
+    #       type: string
+    # post_filter: 
+    #   name: post_filter
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: string
+    callback:
+      name: callback
+      description: >-
+        Optional, you can pass a "callback" parameter to make a JSONP call.
+      in: query
+      required: false
+      schema:
         type: string
-  schemas: 
-    Gene: 
-      properties: 
-        AnimalQTLdb: 
+    dotfield:
+      name: dotfield
+      description: >-
+        Optional, can be used to control the format of the returned chemical object. 
+        If "dotfield" is true, the returned data object is returned flattened (no nested objects) 
+        using dotfield notation for key names. Default: false.
+      in: query
+      required: false
+      schema:
+        type: boolean
+        default: false
+    email:
+      name: email
+      description: >-
+        Optional, if you are regular users of our services, we encourage you to provide us an email, 
+        so that we can better track the usage or follow up with you.
+      in: query
+      required: false
+      schema:
+        type: string
+    facet_size:
+      name: facet_size
+      description: >-
+        Optional, an integer (1 <= facet_size <= 1000) that specifies how many buckets to return in a 
+        [faceted query](https://docs.mychem.info/en/latest/doc/chem_query_service.html?highlight=from#faceted-queries).
+      in: query
+      required: false
+      schema:
+        type: integer
+        default: 10
+    facets:
+      name: facets
+      description: >-
+        Optional, a single field or comma-separated fields to return facets, can only be used on non-free text fields. 
+        E.g. "facets=chembl.molecule_properties.full_mwt". See [examples of faceted queries 
+        here](https://docs.mychem.info/en/latest/doc/chem_query_service.html?highlight=from#faceted-queries).
+      in: query
+      required: false
+      schema:
+        type: array
+        items:
           type: string
-        FLYBASE: 
+    fetch_all:
+      name: fetch_all
+      description: >-
+        Optional, a boolean, which when TRUE, allows fast retrieval of all unsorted query hits. 
+        The return object contains a _scroll_id field, which when passed as a parameter to the query endpoint 
+        (see the scroll_id parameter), returns the next 1000 query results. Setting fetch_all = TRUE causes 
+        the results to be inherently unsorted, therefore the sort parameter is ignored. For more information, 
+        see [examples using fetch_all 
+        here](https://docs.mychem.info/en/latest/doc/chem_query_service.html?highlight=from#scrolling-queries). 
+        Default: FALSE.
+      in: query
+      required: false
+      schema:
+        type: boolean
+        default: false
+    fields:
+      name: fields
+      description: >-
+        Optional, can be a comma-separated list to limit the fields returned from the chemical object. 
+        If "fields=all", all available fields will be returned. Look 
+        [here](https://docs.mychem.info/en/latest/doc/data.html#available-fields) for a list of available fields. 
+        
+
+        Note that it supports dot notation as well, e.g., you can pass "chebi.name". 
+        Default: "fields=all". 
+        The parameter "filter" is an alias for this parameter.
+      in: query
+      required: false
+      schema:
+        type: string
+        default: all
+    from:
+      name: from
+      description: >-
+        Optional, the number of matching chemical hits to skip, starting from 0. Default: 0. 
+      in: query
+      required: false
+      schema:
+        type: integer
+        default: 0
+    scroll_id:
+      name: scroll_id
+      description: >-
+        Optional, a string containing the _scroll_id returned from a query request with fetch_all = TRUE. 
+        Supplying a valid scroll_id will return the next 1000 unordered results. If the next results are 
+        not obtained within 1 minute of the previous set of results, the scroll_id becomes stale, and a 
+        new one must be obtained with another query request with fetch_all = TRUE. All other parameters are 
+        ignored when the scroll_id parameter is supplied. For more information see [examples using scroll_id 
+        here](https://docs.mychem.info/en/latest/doc/chem_query_service.html?highlight=from#scrolling-queries).
+      in: query
+      required: false
+      schema:
+        type: string
+    size:
+      name: size
+      description: >-
+        Optional, the maximum number of matching chemical hits to return (with a cap of 1000 at the moment). Default: 10.
+        The combination of "size" and "from" parameters can be used to get paging for a large query.
+      in: query
+      required: false
+      schema:
+        type: integer
+        default: 10
+    sort:
+      name: sort
+      description: >-
+        Optional, the comma-separated fields to sort on. Prefix with "-" for descending order, otherwise in ascending order. 
+        Default: sort by matching scores in descending order.
+      in: query
+      required: false
+      schema:
+        type: array
+        items:
           type: string
-        HGNC: 
-          type: string
-        HPRD: 
-          type: string
-        MGI: 
-          type: string
-        MIM: 
-          type: string
-        RATMAP: 
-          type: string
-        RGD: 
-          type: string
-        TAIR: 
-          type: string
-        Vega: 
-          type: string
-        WormBase: 
-          type: string
-        Xenbase: 
-          type: string
-        ZFIN: 
-          type: string
-        _id: 
-          type: string
-        accession: 
-          type: object
-        aliase: 
-          type: string
-        ec: 
-          type: string
-        ensembl: 
-          type: object
-        entrezgene: 
-          format: int64
-          type: integer
-        generif: 
-          properties: 
-            pubmed: 
-              $ref: "#/components/schemas/int64_or_array"
-            text: 
-              type: string
-          type: object
-        genomic_pos: 
-          type: object
-        go: 
-          type: object
-        homologene: 
-          type: object
-        interpro: 
-          type: object
-        locus_tag: 
-          type: string
-        map_location: 
-          type: string
-        miRBase: 
-          type: string
-        name: 
-          type: string
-        other_names: 
-          $ref: "#/components/schemas/string_or_array"
-        pathway: 
-          type: object
-        pdb: 
-          $ref: "#/components/schemas/string_or_array"
-        pfam: 
-          type: string
-        pharmgkb: 
-          type: string
-        pid: 
-          type: string
-        pir: 
-          type: string
-        prosite: 
-          type: string
-        reagent: 
-          type: object
-        refseq: 
-          type: object
-        reporter: 
-          type: object
-        summary: 
-          type: string
-        symbol: 
-          type: string
-        taxid: 
-          format: int32
-          type: integer
-        type_of_gene: 
-          type: string
-        umls: 
-          type: object
-        unigene: 
-          type: string
-        uniprot: 
-          properties: 
-            Swiss-Prot: 
-              $ref: "#/components/schemas/string_or_array"
-            TrEMBL: 
-              $ref: "#/components/schemas/string_or_array"
-          type: object
-        wikipedia: 
-          properties: 
-            url_stub: 
-              type: string
-          type: object
-      required: 
-        - _id
-        - taxid
-      type: object
-    MinimalGene: 
-      properties: 
-        _id: 
-          type: string
-        entrezgene: 
-          format: int64
-          type: integer
-        name: 
-          type: string
-        symbol: 
-          type: string
-        taxid: 
-          format: int32
-          type: integer
-      required: 
-        - _id
-        - taxid
-      type: object
-    QueryPOSTResult: 
-      items: 
-        allOf: 
-          - 
-            $ref: "#/components/schemas/MinimalGene"
-          - 
-            properties: 
-              _score: 
-                format: float
-                type: number
-              query: 
-                type: string
-            type: object
-      type: array
-    QueryResult: 
-      properties: 
-        hits: 
-          items: 
-            $ref: "#/components/schemas/Gene"
-          type: array
-        max_score: 
-          format: float
-          type: number
-        took: 
-          type: integer
-        total: 
-          type: integer
-      type: object
-    int64_or_array: 
-      type: integer
-    string_or_array: 
-      type: string
+    ## these are noted in the https://mychem.info/v1/spec endpoint; commenting out for now
+    # _sorted:
+    #   name: _sorted
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: boolean
+    #     default: true
+    # aggs:
+    #   name: aggs
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: array
+    #     items:
+    #       type: string
+    # allow_null:
+    #   name: allow_null
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: array
+    #     items:
+    #       type: string
+    # always_list:
+    #   name: always_list
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: array
+    #     items:
+    #       type: string
+    # explain:
+    #   name: explain
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: boolean
+    # format:
+    #   name: format
+    #   description: 'controls output format of server response, currently supports:
+    #     "json", "jsonld", "html". Type: string. Default: json.'
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: string
+    #     default: json
+    # prefix:
+    #   name: prefix
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: string
+    # raw:
+    #   name: raw
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: boolean
+    # rawquery:
+    #   name: rawquery
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: boolean
+    # search:
+    #   name: search
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: string
+    # userquery:
+    #   name: userquery
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: string
+  # schemas:
+  #   Chem:
+  #     properties:
+  #       _id:
+  #         type: string
+  #     required:
+  #     - _id
+  #     type: object
+  #   ErrorResult:
+  #     properties:
+  #       message:
+  #         type: string
+  #       success:
+  #         type: boolean
+  #     type: object
+  #   QueryPOSTResult:
+  #     items:
+  #       allOf:
+  #       - "$ref": "#/components/schemas/Chem"
+  #       - properties:
+  #           _score:
+  #             format: float
+  #             type: number
+  #           query:
+  #             type: string
+  #         type: object
+  #     type: array
+  #   QueryResult:
+  #     properties:
+  #       hits:
+  #         items:
+  #           "$ref": "#/components/schemas/Chem"
+  #         type: array
+  #       max_score:
+  #         format: float
+  #         type: number
+  #       took:
+  #         type: integer
+  #       total:
+  #         type: integer
+  #     type: object
+  #   int64_or_array:
+  #     oneOf:
+  #     - items:
+  #         format: int64
+  #         type: integer
+  #       type: array
+  #     - format: int64
+  #       type: integer
+  #   string_or_array:
+  #     oneOf:
+  #     - items:
+  #         type: string
+  #       type: array
+  #     - type: string
   x-bte-kgs-operations: 
   ## notes:
   ## - not including Gene <-> Transcript <-> Protein or Gene <-> Protein due to conflation, lack of use in Translator right now
@@ -222,242 +715,222 @@ components:
   ## - pathway info includes Reactome, KEGG, Wikipathways, Biocarta
   ##   However, SRI ID resolver only accepts SMPDB, REACT, GO, PANTHER.PATHWAY right now
   ##   not included: humancyc, mousecyc, netpath, pharmgkb, pid, yeastcyc
-    PathwayHasGene:    ## using Reactome, KEGG, Wikipathways, Biocarta
-      - 
-        inputSeparator: ","
+    PathwayHasGene1:    ## using Reactome, KEGG, Wikipathways, Biocarta
+      - supportBatch: true
+        useTemplating: true
         inputs: 
-          - 
-            id: REACT
+          - id: REACT
             semantic: Pathway
+        requestBody: 
+          body: 
+            q: "{{ queryInputs }}"  ## no prefix
+            scopes: pathway.reactome.id
         outputs: 
-          - 
-            id: NCBIGene
+          - id: NCBIGene
             semantic: Gene
         parameters: 
           ## all records with pathway.reactome.id field also have entrezgene field
           fields: entrezgene
           species: human
+          size: 1000  ## note the size limit
         predicate: has_participant
-        requestBody: 
-          body: 
-            q: "{inputs[0]}"  ## no prefix
-            scopes: pathway.reactome.id
-            size: 1000  ## note the size limit
-          header: application/x-www-form-urlencoded
+        source: "infores:reactome"
         response_mapping: 
           $ref: "#/components/x-bte-response-mapping/entrezgene"
-        source: "infores:reactome"
-        supportBatch: true
         # testExamples:
         #   - qInput: "REACT:R-HSA-70895"  ## Branched-chain amino acid catabolism
         #     oneOutput: "NCBIGene:10295"  ## BCKDK
-      - 
-        inputSeparator: ","
+    PathwayHasGene2:
+      - supportBatch: true
+        useTemplating: true
         inputs: 
-          - 
-            id: "KEGG.PATHWAY"
+          - id: "KEGG.PATHWAY"
             semantic: Pathway
+        requestBody: 
+          body: 
+            q: "{{ queryInputs }}"  ## no prefix
+            scopes: pathway.kegg.id
         outputs: 
-          - 
-            id: NCBIGene
+          - id: NCBIGene
             semantic: Gene
         parameters: 
           ## all records with pathway.kegg field also have entrezgene field
           fields: entrezgene
           species: human
+          size: 1000  ## note the size limit
         predicate: has_participant
-        requestBody: 
-          body: 
-            q: "{inputs[0]}"  ## no prefix
-            scopes: pathway.kegg.id
-            size: 1000  ## note the size limit
-          header: application/x-www-form-urlencoded
+        source: "infores:cpdb"   ## ConsensusPathDB
         response_mapping: 
           $ref: "#/components/x-bte-response-mapping/entrezgene"
-        source: "infores:cpdb"   ## ConsensusPathDB
-        supportBatch: true
         # testExamples:
         #   - qInput: "KEGG.PATHWAY:hsa00120"  ## Primary bile acid biosynthesis - Homo sapiens (human)
         #     oneOutput: "NCBIGene:8309"  ## ACOX2
-      - 
-        inputSeparator: ","
+    PathwayHasGene3:
+      - supportBatch: true
+        useTemplating: true
         inputs: 
-          - 
-            id: WIKIPATHWAYS
+          - id: WIKIPATHWAYS
             semantic: Pathway
+        requestBody: 
+          body: 
+            q: "{{ queryInputs }}"  ## no prefix
+            scopes: pathway.wikipathways.id
         outputs: 
-          - 
-            id: NCBIGene
+          - id: NCBIGene
             semantic: Gene
         parameters: 
           ## all records with pathway.wikipathways field also have entrezgene field
           fields: entrezgene
           species: human
+          size: 1000  ## note the size limit
         predicate: has_participant
-        requestBody: 
-          body: 
-            q: "{inputs[0]}"  ## no prefix
-            scopes: pathway.wikipathways.id
-            size: 1000  ## note the size limit
-          header: application/x-www-form-urlencoded
+        source: "infores:cpdb"   ## ConsensusPathDB
         response_mapping: 
           $ref: "#/components/x-bte-response-mapping/entrezgene"
-        source: "infores:cpdb"   ## ConsensusPathDB
-        supportBatch: true
         # testExamples:
         #   - qInput: "WIKIPATHWAYS:WP2034"  ## Leptin signaling pathway
         #     oneOutput: "NCBIGene:3953"  ## LEPR
-      - 
-        inputSeparator: ","
+    PathwayHasGene4:
+      - supportBatch: true
+        useTemplating: true
         inputs: 
-          - 
-            id: BIOCARTA
+          - id: BIOCARTA
             semantic: Pathway
+        requestBody: 
+          body: 
+            q: "{{ queryInputs }}"  ## no prefix
+            scopes: pathway.biocarta.id
         outputs: 
-          - 
-            id: NCBIGene
+          - id: NCBIGene
             semantic: Gene
         parameters: 
           ## all records with pathway.biocarta field also have entrezgene field
           fields: entrezgene
           species: human
+          size: 1000  ## note the size limit
         predicate: has_participant
-        requestBody: 
-          body: 
-            q: "{inputs[0]}"  ## no prefix
-            scopes: pathway.biocarta.id
-            size: 1000  ## note the size limit
-          header: application/x-www-form-urlencoded
+        source: "infores:cpdb"   ## ConsensusPathDB
         response_mapping: 
           $ref: "#/components/x-bte-response-mapping/entrezgene"
-        source: "infores:cpdb"   ## ConsensusPathDB
-        supportBatch: true
         # testExamples:
         #   - qInput: "BIOCARTA:raspathway"
         #     oneOutput: "NCBIGene:3265"  ## HRAS
-    involvedInPathway:    ## using Reactome, KEGG, Wikipathways, Biocarta
-      - 
-        inputSeparator: ","
+    involvedInPathway1:    ## using Reactome, KEGG, Wikipathways, Biocarta
+      - supportBatch: true
+        useTemplating: true
         inputs: 
-          - 
-            id: NCBIGene
+          - id: NCBIGene
             semantic: Gene
+        requestBody: 
+          body: 
+            q: "{{ queryInputs }}"  ## no prefix
+            scopes: entrezgene
         outputs: 
-          - 
-            id: REACT
+          - id: REACT
             semantic: Pathway
         parameters: 
         ## not including name since BTE isn't ingesting properly right now
           fields: >-
             pathway.reactome.id
           species: human
+          size: 1000
         predicate: participates_in
-        requestBody: 
-          body: 
-            q: "{inputs[0]}"  ## no prefix
-            scopes: entrezgene
-          header: application/x-www-form-urlencoded
+        source: "infores:reactome"
         response_mapping: 
           $ref: "#/components/x-bte-response-mapping/reactomePathway"
-        source: "infores:reactome"
-        supportBatch: true
         # testExamples:
         #   - qInput: "NCBIGene:1629"         ## DBT
         #     oneOutput: "REACT:R-HSA-70895"  ## Branched-chain amino acid catabolism
-      - 
-        inputSeparator: ","
+    involvedInPathway2:
+      - supportBatch: true
+        useTemplating: true
         inputs: 
-          - 
-            id: NCBIGene
+          - id: NCBIGene
             semantic: Gene
+        requestBody: 
+          body: 
+            q: "{{ queryInputs }}"  ## no prefix
+            scopes: entrezgene
         outputs: 
-          - 
-            id: "KEGG.PATHWAY"
+          - id: "KEGG.PATHWAY"
             semantic: Pathway
         parameters: 
         ## not including name since BTE isn't ingesting properly right now
           fields: >-
             pathway.kegg.id
           species: human
+          size: 1000
         predicate: participates_in
-        requestBody: 
-          body: 
-            q: "{inputs[0]}"  ## no prefix
-            scopes: entrezgene
-          header: application/x-www-form-urlencoded
+        source: "infores:cpdb"   ## ConsensusPathDB
         response_mapping: 
           $ref: "#/components/x-bte-response-mapping/keggPathway"
-        source: "infores:cpdb"   ## ConsensusPathDB
-        supportBatch: true
         # testExamples:
         #   - qInput: "NCBIGene:1629"         ## DBT
         #     oneOutput: "KEGG.PATHWAY:hsa00280"  ## Valine, leucine and isoleucine degradation - Homo sapiens (human)
-      - 
-        inputSeparator: ","
+    involvedInPathway3:
+      - supportBatch: true
+        useTemplating: true
         inputs: 
-          - 
-            id: NCBIGene
+          - id: NCBIGene
             semantic: Gene
+        requestBody: 
+          body: 
+            q: "{{ queryInputs }}"  ## no prefix
+            scopes: entrezgene
         outputs: 
-          - 
-            id: WIKIPATHWAYS
+          - id: WIKIPATHWAYS
             semantic: Pathway
         parameters: 
         ## not including name since BTE isn't ingesting properly right now
           fields: >-
             pathway.wikipathways.id
           species: human
+          size: 1000
         predicate: participates_in
-        requestBody: 
-          body: 
-            q: "{inputs[0]}"  ## no prefix
-            scopes: entrezgene
-          header: application/x-www-form-urlencoded
+        source: "infores:cpdb"   ## ConsensusPathDB
         response_mapping: 
           $ref: "#/components/x-bte-response-mapping/wikipathway"
-        source: "infores:cpdb"   ## ConsensusPathDB
-        supportBatch: true
         # testExamples:
         #   - qInput: "NCBIGene:8309"         ## ACOX2
         #     oneOutput: "WIKIPATHWAYS:WP3942"  ## PPAR signaling pathway
-      - 
-        inputSeparator: ","
+    involvedInPathway4:
+      - supportBatch: true
+        useTemplating: true
         inputs: 
-          - 
-            id: NCBIGene
+          - id: NCBIGene
             semantic: Gene
+        requestBody: 
+          body: 
+            q: "{{ queryInputs }}"  ## no prefix
+            scopes: entrezgene
         outputs: 
-          - 
-            id: BIOCARTA
+          - id: BIOCARTA
             semantic: Pathway
         parameters: 
         ## not including name since BTE isn't ingesting properly right now
           fields: >-
             pathway.biocarta.id
           species: human
+          size: 1000
         predicate: participates_in
-        requestBody: 
-          body: 
-            q: "{inputs[0]}"  ## no prefix
-            scopes: entrezgene
-          header: application/x-www-form-urlencoded
+        source: "infores:cpdb"   ## ConsensusPathDB
         response_mapping: 
           $ref: "#/components/x-bte-response-mapping/biocarta"
-        source: "infores:cpdb"   ## ConsensusPathDB
-        supportBatch: true
         # testExamples:
         #   - qInput: "NCBIGene:5608"         ## MAP2K6
         #     oneOutput: "BIOCARTA:p38mapkpathway"  ## p38 mapk signaling pathway
     involvedInBP:
-      - 
-        inputSeparator: ","
+      - supportBatch: true
+        useTemplating: true
         inputs: 
-          - 
-            id: NCBIGene
+          - id: NCBIGene
             semantic: Gene
+        requestBody: 
+          body: 
+            q: "{{ queryInputs }}"  ## no prefix
+            scopes: entrezgene
         outputs: 
-          - 
-            id: GO
+          - id: GO
             semantic: BiologicalProcess
         parameters: 
           ## all records with go.BP field also have entrezgene field
@@ -468,58 +941,52 @@ components:
             go.BP.pubmed,
             go.BP.qualifier
           species: human
+          size: 1000
         predicate: participates_in
-        requestBody: 
-          body: 
-            q: "{inputs[0]}"  ## no prefix
-            scopes: entrezgene
-          header: application/x-www-form-urlencoded
+        source: "infores:ncbi-gene"   ## which got from GO Annotations...
         response_mapping: 
           $ref: "#/components/x-bte-response-mapping/biologicalProcess"
-        source: "infores:ncbi-gene"   ## which got from GO Annotations...
-        supportBatch: true
         # testExamples:
         #   - qInput: "NCBIGene:632"    ## BGLAP
         #     oneOutput: "GO:0001501"   ## skeletal system development
     BPToGene: 
-      - 
-        inputSeparator: ","
+      - supportBatch: true
+        useTemplating: true
         inputs: 
-          - 
-            id: GO
+          - id: GO
             semantic: BiologicalProcess
+        requestBody: 
+          body: 
+            q: "{{ queryInputs }}"  ## HAS PREFIX (GO)
+            scopes: go.BP.id
         outputs: 
-          - 
-            id: NCBIGene
+          - id: NCBIGene
             semantic: Gene
         parameters: 
           ## all records with go.BP field also have entrezgene field
           fields: entrezgene
           species: human
+          size: 1000  ## note size limit
         predicate: has_participant
-        requestBody: 
-          body: 
-            q: "{inputs[0]}"  ## HAS PREFIX (GO)
-            scopes: go.BP.id
-            size: 1000  ## note size limit
-          header: application/x-www-form-urlencoded
+        source: "infores:ncbi-gene"   ## which got from GO Annotations...
         response_mapping: 
           $ref: "#/components/x-bte-response-mapping/entrezgene"
-        source: "infores:ncbi-gene"   ## which got from GO Annotations...
-        supportBatch: true
         # testExamples:
         #   - qInput: "GO:0001501"         ## skeletal system development
         #     oneOutput: "NCBIGene:5741"   ## PTH
     enablesMF:
-      - 
-        inputSeparator: ","
+      - supportBatch: true
+        useTemplating: true
         inputs: 
-          - 
-            id: NCBIGene
+          - id: NCBIGene
             semantic: Gene
+        requestBody: 
+          body: 
+            q: "{{ queryInputs }}"  ## no prefix
+            ## all records with go.MF field also have entrezgene field
+            scopes: entrezgene
         outputs: 
-          - 
-            id: GO
+          - id: GO
             semantic: MolecularActivity
         parameters: 
           ## not including: name, category/gocategory (not needed)
@@ -529,59 +996,51 @@ components:
             go.MF.pubmed,
             go.MF.qualifier
           species: human
+          size: 1000
         predicate: enables
-        requestBody: 
-          body: 
-            q: "{inputs[0]}"  ## no prefix
-            ## all records with go.MF field also have entrezgene field
-            scopes: entrezgene
-          header: application/x-www-form-urlencoded
+        source: "infores:ncbi-gene"   ## which got from GO Annotations...
         response_mapping: 
           $ref: "#/components/x-bte-response-mapping/molecularFunction"
-        source: "infores:ncbi-gene"   ## which got from GO Annotations...
-        supportBatch: true
         # testExamples:
         #   - qInput: "NCBIGene:1629"   ## DBT
         #     oneOutput: "GO:0031405"   ## lipoic acid binding
     MFToGene:
-      - 
-        inputSeparator: ","
+      - supportBatch: true
+        useTemplating: true
         inputs: 
-          - 
-            id: GO
+          - id: GO
             semantic: MolecularActivity
+        requestBody: 
+          body: 
+            q: "{{ queryInputs }}"   ## HAS PREFIX (GO)
+            scopes: go.MF.id
         outputs: 
-          - 
-            id: NCBIGene
+          - id: NCBIGene
             semantic: Gene
         parameters: 
           ## all records with go.MF field also have entrezgene field
           fields: entrezgene
           species: human
+          size: 1000  ## note size limit
         predicate: enabled_by
-        requestBody: 
-          body: 
-            q: "{inputs[0]}"   ## HAS PREFIX (GO)
-            scopes: go.MF.id
-            size: 1000  ## note size limit
-          header: application/x-www-form-urlencoded
+        source: "infores:ncbi-gene"   ## which got from GO Annotations...
         response_mapping: 
           $ref: "#/components/x-bte-response-mapping/entrezgene"
-        source: "infores:ncbi-gene"   ## which got from GO Annotations...
-        supportBatch: true
         # testExamples:
         #   - qInput: "GO:0008147"   ## structural constituent of bone
         #     oneOutput: "NCBIGene:632"   ## BGLAP
     involvedInCC: 
-      - 
-        inputSeparator: ","
+      - supportBatch: true
+        useTemplating: true
         inputs: 
-          - 
-            id: NCBIGene
+          - id: NCBIGene
             semantic: Gene
+        requestBody: 
+          body: 
+            q: "{{ queryInputs }}"  ## no prefix
+            scopes: entrezgene
         outputs: 
-          - 
-            id: GO
+          - id: GO
             semantic: CellularComponent
         parameters: 
           ## all records with go.CC field also have entrezgene field
@@ -592,58 +1051,51 @@ components:
             go.CC.pubmed,
             go.CC.qualifier
           species: human
+          size: 1000
         predicate: active_in
-        requestBody: 
-          body: 
-            q: "{inputs[0]}"  ## no prefix
-            scopes: entrezgene
-          header: application/x-www-form-urlencoded
+        source: "infores:ncbi-gene"   ## which got from GO Annotations...
         response_mapping: 
           $ref: "#/components/x-bte-response-mapping/cellularComponent"
-        source: "infores:ncbi-gene"   ## which got from GO Annotations...
-        supportBatch: true
         # testExamples:
         #   - qInput: "NCBIGene:5741"   ## PTH
         #     oneOutput: "GO:0005576"   ## extracellular region
     CCToGene: 
-      - 
-        inputSeparator: ","
+      - supportBatch: true
+        useTemplating: true
         inputs: 
-          - 
-            id: GO
+          - id: GO
             semantic: CellularComponent
+        requestBody: 
+          body: 
+            q: "{{ queryInputs }}"  ## HAS PREFIX (GO)
+            scopes: go.CC.id
         outputs: 
-          - 
-            id: NCBIGene
+          - id: NCBIGene
             semantic: Gene
         parameters: 
           ## all records with go.CC field also have entrezgene field
           fields: entrezgene
           species: human
+          size: 1000  ## note size limit
         predicate: has_active_component
-        requestBody: 
-          body: 
-            q: "{inputs[0]}"  ## HAS PREFIX (GO)
-            scopes: go.CC.id
-            size: 1000  ## note size limit
-          header: application/x-www-form-urlencoded
+        source: "infores:ncbi-gene"   ## which got from GO Annotations...
         response_mapping: 
           $ref: "#/components/x-bte-response-mapping/entrezgene"
-        source: "infores:ncbi-gene"   ## which got from GO Annotations...
-        supportBatch: true
         # testExamples:
         #   - qInput: "GO:0033268"         ## node of Ranvier
         #     oneOutput: "NCBIGene:6326"   ## SCN2A
     geneToDisease:
-      - 
-        inputSeparator: ","
+      - supportBatch: true
+        useTemplating: true
         inputs: 
-          - 
-            id: NCBIGene
+          - id: NCBIGene
             semantic: Gene
+        requestBody: 
+          body: 
+            q: "{{ queryInputs }}"  ## no prefix
+            scopes: entrezgene
         outputs: 
-          - 
-            id: MONDO
+          - id: MONDO
             semantic: Disease
         parameters: 
           ## all records with clingen field have entrezgene, mondo fields
@@ -653,6 +1105,7 @@ components:
             clingen.clinical_validity.classification,
             clingen.clinical_validity.online_report
           species: human
+          size: 1000
         ## using related_to because....
         ## - the strength of the assertion being made (is this gene related to disease)
         ##   is specified by the clingen.clinical_validity.classification field (see response-mapping)
@@ -660,43 +1113,34 @@ components:
         ## - possible values: definitive, moderate, limited, disputed, refuted (!!!), no known disease relationship (!!!)
         ##     can be a list if there were multiple assertions/clinical_validity objects
         predicate: related_to
-        requestBody: 
-          body: 
-            q: "{inputs[0]}"  ## no prefix
-            scopes: entrezgene
-          header: application/x-www-form-urlencoded
+        source: "infores:clingen"
         response_mapping: 
           $ref: "#/components/x-bte-response-mapping/clingen"
-        source: "infores:clingen"
-        supportBatch: true
         # testExamples:
         #   - qInput: "NCBIGene:23126"     ## POGZ
         #     oneOutput: "MONDO:0014606"   ## intellectual disability-microcephaly-strabismus-behavioral abnormalities syndrome
     diseaseToGene:
-      - 
-        inputSeparator: ","
+      - supportBatch: true
+        useTemplating: true
         inputs: 
-          - 
-            id: MONDO
+          - id: MONDO
             semantic: Disease
+        requestBody: 
+          body: 
+            q: "{{ queryInputs }}"  ## no prefix
+            scopes: clingen.clinical_validity.mondo
         outputs: 
-          - 
-            id: NCBIGene
+          - id: NCBIGene
             semantic: Gene
         parameters: 
           ## all records with clingen field have entrezgene, mondo fields
           fields: entrezgene
           species: human
+          size: 1000
         predicate: related_to
-        requestBody: 
-          body: 
-            q: "{inputs[0]}"  ## no prefix
-            scopes: clingen.clinical_validity.mondo
-          header: application/x-www-form-urlencoded
+        source: "infores:clingen"
         response_mapping: 
           $ref: "#/components/x-bte-response-mapping/entrezgene"
-        source: "infores:clingen"
-        supportBatch: true
         # testExamples:
         #   - qInput: "MONDO:0014606"       ## intellectual disability-microcephaly-strabismus-behavioral abnormalities syndrome
         #     oneOutput: "NCBIGene:23126"   ## POGZ
@@ -704,15 +1148,17 @@ components:
     ## currently written: MGI 
     ## Also have Ensembl (for specific non-human species) and UniprotKB (for all orthologs)
     hasHomolog-MGI: 
-      - 
-        inputSeparator: ","
+      - supportBatch: true
+        useTemplating: true
         inputs: 
-          - 
-            id: HGNC
+          - id: HGNC
             semantic: Gene
+        requestBody: 
+          body: 
+            q: "{{ queryInputs }}"  ## no prefix
+            scopes: pantherdb.HGNC
         outputs: 
-          - 
-            id: MGI
+          - id: MGI
             semantic: Gene
         parameters: 
           fields: >-
@@ -720,44 +1166,37 @@ components:
             pantherdb.ortholog.taxid
           ## almost all records with pantherdb.ortholog fields also have the entrezgene field
           ##   > 145,000 records have both fields, vs ~ 3600 records don't have the entrezgene field
+          size: 1000
         predicate: homologous_to
-        requestBody: 
-          body: 
-            q: "{inputs[0]}"  ## no prefix
-            scopes: pantherdb.HGNC
-          header: application/x-www-form-urlencoded
+        source: "infores:panther"
         response_mapping: 
           $ref: "#/components/x-bte-response-mapping/pantherMGI"
-        source: "infores:panther"
         # testExamples:
         #   - qInput: "HGNC:20589"       ## KCMF1
         #     oneOutput: "MGI:1921537"   ## Kcmf1
     hasHomolog-MGI-rev: 
     ## UPDATED TO USE TEMPLATING
-      - 
-        supportBatch: true
+      - supportBatch: true
         useTemplating: true
         inputs: 
-          - 
-            id: MGI
+          - id: MGI
             semantic: Gene
         requestBody: 
           body: 
             q: "{{ queryInputs | rmPrefix | join(',') }}"  ## no prefix
             scopes: pantherdb.ortholog.MGI
-          header: application/x-www-form-urlencoded
         outputs:
-          - 
-            id: HGNC
+          - id: HGNC
             semantic: Gene
         parameters: 
           ## almost all records with pantherdb.ortholog fields also have the entrezgene field
           ##   > 145,000 records have both fields, vs ~ 3600 records don't have the entrezgene field
           fields: pantherdb.HGNC
+          size: 1000
         predicate: homologous_to
+        source: "infores:panther"
         response_mapping: 
           $ref: "#/components/x-bte-response-mapping/pantherHGNC"
-        source: "infores:panther"
         # testExamples:
         #   - qInput: "MGI:1916384"     ## Fam25c
         #     oneOutput: "HGNC:23586"   ## FAM25C
@@ -801,276 +1240,3 @@ components:
       inTaxon: pantherdb.ortholog.taxid
     pantherHGNC: 
       HGNC: pantherdb.HGNC  ## no prefix
-info: 
-  contact: 
-    email: help@mygene.info
-    name: "Chunlei Wu"
-    x-id: "https://github.com/newgene"
-    x-role: "responsible developer"
-  description: "Documentation of the MyGene.info Gene Query web services. Learn more about [MyGene.info](http://mygene.info/)"
-  termsOfService: "http://mygene.info/terms/"
-  title: "MyGene.info API"
-  version: "3.0"
-  x-translator: 
-    infores: "infores:mygene-info"
-    component: KP
-    team: 
-      - "Service Provider"
-    biolink-version: "3.0.3"
-openapi: "3.0.3"
-paths: 
-  /gene: 
-    post: 
-      parameters: 
-        - 
-          $ref: "#/components/parameters/fields"
-          name: fields
-        - 
-          $ref: "#/components/parameters/species"
-          name: species
-        - 
-          $ref: "#/components/parameters/dotfield"
-          name: dotfield
-        - 
-          $ref: "#/components/parameters/email"
-          name: email
-      requestBody:
-        required: true
-        content: 
-          application/x-www-form-urlencoded: 
-            schema: 
-              properties: 
-                ids: 
-                  description: "multiple geneids seperated by comma, e.g., \"ids=1017,1018\" or \"ids=695,ENSG00000123374\". Note that currently we only take the input ids up to 1000 maximum, the rest will be omitted."
-                  type: string
-              required: 
-                - ids
-      responses: 
-        "200": 
-          content: 
-            application/json: 
-              schema: 
-                items: 
-                  $ref: "#/components/schemas/Gene"
-                type: array
-          description: "a list of matching gene objects"
-      summary: "For a list of gene ids, return the matching gene objects"
-      tags: 
-        - annotation
-  "/gene/{geneid}": 
-    get: 
-      parameters: 
-        - 
-          description: "Entrez or Ensembl gene id, e.g., 1017, ENSG00000170248. A retired Entrez Gene id works too if it is replaced by a new one, e.g., 245794"
-          example: "1017"
-          in: path
-          name: geneid
-          required: true
-          schema: 
-            type: string
-        - 
-          $ref: "#/components/parameters/fields"
-          name: fields
-        - 
-          $ref: "#/components/parameters/dotfield"
-          name: dotfield
-        - 
-          $ref: "#/components/parameters/callback"
-          name: callback
-        - 
-          $ref: "#/components/parameters/email"
-          name: email
-      responses: 
-        "200": 
-          content: 
-            application/json: 
-              schema: 
-                $ref: "#/components/schemas/Gene"
-          description: "A matching gene object"
-      summary: "Retrieve gene annotation object based on Entrez or Ensembl gene id, support JSONP and CORS as well."
-      tags: 
-        - annotation
-  /metadata: 
-    get: 
-      parameters: 
-        - 
-          $ref: "#/components/parameters/callback"
-          name: callback
-      responses: 
-        "200": 
-          description: "MyGene.info metadata object"
-      summary: "Get metadata about the data available from MyGene.info."
-  /metadata/fields: 
-    get: 
-      parameters: 
-        - 
-          description: "Pass a search term to filter the available fields, e.g. \"search=clinvar\"."
-          in: query
-          name: search
-          schema: 
-            type: string
-        - 
-          description: "Pass a prefix string to filter the available fields, e.g. \"prefix=refseq\"."
-          in: query
-          name: prefix
-          schema: 
-            type: string
-        - 
-          $ref: "#/components/parameters/callback"
-          name: callback
-      responses: 
-        "200": 
-          description: "MyGene.info metadata fields object"
-      summary: "Get metadata about the data fields available from MyGene.info."
-  /query: 
-    get: 
-      parameters: 
-        - 
-          description: "Query string. Examples \"CDK2\", \"NM_052827\", \"204639_at\", \"chr1:151,073,054-151,383,976\", \"hg19.chr1:151073054-151383976\". The detailed query syntax can be found from our [docs](http://docs.mygene.info/en/latest/doc/query_service.html)."
-          example: CDK2
-          in: query
-          name: q
-          required: true
-          schema: 
-            type: string
-        - 
-          $ref: "#/components/parameters/fields"
-          name: fields
-        - 
-          $ref: "#/components/parameters/species"
-          name: species
-        - 
-          $ref: "#/components/parameters/size"
-          name: size
-        - 
-          $ref: "#/components/parameters/from"
-          name: from
-        - 
-          $ref: "#/components/parameters/sort"
-          name: sort
-        - 
-          description: "a single field or comma-separated fields to return facets, for example, \"facets=taxid\", \"facets=taxid,type_of_gene\"."
-          in: query
-          name: facets
-          schema: 
-            type: string
-        - 
-          description: "relevant when faceting on species (i.e., “facets=taxid” are passed). It’s used to pass species filter without changing the scope of faceting, so that the returned facet counts won’t change. Either species name or taxonomy id can be used, just like “species” parameter."
-          in: query
-          name: species_facet_filter
-          schema: 
-            type: string
-        - 
-          description: "when passed as “True” or “1”, the query returns only the hits with valid Entrez gene ids. Default: False."
-          in: query
-          name: entrezonly
-          schema: 
-            type: boolean
-        - 
-          description: "when passed as “True” or “1”, the query returns only the hits with valid Ensembl gene ids. Default: False."
-          in: query
-          name: ensemblonly
-          schema: 
-            type: boolean
-        - 
-          $ref: "#/components/parameters/callback"
-          name: callback
-        - 
-          $ref: "#/components/parameters/dotfield"
-          name: dotfield
-        - 
-          $ref: "#/components/parameters/email"
-          name: email
-      responses: 
-        "200": 
-          content: 
-            application/json: 
-              schema: 
-                $ref: "#/components/schemas/QueryResult"
-          description: "A query response object with \"hits\" property"
-      summary: "Make gene query and return matching gene list. Support JSONP and CORS as well."
-      tags: 
-        - query
-    post: 
-      parameters: 
-        - 
-          $ref: "#/components/parameters/fields"
-          name: fields
-        - 
-          $ref: "#/components/parameters/species"
-          name: species
-        - 
-          $ref: "#/components/parameters/dotfield"
-          name: dotfield
-        - 
-          $ref: "#/components/parameters/email"
-          name: email
-      requestBody:
-        required: true
-        content: 
-          application/x-www-form-urlencoded: 
-            schema: 
-              properties: 
-                q: 
-                  description: "multiple query terms seperated by comma (also support \"+\" or white space), but no wildcard, e.g., \"q=1017,1018\" or \"q=CDK2+BTK\""
-                  type: string
-                scopes: 
-                  description: "Specify one or more fields (separated by comma) as the search \"scopes\", e.g., \"scopes=entrezgene\", \"scopes=entrezgene,ensemblgene\". The available \"fields\" can be passed to \"scopes\" parameter are listed [here](http://mygene.info/doc/query_service.html#available-fields). Default: \"scopes=entrezgene,ensemblgene,retired\" (either Entrez or Ensembl gene ids)."
-                  type: string
-              required: 
-                - q
-      responses: 
-        "200": 
-          content: 
-            application/json: 
-              schema: 
-                $ref: "#/components/schemas/QueryPOSTResult"
-          description: "Query response objects with \"hits\" property"
-      summary: "Make gene batch query and return matching gene hits"
-      tags: 
-        - query
-      x-bte-kgs-operations: 
-        - 
-          $ref: "#/components/x-bte-kgs-operations/PathwayHasGene"
-        - 
-          $ref: "#/components/x-bte-kgs-operations/involvedInPathway"
-        - 
-          $ref: "#/components/x-bte-kgs-operations/involvedInBP"
-        - 
-          $ref: "#/components/x-bte-kgs-operations/BPToGene"
-        - 
-          $ref: "#/components/x-bte-kgs-operations/enablesMF"
-        - 
-          $ref: "#/components/x-bte-kgs-operations/MFToGene"
-        - 
-          $ref: "#/components/x-bte-kgs-operations/involvedInCC"
-        - 
-          $ref: "#/components/x-bte-kgs-operations/CCToGene"
-        - 
-          $ref: "#/components/x-bte-kgs-operations/geneToDisease"
-        - 
-          $ref: "#/components/x-bte-kgs-operations/diseaseToGene"
-        - 
-          $ref: "#/components/x-bte-kgs-operations/hasHomolog-MGI"
-        - 
-          $ref: "#/components/x-bte-kgs-operations/hasHomolog-MGI-rev"
-servers: 
-  - 
-    description: "Encrypted Production server"
-    url: "https://mygene.info/v3"
-    x-maturity: production
-  - 
-    description: "Production server"
-    url: "http://mygene.info/v3"
-    x-maturity: production
-tags: 
-  - 
-    name: gene
-  - 
-    name: annotation
-  - 
-    name: query
-  - 
-    name: translator
-  - 
-    name: biothings

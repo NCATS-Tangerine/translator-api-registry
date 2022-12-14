@@ -5,8 +5,8 @@ info:
     name: Chunlei Wu
     x-id: https://github.com/newgene
     x-role: responsible developer
-  description: Documentation of the MyChem.info chem query web services.  Learn more
-    about [MyChem.info](http://MyChem.info/)
+  description: Documentation of the MyChem.info chem query web services. Learn more
+    about [MyChem.info](https://docs.mychem.info/en/latest/index.html)
   termsOfService: http://MyChem.info/terms
   title: MyChem.info API
   version: '1.0'
@@ -33,129 +33,184 @@ tags:
 paths:
   "/chem/{id}":
     get:
+      description: >-
+        By default, this will return the complete chemical annotation object in JSON format. 
+        See [here](https://docs.mychem.info/en/latest/doc/chem_annotation_service.html#returned-object) 
+        for an example and [here](https://docs.mychem.info/en/latest/doc/data.html#chemical-object)
+        for more details. If the input chemical ID is not valid, 404 (NOT FOUND) will be returned.
+        
+
+        Optionally, you can pass a "fields" parameter to return only the annotation you want 
+        (by filtering returned object fields). "fields" accepts any attributes (a.k.a fields) available 
+        from the chemical object. Multiple attributes should be separated by commas. If an attribute is not 
+        available for a specific chemical object, it will be ignored. Note that the attribute names are 
+        case-sensitive.
+
+
+        Just like the chemical query service, you can also pass a "callback" parameter to make a JSONP call.
       parameters:
+      ## these are provided in the docs https://docs.mychem.info/en/latest/doc/chem_annotation_service.html
       - name: id
-        description: 'Retrieve chemical objects based on ID - currently one of: [InChiKey](https://en.wikipedia.org/wiki/International_Chemical_Identifier#InChIKey),
-          [DrugBank accession number](https://www.drugbank.ca/documentation), [ChEMBLID](https://www.ebi.ac.uk/chembl/faq#faq40),
-          [ChEBI identifier](http://www.ebi.ac.uk/chebi/aboutChebiForward.do), [PubChem
-          CID](https://pubchem.ncbi.nlm.nih.gov/search/help_search.html#Cid), [UNII](https://www.fda.gov/ForIndustry/DataStandards/SubstanceRegistrationSystem-UniqueIngredientIdentifierUNII/).  Supports
-          JSONP and CORS as well.'
+        description: >-
+          Retrieve chemical data based on ID - currently one of: 
+          [InChIKey](https://en.wikipedia.org/wiki/International_Chemical_Identifier#InChIKey),
+          [ChEMBLID](https://www.ebi.ac.uk/chembl/faq#faq40),
+          [ChEBI identifier](http://www.ebi.ac.uk/chebi/aboutChebiForward.do), 
+          [PubChem CID](https://pubchem.ncbi.nlm.nih.gov/search/help_search.html#Cid), 
+          [UNII](https://www.fda.gov/ForIndustry/DataStandards/SubstanceRegistrationSystem-UniqueIngredientIdentifierUNII/).
         in: path
         required: true
         example: "USNINKBPBVKHHZ-CYUUQNCZSA-L"
         schema:
           type: string
-      - "$ref": "#/components/parameters/raw"
-      - "$ref": "#/components/parameters/rawquery"
-      - "$ref": "#/components/parameters/_source"
+      - "$ref": "#/components/parameters/fields"
+      - "$ref": "#/components/parameters/callback"
+      - "$ref": "#/components/parameters/email"
+      ## this is useful even when it's not noted in the docs
       - "$ref": "#/components/parameters/size"
-      - "$ref": "#/components/parameters/dotfield"
-      - "$ref": "#/components/parameters/_sorted"
-      - "$ref": "#/components/parameters/always_list"
-      - "$ref": "#/components/parameters/allow_null"
-      - "$ref": "#/components/parameters/format"
+      ## these are noted in the https://mychem.info/v1/spec endpoint; commenting out for now
+      # - "$ref": "#/components/parameters/raw"
+      # - "$ref": "#/components/parameters/rawquery"
+      # - "$ref": "#/components/parameters/dotfield"
+      # - "$ref": "#/components/parameters/_sorted"
+      # - "$ref": "#/components/parameters/always_list"
+      # - "$ref": "#/components/parameters/allow_null"
+      # - "$ref": "#/components/parameters/format"
       responses:
         '200':
-          description: "Success"
+          ## description from https://docs.mychem.info/en/latest/doc/response_status_codes.html
+          description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
+      ## commenting out schemas and other status codes for now
       #     content:
       #       application/json:
       #         schema:
       #           $ref: '#/components/schemas/Chem'
       #   '404':
       #     description: A response indicating an unknown chemical ID
-      # summary: Retrieve chemical objects based on ID
       tags:
       - chemical
   "/chem":
     post:
+      description: >-
+        Although making simple GET requests above to our chemical query service is sufficient in most use cases, 
+        there are some times you might find it easier to batch query (e.g., retrieving chemical annotations for 
+        multiple chemicals). Fortunately, you can also make batch queries via POST requests when you need to.
       parameters:
-      - "$ref": "#/components/parameters/raw"
-      - "$ref": "#/components/parameters/rawquery"
-      - "$ref": "#/components/parameters/_source"
+      ## these are provided in the docs https://docs.mychem.info/en/latest/doc/chem_annotation_service.html
+      - name: ids
+        description: >-
+          Accepts multiple chemical ids separated by comma, e.g., 
+          "ids=SDUQYLNIPVEERB-QPPQHZFASA-N,SESFRYSPDFLNCH-UHFFFAOYSA-N,SHGAZHPCJJPHSC-ZVCIMWCZSA-N". 
+          Note that currently we only take the input ids up to 1000 maximum, the rest will be omitted.
+
+
+          The request body can also be used to provide these ids.
+        in: query
+        ## setting to false since putting this info in the request body seems to work as well
+        required: false
+        schema:
+          type: string
+      - "$ref": "#/components/parameters/fields"
+      - "$ref": "#/components/parameters/email"
+      ## this is useful even when it's not noted in the docs
       - "$ref": "#/components/parameters/size"
-      - "$ref": "#/components/parameters/dotfield"
-      - "$ref": "#/components/parameters/_sorted"
-      - "$ref": "#/components/parameters/always_list"
-      - "$ref": "#/components/parameters/allow_null"
-      - "$ref": "#/components/parameters/format"
+      ## these are noted in the https://mychem.info/v1/spec endpoint; commenting out for now
+      # - "$ref": "#/components/parameters/raw"
+      # - "$ref": "#/components/parameters/rawquery"
+      # - "$ref": "#/components/parameters/dotfield"
+      # - "$ref": "#/components/parameters/_sorted"
+      # - "$ref": "#/components/parameters/always_list"
+      # - "$ref": "#/components/parameters/allow_null"
+      # - "$ref": "#/components/parameters/format"
       requestBody:
         content:
           application/json:
             example:
               ids:
               - "USNINKBPBVKHHZ-CYUUQNCZSA-L"
-              - "KTUFNOKKBVMGRW-UHFFFAOYSA-N"
+              - "CHEMBL266510"
             schema:
               type: object
               properties:
                 ids:
-                  description: 'multiple chemical IDs separated by comma. Note that
-                    currently we only take the input ids up to 1000 maximum, the rest
-                    will be omitted. Type: string (list). Max: 1000.'
+                  description: >-
+                    Accepts multiple chemical ids. Note that currently we only take the input ids 
+                    up to 1000 maximum, the rest will be omitted.
                   type: array
                   items:
                     type: string
       responses:
         '200':
-          description: "Success"
+          description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
       tags:
       - chemical
   "/metadata":
     get:
-      parameters:
-      - "$ref": "#/components/parameters/format"
-      - "$ref": "#/components/parameters/raw"
-      - "$ref": "#/components/parameters/dev"
+      description: Get metadata about the data available from the API
+      ## these are noted in the https://mychem.info/v1/spec endpoint; commenting out for now
+      # parameters:
+      # - "$ref": "#/components/parameters/format"
+      # - "$ref": "#/components/parameters/raw"
       responses:
         '200':
-          description: Success
-      summary: Get metadata about the data available from the API
+          description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
       tags:
       - metadata
   "/metadata/fields":
     get:
-      parameters:
-      - "$ref": "#/components/parameters/format"
-      - "$ref": "#/components/parameters/raw"
-      - "$ref": "#/components/parameters/search"
-      - "$ref": "#/components/parameters/prefix"
+      description: Get metadata about the data fields available from the API
+      ## these are noted in the https://mychem.info/v1/spec endpoint; commenting out for now
+      # parameters:
+      # - "$ref": "#/components/parameters/format"
+      # - "$ref": "#/components/parameters/raw"
+      # - "$ref": "#/components/parameters/search"
+      # - "$ref": "#/components/parameters/prefix"
       responses:
         '200':
-          description: Success
-      summary: Get metadata about the data fields available from a record
+          description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
       tags:
       - metadata
   "/query":
     get:
+      description: >-
+        MyChem.info chemical query web service. In the output, "total" in the output gives the total number 
+        of matching hits, while the actual hits are returned under "hits" field.
       parameters:
       - name: q
-        description: 'Query string.  The detailed query syntax can be found from our
-          [docs](http://MyChem.info).  Examples: "Fludara", "CHEMBI:63599", "DB01073".'
+        ## description partially from https://docs.mychem.info/en/latest/doc/chem_query_service.html#query-syntax
+        description: >-
+          Required, passing user query. The detailed query syntax for parameter is explained 
+          [here](https://docs.mychem.info/en/latest/doc/chem_query_service.html#query-syntax).
         in: query
         required: true
-        example: "Fludara"
+        example: "CHEMBL266510"
         schema:
           type: string
-      - "$ref": "#/components/parameters/aggs"
-      - "$ref": "#/components/parameters/facet_size"
+      - "$ref": "#/components/parameters/fields"
+      - "$ref": "#/components/parameters/size"
       - "$ref": "#/components/parameters/from"
-      - "$ref": "#/components/parameters/userquery"
-      - "$ref": "#/components/parameters/sort"
-      - "$ref": "#/components/parameters/explain"
       - "$ref": "#/components/parameters/fetch_all"
       - "$ref": "#/components/parameters/scroll_id"
-      - "$ref": "#/components/parameters/raw"
-      - "$ref": "#/components/parameters/rawquery"
-      - "$ref": "#/components/parameters/_source"
-      - "$ref": "#/components/parameters/size"
+      - "$ref": "#/components/parameters/sort"
+      - "$ref": "#/components/parameters/facets"
+      - "$ref": "#/components/parameters/facet_size"
+      - "$ref": "#/components/parameters/callback"
       - "$ref": "#/components/parameters/dotfield"
-      - "$ref": "#/components/parameters/_sorted"
-      - "$ref": "#/components/parameters/always_list"
-      - "$ref": "#/components/parameters/allow_null"
-      - "$ref": "#/components/parameters/format"
+      - "$ref": "#/components/parameters/email"
+      ## these are noted in the https://mychem.info/v1/spec endpoint; commenting out for now
+      # - "$ref": "#/components/parameters/aggs"
+      # - "$ref": "#/components/parameters/userquery"
+      # - "$ref": "#/components/parameters/explain"
+      # - "$ref": "#/components/parameters/raw"
+      # - "$ref": "#/components/parameters/rawquery"
+      # - "$ref": "#/components/parameters/_sorted"
+      # - "$ref": "#/components/parameters/always_list"
+      # - "$ref": "#/components/parameters/allow_null"
+      # - "$ref": "#/components/parameters/format"
       responses:
         '200':
-          description: Success
+          description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
+      ## commenting out schemas and other status codes for now
       #     content:
       #       application/json:
       #         schema:
@@ -166,39 +221,64 @@ paths:
       #         schema:
       #           "$ref": "#/components/schemas/ErrorResult"
       #     description: A response indicating an improperly formatted query
-      # summary: Make queries and return matching gene hits. Supports JSONP and CORS
+      # description: Make queries and return matching gene hits. Supports JSONP and CORS
       #   as well.
       tags:
       - query
     post:
+      description: >-
+        Although making simple GET requests above to our chemical query service is sufficient for most use cases, 
+        there are times you might find it more efficient to make batch queries (e.g., retrieving chemical annotation 
+        for multiple chemicals). Fortunately, you can also make batch queries via POST requests when you need to.
+
+
+        The "query" field in the returned object indicates the matching query term. If a query term has no match, 
+        it will return with a "notfound" field with the value "true".
       parameters:
+      ## these are provided in the docs https://docs.mychem.info/en/latest/doc/chem_query_service.html?highlight=from#id2
       - name: q
+        description: >-
+          Accepts multiple values separated by commas. Note that currently we only take the input values up to 1000 
+          maximum, the rest will be omitted.
+
+
+          The request body can also be used to provide these ids.
         in: query
+        ## setting to false since putting this info in the request body seems to work as well
         required: false
         schema:
           type: array
           items:
             type: string
       - name: scopes
+        description: >-
+          Optional, specify one or more fields (separated by commas) to search, e.g., "scopes=chebi". 
+          The available "fields" can be passed to "scopes" parameter are listed 
+          [here](https://docs.mychem.info/en/latest/doc/data.html#available-fields). Default: _id
+
+
+          The request body can also be used to provide this information.
         in: query
+        ## setting to false since putting this info in the request body seems to work as well
         required: false
         schema:
-          type: array
-          items:
-            type: string
-            default:
-            - _id
-      - "$ref": "#/components/parameters/from"
-      - "$ref": "#/components/parameters/sort"
-      - "$ref": "#/components/parameters/raw"
-      - "$ref": "#/components/parameters/rawquery"
-      - "$ref": "#/components/parameters/_source"
+          type: string
+      - "$ref": "#/components/parameters/fields"
+      - "$ref": "#/components/parameters/email"
+      ## this is useful even when it's not noted in the docs
       - "$ref": "#/components/parameters/size"
-      - "$ref": "#/components/parameters/dotfield"
-      - "$ref": "#/components/parameters/_sorted"
-      - "$ref": "#/components/parameters/always_list"
-      - "$ref": "#/components/parameters/allow_null"
-      - "$ref": "#/components/parameters/format"
+      - "$ref": "#/components/parameters/from"
+      - "$ref": "#/components/parameters/fetch_all"
+      - "$ref": "#/components/parameters/scroll_id"
+      ## these are noted in the https://mychem.info/v1/spec endpoint; commenting out for now
+      # - "$ref": "#/components/parameters/sort"
+      # - "$ref": "#/components/parameters/raw"
+      # - "$ref": "#/components/parameters/rawquery"
+      # - "$ref": "#/components/parameters/dotfield"
+      # - "$ref": "#/components/parameters/_sorted"
+      # - "$ref": "#/components/parameters/always_list"
+      # - "$ref": "#/components/parameters/allow_null"
+      # - "$ref": "#/components/parameters/format"
       requestBody:
         content:
           application/json:
@@ -207,33 +287,29 @@ paths:
               - "CHEMBL266510"
               - "CHEMBL1200833"
               scopes:
-              - "subject.CHEMBL_COMPOUND"
+              - "chembl.molecule_chembl_id"
             schema:
               type: object
               properties:
                 q:
-                  description: multiple query terms separated by comma (also "+" or
-                    whitespace).  Does not support wildcard queries
+                  description: >-
+                    Accepts multiple values separated by commas. Note that currently we only take the input values 
+                    up to 1000 maximum, the rest will be omitted.
                   type: array
                   items:
                     type: string
                 scopes:
-                  description: 'a comma-separated list of fields as the search "scopes"
-                    (fields to search through for query term). The available "fields"
-                    that can be passed to the "scopes" parameter are listed in the
-                    **/metadata/fields** endpoint.string Default: "scopes=_id".'
-                  type: array
-                  items:
-                    type: string
-                from:
-                  type: integer
-                sort:
+                  description: >-
+                    Specify one or more fields (separated by commas) to search, e.g., "scopes=chebi". 
+                    The available "fields" can be passed to "scopes" parameter are listed 
+                    [here](https://docs.mychem.info/en/latest/doc/data.html#available-fields). Default: _id
                   type: array
                   items:
                     type: string
       responses:
         '200':
-          description: Success
+          description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
+      ## commenting out schemas and other status codes for now
       #     content:
       #       application/json:
       #         schema:
@@ -244,7 +320,7 @@ paths:
       #         schema:
       #           "$ref": "#/components/schemas/ErrorResult"
       #     description: A response indicating an improperly formatted query
-      # summary: Make batch gene queries and return matching gene hits
+      # description: Make batch gene queries and return matching gene hits
       tags:
       - query
       x-bte-kgs-operations:
@@ -270,197 +346,263 @@ paths:
       - "$ref": "#/components/x-bte-kgs-operations/fdaOrphanData-rev"
 components:
   parameters:
-    _sorted:
-      name: _sorted
+    callback:
+      name: callback
+      description: >-
+        Optional, you can pass a "callback" parameter to make a JSONP call.
       in: query
       required: false
       schema:
-        type: boolean
-        default: true
-    _source:
-      name: _source
-      in: query
-      required: false
-      schema:
-        type: array
-        items:
-          type: string
-    aggs:
-      name: aggs
-      in: query
-      required: false
-      schema:
-        type: array
-        items:
-          type: string
-    allow_null:
-      name: allow_null
-      in: query
-      required: false
-      schema:
-        type: array
-        items:
-          type: string
-    always_list:
-      name: always_list
-      in: query
-      required: false
-      schema:
-        type: array
-        items:
-          type: string
-    dev:
-      name: dev
-      in: query
-      required: false
-      schema:
-        type: boolean
+        type: string
     dotfield:
       name: dotfield
+      description: >-
+        Optional, can be used to control the format of the returned chemical object. 
+        If "dotfield" is true, the returned data object is returned flattened (no nested objects) 
+        using dotfield notation for key names. Default: false.
       in: query
       required: false
       schema:
         type: boolean
-    explain:
-      name: explain
+        default: false
+    email:
+      name: email
+      description: >-
+        Optional, if you are regular users of our services, we encourage you to provide us an email, 
+        so that we can better track the usage or follow up with you.
       in: query
       required: false
       schema:
-        type: boolean
+        type: string
     facet_size:
       name: facet_size
+      description: >-
+        Optional, an integer (1 <= facet_size <= 1000) that specifies how many buckets to return in a 
+        [faceted query](https://docs.mychem.info/en/latest/doc/chem_query_service.html?highlight=from#faceted-queries).
       in: query
       required: false
       schema:
         type: integer
         default: 10
+    facets:
+      name: facets
+      description: >-
+        Optional, a single field or comma-separated fields to return facets, can only be used on non-free text fields. 
+        E.g. "facets=chembl.molecule_properties.full_mwt". See [examples of faceted queries 
+        here](https://docs.mychem.info/en/latest/doc/chem_query_service.html?highlight=from#faceted-queries).
+      in: query
+      required: false
+      schema:
+        type: array
+        items:
+          type: string
     fetch_all:
       name: fetch_all
+      description: >-
+        Optional, a boolean, which when TRUE, allows fast retrieval of all unsorted query hits. 
+        The return object contains a _scroll_id field, which when passed as a parameter to the query endpoint 
+        (see the scroll_id parameter), returns the next 1000 query results. Setting fetch_all = TRUE causes 
+        the results to be inherently unsorted, therefore the sort parameter is ignored. For more information, 
+        see [examples using fetch_all 
+        here](https://docs.mychem.info/en/latest/doc/chem_query_service.html?highlight=from#scrolling-queries). 
+        Default: FALSE.
       in: query
       required: false
       schema:
         type: boolean
-    format:
-      name: format
-      description: 'controls output format of server response, currently supports:
-        "json", "jsonld", "html". Type: string. Default: json.'
+        default: false
+    fields:
+      name: fields
+      description: >-
+        Optional, can be a comma-separated list to limit the fields returned from the chemical object. 
+        If "fields=all", all available fields will be returned. Look 
+        [here](https://docs.mychem.info/en/latest/doc/data.html#available-fields) for a list of available fields. 
+        
+
+        Note that it supports dot notation as well, e.g., you can pass "chebi.name". 
+        Default: "fields=all". 
+        The parameter "filter" is an alias for this parameter.
       in: query
       required: false
       schema:
         type: string
-        default: json
+        default: all
     from:
       name: from
+      description: >-
+        Optional, the number of matching chemical hits to skip, starting from 0. Default: 0. 
       in: query
       required: false
       schema:
         type: integer
-    prefix:
-      name: prefix
-      in: query
-      required: false
-      schema:
-        type: string
-    raw:
-      name: raw
-      in: query
-      required: false
-      schema:
-        type: boolean
-    rawquery:
-      name: rawquery
-      in: query
-      required: false
-      schema:
-        type: boolean
+        default: 0
     scroll_id:
       name: scroll_id
-      in: query
-      required: false
-      schema:
-        type: string
-    search:
-      name: search
+      description: >-
+        Optional, a string containing the _scroll_id returned from a query request with fetch_all = TRUE. 
+        Supplying a valid scroll_id will return the next 1000 unordered results. If the next results are 
+        not obtained within 1 minute of the previous set of results, the scroll_id becomes stale, and a 
+        new one must be obtained with another query request with fetch_all = TRUE. All other parameters are 
+        ignored when the scroll_id parameter is supplied. For more information see [examples using scroll_id 
+        here](https://docs.mychem.info/en/latest/doc/chem_query_service.html?highlight=from#scrolling-queries).
       in: query
       required: false
       schema:
         type: string
     size:
       name: size
-      description: "default: 10 objects/records in response"
+      description: >-
+        Optional, the maximum number of matching chemical hits to return (with a cap of 1000 at the moment). Default: 10.
+        The combination of "size" and "from" parameters can be used to get paging for a large query.
       in: query
       required: false
       schema:
         type: integer
+        default: 10
     sort:
       name: sort
+      description: >-
+        Optional, the comma-separated fields to sort on. Prefix with "-" for descending order, otherwise in ascending order. 
+        Default: sort by matching scores in descending order.
       in: query
       required: false
       schema:
         type: array
         items:
           type: string
-    userquery:
-      name: userquery
-      in: query
-      required: false
-      schema:
-        type: string
-  schemas:
-    Chem:
-      properties:
-        _id:
-          type: string
-      required:
-      - _id
-      type: object
-    ErrorResult:
-      properties:
-        message:
-          type: string
-        success:
-          type: boolean
-      type: object
-    QueryPOSTResult:
-      items:
-        allOf:
-        - "$ref": "#/components/schemas/Chem"
-        - properties:
-            _score:
-              format: float
-              type: number
-            query:
-              type: string
-          type: object
-      type: array
-    QueryResult:
-      properties:
-        hits:
-          items:
-            "$ref": "#/components/schemas/Chem"
-          type: array
-        max_score:
-          format: float
-          type: number
-        took:
-          type: integer
-        total:
-          type: integer
-      type: object
-    int64_or_array:
-      oneOf:
-      - items:
-          format: int64
-          type: integer
-        type: array
-      - format: int64
-        type: integer
-    string_or_array:
-      oneOf:
-      - items:
-          type: string
-        type: array
-      - type: string
+    ## these are noted in the https://mychem.info/v1/spec endpoint; commenting out for now
+    # _sorted:
+    #   name: _sorted
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: boolean
+    #     default: true
+    # aggs:
+    #   name: aggs
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: array
+    #     items:
+    #       type: string
+    # allow_null:
+    #   name: allow_null
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: array
+    #     items:
+    #       type: string
+    # always_list:
+    #   name: always_list
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: array
+    #     items:
+    #       type: string
+    # explain:
+    #   name: explain
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: boolean
+    # format:
+    #   name: format
+    #   description: 'controls output format of server response, currently supports:
+    #     "json", "jsonld", "html". Type: string. Default: json.'
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: string
+    #     default: json
+    # prefix:
+    #   name: prefix
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: string
+    # raw:
+    #   name: raw
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: boolean
+    # rawquery:
+    #   name: rawquery
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: boolean
+    # search:
+    #   name: search
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: string
+    # userquery:
+    #   name: userquery
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: string
+  ## commenting out schemas and other status codes for now
+  # schemas:
+  #   Chem:
+  #     properties:
+  #       _id:
+  #         type: string
+  #     required:
+  #     - _id
+  #     type: object
+  #   ErrorResult:
+  #     properties:
+  #       message:
+  #         type: string
+  #       success:
+  #         type: boolean
+  #     type: object
+  #   QueryPOSTResult:
+  #     items:
+  #       allOf:
+  #       - "$ref": "#/components/schemas/Chem"
+  #       - properties:
+  #           _score:
+  #             format: float
+  #             type: number
+  #           query:
+  #             type: string
+  #         type: object
+  #     type: array
+  #   QueryResult:
+  #     properties:
+  #       hits:
+  #         items:
+  #           "$ref": "#/components/schemas/Chem"
+  #         type: array
+  #       max_score:
+  #         format: float
+  #         type: number
+  #       took:
+  #         type: integer
+  #       total:
+  #         type: integer
+  #     type: object
+  #   int64_or_array:
+  #     oneOf:
+  #     - items:
+  #         format: int64
+  #         type: integer
+  #       type: array
+  #     - format: int64
+  #       type: integer
+  #   string_or_array:
+  #     oneOf:
+  #     - items:
+  #         type: string
+  #       type: array
+  #     - type: string
   x-bte-response-mapping:
     aeolusIndication-meddra:
       MEDDRA: aeolus.indications.meddra_code
@@ -525,16 +667,15 @@ components:
     ##   https://nodenormalization-sri.renci.org/1.2/get_normalized_nodes?curie=MEDDRA%3A10021639&conflate=true
     ##   But some seem like PhenotypicFeatures...
     - supportBatch: true
-      inputSeparator: ","
+      useTemplating: true
       inputs:
       - id: UNII
         semantic: SmallMolecule
       requestBody:
         body:
-          q: "{inputs[0]}"  ## no prefix
+          q: "{{ queryInputs }}"  ## no prefix
           scopes: aeolus.unii
           ## all 3044 records have unii, only 1931 have inchikey
-        header: application/x-www-form-urlencoded
       outputs:
       - id: MEDDRA
         semantic: Disease
@@ -552,15 +693,14 @@ components:
     ##   un-comment the operation in x-bte-kgs-operation list under post and try this out 
     aeolusTreats-rev:
     - supportBatch: true
-      inputSeparator: ","
+      useTemplating: true
       inputs:
       - id: MEDDRA
         semantic: Disease
       requestBody:
         body:
-          q: "{inputs[0]}"  ## no prefix
+          q: "{{ queryInputs }}"  ## no prefix
           scopes: aeolus.indications.meddra_code
-        header: application/x-www-form-urlencoded
       outputs:
       - id: UNII
         semantic: SmallMolecule
@@ -587,15 +727,14 @@ components:
     chebiToReactome:
     ## there are 1941 records with chebi.xrefs.reactome
     - supportBatch: true
-      inputSeparator: ","
+      useTemplating: true
       inputs:
       - id: CHEBI
         semantic: SmallMolecule
       requestBody:
         body:
-          q: "{inputs[0]}"  ## HAS PREFIX!
+          q: "{{ queryInputs }}"  ## HAS PREFIX!
           scopes: chebi.id
-        header: application/x-www-form-urlencoded
       outputs:
       ## uses Reactome Reaction, not pathway...
       - id: REACT
@@ -612,15 +751,14 @@ components:
       #     oneOutput: "REACT:R-HSA-139970"  ##  FMO3:FAD N-oxidises TMA to TMAO 
     chebiToReactome-rev:
     - supportBatch: true
-      inputSeparator: ","
+      useTemplating: true
       inputs:
       - id: REACT
         semantic: MolecularActivity
       requestBody:
         body:
-          q: "{inputs[0]}"  ## no prefix
+          q: "{{ queryInputs }}"  ## no prefix
           scopes: chebi.xrefs.reactome
-        header: application/x-www-form-urlencoded
       outputs:
       - id: CHEBI
         semantic: SmallMolecule
@@ -637,15 +775,14 @@ components:
     chebiToRhea:
     ## there are 11079 records with chebi.xrefs.rhea
     - supportBatch: true
-      inputSeparator: ","
+      useTemplating: true
       inputs:
       - id: CHEBI
         semantic: SmallMolecule
       requestBody:
         body:
-          q: "{inputs[0]}"  ## HAS PREFIX!
+          q: "{{ queryInputs }}"  ## HAS PREFIX!
           scopes: chebi.id
-        header: application/x-www-form-urlencoded
       outputs:
       - id: RHEA
         semantic: MolecularActivity
@@ -661,15 +798,14 @@ components:
       #     oneOutput: "RHEA:47616"   ## ethionamide + H(+) + NADPH + O2 = ethionamide S-oxide + H2O + NADP(+)
     chebiToRhea-rev:
     - supportBatch: true
-      inputSeparator: ","
+      useTemplating: true
       inputs:
       - id: RHEA
         semantic: MolecularActivity
       requestBody:
         body:
-          q: "{inputs[0]}"  ## HAS PREFIX (RHEA)
+          q: "{{ queryInputs }}"  ## HAS PREFIX (RHEA)
           scopes: chebi.xrefs.rhea
-        header: application/x-www-form-urlencoded
       outputs:
       - id: CHEBI
         semantic: SmallMolecule
@@ -682,7 +818,7 @@ components:
         "$ref": "#/components/x-bte-response-mapping/chebi"
       # testExamples:
       #   - qInput: "RHEA:23312"      ## 2 sucrose = 1(F)-beta-D-fructosylsucrose + D-glucose
-      #     oneOutput: "CHEBI:16885"  ## 1-kestose
+      #     oneOutput: "CHEBI:16885"  ## 1-kestose / 1(F)-beta-D-fructosylsucrose
     ## chembl
     ## - not including drug_mechanisms because 
     ##   * it uses CHEMBL.TARGET IDs and SRI ID resolver doesn't support that yet...
@@ -690,15 +826,14 @@ components:
     treatsChembl:
     ## all drug_indication records have a mesh ID for the indication...
     - supportBatch: true
-      inputSeparator: ","
+      useTemplating: true
       inputs:
       - id: CHEMBL.COMPOUND
         semantic: SmallMolecule
       requestBody:
         body:
-          q: "{inputs[0]}"  ## no prefix
+          q: "{{ queryInputs }}"  ## no prefix
           scopes: chembl.molecule_chembl_id
-        header: application/x-www-form-urlencoded
       outputs:
       - id: MESH
         semantic: Disease
@@ -722,15 +857,14 @@ components:
       #     oneOutput: "MESH:D000072658"             ## Non-ST Elevated Myocardial Infarction
     treatsChembl-rev:
     - supportBatch: true
-      inputSeparator: ","
+      useTemplating: true
       inputs:
       - id: MESH
         semantic: Disease
       requestBody:
         body:
-          q: "{inputs[0]}"  ## no prefix
+          q: "{{ queryInputs }}"  ## no prefix
           scopes: chembl.drug_indications.mesh_id
-        header: application/x-www-form-urlencoded
       outputs:
       - id: CHEMBL.COMPOUND
         semantic: SmallMolecule
@@ -757,7 +891,7 @@ components:
       ##   possible values: "Homo sapiens", "Rattus norvegicus", "Bos taurus", "Mus musculus"...
       ## I'm not clear on how to get only human genes to return...
     - supportBatch: true
-      inputSeparator: ","
+      useTemplating: true
       inputs:
       ## there are 2382 records with drugcentral.bioactivity fields
       ##   most of them (2362) also have the drugcentral.xrefs.chembl_id field
@@ -765,9 +899,8 @@ components:
         semantic: SmallMolecule
       requestBody:
         body:
-          q: "{inputs[0]}"  ## no prefix
+          q: "{{ queryInputs }}"  ## no prefix
           scopes: drugcentral.xrefs.chembl_id
-        header: application/x-www-form-urlencoded
       outputs:
       - id: UniProtKB
         semantic: Gene
@@ -798,15 +931,14 @@ components:
       #     oneOutput: "UniProtKB:Q07869"              ## PPARA
     drugcentral-bioactivity-rev:
     - supportBatch: true
-      inputSeparator: ","
+      useTemplating: true
       inputs:
       - id: UniProtKB
         semantic: Gene
       requestBody:
         body:
-          q: "{inputs[0]}"  ## no prefix
+          q: "{{ queryInputs }}"  ## no prefix
           scopes: drugcentral.bioactivity.uniprot.uniprot_id
-        header: application/x-www-form-urlencoded
       outputs:
       - id: CHEMBL.COMPOUND
         semantic: SmallMolecule
@@ -822,7 +954,7 @@ components:
       #     oneOutput: "CHEMBL.COMPOUND:CHEMBL1252"    ## abarelix
     drugcentral-contraindication:
     - supportBatch: true
-      inputSeparator: ","
+      useTemplating: true
       inputs:
       - id: CHEMBL.COMPOUND
         semantic: SmallMolecule
@@ -830,9 +962,8 @@ components:
       ##   most of them (1365) also have the drugcentral.xrefs.chembl_id field
       requestBody:
         body:
-          q: "{inputs[0]}"  ## no prefix
+          q: "{{ queryInputs }}"  ## no prefix
           scopes: drugcentral.xrefs.chembl_id
-        header: application/x-www-form-urlencoded
       outputs:
       - id: UMLS
         semantic: Disease
@@ -851,15 +982,14 @@ components:
       #     oneOutput: "UMLS:C0001973"              ## Alcoholism
     drugcentral-contraindication-rev:
     - supportBatch: true
-      inputSeparator: ","
+      useTemplating: true
       inputs:
       - id: UMLS
         semantic: Disease
       requestBody:
         body:
-          q: "{inputs[0]}"  ## no prefix
+          q: "{{ queryInputs }}"  ## no prefix
           scopes: drugcentral.drug_use.contraindication.umls_cui
-        header: application/x-www-form-urlencoded
       outputs:
       - id: CHEMBL.COMPOUND
         semantic: SmallMolecule
@@ -876,7 +1006,7 @@ components:
     drugcentral-indication:
     ## note: some records don't have the needed output IDs...only a concept name...
     - supportBatch: true
-      inputSeparator: ","
+      useTemplating: true
       inputs:
       - id: UNII
         semantic: SmallMolecule
@@ -885,9 +1015,8 @@ components:
       ## note: there were slightly less records (2320) with the drugcentral.xrefs.chembl_id field
       requestBody:
         body:
-          q: "{inputs[0]}"  ## no prefix
+          q: "{{ queryInputs }}"  ## no prefix
           scopes: drugcentral.xrefs.unii
-        header: application/x-www-form-urlencoded
       outputs:
       - id: UMLS
         semantic: Disease
@@ -907,17 +1036,16 @@ components:
       #     oneOutput: "UMLS:C0242339"   ## Dyslipidemia
     drugcentral-indication-rev:
     - supportBatch: true
-      inputSeparator: ","
+      useTemplating: true
       inputs:
       - id: UMLS
         semantic: Disease
       requestBody:
         body:
-          q: "{inputs[0]}"  ## no prefix
+          q: "{{ queryInputs }}"  ## no prefix
           ## example: put C0038013 here (Ankylosing spondylitis)
           ##   should get CHEMBL650 (METHYLPREDNISOLONE) in response
           scopes: drugcentral.drug_use.indication.umls_cui
-        header: application/x-www-form-urlencoded
       outputs:
       - id: UNII
         semantic: SmallMolecule
@@ -930,7 +1058,7 @@ components:
         "$ref": "#/components/x-bte-response-mapping/drugcentral-unii"
       # testExamples:
       #   - qInput: "UMLS:C0234974"    ## Simple partial seizure
-      #     oneOutput: "UNII:44YRR34555"   ## keppra
+      #     oneOutput: "UNII:44YRR34555"   ## keppra / Levetiracetam
     ## edit, try this out once spaces in fields are fixed (next MyChem release)
     drugcentral-offlabel:
     - supportBatch: true
@@ -941,18 +1069,13 @@ components:
       ## there are 782 records with "drugcentral.drug_use.off_label_use" fields
       ##   most of them (780) also have the drugcentral.xrefs.chembl_id field 
       ## note: there were slightly less records (775) with the drugcentral.xrefs.unii field
-      requestBodyType: object
       requestBody:
-        body: >-
-          { 
-            "q": "{{ queryInputs }}",
-            "scopes": "drugcentral.xrefs.chembl_id"
-          }
-        header: application/x-www-form-urlencoded
+        body:
+          q: "{{ queryInputs }}"  ## no prefix
+          scopes: drugcentral.xrefs.chembl_id
       outputs:
       - id: UMLS
         semantic: Disease
-      ## moved parameters (fields, size) to the request body to allow MyChem to handle field with space inside...
       parameters:
         fields: drugcentral.drug_use.off_label_use.umls_cui
         size: 1000     ## note size limit; added just in case
@@ -965,21 +1088,17 @@ components:
         "$ref": "#/components/x-bte-response-mapping/drugcentral-offlabel"
       # testExamples:
       #   - qInput: "CHEMBL.COMPOUND:CHEMBL11"    ## imipramine
-      #     oneOutput: "UMLS:C0027796"   ## Neuropathic pain
+      #     oneOutput: "UMLS:C0027796"   ## Neuropathic pain / neuralgia
     drugcentral-offlabel-rev:
     - supportBatch: true
       useTemplating: true
       inputs:
       - id: UMLS
         semantic: Disease
-      requestBodyType: object  
       requestBody:
-        body: >-
-          {
-            "q": "{{ queryInputs }}",
-            "scopes": ["drugcentral.drug_use.off_label_use.umls_cui"]
-          }
-        header: application/x-www-form-urlencoded
+        body:
+          q: "{{ queryInputs }}"  ## no prefix
+          scopes: drugcentral.drug_use.off_label_use.umls_cui
       outputs:
       - id: "CHEMBL.COMPOUND"
         semantic: SmallMolecule
@@ -998,7 +1117,7 @@ components:
     ##   https://nodenormalization-sri.renci.org/1.2/get_normalized_nodes?curie=MEDDRA%3A10035528&conflate=true
     ##   But some are definitely PhenotypicFeatures...
     - supportBatch: true
-      inputSeparator: ","
+      useTemplating: true
       inputs:
       - id: CHEMBL.COMPOUND
         semantic: SmallMolecule
@@ -1006,9 +1125,8 @@ components:
       ##   most of them (1994) also have the drugcentral.xrefs.chembl_id field
       requestBody:
         body:
-          q: "{inputs[0]}"  ## no prefix
+          q: "{{ queryInputs }}"  ## no prefix
           scopes: drugcentral.xrefs.chembl_id
-        header: application/x-www-form-urlencoded
       outputs:
       - id: MEDDRA
         semantic: Disease
@@ -1034,15 +1152,14 @@ components:
       #     oneOutput: "MEDDRA:10006093"           ## Bradycardia
     drugcentral-adverseEvent-rev:
     - supportBatch: true
-      inputSeparator: ","
+      useTemplating: true
       inputs:
       - id: MEDDRA
         semantic: Disease
       requestBody:
         body:
-          q: "{inputs[0]}"  ## no prefix
+          q: "{{ queryInputs }}"  ## no prefix
           scopes: drugcentral.fda_adverse_event.meddra_code
-        header: application/x-www-form-urlencoded
       outputs:
       - id: CHEMBL.COMPOUND
         semantic: SmallMolecule
@@ -1059,7 +1176,7 @@ components:
       #     oneOutput: "CHEMBL.COMPOUND:CHEMBL395091"      ## esketamine HCl
     fdaOrphanData:
     - supportBatch: true
-      inputSeparator: ","
+      useTemplating: true
       inputs:
       - id: PUBCHEM.COMPOUND
         semantic: SmallMolecule
@@ -1068,9 +1185,8 @@ components:
       ##   same amount have inchikey field...
       requestBody:
         body:
-          q: "{inputs[0]}"  ## no prefix
+          q: "{{ queryInputs }}"  ## no prefix
           scopes: fda_orphan_drug.pubchem_cid
-        header: application/x-www-form-urlencoded
       outputs:
       - id: UMLS
         semantic: Disease
@@ -1101,15 +1217,14 @@ components:
       #     oneOutput: "UMLS:C0023467"             ## Acute myeloid leukemia
     fdaOrphanData-rev:
     - supportBatch: true
-      inputSeparator: ","
+      useTemplating: true
       inputs:
       - id: UMLS
         semantic: Disease
       requestBody:
         body:
-          q: "{inputs[0]}"  ## no prefix
+          q: "{{ queryInputs }}"  ## no prefix
           scopes: fda_orphan_drug.orphan_designation.umls
-        header: application/x-www-form-urlencoded
       outputs:
       - id: PUBCHEM.COMPOUND
         semantic: SmallMolecule
