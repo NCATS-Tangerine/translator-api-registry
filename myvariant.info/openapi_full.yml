@@ -1,12 +1,12 @@
-openapi: 3.0.0
+openapi: 3.0.3
 info:
   contact:
     email: help@myvariant.info
     name: Chunlei Wu
     x-id: https://github.com/newgene
     x-role: responsible developer
-  description: Documentation of the MyVariant.info Variant Query web services. Learn
-    more about [MyVariant.info](http://myvariant.info/)
+  description: Documentation of the MyVariant.info genetic variant query web services. Learn
+    more about [MyVariant.info](https://docs.myvariant.info/en/latest/index.html)
   termsOfService: http://myvariant.info/terms/
   title: MyVariant.info API
   version: '1.0'
@@ -30,141 +30,304 @@ tags:
 - name: translator
 - name: biothings
 paths:
-  "/metadata":
+  "/variant/{id}":
     get:
+      description: >-
+        By default, this will return the complete variant annotation object in JSON format. 
+        See [here](https://docs.myvariant.info/en/latest/doc/variant_annotation_service.html#returned-object) 
+        for an example and [here](https://docs.myvariant.info/en/latest/doc/data.html#variant-object)
+        for more details. If the input variant ID is not valid, 404 (NOT FOUND) will be returned.
+        
+
+        Optionally, you can pass a "fields" parameter to return only the annotation you want 
+        (by filtering returned object fields). "fields" accepts any attributes (a.k.a fields) available 
+        from the chemical object. Multiple attributes should be separated by commas. If an attribute is not 
+        available for a specific variant object, it will be ignored. Note that the attribute names are 
+        case-sensitive.
+
+
+        Just like the variant query service, you can also pass a "callback" parameter to make a JSONP call.
       parameters:
+      ## these are provided in the docs https://docs.myvariant.info/en/latest/doc/variant_annotation_service.html
+      - name: id
+        description: >-
+          Retrieve chemical data based on ID - currently the 
+          HGVS-based id using genomic location based on hg19 human genome assembly
+        in: path
+        required: true
+        example: "chr6:g.152708291G>A"
+        schema:
+          type: string
+      - "$ref": "#/components/parameters/fields"
       - "$ref": "#/components/parameters/callback"
-        in: query
-        name: callback
+      - "$ref": "#/components/parameters/email"
+      ## this is useful even when it's not noted in the docs
+      - "$ref": "#/components/parameters/size"
+      ## these are noted in the https://myvariant.info/v1/spec endpoint; commenting out for now
+      ##   assembly is unique to MyVariant
+      # - "$ref": "#/components/parameters/assembly"
+      # - "$ref": "#/components/parameters/raw"
+      # - "$ref": "#/components/parameters/rawquery"
+      # - "$ref": "#/components/parameters/dotfield"
+      # - "$ref": "#/components/parameters/_sorted"
+      # - "$ref": "#/components/parameters/always_list"
+      # - "$ref": "#/components/parameters/allow_null"
+      # - "$ref": "#/components/parameters/format"
       responses:
         '200':
-          description: MyVariant.info metadata object
-      summary: Get metadata about the data available from MyVariant.info.
+          ## description from https://docs.myvariant.info/en/latest/doc/response_status_codes.html
+          description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
+      ## commenting out schemas and other status codes for now
+      #     content:
+      #       application/json:
+      #         schema:
+      #           $ref: '#/components/schemas/Chem'
+      #   '404':
+      #     description: A response indicating an unknown chemical ID
+      tags:
+      - variant
+  "/variant":
+    post:
+      description: >-
+        Although making simple GET requests above to our variant query service is sufficient in most use cases, 
+        there are some times you might find it easier to batch query (e.g., retrieving variant annotations for 
+        multiple variants). Fortunately, you can also make batch queries via POST requests when you need to.
+      parameters:
+      ## these are provided in the docs https://docs.myvariant.info/en/latest/doc/variant_annotation_service.html
+      - name: ids
+        description: >-
+          Required. Accepts multiple HGVS variant ids separated by comma, 
+          e.g., "ids=chr6:g.152708291G>A,chr7:g.55241707G>T,chr16:g.28883241A>G". 
+          Note that currently we only take the input ids up to 1000 maximum, the rest will be omitted.
+
+
+          The request body can also be used to provide these ids.
+        in: query
+        ## setting to false since putting this info in the request body seems to work as well
+        required: false
+        schema:
+          type: string
+      - "$ref": "#/components/parameters/fields"
+      - "$ref": "#/components/parameters/email"
+      ## this is useful even when it's not noted in the docs
+      - "$ref": "#/components/parameters/size"
+      ## these are noted in the https://myvariant.info/v1/spec endpoint; commenting out for now
+      ##   assembly is unique to MyVariant
+      # - "$ref": "#/components/parameters/assembly"
+      # - "$ref": "#/components/parameters/raw"
+      # - "$ref": "#/components/parameters/rawquery"
+      # - "$ref": "#/components/parameters/dotfield"
+      # - "$ref": "#/components/parameters/_sorted"
+      # - "$ref": "#/components/parameters/always_list"
+      # - "$ref": "#/components/parameters/allow_null"
+      # - "$ref": "#/components/parameters/format"
+      requestBody:
+        content:
+          application/json:
+            example:
+              ids:
+              - "chr6:g.152708291G>A"
+              - "chr7:g.55241707G>T"
+            schema:
+              type: object
+              properties:
+                ids:
+                  description: >-
+                    Accepts multiple variant ids. Note that currently we only take the input ids 
+                    up to 1000 maximum, the rest will be omitted.
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '200':
+          description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
+      tags:
+      - variant
+  "/metadata":
+    get:
+      description: Get metadata about the data available from the API
+      ## these are noted in the hhttps://myvariant.info/v1/spec endpoint; commenting out for now
+      # parameters:
+      # - "$ref": "#/components/parameters/format"
+      # - "$ref": "#/components/parameters/raw"
+      responses:
+        '200':
+          description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
       tags:
       - metadata
   "/metadata/fields":
     get:
-      parameters:
-      - description: Pass a search term to filter the available fields, e.g. "search=clinvar".
-        in: query
-        name: search
-        schema:
-          type: string
-      - description: Pass a prefix string to filter the available fields, e.g. "prefix=refseq".
-        in: query
-        name: prefix
-        schema:
-          type: string
-      - "$ref": "#/components/parameters/callback"
-        in: query
-        name: callback
+      description: Get metadata about the data fields available from the API
+      ## these are noted in the hhttps://myvariant.info/v1/spec endpoint; commenting out for now
+      # parameters:
+      # - "$ref": "#/components/parameters/format"
+      # - "$ref": "#/components/parameters/raw"
+      # - "$ref": "#/components/parameters/search"
+      # - "$ref": "#/components/parameters/prefix"
       responses:
         '200':
-          description: MyVariant.info metadata fields object
-      summary: Get metadata about the data fields available from MyVariant.info.
+          description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
       tags:
       - metadata
   "/query":
     get:
+      description: >-
+        MyChem.info chemical query web service. In the output, "total" in the output gives the total number 
+        of matching hits, while the actual hits are returned under "hits" field.
       parameters:
-      - description: Query string. Examples "rs752396467", "possibly_damaging", "CDK7".
-          The detailed query syntax can be found from our [docs](http://docs.myvariant.info/en/latest/doc/variant_query_service.html).
-        example: CDK7
+      - name: q
+        ## description partially from https://docs.myvariant.info/en/latest/doc/variant_query_service.html#query-syntax
+        description: >-
+          Required, passing user query. The detailed query syntax for parameter is explained 
+          [here](https://docs.myvariant.info/en/latest/doc/variant_query_service.html#query-syntax).
         in: query
-        name: q
         required: true
+        example: "rs58991260"
         schema:
           type: string
-      - '1': query
-        "$ref": "#/components/parameters/fields"
-        name: fields
+      - "$ref": "#/components/parameters/fields"
       - "$ref": "#/components/parameters/size"
-        in: query
-        name: size
       - "$ref": "#/components/parameters/from"
-        in: query
-        name: from
+      - "$ref": "#/components/parameters/fetch_all"
+      - "$ref": "#/components/parameters/scroll_id"
       - "$ref": "#/components/parameters/sort"
-        in: query
-        name: sort
-      - description: a single field or comma-separated fields to return facets, for
-          example, "facets=clinvar.gene.id", "facets=clinvar.gene.id,dbnsfp.uniprot.acc".
-        in: query
-        name: facets
-        schema:
-          type: string
+      - "$ref": "#/components/parameters/facets"
+      - "$ref": "#/components/parameters/facet_size"
       - "$ref": "#/components/parameters/callback"
-        in: query
-        name: callback
       - "$ref": "#/components/parameters/dotfield"
-        in: query
-        name: dotfield
       - "$ref": "#/components/parameters/email"
-        in: query
-        name: email
+      ## these are noted in the https://myvariant.info/v1/spec endpoint; commenting out for now
+      ##   assembly is unique to MyVariant
+      # - "$ref": "#/components/parameters/assembly"
+      # - "$ref": "#/components/parameters/aggs"
+      # - "$ref": "#/components/parameters/userquery"
+      # - "$ref": "#/components/parameters/explain"
+      # - "$ref": "#/components/parameters/raw"
+      # - "$ref": "#/components/parameters/rawquery"
+      # - "$ref": "#/components/parameters/_sorted"
+      # - "$ref": "#/components/parameters/always_list"
+      # - "$ref": "#/components/parameters/allow_null"
+      # - "$ref": "#/components/parameters/format"
       responses:
         '200':
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/QueryResult"
-          description: A query response object with "hits" property
-        '400':
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/ErrorResult"
-          description: A response indicating an improperly formatted query
-      summary: Make variant query and return matching variant list. Support JSONP
-        and CORS as well.
+          description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
+      ## commenting out schemas and other status codes for now
+      #     content:
+      #       application/json:
+      #         schema:
+      #           "$ref": "#/components/schemas/QueryResult"
+      #   '400':
+      #     content:
+      #       application/json:
+      #         schema:
+      #           "$ref": "#/components/schemas/ErrorResult"
+      #     description: A response indicating an improperly formatted query
+      # description: Make queries and return matching gene hits. Supports JSONP and CORS
+      #   as well.
       tags:
       - query
     post:
+      description: >-
+        Although making simple GET requests above to our variant query service is sufficient for most use cases, 
+        there are times you might find it more efficient to make batch queries (e.g., retrieving variant annotation 
+        for multiple variants). Fortunately, you can also make batch queries via POST requests when you need to.
+
+
+        The "query" field in the returned object indicates the matching query term. If a query term has no match, 
+        it will return with a "notfound" field with the value "true".
       parameters:
+      ## these are provided in the docs https://docs.myvariant.info/en/latest/doc/variant_query_service.html#id2
+      - name: q
+        description: >-
+          Accepts multiple values separated by commas. Note that currently we only take the input values up to 1000 
+          maximum, the rest will be omitted.
+
+
+          The request body can also be used to provide these ids.
+        in: query
+        ## setting to false since putting this info in the request body seems to work as well
+        required: false
+        schema:
+          type: array
+          items:
+            type: string
+      - name: scopes
+        description: >-
+          Optional, specify one or more fields (separated by commas) to search, e.g., "scopes=dbsnp.rsid". 
+          The available "fields" can be passed to "scopes" parameter are listed 
+          [here](https://docs.myvariant.info/en/latest/doc/data.html#available-fields). Default: _id
+
+
+          The request body can also be used to provide this information.
+        in: query
+        ## setting to false since putting this info in the request body seems to work as well
+        required: false
+        schema:
+          type: string
       - "$ref": "#/components/parameters/fields"
-        in: query
-        name: fields
-      - "$ref": "#/components/parameters/dotfield"
-        in: query
-        name: dotfield
       - "$ref": "#/components/parameters/email"
-        in: query
-        name: email
+      ## this is useful even when it's not noted in the docs
+      - "$ref": "#/components/parameters/size"
+      - "$ref": "#/components/parameters/from"
+      - "$ref": "#/components/parameters/fetch_all"
+      - "$ref": "#/components/parameters/scroll_id"
+      ## these are noted in the https://myvariant.info/v1/spec endpoint; commenting out for now
+      ##   assembly is unique to MyVariant
+      ##   others haven't been written down here: with_total, analyzer
+      # - "$ref": "#/components/parameters/assembly"
+      # - "$ref": "#/components/parameters/sort"
+      # - "$ref": "#/components/parameters/raw"
+      # - "$ref": "#/components/parameters/rawquery"
+      # - "$ref": "#/components/parameters/dotfield"
+      # - "$ref": "#/components/parameters/_sorted"
+      # - "$ref": "#/components/parameters/always_list"
+      # - "$ref": "#/components/parameters/allow_null"
+      # - "$ref": "#/components/parameters/format"
       requestBody:
-        required: true
         content:
-          application/x-www-form-urlencoded:
+          application/json:
+            example:
+              q:
+              - "rs58991260"
+              - "rs928128624"
+              scopes:
+              - "dbsnp.rsid"
             schema:
+              type: object
               properties:
                 q:
-                  description: multiple query terms seperated by comma (also support
-                    "+" or white space), but no wildcard, e.g., "q=rs58991260,rs2500"
-                    or "q=rs58991260+rs2500"
-                  type: string
+                  description: >-
+                    Accepts multiple values separated by commas. Note that currently we only take the input values 
+                    up to 1000 maximum, the rest will be omitted.
+                  type: array
+                  items:
+                    type: string
                 scopes:
-                  description: 'Specify one or more fields (separated by comma) as
-                    the search "scopes", e.g., "scopes=dbsnp.rsid". The available
-                    "fields" that can be passed to "scopes" parameter are listed [here](http://docs.myvariant.info/en/latest/doc/data.html#available-fields).
-                    Default: "scopes=_id" (HGVS id).'
-                  type: string
-              required:
-              - q
+                  description: >-
+                    Specify one or more fields (separated by commas) to search, e.g., "scopes=dbsnp.rsid". 
+                    The available "fields" can be passed to "scopes" parameter are listed 
+                    [here](https://docs.myvariant.info/en/latest/doc/data.html#available-fields). Default: _id
+                  type: array
+                  items:
+                    type: string
       responses:
         '200':
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/QueryPOSTResult"
-          description: Query response objects with "hits" property
-        '400':
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/ErrorResult"
-          description: A response indicating an improperly formatted query
-      summary: Make variant batch query and return matching variant hits
+          description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
+      ## commenting out schemas and other status codes for now
+      #     content:
+      #       application/json:
+      #         schema:
+      #           "$ref": "#/components/schemas/QueryPOSTResult"
+      #   '400':
+      #     content:
+      #       application/json:
+      #         schema:
+      #           "$ref": "#/components/schemas/ErrorResult"
+      #     description: A response indicating an improperly formatted query
+      # description: Make batch gene queries and return matching gene hits
       tags:
       - query
+      ## 16 operations (8 sets)
       x-bte-kgs-operations:
       - "$ref": "#/components/x-bte-kgs-operations/civic-geneDisease"
       - "$ref": "#/components/x-bte-kgs-operations/civic-geneDisease-rev"
@@ -182,189 +345,273 @@ paths:
       - "$ref": "#/components/x-bte-kgs-operations/docm-geneDisease-rev"
       - "$ref": "#/components/x-bte-kgs-operations/docm-variantDisease"
       - "$ref": "#/components/x-bte-kgs-operations/docm-variantDisease-rev"
-  "/variant":
-    post:
-      parameters:
-      - "$ref": "#/components/parameters/fields"
-        in: query
-        name: fields
-      - "$ref": "#/components/parameters/dotfield"
-        in: query
-        name: dotfield
-      - "$ref": "#/components/parameters/email"
-        in: query
-        name: email
-      requestBody:
-        required: true
-        content:
-          application/x-www-form-urlencoded:
-            schema:
-              properties:
-                ids:
-                  description: multiple variant ids seperated by comma, e.g., "ids=chr6:g.152708291G>A,chr1:g.35367G>A"
-                    or "ids=rs5882,rs12190874". Note that currently we only take the
-                    input ids up to 1000 maximum, the rest will be omitted.
-                  type: string
-              required:
-              - ids
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                items:
-                  "$ref": "#/components/schemas/Variant"
-                type: array
-          description: a list of matching variant objects
-      summary: For a list of variant ids, return the matching variant objects
-      tags:
-      - variant
-  "/variant/{variantid}":
-    get:
-      parameters:
-      - description: HGVS or rsid, e.g., chr6:g.152708291G>A, rs12190874
-        example: chr6:g.152708291G>A
-        in: path
-        name: variantid
-        required: true
-        schema:
-          type: string
-      - "$ref": "#/components/parameters/fields"
-        in: query
-        name: fields
-      - "$ref": "#/components/parameters/dotfield"
-        in: query
-        name: dotfield
-      - "$ref": "#/components/parameters/callback"
-        in: query
-        name: callback
-      - "$ref": "#/components/parameters/email"
-        in: query
-        name: email
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/Variant"
-          description: A matching variant object
-        '404':
-          description: A response indicating an unknown variant id
-      summary: Retrieve variant annotation object based on HGVS or rsid, support JSONP
-        and CORS as well.
-      tags:
-      - variant
 components:
   parameters:
-    callback:
-      description: you can pass a "callback" parameter to make a JSONP call.
+    ## assembly is specific to MyVariant
+    assembly:
+      name: assembly
       in: query
+      required: false
+      schema:
+        type: string
+        default: hg19
+    callback:
       name: callback
+      description: >-
+        Optional, you can pass a "callback" parameter to make a JSONP call.
+      in: query
+      required: false
       schema:
         type: string
     dotfield:
-      description: 'control the format of the returned variant object. If "true" or
-        "1", all fields will be collapsed into a single level deep structure (all
-        nested objects will be a single level deep, using dotfield notation to signify
-        the nested structure) Default: false.'
-      in: query
       name: dotfield
+      description: >-
+        Optional, can be used to control the format of the returned chemical object. 
+        If "dotfield" is true, the returned data object is returned flattened (no nested objects) 
+        using dotfield notation for key names. Default: false.
+      in: query
+      required: false
       schema:
         type: boolean
+        default: false
     email:
-      description: If you are regular users of our services, we encourage you to provide
-        us an email, so that we can better track the usage or follow up with you.
-      in: query
       name: email
+      description: >-
+        Optional, if you are regular users of our services, we encourage you to provide us an email, 
+        so that we can better track the usage or follow up with you.
+      in: query
+      required: false
       schema:
         type: string
+    facet_size:
+      name: facet_size
+      description: >-
+        Optional, an integer (1 <= facet_size <= 1000) that specifies how many buckets to return in a 
+        [faceted query](https://docs.mychem.info/en/latest/doc/chem_query_service.html?highlight=from#faceted-queries).
+      in: query
+      required: false
+      schema:
+        type: integer
+        default: 10
+    facets:
+      name: facets
+      description: >-
+        Optional, a single field or comma-separated fields to return facets, can only be used on non-free text fields. 
+        E.g. "facets=chembl.molecule_properties.full_mwt". See [examples of faceted queries 
+        here](https://docs.mychem.info/en/latest/doc/chem_query_service.html?highlight=from#faceted-queries).
+      in: query
+      required: false
+      schema:
+        type: array
+        items:
+          type: string
+    fetch_all:
+      name: fetch_all
+      description: >-
+        Optional, a boolean, which when TRUE, allows fast retrieval of all unsorted query hits. 
+        The return object contains a _scroll_id field, which when passed as a parameter to the query endpoint 
+        (see the scroll_id parameter), returns the next 1000 query results. Setting fetch_all = TRUE causes 
+        the results to be inherently unsorted, therefore the sort parameter is ignored. For more information, 
+        see [examples using fetch_all 
+        here](https://docs.mychem.info/en/latest/doc/chem_query_service.html?highlight=from#scrolling-queries). 
+        Default: FALSE.
+      in: query
+      required: false
+      schema:
+        type: boolean
+        default: false
     fields:
-      description: 'a comma-separated fields to limit the fields returned from the
-        matching variant hits. The supported field names can be found from any variant
-        object (e.g. http://myvariant.info/v1/variant/rs12190874). Note that it supports
-        dot notation as well, e.g., you can pass "dbsnp.rsid". If "fields=all", all
-        available fields will be returned. Default: "all".'
-      in: query
       name: fields
+      description: >-
+        Optional, can be a comma-separated list to limit the fields returned from the chemical object. 
+        If "fields=all", all available fields will be returned. Look 
+        [here](https://docs.mychem.info/en/latest/doc/data.html#available-fields) for a list of available fields. 
+        
+
+        Note that it supports dot notation as well, e.g., you can pass "chebi.name". 
+        Default: "fields=all". 
+        The parameter "filter" is an alias for this parameter.
+      in: query
+      required: false
       schema:
         type: string
+        default: all
     from:
-      description: 'the number of matching variant hits to skip, starting from 0.
-        Combining with "size" parameter, this can be useful for paging. Default: 0.'
-      in: query
       name: from
+      description: >-
+        Optional, the number of matching chemical hits to skip, starting from 0. Default: 0. 
+      in: query
+      required: false
       schema:
         type: integer
-    size:
-      description: 'the maximum number of matching variant hits to return (with a
-        cap of 1000 at the moment). Default: 10.'
+        default: 0
+    scroll_id:
+      name: scroll_id
+      description: >-
+        Optional, a string containing the _scroll_id returned from a query request with fetch_all = TRUE. 
+        Supplying a valid scroll_id will return the next 1000 unordered results. If the next results are 
+        not obtained within 1 minute of the previous set of results, the scroll_id becomes stale, and a 
+        new one must be obtained with another query request with fetch_all = TRUE. All other parameters are 
+        ignored when the scroll_id parameter is supplied. For more information see [examples using scroll_id 
+        here](https://docs.mychem.info/en/latest/doc/chem_query_service.html?highlight=from#scrolling-queries).
       in: query
-      name: size
-      schema:
-        type: integer
-    sort:
-      description: 'the comma-separated fields to sort on. Prefix with "-" for descending
-        order, otherwise in ascending order. Default: sort by matching scores in decending
-        order.'
-      in: query
-      name: sort
+      required: false
       schema:
         type: string
-  schemas:
-    ErrorResult:
-      properties:
-        message:
-          type: string
-        success:
-          type: boolean
-      type: object
-    QueryPOSTResult:
-      items:
-        allOf:
-        - "$ref": "#/components/schemas/Variant"
-        - properties:
-            _score:
-              format: float
-              type: number
-            query:
-              type: string
-          type: object
-      type: array
-    QueryResult:
-      properties:
-        hits:
-          items:
-            "$ref": "#/components/schemas/Variant"
-          type: array
-        max_score:
-          format: float
-          type: number
-        took:
-          type: integer
-        total:
-          type: integer
-      type: object
-    Variant:
-      properties:
-        _id:
-          type: string
-      required:
-      - _id
-      type: object
-    int64_or_array:
-      oneOf:
-      - items:
-          format: int64
-          type: integer
-        type: array
-      - format: int64
+    size:
+      name: size
+      description: >-
+        Optional, the maximum number of matching chemical hits to return (with a cap of 1000 at the moment). Default: 10.
+        The combination of "size" and "from" parameters can be used to get paging for a large query.
+      in: query
+      required: false
+      schema:
         type: integer
-    string_or_array:
-      oneOf:
-      - items:
-          type: string
+        default: 10
+    sort:
+      name: sort
+      description: >-
+        Optional, the comma-separated fields to sort on. Prefix with "-" for descending order, otherwise in ascending order. 
+        Default: sort by matching scores in descending order.
+      in: query
+      required: false
+      schema:
         type: array
-      - type: string
+        items:
+          type: string
+    ## these are noted in the https://mychem.info/v1/spec endpoint; commenting out for now
+    # _sorted:
+    #   name: _sorted
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: boolean
+    #     default: true
+    # aggs:
+    #   name: aggs
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: array
+    #     items:
+    #       type: string
+    # allow_null:
+    #   name: allow_null
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: array
+    #     items:
+    #       type: string
+    # always_list:
+    #   name: always_list
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: array
+    #     items:
+    #       type: string
+    # explain:
+    #   name: explain
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: boolean
+    # format:
+    #   name: format
+    #   description: 'controls output format of server response, currently supports:
+    #     "json", "jsonld", "html". Type: string. Default: json.'
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: string
+    #     default: json
+    # prefix:
+    #   name: prefix
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: string
+    # raw:
+    #   name: raw
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: boolean
+    # rawquery:
+    #   name: rawquery
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: boolean
+    # search:
+    #   name: search
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: string
+    # userquery:
+    #   name: userquery
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: string
+  ## commenting out schemas and other status codes for now
+  # schemas:
+  #   Chem:
+  #     properties:
+  #       _id:
+  #         type: string
+  #     required:
+  #     - _id
+  #     type: object
+  #   ErrorResult:
+  #     properties:
+  #       message:
+  #         type: string
+  #       success:
+  #         type: boolean
+  #     type: object
+  #   QueryPOSTResult:
+  #     items:
+  #       allOf:
+  #       - "$ref": "#/components/schemas/Chem"
+  #       - properties:
+  #           _score:
+  #             format: float
+  #             type: number
+  #           query:
+  #             type: string
+  #         type: object
+  #     type: array
+  #   QueryResult:
+  #     properties:
+  #       hits:
+  #         items:
+  #           "$ref": "#/components/schemas/Chem"
+  #         type: array
+  #       max_score:
+  #         format: float
+  #         type: number
+  #       took:
+  #         type: integer
+  #       total:
+  #         type: integer
+  #     type: object
+  #   int64_or_array:
+  #     oneOf:
+  #     - items:
+  #         format: int64
+  #         type: integer
+  #       type: array
+  #     - format: int64
+  #       type: integer
+  #   string_or_array:
+  #     oneOf:
+  #     - items:
+  #         type: string
+  #       type: array
+  #     - type: string
   x-bte-response-mapping:
     civic-geneDisease:
       DOID: civic.evidence_items.disease.doid
@@ -382,8 +629,10 @@ components:
       ## provenance
       clinical_trial_url: civic.evidence_items.source.clinical_trials.clinical_trial_url
       pubmed: civic.evidence_items.source.pubmed
-      ## context: variant involved, could use "biolink:sequence_variant_qualifier"?
+      ## context: variant involved, could use "biolink:sequence_variant_qualifier"
+      ##   but then ID-namespace would be unclear (this ID doesn't have a prefix) 
       civic_variant_id: civic.evidence_items.variant_id
+      ## context: variant involved was Somatic, unknown...
       civic_variant_origin: civic.evidence_items.variant_origin
     civic-geneOnly:
       NCBIGene: civic.entrez_id
@@ -405,7 +654,7 @@ components:
       ## provenance
       clinical_trial_url: civic.evidence_items.source.clinical_trials.clinical_trial_url
       pubmed: civic.evidence_items.source.pubmed
-      ## context: variant involved was from where
+      ## context: variant involved was Somatic, unknown...
       civic_variant_origin: civic.evidence_items.variant_origin
     dbsnp-rsid:
       DBSNP: dbsnp.rsid  ## no prefix
@@ -417,7 +666,7 @@ components:
       OMIM: clinvar.rcv.conditions.identifiers.omim  ## no prefix
       ## edge attributes
       clinvar_clinical_significance: clinvar.rcv.clinical_significance  ## similar to relation
-      clinvar_variant_rsid: dbsnp.rsid    ## context: variant; could use biolink:sequence_variant_qualifier?
+      "biolink:sequence_variant_qualifier": dbsnp.rsid    ## no prefix 
       clinvar_submission_last_evaluated: clinvar.rcv.last_evaluated  ## gives a date yyyy-mm-dd
       clinvar_num_submitters: clinvar.rcv.number_submitters
       clinvar_variant_origin: clinvar.rcv.origin
@@ -461,15 +710,14 @@ components:
     ##     - civic variant_groups: 129 records, not clear how to structure / what the relationship is
     civic-geneDisease:
       - supportBatch: true
-        inputSeparator: ","
+        useTemplating: true
         inputs:
         - id: NCBIGene
           semantic: Gene
         requestBody:
           body:
-            q: "{inputs[0]}"  ## no prefix
+            q: "{{ queryInputs }}"  ## no prefix
             scopes: civic.entrez_id
-          header: application/x-www-form-urlencoded
         outputs:
         - id: DOID
           semantic: Disease
@@ -490,15 +738,14 @@ components:
       #     oneOutput: "DOID:3910"    ##  Lung Adenocarcinoma
     civic-geneDisease-rev:
       - supportBatch: true
-        inputSeparator: ","
+        useTemplating: true
         inputs:
         - id: DOID
           semantic: Disease
         requestBody:
           body:
-            q: "{inputs[0]}"  ## HAS PREFIX
+            q: "{{ queryInputs }}"  ## HAS PREFIX
             scopes: civic.evidence_items.disease.doid
-          header: application/x-www-form-urlencoded
         outputs:
         - id: NCBIGene
           semantic: Gene
@@ -516,15 +763,14 @@ components:
     civic-variantDisease:
     ## out of 2648 civic records, only some (653) have the doid disease field...
       - supportBatch: true
-        inputSeparator: ","
+        useTemplating: true
         inputs:
         - id: DBSNP
           semantic: SequenceVariant
         requestBody:
           body:
-            q: "{inputs[0]}"  ## no prefix
+            q: "{{ queryInputs }}"  ## no prefix
             scopes: dbsnp.rsid
-          header: application/x-www-form-urlencoded
         outputs:
         - id: DOID
           semantic: Disease
@@ -547,15 +793,14 @@ components:
       #     oneOutput: "DOID:9253"        ##  Gastrointestinal Stromal Tumor
     civic-variantDisease-rev:
       - supportBatch: true
-        inputSeparator: ","
+        useTemplating: true
         inputs:
         - id: DOID
           semantic: Disease
         requestBody:
           body:
-            q: "{inputs[0]}"  ## HAS PREFIX
+            q: "{{ queryInputs }}"  ## HAS PREFIX
             scopes: civic.evidence_items.disease.doid
-          header: application/x-www-form-urlencoded
         outputs:
         - id: DBSNP
           semantic: SequenceVariant
@@ -574,15 +819,14 @@ components:
     ## note: there may be redundant results in the response
     ## there are 446 million records
     - supportBatch: true
-      inputSeparator: ","
+      useTemplating: true
       inputs:
       - id: DBSNP
         semantic: SequenceVariant
       requestBody:
         body:
-          q: "{inputs[0]}"  ## no prefix
+          q: "{{ queryInputs }}"  ## no prefix
           scopes: dbsnp.rsid
-        header: application/x-www-form-urlencoded
       outputs:
       - id: NCBIGene
         semantic: Gene
@@ -598,15 +842,14 @@ components:
       #     oneOutput: "NCBIGene:55691"    ## FRMD4A
     dbsnp-variantGene-rev:
     - supportBatch: true
-      inputSeparator: ","
+      useTemplating: true
       inputs:
       - id: NCBIGene
         semantic: Gene
       requestBody:
         body:
-          q: "{inputs[0]}"  ## no prefix
+          q: "{{ queryInputs }}"  ## no prefix
           scopes: dbsnp.gene.geneid
-        header: application/x-www-form-urlencoded
       outputs:
       - id: DBSNP
         semantic: SequenceVariant
@@ -619,20 +862,19 @@ components:
       ## https://myvariant.info/v1/query?q=_exists_:%22dbsnp.rsid%22%20AND%20_exists_:%22dbsnp.gene.geneid%22
       # testExamples:
       #   - qInput: "NCBIGene:55691"          ## FRMD4A
-      #     oneOutput: "DBSNP:rs550898964"
+      #     oneOutput: "DBSNP:rs767038114"
     clinvar-variantGene:
     ## there are 43k records with clinvar.rsid but no dbsnp
     ## https://myvariant.info/v1/query?q=_exists_:%22clinvar.rsid%22%20AND%20NOT%20_exists_:%22dbsnp.rsid%22
     - supportBatch: true
-      inputSeparator: ","
+      useTemplating: true
       inputs:
       - id: DBSNP
         semantic: SequenceVariant
       requestBody:
         body:
-          q: "{inputs[0]}"  ## no prefix
+          q: "{{ queryInputs }}"  ## no prefix
           scopes: clinvar.rsid
-        header: application/x-www-form-urlencoded
       outputs:
       - id: NCBIGene
         semantic: Gene
@@ -647,15 +889,14 @@ components:
       #     oneOutput: "NCBIGene:1756"    ## DMD
     clinvar-variantGene-rev:
     - supportBatch: true
-      inputSeparator: ","
+      useTemplating: true
       inputs:
       - id: NCBIGene
         semantic: Gene
       requestBody:
         body:
-          q: "{inputs[0]}"  ## no prefix
+          q: "{{ queryInputs }}"  ## no prefix
           scopes: clinvar.gene.id
-        header: application/x-www-form-urlencoded
       outputs:
       - id: DBSNP
         semantic: SequenceVariant
@@ -667,7 +908,7 @@ components:
         "$ref": "#/components/x-bte-response-mapping/clinvar-rsid"
       # testExamples:
       #   - qInput: "NCBIGene:284098"          ## PIGW
-      #     oneOutput: "DBSNP:rs779029016"
+      #     oneOutput: "DBSNP:rs915498700"
     clinvar-geneDisease:
     ## - conditions.identifiers can include multiple kinds
     ##   some conditions have no IDs, some have multiple IDs (not all have OMIM). 
@@ -678,16 +919,15 @@ components:
     ##   - many medgen IDs but I don't think SRI ID resolver supports this...
     ##   - not indexed: mesh, mondo
     - supportBatch: true
-      inputSeparator: ","
+      useTemplating: true
       inputs:
       - id: NCBIGene
         semantic: Gene
       requestBody:
         body:
-          q: "{inputs[0]}"  ## no prefix
+          q: "{{ queryInputs }}"  ## no prefix
           scopes: clinvar.gene.id
           ## out of >497,000 records with clinvar.rcv.conditions.identifiers.omim field, all have gene field...
-        header: application/x-www-form-urlencoded
       outputs:
       - id: OMIM
         semantic: Disease
@@ -713,15 +953,14 @@ components:
       #     oneOutput: "OMIM:209500"   ## Atrichia with papular lesions (APL)
     clinvar-geneDisease-rev:
     - supportBatch: true
-      inputSeparator: ","
+      useTemplating: true
       inputs:
       - id: OMIM
         semantic: Disease
       requestBody:
         body:
-          q: "{inputs[0]}"  ## no prefix
+          q: "{{ queryInputs }}"  ## no prefix
           scopes: clinvar.rcv.conditions.identifiers.omim
-        header: application/x-www-form-urlencoded
       outputs:
       - id: NCBIGene
         semantic: Gene
@@ -737,17 +976,16 @@ components:
       #     oneOutput: "NCBIGene:3551"   ## IKBKB
     clinvar-variantDisease:
     - supportBatch: true
-      inputSeparator: ","
+      useTemplating: true
       inputs:
       - id: DBSNP
         semantic: SequenceVariant
       requestBody:
         body:
-          q: "{inputs[0]}"  ## no prefix
+          q: "{{ queryInputs }}"  ## no prefix
           scopes: dbsnp.rsid
           ## out of >497,000 records with clinvar.rcv.conditions.identifiers.omim field, 
           ##        >405,000 records also have dbsnp.rsid field (which is more than the 347,000 records with clinvar.rsid)
-        header: application/x-www-form-urlencoded
       outputs:
       - id: OMIM
         semantic: Disease
@@ -771,18 +1009,17 @@ components:
       ## https://myvariant.info/v1/query?q=_exists_:%22clinvar.rcv.conditions.identifiers.omim%22%20AND%20_exists_:%22dbsnp.rsid%22
       # testExamples:
       #   - qInput: "DBSNP:rs1193171808"
-      #     oneOutput: "OMIM:615592"        ## Immunodeficiency 15 (IMD15B)
+      #     oneOutput: "OMIM:615592"        ## severe combined immunodeficiency due to IKK2 deficiency
     clinvar-variantDisease-rev:
     - supportBatch: true
-      inputSeparator: ","
+      useTemplating: true
       inputs:
       - id: OMIM
         semantic: Disease
       requestBody:
         body:
-          q: "{inputs[0]}"  ## no prefix
+          q: "{{ queryInputs }}"  ## no prefix
           scopes: clinvar.rcv.conditions.identifiers.omim
-        header: application/x-www-form-urlencoded
       outputs:
       - id: DBSNP
         semantic: SequenceVariant
@@ -798,16 +1035,15 @@ components:
       #     oneOutput: "DBSNP:rs1480200060"
     docm-geneDisease:
     - supportBatch: true
-      inputSeparator: ","
+      useTemplating: true
       inputs:
       - id: ENSEMBL
         semantic: Gene
       requestBody:
         body:
-          q: "{inputs[0]}"  ## no prefix
+          q: "{{ queryInputs }}"  ## no prefix
           scopes: docm.ensembl_gene_id
           ## all 1119 records with docm field have the gene id
-        header: application/x-www-form-urlencoded
       outputs:
       - id: DOID
         semantic: Disease
@@ -826,15 +1062,14 @@ components:
       #     oneOutput: "DOID:769"               ## Neuroblastoma
     docm-geneDisease-rev:
     - supportBatch: true
-      inputSeparator: ","
+      useTemplating: true
       inputs:
       - id: DOID
         semantic: Disease
       requestBody:
         body:
-          q: "{inputs[0]}"  ## HAS PREFIX
+          q: "{{ queryInputs }}"  ## HAS PREFIX
           scopes: docm.doid
-        header: application/x-www-form-urlencoded
       outputs:
       - id: ENSEMBL
         semantic: Gene
@@ -851,17 +1086,16 @@ components:
       #     oneOutput: "ENSEMBL:ENSG00000169032"    ## MAP2K1
     docm-variantDisease:
     - supportBatch: true
-      inputSeparator: ","
+      useTemplating: true
       inputs:
       - id: DBSNP
         semantic: SequenceVariant
       requestBody:
         body:
-          q: "{inputs[0]}"  ## no prefix
+          q: "{{ queryInputs }}"  ## no prefix
           scopes: dbsnp.rsid
           ## out of 1119 records with docm field, 
           ##        465 records also have dbsnp.rsid field
-        header: application/x-www-form-urlencoded
       outputs:
       - id: DOID
         semantic: Disease
@@ -880,18 +1114,17 @@ components:
       ## https://myvariant.info/v1/query?q=_exists_:%22docm.ensembl_gene_id%22%20AND%20_exists_:%22dbsnp.rsid%22
       # testExamples:
       #   - qInput: "DBSNP:rs759487569"    ## in GATA2
-      #     oneOutput: "DOID:9119"         ## AML
+      #     oneOutput: "DOID:9119"         ## acute myeloid leukemia (AML)
     docm-variantDisease-rev:
     - supportBatch: true
-      inputSeparator: ","
+      useTemplating: true
       inputs:
       - id: DOID
         semantic: Disease
       requestBody:
         body:
-          q: "{inputs[0]}"  ## HAS PREFIX
+          q: "{{ queryInputs }}"  ## HAS PREFIX
           scopes: docm.doid
-        header: application/x-www-form-urlencoded
       outputs:
       - id: DBSNP
         semantic: SequenceVariant

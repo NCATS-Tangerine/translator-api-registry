@@ -1,5 +1,4 @@
----
-openapi: 3.0.0
+openapi: 3.0.3
 info:
   version: '1.0'
   title: QuickGO API
@@ -9,6 +8,7 @@ info:
     terms from GO (the Gene Ontology) and ECO (the Evidence & Conclusion Ontology),
     Gene Ontology annotations from the EBI's GOA database, and gene products (proteins
     from UniProt, RNA from RNAcentral and complexes from ComplexPortal).
+    See https://www.ebi.ac.uk/QuickGO/api/index.html for more details.
   termsOfService: https://www.ebi.ac.uk/QuickGO/services
   contact:
     name: pharmgkb help desk
@@ -34,9 +34,9 @@ paths:
       parameters:
       - name: goid
         in: path
-        description: Put Gene Ontology ID here, e.g. GO:0000082
+        description: Put Gene Ontology ID here, e.g. "GO:0000082"
         required: true
-        example: GO:0000082
+        example: "GO:0000082"
         schema:
           type: string
       responses:
@@ -48,17 +48,18 @@ components:
   x-bte-kgs-operations:
     ## BIG NOTE: there is likely more data in this API, but want to add stuff that would be helpful for use cases, that we regularly update
     ma_has_subclass_ma:
-    - inputs:
-      - id: GO
-        semantic: MolecularActivity
-      source: "infores:go"
-      predicate: superclass_of  ## this is current biolink, same meaning as "has_subclass"
-      outputs:
+    - supportBatch: false
+      useTemplating: true
+      inputs:
       - id: GO
         semantic: MolecularActivity
       parameters:
-        goid: "{inputs[0]}"  ## has prefix (GO)
-      supportBatch: false
+        goid: "{{ queryInputs }}"  ## has prefix (GO)
+      outputs:
+      - id: GO
+        semantic: MolecularActivity
+      predicate: superclass_of  ## this is current biolink, same meaning as "has_subclass"
+      source: "infores:go"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/ma_has_subclass_ma"
       # testExamples:
@@ -67,4 +68,4 @@ components:
   x-bte-response-mapping:
     ma_has_subclass_ma:
       GO: results.children.id  ## has prefix (GO)
-      relation: results.children.relation
+      "biolink:original_predicate": results.children.relation

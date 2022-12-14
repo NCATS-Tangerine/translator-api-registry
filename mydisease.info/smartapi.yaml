@@ -6,7 +6,7 @@ info:
     x-id: https://github.com/newgene
     x-role: responsible developer
   description: Documentation of the MyDisease.info disease query web services.  Learn
-    more about [mydisease.info](http://mydisease.info/)
+    more about [MyDisease.info](https://docs.mydisease.info/en/latest/index.html)
   termsOfService: http://mydisease.info/terms
   title: MyDisease.info API
   version: '1.0'
@@ -17,6 +17,9 @@ info:
       - Service Provider
     biolink-version: "2.2.13"
 servers:
+- description: Encrypted Production server
+  url: https://mydisease.info/v1
+  x-maturity: production
 - description: Production server
   url: http://mydisease.info/v1
   x-maturity: production
@@ -29,47 +32,88 @@ tags:
 paths:
   "/disease/{id}":
     get:
+      description: >-
+        By default, this will return the complete disease annotation object in JSON format. 
+        See [here](https://docs.mydisease.info/en/latest/doc/data.html#disease-object)
+        for more details. If the input disease ID is not valid, 404 (NOT FOUND) will be returned.
+        
+
+        Optionally, you can pass a "fields" parameter to return only the annotation you want 
+        (by filtering returned object fields). "fields" accepts any attributes (a.k.a fields) available 
+        from the disease object. Multiple attributes should be separated by commas. If an attribute is not 
+        available for a specific disease object, it will be ignored. Note that the attribute names are 
+        case-sensitive.
+
+
+        Just like the disease query service, you can also pass a "callback" parameter to make a JSONP call.
       parameters:
+      ## these are provided in the docs https://docs.mydisease.info/en/latest/doc/disease_annotation_service.html
       - name: id
-        description: Retrieve disease objects based on ID
+        description: >-
+          Retrieve disease data based on ID
         in: path
         required: true
         example: "MONDO:0000490"
         schema:
           type: string
-      - "$ref": "#/components/parameters/raw"
-      - "$ref": "#/components/parameters/rawquery"
-      - "$ref": "#/components/parameters/_source"
+      - "$ref": "#/components/parameters/fields"
+      - "$ref": "#/components/parameters/callback"
+      - "$ref": "#/components/parameters/email"
+      ## this is useful even when it's not noted in the docs
       - "$ref": "#/components/parameters/size"
-      - "$ref": "#/components/parameters/dotfield"
-      - "$ref": "#/components/parameters/_sorted"
-      - "$ref": "#/components/parameters/always_list"
-      - "$ref": "#/components/parameters/allow_null"
-      - "$ref": "#/components/parameters/format"
+      ## these are noted in the https://mydisease.info/v1/spec endpoint; commenting out for now
+      # - "$ref": "#/components/parameters/raw"
+      # - "$ref": "#/components/parameters/rawquery"
+      # - "$ref": "#/components/parameters/dotfield"
+      # - "$ref": "#/components/parameters/_sorted"
+      # - "$ref": "#/components/parameters/always_list"
+      # - "$ref": "#/components/parameters/allow_null"
+      # - "$ref": "#/components/parameters/format"
       responses:
         '200':
-          description: "Success"
+          ## description from https://docs.mydisease.info/en/latest/doc/response_status_codes.html
+          description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
+      ## commenting out schemas and other status codes for now
       #     content:
       #       application/json:
       #         schema:
-      #           $ref: '#/components/schemas/Disease'
+      #           $ref: '#/components/schemas/Chem'
       #   '404':
-      #     description: A response indicating an unknown disease ID
-      # summary: Retrieve disease objects based on ID
+      #     description: A response indicating an unknown chemical ID
       tags:
       - disease
   "/disease":
     post:
+      description: >-
+        Although making simple GET requests above to our disease query service is sufficient in most use cases, 
+        there are some times you might find it easier to batch query (e.g., retrieving disease annotations for 
+        multiple diseases). Fortunately, you can also make batch queries via POST requests when you need to.
       parameters:
-      - "$ref": "#/components/parameters/raw"
-      - "$ref": "#/components/parameters/rawquery"
-      - "$ref": "#/components/parameters/_source"
+      ## these are provided in the docs https://docs.mydisease.info/en/latest/doc/disease_annotation_service.html
+      - name: ids
+        description: >-
+          Accepts multiple chemical ids separated by commas. 
+          Note that currently we only take the input ids up to 1000 maximum, the rest will be omitted.
+
+
+          The request body can also be used to provide these ids.
+        in: query
+        ## setting to false since putting this info in the request body seems to work as well
+        required: false
+        schema:
+          type: string
+      - "$ref": "#/components/parameters/fields"
+      - "$ref": "#/components/parameters/email"
+      ## this is useful even when it's not noted in the docs
       - "$ref": "#/components/parameters/size"
-      - "$ref": "#/components/parameters/dotfield"
-      - "$ref": "#/components/parameters/_sorted"
-      - "$ref": "#/components/parameters/always_list"
-      - "$ref": "#/components/parameters/allow_null"
-      - "$ref": "#/components/parameters/format"
+      ## these are noted in the https://mydisease.info/v1/spec endpoint; commenting out for now
+      # - "$ref": "#/components/parameters/raw"
+      # - "$ref": "#/components/parameters/rawquery"
+      # - "$ref": "#/components/parameters/dotfield"
+      # - "$ref": "#/components/parameters/_sorted"
+      # - "$ref": "#/components/parameters/always_list"
+      # - "$ref": "#/components/parameters/allow_null"
+      # - "$ref": "#/components/parameters/format"
       requestBody:
         content:
           application/json:
@@ -81,74 +125,84 @@ paths:
               type: object
               properties:
                 ids:
-                  description: 'multiple disease IDs separated by comma. Note that
-                    currently we only take the input ids up to 1000 maximum, the rest
-                    will be omitted. Type: string (list). Max: 1000.'
+                  description: >-
+                    Accepts multiple disease ids. Note that currently we only take the input ids 
+                    up to 1000 maximum, the rest will be omitted.
                   type: array
                   items:
                     type: string
       responses:
         '200':
-          description: "Success"
+          description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
       tags:
       - disease
   "/metadata":
     get:
-      parameters:
-      - "$ref": "#/components/parameters/format"
-      - "$ref": "#/components/parameters/raw"
-      - "$ref": "#/components/parameters/dev"
+      description: Get metadata about the data available from the API
+      ## these are noted in the https://mydisease.info/v1/spec endpoint; commenting out for now
+      # parameters:
+      # - "$ref": "#/components/parameters/format"
+      # - "$ref": "#/components/parameters/raw"
       responses:
         '200':
-          description: Success
-      summary: Get metadata about the data available from the API
+          description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
       tags:
       - metadata
   "/metadata/fields":
     get:
-      parameters:
-      - "$ref": "#/components/parameters/format"
-      - "$ref": "#/components/parameters/raw"
-      - "$ref": "#/components/parameters/search"
-      - "$ref": "#/components/parameters/prefix"
+      description: Get metadata about the data fields available from the API
+      ## these are noted in the https://mydisease.info/v1/spec endpoint; commenting out for now
+      # parameters:
+      # - "$ref": "#/components/parameters/format"
+      # - "$ref": "#/components/parameters/raw"
+      # - "$ref": "#/components/parameters/search"
+      # - "$ref": "#/components/parameters/prefix"
       responses:
         '200':
-          description: Success
-      summary: Get metadata about the data fields available from a record
+          description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
       tags:
       - metadata
   "/query":
     get:
+      description: >-
+        MyDisease.info chemical query web service. In the output, "total" in the output gives the total number 
+        of matching hits, while the actual hits are returned under "hits" field.
       parameters:
       - name: q
-        description: 'Query string.  The detailed query syntax can be found from our
-          [docs](http://mydisease.info).  Examples: "cancer", "primary ciliary dyskinesia",
-          "DOID:9562"'
+        ## description partially from https://docs.mydisease.info/en/latest/doc/disease_query_service.html#query-syntax
+        description: >-
+          Required, passing user query. The detailed query syntax for parameter is explained 
+          [here](https://docs.mydisease.info/en/latest/doc/disease_query_service.html#query-syntax).
         in: query
         required: true
         example: "cancer"
         schema:
           type: string
-      - "$ref": "#/components/parameters/aggs"
-      - "$ref": "#/components/parameters/facet_size"
+      - "$ref": "#/components/parameters/fields"
+      - "$ref": "#/components/parameters/size"
       - "$ref": "#/components/parameters/from"
-      - "$ref": "#/components/parameters/userquery"
-      - "$ref": "#/components/parameters/sort"
-      - "$ref": "#/components/parameters/explain"
       - "$ref": "#/components/parameters/fetch_all"
       - "$ref": "#/components/parameters/scroll_id"
-      - "$ref": "#/components/parameters/raw"
-      - "$ref": "#/components/parameters/rawquery"
-      - "$ref": "#/components/parameters/_source"
-      - "$ref": "#/components/parameters/size"
+      - "$ref": "#/components/parameters/sort"
+      - "$ref": "#/components/parameters/facets"
+      - "$ref": "#/components/parameters/facet_size"
+      - "$ref": "#/components/parameters/callback"
       - "$ref": "#/components/parameters/dotfield"
-      - "$ref": "#/components/parameters/_sorted"
-      - "$ref": "#/components/parameters/always_list"
-      - "$ref": "#/components/parameters/allow_null"
-      - "$ref": "#/components/parameters/format"
+      - "$ref": "#/components/parameters/email"
+      ## these are noted in the https://mydisease.info/v1/spec endpoint; commenting out for now
+      # - "$ref": "#/components/parameters/aggs"
+      # - "$ref": "#/components/parameters/userquery"
+      # - "$ref": "#/components/parameters/explain"
+      # - "$ref": "#/components/parameters/raw"
+      # - "$ref": "#/components/parameters/rawquery"
+      # - "$ref": "#/components/parameters/_sorted"
+      # - "$ref": "#/components/parameters/always_list"
+      # - "$ref": "#/components/parameters/allow_null"
+      # - "$ref": "#/components/parameters/format"
       responses:
         '200':
-          description: Success
+          description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
+      ## commenting out schemas and other status codes for now
       #     content:
       #       application/json:
       #         schema:
@@ -159,39 +213,64 @@ paths:
       #         schema:
       #           "$ref": "#/components/schemas/ErrorResult"
       #     description: A response indicating an improperly formatted query
-      # summary: Make queries and return matching gene hits. Supports JSONP and CORS
+      # description: Make queries and return matching gene hits. Supports JSONP and CORS
       #   as well.
       tags:
       - query
     post:
+      description: >-
+        Although making simple GET requests above to our disease query service is sufficient for most use cases, 
+        there are times you might find it more efficient to make batch queries (e.g., retrieving disease annotation 
+        for multiple diseases). Fortunately, you can also make batch queries via POST requests when you need to.
+
+
+        The "query" field in the returned object indicates the matching query term. If a query term has no match, 
+        it will return with a "notfound" field with the value "true".
       parameters:
+      ## these are provided in the docs https://docs.mydisease.info/en/latest/doc/disease_query_service.html#id2
       - name: q
+        description: >-
+          Accepts multiple values separated by commas. Note that currently we only take the input values up to 1000 
+          maximum, the rest will be omitted.
+
+
+          The request body can also be used to provide these ids.
         in: query
+        ## setting to false since putting this info in the request body seems to work as well
         required: false
         schema:
           type: array
           items:
             type: string
       - name: scopes
+        description: >-
+          Optional, specify one or more fields (separated by commas) to search. 
+          The available "fields" can be passed to "scopes" parameter are listed 
+          [here](https://docs.mydisease.info/en/latest/doc/data.html#available-fields). Default: _id
+
+
+          The request body can also be used to provide this information.
         in: query
+        ## setting to false since putting this info in the request body seems to work as well
         required: false
         schema:
-          type: array
-          items:
-            type: string
-            default:
-            - _id
-      - "$ref": "#/components/parameters/from"
-      - "$ref": "#/components/parameters/sort"
-      - "$ref": "#/components/parameters/raw"
-      - "$ref": "#/components/parameters/rawquery"
-      - "$ref": "#/components/parameters/_source"
+          type: string
+      - "$ref": "#/components/parameters/fields"
+      - "$ref": "#/components/parameters/email"
+      ## this is useful even when it's not noted in the docs
       - "$ref": "#/components/parameters/size"
-      - "$ref": "#/components/parameters/dotfield"
-      - "$ref": "#/components/parameters/_sorted"
-      - "$ref": "#/components/parameters/always_list"
-      - "$ref": "#/components/parameters/allow_null"
-      - "$ref": "#/components/parameters/format"
+      - "$ref": "#/components/parameters/from"
+      - "$ref": "#/components/parameters/fetch_all"
+      - "$ref": "#/components/parameters/scroll_id"
+      ## these are noted in the https://mydisease.info/v1/spec endpoint; commenting out for now
+      # - "$ref": "#/components/parameters/sort"
+      # - "$ref": "#/components/parameters/raw"
+      # - "$ref": "#/components/parameters/rawquery"
+      # - "$ref": "#/components/parameters/dotfield"
+      # - "$ref": "#/components/parameters/_sorted"
+      # - "$ref": "#/components/parameters/always_list"
+      # - "$ref": "#/components/parameters/allow_null"
+      # - "$ref": "#/components/parameters/format"
       requestBody:
         content:
           application/json:
@@ -205,28 +284,24 @@ paths:
               type: object
               properties:
                 q:
-                  description: multiple query terms separated by comma (also "+" or
-                    whitespace).  Does not support wildcard queries
+                  description: >-
+                    Accepts multiple values separated by commas. Note that currently we only take the input values 
+                    up to 1000 maximum, the rest will be omitted.
                   type: array
                   items:
                     type: string
                 scopes:
-                  description: 'a comma-separated list of fields as the search "scopes"
-                    (fields to search through for query term). The available "fields"
-                    that can be passed to the "scopes" parameter are listed in the
-                    **/metadata/fields** endpoint.string Default: "scopes=_id".'
-                  type: array
-                  items:
-                    type: string
-                from:
-                  type: integer
-                sort:
+                  description: >-
+                    Specify one or more fields (separated by commas) to search. 
+                    The available "fields" can be passed to "scopes" parameter are listed 
+                    [here](https://docs.mydisease.info/en/latest/doc/data.html#available-fields). Default: _id
                   type: array
                   items:
                     type: string
       responses:
         '200':
-          description: Success
+          description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
+      ## commenting out schemas and other status codes for now
       #     content:
       #       application/json:
       #         schema:
@@ -237,7 +312,7 @@ paths:
       #         schema:
       #           "$ref": "#/components/schemas/ErrorResult"
       #     description: A response indicating an improperly formatted query
-      # summary: Make batch gene queries and return matching gene hits
+      # description: Make batch gene queries and return matching gene hits
       tags:
       - query
       x-bte-kgs-operations:
@@ -269,203 +344,269 @@ paths:
       - "$ref": "#/components/x-bte-kgs-operations/disease_arises_from_feature-rev"
 components:
   parameters:
-    _sorted:
-      name: _sorted
+    callback:
+      name: callback
+      description: >-
+        Optional, you can pass a "callback" parameter to make a JSONP call.
       in: query
       required: false
       schema:
-        type: boolean
-        default: true
-    _source:
-      name: _source
-      in: query
-      required: false
-      schema:
-        type: array
-        items:
-          type: string
-    aggs:
-      name: aggs
-      in: query
-      required: false
-      schema:
-        type: array
-        items:
-          type: string
-    allow_null:
-      name: allow_null
-      in: query
-      required: false
-      schema:
-        type: array
-        items:
-          type: string
-    always_list:
-      name: always_list
-      in: query
-      required: false
-      schema:
-        type: array
-        items:
-          type: string
-    dev:
-      name: dev
-      in: query
-      required: false
-      schema:
-        type: boolean
+        type: string
     dotfield:
       name: dotfield
+      description: >-
+        Optional, can be used to control the format of the returned chemical object. 
+        If "dotfield" is true, the returned data object is returned flattened (no nested objects) 
+        using dotfield notation for key names. Default: false.
       in: query
       required: false
       schema:
         type: boolean
-    explain:
-      name: explain
+        default: false
+    email:
+      name: email
+      description: >-
+        Optional, if you are regular users of our services, we encourage you to provide us an email, 
+        so that we can better track the usage or follow up with you.
       in: query
       required: false
       schema:
-        type: boolean
+        type: string
     facet_size:
       name: facet_size
+      description: >-
+        Optional, an integer (1 <= facet_size <= 1000) that specifies how many buckets to return in a 
+        [faceted query](https://docs.mychem.info/en/latest/doc/chem_query_service.html?highlight=from#faceted-queries).
       in: query
       required: false
       schema:
         type: integer
         default: 10
+    facets:
+      name: facets
+      description: >-
+        Optional, a single field or comma-separated fields to return facets, can only be used on non-free text fields. 
+        E.g. "facets=chembl.molecule_properties.full_mwt". See [examples of faceted queries 
+        here](https://docs.mychem.info/en/latest/doc/chem_query_service.html?highlight=from#faceted-queries).
+      in: query
+      required: false
+      schema:
+        type: array
+        items:
+          type: string
     fetch_all:
       name: fetch_all
+      description: >-
+        Optional, a boolean, which when TRUE, allows fast retrieval of all unsorted query hits. 
+        The return object contains a _scroll_id field, which when passed as a parameter to the query endpoint 
+        (see the scroll_id parameter), returns the next 1000 query results. Setting fetch_all = TRUE causes 
+        the results to be inherently unsorted, therefore the sort parameter is ignored. For more information, 
+        see [examples using fetch_all 
+        here](https://docs.mychem.info/en/latest/doc/chem_query_service.html?highlight=from#scrolling-queries). 
+        Default: FALSE.
       in: query
       required: false
       schema:
         type: boolean
-    format:
-      name: format
-      description: 'controls output format of server response, currently supports:
-        "json", "jsonld", "html". Type: string. Default: json.'
+        default: false
+    fields:
+      name: fields
+      description: >-
+        Optional, can be a comma-separated list to limit the fields returned from the chemical object. 
+        If "fields=all", all available fields will be returned. Look 
+        [here](https://docs.mychem.info/en/latest/doc/data.html#available-fields) for a list of available fields. 
+        
+
+        Note that it supports dot notation as well, e.g., you can pass "chebi.name". 
+        Default: "fields=all". 
+        The parameter "filter" is an alias for this parameter.
       in: query
       required: false
       schema:
         type: string
-        default: json
+        default: all
     from:
       name: from
+      description: >-
+        Optional, the number of matching chemical hits to skip, starting from 0. Default: 0. 
       in: query
       required: false
       schema:
         type: integer
-    prefix:
-      name: prefix
-      in: query
-      required: false
-      schema:
-        type: string
-    raw:
-      name: raw
-      in: query
-      required: false
-      schema:
-        type: boolean
-    rawquery:
-      name: rawquery
-      in: query
-      required: false
-      schema:
-        type: boolean
+        default: 0
     scroll_id:
       name: scroll_id
-      in: query
-      required: false
-      schema:
-        type: string
-    search:
-      name: search
+      description: >-
+        Optional, a string containing the _scroll_id returned from a query request with fetch_all = TRUE. 
+        Supplying a valid scroll_id will return the next 1000 unordered results. If the next results are 
+        not obtained within 1 minute of the previous set of results, the scroll_id becomes stale, and a 
+        new one must be obtained with another query request with fetch_all = TRUE. All other parameters are 
+        ignored when the scroll_id parameter is supplied. For more information see [examples using scroll_id 
+        here](https://docs.mychem.info/en/latest/doc/chem_query_service.html?highlight=from#scrolling-queries).
       in: query
       required: false
       schema:
         type: string
     size:
       name: size
-      description: "default: 10 objects/records in response"
+      description: >-
+        Optional, the maximum number of matching chemical hits to return (with a cap of 1000 at the moment). Default: 10.
+        The combination of "size" and "from" parameters can be used to get paging for a large query.
       in: query
       required: false
       schema:
         type: integer
+        default: 10
     sort:
       name: sort
+      description: >-
+        Optional, the comma-separated fields to sort on. Prefix with "-" for descending order, otherwise in ascending order. 
+        Default: sort by matching scores in descending order.
       in: query
       required: false
       schema:
         type: array
         items:
           type: string
-    userquery:
-      name: userquery
-      in: query
-      required: false
-      schema:
-        type: string
-  schemas:
-    Disease:
-      properties:
-        _id:
-          type: string
-      required:
-      - _id
-      type: object
-    ErrorResult:
-      properties:
-        message:
-          type: string
-        success:
-          type: boolean
-      type: object
-    QueryPOSTResult:
-      items:
-        allOf:
-        - "$ref": "#/components/schemas/Disease"
-        - properties:
-            _score:
-              format: float
-              type: number
-            query:
-              type: string
-          type: object
-      type: array
-    QueryResult:
-      properties:
-        hits:
-          items:
-            "$ref": "#/components/schemas/Disease"
-          type: array
-        max_score:
-          format: float
-          type: number
-        took:
-          type: integer
-        total:
-          type: integer
-      type: object
-    int64_or_array:
-      oneOf:
-      - items:
-          format: int64
-          type: integer
-        type: array
-      - format: int64
-        type: integer
-    string_or_array:
-      oneOf:
-      - items:
-          type: string
-        type: array
-      - type: string
+    ## these are noted in the https://mychem.info/v1/spec endpoint; commenting out for now
+    # _sorted:
+    #   name: _sorted
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: boolean
+    #     default: true
+    # aggs:
+    #   name: aggs
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: array
+    #     items:
+    #       type: string
+    # allow_null:
+    #   name: allow_null
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: array
+    #     items:
+    #       type: string
+    # always_list:
+    #   name: always_list
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: array
+    #     items:
+    #       type: string
+    # explain:
+    #   name: explain
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: boolean
+    # format:
+    #   name: format
+    #   description: 'controls output format of server response, currently supports:
+    #     "json", "jsonld", "html". Type: string. Default: json.'
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: string
+    #     default: json
+    # prefix:
+    #   name: prefix
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: string
+    # raw:
+    #   name: raw
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: boolean
+    # rawquery:
+    #   name: rawquery
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: boolean
+    # search:
+    #   name: search
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: string
+    # userquery:
+    #   name: userquery
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: string
+  ## commenting out schemas and other status codes for now
+  # schemas:
+  #   Chem:
+  #     properties:
+  #       _id:
+  #         type: string
+  #     required:
+  #     - _id
+  #     type: object
+  #   ErrorResult:
+  #     properties:
+  #       message:
+  #         type: string
+  #       success:
+  #         type: boolean
+  #     type: object
+  #   QueryPOSTResult:
+  #     items:
+  #       allOf:
+  #       - "$ref": "#/components/schemas/Chem"
+  #       - properties:
+  #           _score:
+  #             format: float
+  #             type: number
+  #           query:
+  #             type: string
+  #         type: object
+  #     type: array
+  #   QueryResult:
+  #     properties:
+  #       hits:
+  #         items:
+  #           "$ref": "#/components/schemas/Chem"
+  #         type: array
+  #       max_score:
+  #         format: float
+  #         type: number
+  #       took:
+  #         type: integer
+  #       total:
+  #         type: integer
+  #     type: object
+  #   int64_or_array:
+  #     oneOf:
+  #     - items:
+  #         format: int64
+  #         type: integer
+  #       type: array
+  #     - format: int64
+  #       type: integer
+  #   string_or_array:
+  #     oneOf:
+  #     - items:
+  #         type: string
+  #       type: array
+  #     - type: string
   x-bte-response-mapping:
     ## not including "name" field since BTE isn't ingesting / using it to annotate nodes...
     disease-gene:
       NCBIGene: disgenet.genes_related_to_disease.gene_id  ## no prefix
       pubmed: disgenet.genes_related_to_disease.pubmed     ## no prefix
-      source: disgenet.genes_related_to_disease.source
+      disgenet_source: disgenet.genes_related_to_disease.source
       ## could remove "disgenet-" prefix from the key
       ##  if the key becomes the TRAPI attribute "original_attribute_name"
       disgenet-DPI: disgenet.genes_related_to_disease.DPI
@@ -475,7 +616,7 @@ components:
     disease-variant:
       DBSNP: disgenet.variants_related_to_disease.rsid       ## no prefix
       pubmed: disgenet.variants_related_to_disease.pubmed    ## no prefix
-      source: disgenet.variants_related_to_disease.source
+      disgenet_source: disgenet.variants_related_to_disease.source
       ## could remove "disgenet-" prefix from the key
       ##  if the key becomes the TRAPI attribute "original_attribute_name"
       disgenet-DPI: disgenet.variants_related_to_disease.DPI
@@ -483,21 +624,21 @@ components:
       disgenet-EI: disgenet.variants_related_to_disease.EI
       disgenet-score: disgenet.variants_related_to_disease.score
     disease-phenotype:
-      HP: hpo.phenotype_related_to_disease.hpo_id             ## HAS PREFIX (HP)
+      HP: hpo.phenotype_related_to_disease.hpo_id                                   ## HAS PREFIX (HP)
       ## note: there are 6 reference-related fields (parser created based on ID namespace)
-      pubmed: hpo.phenotype_related_to_disease.pmid_refs                 ## HAS PREFIX (PMID)
-      isbn_refs: hpo.phenotype_related_to_disease.isbn_refs              ## HAS PREFIX (ISBN)
-      website_refs: hpo.phenotype_related_to_disease.website_refs        ## no prefix
-      decipher_refs: hpo.phenotype_related_to_disease.decipher_refs      ## HAS PREFIX (DECIPHER)
-      omim_refs: hpo.phenotype_related_to_disease.omim_refs              ## HAS PREFIX (OMIM)
-      orphanet_refs: hpo.phenotype_related_to_disease.orphanet_refs      ## HAS PREFIX (ORPHANET)
+      pubmed: hpo.phenotype_related_to_disease.pmid_refs                            ## HAS PREFIX (PMID)
+      isbn_refs: hpo.phenotype_related_to_disease.isbn_refs                         ## HAS PREFIX (ISBN)
+      "biolink:source_web_page": hpo.phenotype_related_to_disease.website_refs      ## no prefix
+      decipher_refs: hpo.phenotype_related_to_disease.decipher_refs                 ## HAS PREFIX (DECIPHER)
+      omim_refs: hpo.phenotype_related_to_disease.omim_refs                         ## HAS PREFIX (OMIM)
+      orphanet_refs: hpo.phenotype_related_to_disease.orphanet_refs                 ## HAS PREFIX (ORPHANET)
       ## note: there are 4 frequency-related fields (parser created based on different data types)
-      numeric_freq: hpo.phenotype_related_to_disease.numeric_freq           ## decimal freq
-      hp_freq: hpo.phenotype_related_to_disease.hp_freq                     ## HP ontology freq term
-      freq_numerator: hpo.phenotype_related_to_disease.freq_numerator       ## frequency as a fraction (numerator)
-      freq_denominator: hpo.phenotype_related_to_disease.freq_denominator   ## frequency as a fraction (denominator)
+      "biolink:has_quotient": hpo.phenotype_related_to_disease.numeric_freq         ## decimal freq
+      "biolink:frequency_qualifier": hpo.phenotype_related_to_disease.hp_freq       ## HP ontology freq term
+      "biolink:has_count": hpo.phenotype_related_to_disease.freq_numerator          ## frequency as a fraction (numerator)
+      "biolink:has_total": hpo.phenotype_related_to_disease.freq_denominator        ## frequency as a fraction (denominator)
       ## value of this field is evidence codes (IEA, TAS, PCS)
-      hpoa_evidence_code: hpo.phenotype_related_to_disease.evidence
+      "biolink:evidence_type": hpo.phenotype_related_to_disease.evidence
       ## supposed to provide context (only present in some records)
       ## - modifier/onset fields are HP terms w/ prefix
       ## - sex will be "male" or "female"
@@ -548,7 +689,19 @@ components:
     disease-gene:
     ## 22942 / 27762 disgenet.genes_related_to_disease records have disgenet.xrefs.umls
       - supportBatch: true
-        inputSeparator: ","
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+        - id: UMLS
+          semantic: Disease
+        requestBody:
+          body:
+            ## currently, BTE already strips prefix...
+            # q: "{{ queryInputs | rmPrefix }}"
+            q: "{{ queryInputs }}"  ## no prefix
+            scopes: disgenet.xrefs.umls
+        outputs:
+        - id: NCBIGene
+          semantic: Gene
         parameters:
         ## see https://www.disgenet.org/dbinfo#section44
         ## not including YearFinal, YearInitial, gene_name 
@@ -560,17 +713,6 @@ components:
             disgenet.genes_related_to_disease.DSI,
             disgenet.genes_related_to_disease.EI,
             disgenet.genes_related_to_disease.score
-        requestBody:
-          body:
-            q: "{inputs[0]}"  ## no prefix
-            scopes: disgenet.xrefs.umls
-          header: application/x-www-form-urlencoded
-        inputs:
-        - id: UMLS
-          semantic: Disease
-        outputs:
-        - id: NCBIGene
-          semantic: Gene
         ## can't be more specific because we can't restrict (see note above)
         predicate: condition_associated_with_gene 
         source: "infores:disgenet"
@@ -582,7 +724,19 @@ components:
     disease-variant:
     ## 11200 / 12605 disgenet.variants_related_to_disease records have disgenet.xrefs.umls
       - supportBatch: true
-        inputSeparator: ","
+        useTemplating: true
+        inputs:
+        - id: UMLS
+          semantic: Disease
+        requestBody:
+          body:
+            ## currently, BTE already strips prefix...
+            # q: "{{ queryInputs | rmPrefix }}"
+            q: "{{ queryInputs }}"  ## no prefix
+            scopes: disgenet.xrefs.umls
+        outputs:
+        - id: DBSNP
+          semantic: SequenceVariant
         parameters:
         ## see https://www.disgenet.org/dbinfo#section45
         ## not including YearFinal, YearInitial, chrom, pos 
@@ -594,17 +748,6 @@ components:
             disgenet.variants_related_to_disease.DSI,
             disgenet.variants_related_to_disease.EI,
             disgenet.variants_related_to_disease.score
-        requestBody:
-          body:
-            q: "{inputs[0]}"  ## no prefix
-            scopes: disgenet.xrefs.umls
-          header: application/x-www-form-urlencoded
-        inputs:
-        - id: UMLS
-          semantic: Disease
-        outputs:
-        - id: DBSNP
-          semantic: SequenceVariant
         ## can't be more specific because we can't restrict (see note above)
         predicate: related_to
         source: "infores:disgenet"
@@ -621,7 +764,19 @@ components:
   ##   however, this is not much info (~22 diseases) and we don't have mappings from SRI-based ID resolver
     disease-phenotype:
       - supportBatch: true
-        inputSeparator: ","
+        useTemplating: true
+        inputs:
+        - id: OMIM
+          semantic: Disease
+        requestBody:
+          body:
+            ## currently, BTE already strips prefix...
+            # q: "{{ queryInputs | rmPrefix }}"
+            q: "{{ queryInputs }}"  ## no prefix
+            scopes: hpo.omim
+        outputs:
+        - id: HP
+          semantic: PhenotypicFeature
         parameters:
         ## not including biocuration field
           fields: >-
@@ -640,17 +795,6 @@ components:
             hpo.phenotype_related_to_disease.modifier,
             hpo.phenotype_related_to_disease.onset,
             hpo.phenotype_related_to_disease.sex
-        requestBody:
-          body:
-            q: "{inputs[0]}"  ## no prefix
-            scopes: hpo.omim
-          header: application/x-www-form-urlencoded
-        inputs:
-        - id: OMIM
-          semantic: Disease
-        outputs:
-        - id: HP
-          semantic: PhenotypicFeature
         predicate: has_phenotype
         ## includes annotations with aspect == "P"
         ##   (aspect as "I" became hpo.inheritance, "C" became hpo.course, "M" became hpo.modifier)
@@ -662,7 +806,19 @@ components:
         #     oneOutput: "HP:0001254"   ## Lethargy
     disease-phenotype2:
       - supportBatch: true
-        inputSeparator: ","
+        useTemplating: true
+        inputs:
+        - id: ORPHANET
+          semantic: Disease
+        requestBody:
+          body:
+            ## currently, BTE already strips prefix...
+            # q: "{{ queryInputs | rmPrefix }}"
+            q: "{{ queryInputs }}"  ## no prefix
+            scopes: hpo.orphanet
+        outputs:
+        - id: HP
+          semantic: PhenotypicFeature
         parameters:
           fields: >-
             hpo.phenotype_related_to_disease.hpo_id,
@@ -680,17 +836,6 @@ components:
             hpo.phenotype_related_to_disease.modifier,
             hpo.phenotype_related_to_disease.onset,
             hpo.phenotype_related_to_disease.sex
-        requestBody:
-          body:
-            q: "{inputs[0]}"  ## no prefix
-            scopes: hpo.orphanet
-          header: application/x-www-form-urlencoded
-        inputs:
-        - id: ORPHANET
-          semantic: Disease
-        outputs:
-        - id: HP
-          semantic: PhenotypicFeature
         predicate: has_phenotype
         source: "infores:hpo-annotations"
         response_mapping:
@@ -708,7 +853,20 @@ components:
   ## - we removed CTD disease-pathway data because that info is all indirect
     disease-chemical:
       - supportBatch: true
-        inputSeparator: ","
+        useTemplating: true
+        inputs:
+        - id: MESH
+          semantic: Disease
+        requestBody:
+          body:
+            ## currently, BTE already strips prefix...
+            # q: "{{ queryInputs | rmPrefix }}"
+            q: "{{ queryInputs }}"  ## no prefix
+            scopes: ctd.mesh
+        outputs:
+        - id: MESH
+          semantic: SmallMolecule
+          ## note that 3085 / 3253 have cas_registry_number field that can be used as well
         parameters:
         ## not including: cas_registry_number, source, name
         ## BTE currently isn't ingesting name correctly
@@ -716,18 +874,6 @@ components:
             ctd.chemical_related_to_disease.mesh_chemical_id,
             ctd.chemical_related_to_disease.direct_evidence,
             ctd.chemical_related_to_disease.pubmed
-        requestBody:
-          body:
-            q: "{inputs[0]}"  ## no prefix
-            scopes: ctd.mesh
-          header: application/x-www-form-urlencoded
-        inputs:
-        - id: MESH
-          semantic: Disease
-        outputs:
-        - id: MESH
-          semantic: SmallMolecule
-          ## note that 3085 / 3253 have cas_registry_number field that can be used as well
         predicate: related_to
         ## direct_evidence is kinda like a relation....
         ##   can have value "marker/mechanism" or "therapeutic").
@@ -739,23 +885,24 @@ components:
         #     oneOutput: "MESH:C448659"   ## Geldanamycin, monohydrochloride
     disease-chemical2:
       - supportBatch: true
-        inputSeparator: ","
+        useTemplating: true
+        inputs:
+        - id: OMIM
+          semantic: Disease
+        requestBody:
+          body:
+            ## currently, BTE already strips prefix...
+            # q: "{{ queryInputs | rmPrefix }}"
+            q: "{{ queryInputs }}"  ## no prefix
+            scopes: ctd.omim
+        outputs:
+        - id: MESH
+          semantic: SmallMolecule
         parameters:
           fields: >-
             ctd.chemical_related_to_disease.mesh_chemical_id,
             ctd.chemical_related_to_disease.direct_evidence,
             ctd.chemical_related_to_disease.pubmed
-        requestBody:
-          body:
-            q: "{inputs[0]}"  ## no prefix
-            scopes: ctd.omim
-          header: application/x-www-form-urlencoded
-        inputs:
-        - id: OMIM
-          semantic: Disease
-        outputs:
-        - id: MESH
-          semantic: SmallMolecule
         predicate: related_to
         source: "infores:ctd"
         response_mapping:
@@ -768,21 +915,22 @@ components:
 ##   so we can't retrieve the subset of data for the specific gene / variant / etc's record 
     gene-disease:
       - supportBatch: true
-        inputSeparator: ","
-        parameters:
-          fields: disgenet.xrefs.umls
-          size: 1000  ## note the size limit
-        requestBody:
-          body:
-            q: "{inputs[0]}"   ## no prefix
-            scopes: disgenet.genes_related_to_disease.gene_id
-          header: application/x-www-form-urlencoded
+        useTemplating: true
         inputs:
         - id: NCBIGene
           semantic: Gene
+        requestBody:
+          body:
+            ## currently, BTE already strips prefix...
+            # q: "{{ queryInputs | rmPrefix }}"
+            q: "{{ queryInputs }}"   ## no prefix
+            scopes: disgenet.genes_related_to_disease.gene_id
         outputs:
         - id: UMLS
           semantic: Disease
+        parameters:
+          fields: disgenet.xrefs.umls
+          size: 1000  ## note the size limit
         predicate: gene_associated_with_condition
         source: "infores:disgenet"
         response_mapping:
@@ -792,21 +940,22 @@ components:
         #     oneOutput: "UMLS:C3658290"    ## Drug-Induced Acute Liver Injury
     variant-disease:
       - supportBatch: true
-        inputSeparator: ","
-        parameters:
-          fields: disgenet.xrefs.umls
-          size: 1000  ## note the size limit
-        requestBody:
-          body:
-            q: "{inputs[0]}"   ## no prefix
-            scopes: disgenet.variants_related_to_disease.rsid
-          header: application/x-www-form-urlencoded
+        useTemplating: true
         inputs:
         - id: DBSNP
           semantic: SequenceVariant
+        requestBody:
+          body:
+            ## currently, BTE already strips prefix...
+            # q: "{{ queryInputs | rmPrefix }}"
+            q: "{{ queryInputs }}"   ## no prefix
+            scopes: disgenet.variants_related_to_disease.rsid
         outputs:
         - id: UMLS
           semantic: Disease
+        parameters:
+          fields: disgenet.xrefs.umls
+          size: 1000  ## note the size limit
         predicate: related_to
         source: "infores:disgenet"
         response_mapping:
@@ -816,21 +965,22 @@ components:
         #     oneOutput: "UMLS:C4021107"    ## Non-obstructive azoospermia
     phenotype-disease:
       - supportBatch: true
-        inputSeparator: ","
-        parameters:
-          fields: hpo.omim
-          size: 1000  ## note the size limit
-        requestBody:
-          body:
-            q: "{inputs[0]}"   ## HAS PREFIX (HP)
-            scopes: hpo.phenotype_related_to_disease.hpo_id
-          header: application/x-www-form-urlencoded
+        useTemplating: true
         inputs:
         - id: HP
           semantic: PhenotypicFeature
+        requestBody:
+          body:
+            ## HAS PREFIX (HP): currently a bit redundant to do this (BTE handles it)
+            # q: "{{ queryInputs | replPrefix('HP', ':') }}"
+            q: "{{ queryInputs }}"
+            scopes: hpo.phenotype_related_to_disease.hpo_id
         outputs:
         - id: OMIM
           semantic: Disease
+        parameters:
+          fields: hpo.omim
+          size: 1000  ## note the size limit
         predicate: phenotype_of
         source: "infores:hpo-annotations"
         response_mapping:
@@ -840,21 +990,22 @@ components:
         #     oneOutput: "OMIM:608720"   ## Neuropathy, Hereditary Sensory And Autonomic, Adult-onset, With Anosmia
     phenotype-disease2:
       - supportBatch: true
-        inputSeparator: ","
-        parameters:
-          fields: hpo.orphanet
-          size: 1000  ## note the size limit
-        requestBody:
-          body:
-            q: "{inputs[0]}"   ## HAS PREFIX (HP)  
-            scopes: hpo.phenotype_related_to_disease.hpo_id
-          header: application/x-www-form-urlencoded
+        useTemplating: true
         inputs:
         - id: HP
           semantic: PhenotypicFeature
+        requestBody:
+          body:
+            ## HAS PREFIX (HP): currently a bit redundant to do this (BTE handles it)
+            # q: "{{ queryInputs | replPrefix('HP', ':') }}"
+            q: "{{ queryInputs }}"
+            scopes: hpo.phenotype_related_to_disease.hpo_id
         outputs:
         - id: ORPHANET
           semantic: Disease
+        parameters:
+          fields: hpo.orphanet
+          size: 1000  ## note the size limit
         predicate: phenotype_of
         source: "infores:hpo-annotations"
         response_mapping:
@@ -864,21 +1015,22 @@ components:
         #     oneOutput: "ORPHANET:99857"   ## Secondary Syringomyelia
     chemical-disease:
       - supportBatch: true
-        inputSeparator: ","
-        parameters:
-          fields: ctd.mesh
-          size: 1000  ## note the size limit
-        requestBody:
-          body:
-            q: "{inputs[0]}"  ## no prefix
-            scopes: ctd.chemical_related_to_disease.mesh_chemical_id
-          header: application/x-www-form-urlencoded
+        useTemplating: true
         inputs:
         - id: MESH
           semantic: SmallMolecule
+        requestBody:
+          body:
+            ## currently, BTE already strips prefix...
+            # q: "{{ queryInputs | rmPrefix }}"
+            q: "{{ queryInputs }}"  ## no prefix
+            scopes: ctd.chemical_related_to_disease.mesh_chemical_id
         outputs:
         - id: MESH
           semantic: Disease
+        parameters:
+          fields: ctd.mesh
+          size: 1000  ## note the size limit
         predicate: related_to
         source: "infores:ctd"
         response_mapping:
@@ -888,21 +1040,22 @@ components:
         #     oneOutput: "MESH:D008288"   ## Malaria (maps to MONDO:0005136)
     chemical-disease2:
       - supportBatch: true
-        inputSeparator: ","
-        parameters:
-          fields: ctd.omim
-          size: 1000  ## note the size limit
-        requestBody:
-          body:
-            q: "{inputs[0]}"    ## no prefix
-            scopes: ctd.chemical_related_to_disease.mesh_chemical_id
-          header: application/x-www-form-urlencoded
+        useTemplating: true
         inputs:
         - id: MESH
           semantic: SmallMolecule
+        requestBody:
+          body:
+            ## currently, BTE already strips prefix...
+            # q: "{{ queryInputs | rmPrefix }}"
+            q: "{{ queryInputs }}"    ## no prefix
+            scopes: ctd.chemical_related_to_disease.mesh_chemical_id
         outputs:
         - id: OMIM
           semantic: Disease
+        parameters:
+          fields: ctd.omim
+          size: 1000  ## note the size limit
         predicate: related_to
         source: "infores:ctd"
         response_mapping: 
@@ -921,21 +1074,22 @@ components:
     ##     - disjoint from (this is a negation / NOT relationship)
     has_subclass:
       - supportBatch: true
-        inputSeparator: ","
-        parameters:
-          fields: mondo.children
-          size: 1000  ## note the size limit
-        requestBody:
-          body:
-            q: "{inputs[0]}"  ## HAS PREFIX (MONDO)
-            scopes: mondo.mondo
-          header: application/x-www-form-urlencoded
+        useTemplating: true
         inputs:
         - id: MONDO
           semantic: Disease
+        requestBody:
+          body:
+            ## HAS PREFIX (MONDO): currently a bit redundant to do this (BTE handles it)
+            # q: "{{ queryInputs | replPrefix('MONDO', ':') }}"
+            q: "{{ queryInputs }}"
+            scopes: mondo.mondo
         outputs:
         - id: MONDO
           semantic: Disease
+        parameters:
+          fields: mondo.children
+          size: 1000  ## note the size limit
         predicate: superclass_of  ## this is the inverse of subclass_of right now
         ## relation: "has children"?
         source: "infores:mondo"
@@ -946,21 +1100,22 @@ components:
         #     oneOutput: "MONDO:0021698"   ## alcohol-related disorders          
     subclass_of:
       - supportBatch: true
-        inputSeparator: ","
-        parameters:
-          fields: mondo.parents
-          size: 1000  ## note the size limit
-        requestBody:
-          body:
-            q: "{inputs[0]}"   ## HAS PREFIX (MONDO)
-            scopes: mondo.mondo
-          header: application/x-www-form-urlencoded
+        useTemplating: true
         inputs:
         - id: MONDO
           semantic: Disease
+        requestBody:
+          body:
+            ## HAS PREFIX (MONDO): currently a bit redundant to do this (BTE handles it)
+            # q: "{{ queryInputs | replPrefix('MONDO', ':') }}"
+            q: "{{ queryInputs }}"
+            scopes: mondo.mondo
         outputs:
         - id: MONDO
           semantic: Disease
+        parameters:
+          fields: mondo.parents
+          size: 1000  ## note the size limit
         predicate: subclass_of
         ## relation: "has parents"?
         source: "infores:mondo"
@@ -971,21 +1126,22 @@ components:
         #     oneOutput: "MONDO:0002025"   ## psychiatric disorder
     predisposes_towards:
       - supportBatch: true
-        inputSeparator: ","
-        parameters:
-          fields: mondo.predisposes_towards.mondo
-          size: 1000  ## note the size limit
-        requestBody:
-          body:
-            q: "{inputs[0]}"   ## HAS PREFIX (MONDO)
-            scopes: mondo.mondo
-          header: application/x-www-form-urlencoded
+        useTemplating: true
         inputs:
         - id: MONDO
           semantic: Disease
+        requestBody:
+          body:
+            ## HAS PREFIX (MONDO): currently a bit redundant to do this (BTE handles it)
+            # q: "{{ queryInputs | replPrefix('MONDO', ':') }}"
+            q: "{{ queryInputs }}"
+            scopes: mondo.mondo
         outputs:
         - id: MONDO
           semantic: Disease
+        parameters:
+          fields: mondo.predisposes_towards.mondo
+          size: 1000  ## note the size limit
         predicate: contributes_to  ## maps to "MONDO:predisposes_towards"
         ## could use more specific biolink predicate like predisposes??
         source: "infores:mondo"
@@ -996,21 +1152,22 @@ components:
         #     oneOutput: "MONDO:0004979"   ## asthma
     predisposes_towards-rev:
       - supportBatch: true
-        inputSeparator: ","
-        parameters:
-          fields: mondo.mondo
-          size: 1000  ## note the size limit
-        requestBody:
-          body:
-            q: "{inputs[0]}"   ## HAS PREFIX (MONDO)
-            scopes: mondo.predisposes_towards.mondo
-          header: application/x-www-form-urlencoded
+        useTemplating: true
         inputs:
         - id: MONDO
           semantic: Disease
+        requestBody:
+          body:
+            ## HAS PREFIX (MONDO): currently a bit redundant to do this (BTE handles it)
+            # q: "{{ queryInputs | replPrefix('MONDO', ':') }}"
+            q: "{{ queryInputs }}"
+            scopes: mondo.predisposes_towards.mondo
         outputs:
         - id: MONDO
           semantic: Disease
+        parameters:
+          fields: mondo.mondo
+          size: 1000  ## note the size limit
         predicate: contribution_from
         ## inverse of contributes_to, which is mapped to "MONDO:predisposes_towards"
         ## no relation then...
@@ -1022,21 +1179,22 @@ components:
         #     oneOutput: "MONDO:0010940"   ## inherited susceptibility to asthma
     disease_shares_features_of:
       - supportBatch: true
-        inputSeparator: ","
-        parameters:
-          fields: mondo.disease_shares_features_of.mondo
-          size: 1000  ## note the size limit
-        requestBody:
-          body:
-            q: "{inputs[0]}"   ## HAS PREFIX (MONDO)
-            scopes: mondo.mondo
-          header: application/x-www-form-urlencoded
+        useTemplating: true
         inputs:
         - id: MONDO
           semantic: Disease
+        requestBody:
+          body:
+            ## HAS PREFIX (MONDO): currently a bit redundant to do this (BTE handles it)
+            # q: "{{ queryInputs | replPrefix('MONDO', ':') }}"
+            q: "{{ queryInputs }}"
+            scopes: mondo.mondo
         outputs:
         - id: MONDO
           semantic: Disease
+        parameters:
+          fields: mondo.disease_shares_features_of.mondo
+          size: 1000  ## note the size limit
         predicate: similar_to  ## could biolink have a more specific predicate?
         ##   note that relation maps to biolink:related_to right now...
         source: "infores:mondo"
@@ -1049,21 +1207,22 @@ components:
     ## checked and inverse relationship doesn't exist already in the data
     ##   for example, the record for Carpenter syndrome doesn't have disease_shares_features_of
       - supportBatch: true
-        inputSeparator: ","
-        parameters:
-          fields: mondo.mondo
-          size: 1000  ## note the size limit
-        requestBody:
-          body:
-            q: "{inputs[0]}"   ## HAS PREFIX (MONDO)
-            scopes: mondo.disease_shares_features_of.mondo
-          header: application/x-www-form-urlencoded
+        useTemplating: true
         inputs:
         - id: MONDO
           semantic: Disease
+        requestBody:
+          body:
+            ## HAS PREFIX (MONDO): currently a bit redundant to do this (BTE handles it)
+            # q: "{{ queryInputs | replPrefix('MONDO', ':') }}"
+            q: "{{ queryInputs }}"
+            scopes: mondo.disease_shares_features_of.mondo
         outputs:
         - id: MONDO
           semantic: Disease
+        parameters:
+          fields: mondo.mondo
+          size: 1000  ## note the size limit
         predicate: similar_to  ## could biolink have a more specific predicate?
         source: "infores:mondo"
         response_mapping:
@@ -1073,21 +1232,22 @@ components:
         #     oneOutput: "MONDO:0008711"   ## Goodman syndrome
     disease_has_major_feature:
       - supportBatch: true
-        inputSeparator: ","
-        parameters:
-          fields: mondo.disease_has_major_feature.mondo
-          size: 1000  ## note the size limit
-        requestBody:
-          body:
-            q: "{inputs[0]}"   ## HAS PREFIX (MONDO)
-            scopes: mondo.mondo
-          header: application/x-www-form-urlencoded
+        useTemplating: true
         inputs:
         - id: MONDO
           semantic: Disease
+        requestBody:
+          body:
+            ## HAS PREFIX (MONDO): currently a bit redundant to do this (BTE handles it)
+            # q: "{{ queryInputs | replPrefix('MONDO', ':') }}"
+            q: "{{ queryInputs }}"
+            scopes: mondo.mondo
         outputs:
         - id: MONDO
           semantic: Disease
+        parameters:
+          fields: mondo.disease_has_major_feature.mondo
+          size: 1000  ## note the size limit
         predicate: has_part  ## maps to "MONDO:disease_has_major_feature"
         source: "infores:mondo"
         response_mapping:
@@ -1097,21 +1257,22 @@ components:
         #     oneOutput: "MONDO:0001627"   ## dementia (disease)
     disease_has_major_feature-rev:
       - supportBatch: true
-        inputSeparator: ","
-        parameters:
-          fields: mondo.mondo
-          size: 1000  ## note the size limit
-        requestBody:
-          body:
-            q: "{inputs[0]}"   ## HAS PREFIX (MONDO)
-            scopes: mondo.disease_has_major_feature.mondo
-          header: application/x-www-form-urlencoded
+        useTemplating: true
         inputs:
         - id: MONDO
           semantic: Disease
+        requestBody:
+          body:
+            ## HAS PREFIX (MONDO): currently a bit redundant to do this (BTE handles it)
+            # q: "{{ queryInputs | replPrefix('MONDO', ':') }}"
+            q: "{{ queryInputs }}"
+            scopes: mondo.disease_has_major_feature.mondo
         outputs:
         - id: MONDO
           semantic: Disease
+        parameters:
+          fields: mondo.mondo
+          size: 1000  ## note the size limit
         predicate: part_of  ## could biolink have a more specific predicate?
         source: "infores:mondo"
         response_mapping:
@@ -1121,21 +1282,22 @@ components:
         #     oneOutput: "MONDO:0015140"   ## early-onset autosomal dominant Alzheimer disease
     disease_has_feature:
       - supportBatch: true
-        inputSeparator: ","
-        parameters:
-          fields: mondo.disease_has_feature.mondo
-          size: 1000  ## note the size limit
-        requestBody:
-          body:
-            q: "{inputs[0]}"   ## HAS PREFIX (MONDO)
-            scopes: mondo.mondo
-          header: application/x-www-form-urlencoded
+        useTemplating: true
         inputs:
         - id: MONDO
           semantic: Disease
+        requestBody:
+          body:
+            ## HAS PREFIX (MONDO): currently a bit redundant to do this (BTE handles it)
+            # q: "{{ queryInputs | replPrefix('MONDO', ':') }}"
+            q: "{{ queryInputs }}"
+            scopes: mondo.mondo
         outputs:
         - id: MONDO
           semantic: Disease
+        parameters:
+          fields: mondo.disease_has_feature.mondo
+          size: 1000  ## note the size limit
         predicate: has_part  ## no biolink mapping...
         source: "infores:mondo"
         response_mapping:
@@ -1145,21 +1307,22 @@ components:
         #     oneOutput: "MONDO:0005020"   ## intestinal disease
     disease_has_feature-rev:
       - supportBatch: true
-        inputSeparator: ","
-        parameters:
-          fields: mondo.mondo
-          size: 1000  ## note the size limit
-        requestBody:
-          body:
-            q: "{inputs[0]}"   ## HAS PREFIX (MONDO)
-            scopes: mondo.disease_has_feature.mondo
-          header: application/x-www-form-urlencoded
+        useTemplating: true
         inputs:
         - id: MONDO
           semantic: Disease
+        requestBody:
+          body:
+            ## HAS PREFIX (MONDO): currently a bit redundant to do this (BTE handles it)
+            # q: "{{ queryInputs | replPrefix('MONDO', ':') }}"
+            q: "{{ queryInputs }}"
+            scopes: mondo.disease_has_feature.mondo
         outputs:
         - id: MONDO
           semantic: Disease
+        parameters:
+          fields: mondo.mondo
+          size: 1000  ## note the size limit
         predicate: part_of
         source: "infores:mondo"
         response_mapping:
@@ -1169,21 +1332,22 @@ components:
         #     oneOutput: "MONDO:0005796"   ## HIV enteropathy
     disease_causes_feature:
       - supportBatch: true
-        inputSeparator: ","
-        parameters:
-          fields: mondo.disease_causes_feature.mondo
-          size: 1000  ## note the size limit
-        requestBody:
-          body:
-            q: "{inputs[0]}"   ## HAS PREFIX (MONDO)
-            scopes: mondo.mondo
-          header: application/x-www-form-urlencoded
+        useTemplating: true
         inputs:
         - id: MONDO
           semantic: Disease
+        requestBody:
+          body:
+            ## HAS PREFIX (MONDO): currently a bit redundant to do this (BTE handles it)
+            # q: "{{ queryInputs | replPrefix('MONDO', ':') }}"
+            q: "{{ queryInputs }}"
+            scopes: mondo.mondo
         outputs:
         - id: MONDO
           semantic: Disease
+        parameters:
+          fields: mondo.disease_causes_feature.mondo
+          size: 1000  ## note the size limit
         predicate: causes  ## maps to "MONDO:disease_causes_feature"
         source: "infores:mondo"
         response_mapping:
@@ -1193,21 +1357,22 @@ components:
         #     oneOutput: "MONDO:0001106"   ## kidney failure
     disease_causes_feature-rev:
       - supportBatch: true
-        inputSeparator: ","
-        parameters:
-          fields: mondo.mondo
-          size: 1000  ## note the size limit
-        requestBody:
-          body:
-            q: "{inputs[0]}"   ## HAS PREFIX (MONDO)
-            scopes: mondo.disease_causes_feature.mondo
-          header: application/x-www-form-urlencoded
+        useTemplating: true
         inputs:
         - id: MONDO
           semantic: Disease
+        requestBody:
+          body:
+            ## HAS PREFIX (MONDO): currently a bit redundant to do this (BTE handles it)
+            # q: "{{ queryInputs | replPrefix('MONDO', ':') }}"
+            q: "{{ queryInputs }}"
+            scopes: mondo.disease_causes_feature.mondo
         outputs:
         - id: MONDO
           semantic: Disease
+        parameters:
+          fields: mondo.mondo
+          size: 1000  ## note the size limit
         predicate: caused_by
         source: "infores:mondo"
         response_mapping:
@@ -1217,21 +1382,22 @@ components:
         #     oneOutput: "MONDO:0000490"   ## glomerulosclerosis
     disease_arises_from_feature:
       - supportBatch: true
-        inputSeparator: ","
-        parameters:
-          fields: mondo.disease_arises_from_feature.mondo
-          size: 1000  ## note the size limit
-        requestBody:
-          body:
-            q: "{inputs[0]}"   ## HAS PREFIX (MONDO)
-            scopes: mondo.mondo
-          header: application/x-www-form-urlencoded
+        useTemplating: true
         inputs:
         - id: MONDO
           semantic: Disease
+        requestBody:
+          body:
+            ## HAS PREFIX (MONDO): currently a bit redundant to do this (BTE handles it)
+            # q: "{{ queryInputs | replPrefix('MONDO', ':') }}"
+            q: "{{ queryInputs }}"
+            scopes: mondo.mondo
         outputs:
         - id: MONDO
           semantic: Disease
+        parameters:
+          fields: mondo.disease_arises_from_feature.mondo
+          size: 1000  ## note the size limit
         predicate: caused_by
         source: "infores:mondo"
         response_mapping:
@@ -1241,21 +1407,20 @@ components:
           #     oneOutput: "MONDO:0021568"   ## renal tubule disease
     disease_arises_from_feature-rev:
       - supportBatch: true
-        inputSeparator: ","
-        parameters:
-          fields: mondo.mondo
-          size: 1000  ## note the size limit
-        requestBody:
-          body:
-            q: "{inputs[0]}"   ## HAS PREFIX (MONDO)
-            scopes: mondo.disease_arises_from_feature.mondo
-          header: application/x-www-form-urlencoded
+        useTemplating: true
         inputs:
         - id: MONDO
           semantic: Disease
+        requestBody:
+          body:
+            q: "{{ queryInputs }}"   ## HAS PREFIX (MONDO)
+            scopes: mondo.disease_arises_from_feature.mondo
         outputs:
         - id: MONDO
           semantic: Disease
+        parameters:
+          fields: mondo.mondo
+          size: 1000  ## note the size limit
         predicate: causes
         source: "infores:mondo"
         response_mapping:

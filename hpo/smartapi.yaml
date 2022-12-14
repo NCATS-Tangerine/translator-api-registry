@@ -5,7 +5,8 @@ info:
     name: BioThings Team
     x-id: https://github.com/biothings
     x-role: responsible developers
-  description: Documentation of the HPO query web services.
+  description: >-
+    Documentation of the BioThings API for [Human Phenotype Ontology](https://hpo.jax.org/app/) data.
   termsOfService: https://biothings.io/about
   title: Human Phenotype Ontology API
   version: '2020.6'
@@ -23,6 +24,7 @@ servers:
   url: http://biothings.ncats.io/hpo
   x-maturity: production
 tags:
+- name: ontology
 - name: phenotype
 - name: query
 - name: translator
@@ -30,6 +32,19 @@ tags:
 paths:
   "/phenotype/{id}":
     get:
+      description: >-
+        By default, this will return the complete ontology term record in JSON format. If the input is not valid,
+        404 (NOT FOUND) will be returned.
+        
+
+        Optionally, you can pass a "fields" parameter to return only the annotation you want 
+        (by filtering returned object fields). "fields" accepts any attributes (a.k.a fields) available 
+        from the association. Multiple attributes should be separated by commas. If an attribute is not 
+        available for a specific ontology term, it will be ignored. Note that the attribute names are 
+        case-sensitive.
+
+
+        Just like the query service, you can also pass a "callback" parameter to make a JSONP call.
       parameters:
       - name: id
         in: path
@@ -37,39 +52,62 @@ paths:
         example: "HP:0008490"
         schema:
           type: string
-      - "$ref": "#/components/parameters/raw"
-      - "$ref": "#/components/parameters/rawquery"
-      - "$ref": "#/components/parameters/_source"
+      - "$ref": "#/components/parameters/fields"
+      - "$ref": "#/components/parameters/callback"
+      - "$ref": "#/components/parameters/email"
+      ## this is useful even when it's not noted in the docs
       - "$ref": "#/components/parameters/size"
-      - "$ref": "#/components/parameters/dotfield"
-      - "$ref": "#/components/parameters/_sorted"
-      - "$ref": "#/components/parameters/always_list"
-      - "$ref": "#/components/parameters/allow_null"
-      - "$ref": "#/components/parameters/format"
+      ## these are noted in the /spec endpoint; commenting out for now
+      # - "$ref": "#/components/parameters/raw"
+      # - "$ref": "#/components/parameters/rawquery"
+      # - "$ref": "#/components/parameters/dotfield"
+      # - "$ref": "#/components/parameters/_sorted"
+      # - "$ref": "#/components/parameters/always_list"
+      # - "$ref": "#/components/parameters/allow_null"
+      # - "$ref": "#/components/parameters/format"
       responses:
         '200':
-          description: "Success"
+          description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
+      ## commenting out schemas and other status codes for now
       #     content:
       #       application/json:
       #         schema:
-      #           $ref: '#/components/schemas/Phenotype'
+      #           $ref: '#/components/schemas/Association'
       #   '404':
-      #     description: A response indicating an unknown phenotype ID
-      # summary: Retrieve phenotype objects based on ID
+      #     description: A response indicating an unknown association ID
       tags:
-      - phenotype
+      - ontology
   "/phenotype":
     post:
+      description: >-
+        Although making simple GET requests above to our service is sufficient in most use cases, 
+        there are some times you might find it easier to batch query (e.g., retrieving multiple ontology terms). 
+        Fortunately, you can also make batch queries via POST requests when you need to.
       parameters:
-      - "$ref": "#/components/parameters/raw"
-      - "$ref": "#/components/parameters/rawquery"
-      - "$ref": "#/components/parameters/_source"
+      - name: ids
+        description: >-
+          Accepts multiple ontology term ids separated by commas. Note that currently we only take ids up to 
+          1000 maximum, the rest will be omitted.
+
+
+          The request body can also be used to provide these ids.
+        in: query
+        ## setting to false since putting this info in the request body seems to work as well
+        required: false
+        schema:
+          type: string
+      - "$ref": "#/components/parameters/fields"
+      - "$ref": "#/components/parameters/email"
+      ## this is useful even when it's not noted in the docs
       - "$ref": "#/components/parameters/size"
-      - "$ref": "#/components/parameters/dotfield"
-      - "$ref": "#/components/parameters/_sorted"
-      - "$ref": "#/components/parameters/always_list"
-      - "$ref": "#/components/parameters/allow_null"
-      - "$ref": "#/components/parameters/format"
+      ## these are noted in the /spec endpoint; commenting out for now
+      # - "$ref": "#/components/parameters/raw"
+      # - "$ref": "#/components/parameters/rawquery"
+      # - "$ref": "#/components/parameters/dotfield"
+      # - "$ref": "#/components/parameters/_sorted"
+      # - "$ref": "#/components/parameters/always_list"
+      # - "$ref": "#/components/parameters/allow_null"
+      # - "$ref": "#/components/parameters/format"
       requestBody:
         content:
           application/json:
@@ -81,72 +119,84 @@ paths:
               type: object
               properties:
                 ids:
-                  description: 'multiple phenotype IDs separated by comma. Note that
-                    currently we only take the input ids up to 1000 maximum, the rest
-                    will be omitted. Type: string (list). Max: 1000.'
+                  description: >-
+                    Accepts multiple ontology term ids. Note that currently we only take the input ids 
+                    up to 1000 maximum, the rest will be omitted.
                   type: array
                   items:
                     type: string
       responses:
         '200':
-          description: "Success"
+          description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
       tags:
-      - phenotype
+      - ontology
   "/metadata":
     get:
-      parameters:
-      - "$ref": "#/components/parameters/format"
-      - "$ref": "#/components/parameters/raw"
-      - "$ref": "#/components/parameters/dev"
+      description: Get metadata about the data available from the API
+      ## these are noted in the https://mychem.info/v1/spec endpoint; commenting out for now
+      # parameters:
+      # - "$ref": "#/components/parameters/format"
+      # - "$ref": "#/components/parameters/raw"
       responses:
         '200':
-          description: Success
-      summary: Get metadata about the data available from the API
+          description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
       tags:
       - metadata
   "/metadata/fields":
     get:
-      parameters:
-      - "$ref": "#/components/parameters/format"
-      - "$ref": "#/components/parameters/raw"
-      - "$ref": "#/components/parameters/search"
-      - "$ref": "#/components/parameters/prefix"
+      description: Get metadata about the data fields available from the API
+      ## these are noted in the https://mychem.info/v1/spec endpoint; commenting out for now
+      # parameters:
+      # - "$ref": "#/components/parameters/format"
+      # - "$ref": "#/components/parameters/raw"
+      # - "$ref": "#/components/parameters/search"
+      # - "$ref": "#/components/parameters/prefix"
       responses:
         '200':
-          description: Success
-      summary: Get metadata about the data fields available from a record
+          description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
       tags:
       - metadata
   "/query":
     get:
+      description: >-
+        Query service. In the output, "total" in the output gives the total number 
+        of matching hits, while the actual hits are returned under "hits" field.
       parameters:
       - name: q
-        description: Query string.
+        description: >-
+          Required, passing user query. The detailed query syntax for parameter is explained 
+          [here for a core BioThings 
+          API](https://docs.mychem.info/en/latest/doc/chem_query_service.html#query-syntax).
         in: query
         required: true
         example: hp:"HP:0008490"
         schema:
           type: string
-      - "$ref": "#/components/parameters/aggs"
-      - "$ref": "#/components/parameters/facet_size"
+      - "$ref": "#/components/parameters/fields"
+      - "$ref": "#/components/parameters/size"
       - "$ref": "#/components/parameters/from"
-      - "$ref": "#/components/parameters/userquery"
-      - "$ref": "#/components/parameters/sort"
-      - "$ref": "#/components/parameters/explain"
       - "$ref": "#/components/parameters/fetch_all"
       - "$ref": "#/components/parameters/scroll_id"
-      - "$ref": "#/components/parameters/raw"
-      - "$ref": "#/components/parameters/rawquery"
-      - "$ref": "#/components/parameters/_source"
-      - "$ref": "#/components/parameters/size"
+      - "$ref": "#/components/parameters/sort"
+      - "$ref": "#/components/parameters/facets"
+      - "$ref": "#/components/parameters/facet_size"
+      - "$ref": "#/components/parameters/callback"
       - "$ref": "#/components/parameters/dotfield"
-      - "$ref": "#/components/parameters/_sorted"
-      - "$ref": "#/components/parameters/always_list"
-      - "$ref": "#/components/parameters/allow_null"
-      - "$ref": "#/components/parameters/format"
+      - "$ref": "#/components/parameters/email"
+      ## these are noted in the /spec endpoint; commenting out for now
+      # - "$ref": "#/components/parameters/aggs"
+      # - "$ref": "#/components/parameters/userquery"
+      # - "$ref": "#/components/parameters/explain"
+      # - "$ref": "#/components/parameters/raw"
+      # - "$ref": "#/components/parameters/rawquery"
+      # - "$ref": "#/components/parameters/_sorted"
+      # - "$ref": "#/components/parameters/always_list"
+      # - "$ref": "#/components/parameters/allow_null"
+      # - "$ref": "#/components/parameters/format"
       responses:
         '200':
-          description: Success
+          description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
+      ## commenting out schemas and other status codes for now
       #     content:
       #       application/json:
       #         schema:
@@ -162,34 +212,56 @@ paths:
       tags:
       - query
     post:
+      description: >-
+        Although making simple GET requests above to our query service is sufficient for most use cases, 
+        there are times you might find it more efficient to make batch queries (e.g., retrieving data 
+        for multiple inputs). Fortunately, you can also make batch queries via POST requests when you need to.
+
+
+        The "query” field in the returned object indicates the matching query term. If a query term has no match, 
+        it will return with a “notfound” field with the value “true”.
       parameters:
       - name: q
+        description: >-
+          Accepts multiple values separated by commas. Note that currently we only take the input values up to 1000 
+          maximum, the rest will be omitted.
+
+
+          The request body can also be used to provide these ids.
         in: query
+        ## setting to false since putting this info in the request body seems to work as well
         required: false
         schema:
           type: array
           items:
             type: string
       - name: scopes
+        description: >-
+          Optional, specify one or more fields (separated by commas) to search. Default: _id
+
+
+          The request body can also be used to provide this information.
         in: query
+        ## setting to false since putting this info in the request body seems to work as well
         required: false
         schema:
-          type: array
-          items:
-            type: string
-            default:
-            - _id
-      - "$ref": "#/components/parameters/from"
-      - "$ref": "#/components/parameters/sort"
-      - "$ref": "#/components/parameters/raw"
-      - "$ref": "#/components/parameters/rawquery"
-      - "$ref": "#/components/parameters/_source"
+          type: string
+      - "$ref": "#/components/parameters/fields"
+      - "$ref": "#/components/parameters/email"
+      ## this is useful even when it's not noted in the docs
       - "$ref": "#/components/parameters/size"
-      - "$ref": "#/components/parameters/dotfield"
-      - "$ref": "#/components/parameters/_sorted"
-      - "$ref": "#/components/parameters/always_list"
-      - "$ref": "#/components/parameters/allow_null"
-      - "$ref": "#/components/parameters/format"
+      - "$ref": "#/components/parameters/from"
+      - "$ref": "#/components/parameters/fetch_all"
+      - "$ref": "#/components/parameters/scroll_id"
+      ## these are noted in the https://mychem.info/v1/spec endpoint; commenting out for now
+      # - "$ref": "#/components/parameters/sort"
+      # - "$ref": "#/components/parameters/raw"
+      # - "$ref": "#/components/parameters/rawquery"
+      # - "$ref": "#/components/parameters/dotfield"
+      # - "$ref": "#/components/parameters/_sorted"
+      # - "$ref": "#/components/parameters/always_list"
+      # - "$ref": "#/components/parameters/allow_null"
+      # - "$ref": "#/components/parameters/format"
       requestBody:
         content:
           application/json:
@@ -203,22 +275,22 @@ paths:
               type: object
               properties:
                 q:
+                  description: >-
+                    Accepts multiple values separated by commas. Note that currently we only take the input values 
+                    up to 1000 maximum, the rest will be omitted.
                   type: array
                   items:
                     type: string
                 scopes:
-                  type: array
-                  items:
-                    type: string
-                from:
-                  type: integer
-                sort:
+                  description: >-
+                    Specify one or more fields (separated by commas) to search. Default: _id
                   type: array
                   items:
                     type: string
       responses:
         '200':
-          description: Success
+          description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
+      ## commenting out schemas and other status codes for now
       #     content:
       #       application/json:
       #         schema:
@@ -237,142 +309,208 @@ paths:
       - $ref: '#/components/x-bte-kgs-operations/subclass_of'
 components:
   parameters:
-    _sorted:
-      name: _sorted
+    callback:
+      name: callback
+      description: >-
+        Optional, you can pass a "callback" parameter to make a JSONP call.
       in: query
       required: false
       schema:
-        type: boolean
-        default: true
-    _source:
-      name: _source
-      in: query
-      required: false
-      schema:
-        type: array
-        items:
-          type: string
-    aggs:
-      name: aggs
-      in: query
-      required: false
-      schema:
-        type: array
-        items:
-          type: string
-    allow_null:
-      name: allow_null
-      in: query
-      required: false
-      schema:
-        type: array
-        items:
-          type: string
-    always_list:
-      name: always_list
-      in: query
-      required: false
-      schema:
-        type: array
-        items:
-          type: string
-    dev:
-      name: dev
-      in: query
-      required: false
-      schema:
-        type: boolean
+        type: string
     dotfield:
       name: dotfield
+      description: >-
+        Optional, can be used to control the format of the returned chemical object. 
+        If "dotfield" is true, the returned data object is returned flattened (no nested objects) 
+        using dotfield notation for key names. Default: false.
       in: query
       required: false
       schema:
         type: boolean
-    explain:
-      name: explain
+        default: false
+    email:
+      name: email
+      description: >-
+        Optional, if you are regular users of our services, we encourage you to provide us an email, 
+        so that we can better track the usage or follow up with you.
       in: query
       required: false
       schema:
-        type: boolean
+        type: string
     facet_size:
       name: facet_size
+      description: >-
+        Optional, an integer (1 <= facet_size <= 1000) that specifies how many buckets to return in a 
+        [faceted query](https://docs.mychem.info/en/latest/doc/chem_query_service.html?highlight=from#faceted-queries).
       in: query
       required: false
       schema:
         type: integer
         default: 10
+    facets:
+      name: facets
+      description: >-
+        Optional, a single field or comma-separated fields to return facets, can only be used on non-free text fields. 
+        E.g. “facets=chembl.molecule_properties.full_mwt”. See [examples of faceted queries for a core BioThings 
+        API](https://docs.mychem.info/en/latest/doc/chem_query_service.html?highlight=from#faceted-queries).
+      in: query
+      required: false
+      schema:
+        type: array
+        items:
+          type: string
     fetch_all:
       name: fetch_all
+      description: >-
+        Optional, a boolean, which when TRUE, allows fast retrieval of all unsorted query hits. 
+        The return object contains a _scroll_id field, which when passed as a parameter to the query endpoint 
+        (see the scroll_id parameter), returns the next 1000 query results. Setting fetch_all = TRUE causes 
+        the results to be inherently unsorted, therefore the sort parameter is ignored. For more information, 
+        see [examples using fetch_all for a core BioThings 
+        API](https://docs.mychem.info/en/latest/doc/chem_query_service.html?highlight=from#scrolling-queries). 
+        Default: FALSE.
       in: query
       required: false
       schema:
         type: boolean
-    format:
-      name: format
-      description: 'controls output format of server response, currently supports:
-        "json", "jsonld", "html". Type: string. Default: json.'
+        default: false
+    fields:
+      name: fields
+      description: >-
+        Optional, can be a comma-separated list to limit the fields returned from the chemical object. 
+        If "fields=all", all available fields will be returned.
+        
+
+        Note that it supports dot notation as well, e.g., you can pass "chebi.name". 
+        Default: "fields=all". 
+        The parameter "filter" is an alias for this parameter.
       in: query
       required: false
       schema:
         type: string
-        default: json
+        default: all
     from:
       name: from
+      description: >-
+        Optional, the number of matching chemical hits to skip, starting from 0. Default: 0. 
       in: query
       required: false
       schema:
         type: integer
-    prefix:
-      name: prefix
-      in: query
-      required: false
-      schema:
-        type: string
-    raw:
-      name: raw
-      in: query
-      required: false
-      schema:
-        type: boolean
-    rawquery:
-      name: rawquery
-      in: query
-      required: false
-      schema:
-        type: boolean
+        default: 0
     scroll_id:
       name: scroll_id
-      in: query
-      required: false
-      schema:
-        type: string
-    search:
-      name: search
+      description: >-
+        Optional, a string containing the _scroll_id returned from a query request with fetch_all = TRUE. 
+        Supplying a valid scroll_id will return the next 1000 unordered results. If the next results are 
+        not obtained within 1 minute of the previous set of results, the scroll_id becomes stale, and a 
+        new one must be obtained with another query request with fetch_all = TRUE. All other parameters are 
+        ignored when the scroll_id parameter is supplied. For more information see [examples using scroll_id 
+        for a core BioThings 
+        API](https://docs.mychem.info/en/latest/doc/chem_query_service.html?highlight=from#scrolling-queries).
       in: query
       required: false
       schema:
         type: string
     size:
       name: size
-      description: "default: 10 objects/records in response"
+      description: >-
+        Optional, the maximum number of matching chemical hits to return (with a cap of 1000 at the moment). Default: 10.
+        The combination of "size" and "from" parameters can be used to get paging for a large query.
       in: query
       required: false
       schema:
         type: integer
+        default: 10
     sort:
       name: sort
+      description: >-
+        Optional, the comma-separated fields to sort on. Prefix with "-" for descending order, otherwise in ascending order. 
+        Default: sort by matching scores in descending order.
       in: query
       required: false
       schema:
         type: array
         items:
           type: string
-    userquery:
-      name: userquery
-      in: query
-      required: false
-      schema:
-        type: string
+    ## these are noted in the https://mychem.info/v1/spec endpoint; commenting out for now
+    # _sorted:
+    #   name: _sorted
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: boolean
+    #     default: true
+    # aggs:
+    #   name: aggs
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: array
+    #     items:
+    #       type: string
+    # allow_null:
+    #   name: allow_null
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: array
+    #     items:
+    #       type: string
+    # always_list:
+    #   name: always_list
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: array
+    #     items:
+    #       type: string
+    # explain:
+    #   name: explain
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: boolean
+    # format:
+    #   name: format
+    #   description: 'controls output format of server response, currently supports:
+    #     "json", "jsonld", "html". Type: string. Default: json.'
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: string
+    #     default: json
+    # prefix:
+    #   name: prefix
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: string
+    # raw:
+    #   name: raw
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: boolean
+    # rawquery:
+    #   name: rawquery
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: boolean
+    # search:
+    #   name: search
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: string
+    # userquery:
+    #   name: userquery
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: string
+  ## commenting out schemas and other status codes for now
   # schemas:
   #   Association:
   #     properties:
@@ -430,45 +568,50 @@ components:
   #     - type: string
   x-bte-kgs-operations:
     has_subclass:
-    - inputSeparator: ','
+    ## 5160 records: https://biothings.ncats.io/hpo/query?q=_exists_:children
+    - supportBatch: true
+      useTemplating: true
       inputs:
       - id: HP
         semantic: PhenotypicFeature
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"
+          scopes: _id
       outputs:
       - id: HP
         semantic: PhenotypicFeature
       parameters:
         fields: children
       predicate: superclass_of  ## this is current biolink, same meaning as "has_subclass"
-      requestBody:
-        body:
-          q: '{inputs[0]}'
-          scopes: _id
-        header: application/x-www-form-urlencoded
+      source: "infores:hpo"
       response_mapping:
         $ref: '#/components/x-bte-response-mapping/has_subclass'
-      source: "infores:hpo"
-      supportBatch: true
+      # testExamples:
+      #   - qInput: "HP:0025598"        ## Inferior oblique muscle weakness
+      #     oneOutput: "HP:0025597"     ## Inferior oblique muscle restriction
     subclass_of:
-    - inputSeparator: ','
+    - supportBatch: true
+      useTemplating: true
       inputs:
       - id: HP
         semantic: PhenotypicFeature
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"
+          scopes: _id
       outputs:
       - id: HP
         semantic: PhenotypicFeature
       parameters:
         fields: parents
       predicate: subclass_of
-      requestBody:
-        body:
-          q: '{inputs[0]}'
-          scopes: _id
-        header: application/x-www-form-urlencoded
+      source: "infores:hpo"
       response_mapping:
         $ref: '#/components/x-bte-response-mapping/subclass_of'
-      source: "infores:hpo"
-      supportBatch: true
+      # testExamples:
+      #   - qInput: "HP:0025532"        ## Positive pathergy test
+      #     oneOutput: "HP:0011122"     ## Abnormality of skin physiology
   x-bte-response-mapping:
     has_subclass:
       HP: children
