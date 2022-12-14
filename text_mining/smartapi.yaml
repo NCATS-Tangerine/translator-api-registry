@@ -5,7 +5,9 @@ info:
     name: Bill Baumgartner
     x-id: https://github.com/bill-baumgartner/
     x-role: responsible developer
-  description: Documentation of the Text Mining Targeted Association query web services.
+  description: >-
+    Documentation of Translator Text-Mining Provider's Targeted Association 
+    query web services.
   termsOfService: https://biothings.io/about
   title: Text Mining Targeted Association API
   version: '2022-09-01'
@@ -15,7 +17,7 @@ info:
     team:
       - Text Mining Provider
       - Service Provider
-    biolink-version: "3.0.3"
+    biolink-version: "3.1.1"
 servers:
 - description: Encrypted Production server
   url: https://biothings.ncats.io/text_mining_targeted_association
@@ -35,199 +37,278 @@ tags:
 - name: biothings
 - name: biothings_graph
 paths:
-  /association:
-    post:
+  "/association/{id}":
+    get:
+      description: >-
+        By default, this will return the complete association in JSON format. If the input is not valid,
+        404 (NOT FOUND) will be returned.
+        
+
+        Optionally, you can pass a "fields" parameter to return only the annotation you want 
+        (by filtering returned object fields). "fields" accepts any attributes (a.k.a fields) available 
+        from the association. Multiple attributes should be separated by commas. If an attribute is not 
+        available for a specific association, it will be ignored. Note that the attribute names are 
+        case-sensitive.
+
+
+        Just like the query service, you can also pass a "callback" parameter to make a JSONP call.
       parameters:
-      - $ref: '#/components/parameters/dotfield'
-        name: dotfield
-      - $ref: '#/components/parameters/fields'
-        name: fields
-      - $ref: '#/components/parameters/email'
-        name: email
-      - $ref: '#/components/parameters/format'
-        name: format
-      requestBody:
+      - name: id
+        in: path
         required: true
-        content:
-          application/x-www-form-urlencoded:
-            schema:
-              properties:
-                ids:
-                  description: 'multiple association IDs separated by comma. Note
-                    that currently we only take the input ids up to 1000 maximum,
-                    the rest will be omitted. Type: string (list). Max: 1000.'
-                  type: string
-              required:
-              - ids
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                items:
-                  $ref: '#/components/schemas/Association'
-                type: array
-          description: A list of matching association objects
-        '400':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResult'
-          description: A response indicating an improperly formatted query
-      summary: For a list of association IDs, return the matching disease object
-      tags:
-      - association
-  # /association/{associationid}:
-  #   get:
-  #     parameters:
-  #     - description: Retrieve association objects based on Association ID  Supports
-  #         JSONP and CORS as well.
-  #       example: 275bfadd2b4c60c3
-  #       in: path
-  #       name: associationid
-  #       required: true
-  #       schema:
-  #         type: string
-  #     - $ref: '#/components/parameters/dotfield'
-  #       name: dotfield
-  #     - $ref: '#/components/parameters/callback'
-  #       name: callback
-  #     - $ref: '#/components/parameters/fields'
-  #       name: fields
-  #     - $ref: '#/components/parameters/email'
-  #       name: email
-  #     - $ref: '#/components/parameters/format'
-  #       name: format
-  #     responses:
-  #       '200':
-  #         content:
-  #           application/json:
-  #             schema:
-  #               $ref: '#/components/schemas/Association'
-  #         description: A matching association object
-  #       '404':
-  #         description: A response indicating an unknown association ID
-  #     summary: Retrieve association objects based on ID
-  #     tags:
-  #     - association
-  /metadata:
-    get:
-      parameters:
-      - $ref: '#/components/parameters/callback'
-        in: query
-        name: callback
-      responses:
-        '200':
-          description: KP metadata object
-      summary: Get metadata about the data available from the API
-      tags:
-      - metadata
-  /metadata/fields:
-    get:
-      parameters:
-      - $ref: '#/components/parameters/search'
-        name: search
-      - $ref: '#/components/parameters/callback'
-        name: callback
-      - $ref: '#/components/parameters/prefix'
-        name: prefix
-      - $ref: '#/components/parameters/format'
-        name: format
-      responses:
-        '200':
-          description: metadata fields object
-      summary: Get metadata about the data fields available
-      tags:
-      - metadata
-  /query:
-    get:
-      parameters:
-      - description: Query string.
-        example: object.id:CHEMBL.COMPOUND\:CHEMBL26
-        in: query
-        name: q
-        required: true
+        example: "6378d9e8c08d47e8709400ee631d15153f8b83cf649a31d803d77ef7362b4ac4-positive"
         schema:
           type: string
-      - $ref: '#/components/parameters/dotfield'
-        name: dotfield
-      - $ref: '#/components/parameters/fields'
-        name: fields
-      - $ref: '#/components/parameters/facet_size'
-        name: facet_size
-      - $ref: '#/components/parameters/sort'
-        name: sort
-      - $ref: '#/components/parameters/callback'
-        name: callback
-      - $ref: '#/components/parameters/email'
-        name: email
-      - $ref: '#/components/parameters/facets'
-        name: facets
-      - $ref: '#/components/parameters/size'
-        name: size
-      - $ref: '#/components/parameters/from'
-        name: from
-      - $ref: '#/components/parameters/format'
-        name: format
+      - "$ref": "#/components/parameters/fields"
+      - "$ref": "#/components/parameters/callback"
+      - "$ref": "#/components/parameters/email"
+      ## this is useful even when it's not noted in the docs
+      - "$ref": "#/components/parameters/size"
+      ## these are noted in the /spec endpoint; commenting out for now
+      # - "$ref": "#/components/parameters/raw"
+      # - "$ref": "#/components/parameters/rawquery"
+      # - "$ref": "#/components/parameters/dotfield"
+      # - "$ref": "#/components/parameters/_sorted"
+      # - "$ref": "#/components/parameters/always_list"
+      # - "$ref": "#/components/parameters/allow_null"
+      # - "$ref": "#/components/parameters/format"
       responses:
         '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/QueryResult'
-          description: A query response with the "hits" property
-        '400':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResult'
-          description: A response indicating an improperly formatted query
-      summary: Make queries and return matching association hits. Supports JSONP and
-        CORS as well.
+          description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
+      ## commenting out schemas and other status codes for now
+      #     content:
+      #       application/json:
+      #         schema:
+      #           $ref: '#/components/schemas/Association'
+      #   '404':
+      #     description: A response indicating an unknown association ID
+      tags:
+      - association
+  "/association":
+    post:
+      description: >-
+        Although making simple GET requests above to our service is sufficient in most use cases, 
+        there are some times you might find it easier to batch query (e.g., retrieving multiple associations). 
+        Fortunately, you can also make batch queries via POST requests when you need to.
+      parameters:
+      - name: ids
+        description: >-
+          Accepts multiple association ids separated by commas. Note that currently we only take ids up to 
+          1000 maximum, the rest will be omitted.
+
+
+          The request body can also be used to provide these ids.
+        in: query
+        ## setting to false since putting this info in the request body seems to work as well
+        required: false
+        schema:
+          type: string
+      - "$ref": "#/components/parameters/fields"
+      - "$ref": "#/components/parameters/email"
+      ## this is useful even when it's not noted in the docs
+      - "$ref": "#/components/parameters/size"
+      ## these are noted in the /spec endpoint; commenting out for now
+      # - "$ref": "#/components/parameters/raw"
+      # - "$ref": "#/components/parameters/rawquery"
+      # - "$ref": "#/components/parameters/dotfield"
+      # - "$ref": "#/components/parameters/_sorted"
+      # - "$ref": "#/components/parameters/always_list"
+      # - "$ref": "#/components/parameters/allow_null"
+      # - "$ref": "#/components/parameters/format"
+      requestBody:
+        content:
+          application/json:
+            example:
+              ids:
+              - "38d267e6df76d3a26cc198dce075dcf8b1d5f50fd8cebc72c58a2eb976813128-negative"
+              - "1031517abf49bb9fa9443066cd9801ac90d7c942d9f5da43cdcf526fae87b7df-false"
+            schema:
+              type: object
+              properties:
+                ids:
+                  description: >-
+                    Accepts multiple association ids. Note that currently we only take the input ids 
+                    up to 1000 maximum, the rest will be omitted.
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '200':
+          description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
+      tags:
+      - association
+  "/metadata":
+    get:
+      description: Get metadata about the data available from the API
+      ## these are noted in the https://mychem.info/v1/spec endpoint; commenting out for now
+      # parameters:
+      # - "$ref": "#/components/parameters/format"
+      # - "$ref": "#/components/parameters/raw"
+      responses:
+        '200':
+          description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
+      tags:
+      - metadata
+  "/metadata/fields":
+    get:
+      description: Get metadata about the data fields available from the API
+      ## these are noted in the https://mychem.info/v1/spec endpoint; commenting out for now
+      # parameters:
+      # - "$ref": "#/components/parameters/format"
+      # - "$ref": "#/components/parameters/raw"
+      # - "$ref": "#/components/parameters/search"
+      # - "$ref": "#/components/parameters/prefix"
+      responses:
+        '200':
+          description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
+      tags:
+      - metadata
+  "/query":
+    get:
+      description: >-
+        Query service. In the output, "total" in the output gives the total number 
+        of matching hits, while the actual hits are returned under "hits" field.
+      parameters:
+      - name: q
+        description: >-
+          Required, passing user query. The detailed query syntax for parameter is explained 
+          [here for a core BioThings 
+          API](https://docs.mychem.info/en/latest/doc/chem_query_service.html#query-syntax).
+        in: query
+        required: true
+        example: "subject.UniProtKB:P28340"
+        schema:
+          type: string
+      - "$ref": "#/components/parameters/fields"
+      - "$ref": "#/components/parameters/size"
+      - "$ref": "#/components/parameters/from"
+      - "$ref": "#/components/parameters/fetch_all"
+      - "$ref": "#/components/parameters/scroll_id"
+      - "$ref": "#/components/parameters/sort"
+      - "$ref": "#/components/parameters/facets"
+      - "$ref": "#/components/parameters/facet_size"
+      - "$ref": "#/components/parameters/callback"
+      - "$ref": "#/components/parameters/dotfield"
+      - "$ref": "#/components/parameters/email"
+      ## these are noted in the /spec endpoint; commenting out for now
+      # - "$ref": "#/components/parameters/aggs"
+      # - "$ref": "#/components/parameters/userquery"
+      # - "$ref": "#/components/parameters/explain"
+      # - "$ref": "#/components/parameters/raw"
+      # - "$ref": "#/components/parameters/rawquery"
+      # - "$ref": "#/components/parameters/_sorted"
+      # - "$ref": "#/components/parameters/always_list"
+      # - "$ref": "#/components/parameters/allow_null"
+      # - "$ref": "#/components/parameters/format"
+      responses:
+        '200':
+          description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
+      ## commenting out schemas and other status codes for now
+      #     content:
+      #       application/json:
+      #         schema:
+      #           "$ref": "#/components/schemas/QueryResult"
+      #   '400':
+      #     content:
+      #       application/json:
+      #         schema:
+      #           "$ref": "#/components/schemas/ErrorResult"
+      #     description: A response indicating an improperly formatted query
+      # summary: Make queries and return matching gene hits. Supports JSONP and CORS
+      #   as well.
       tags:
       - query
     post:
+      description: >-
+        Although making simple GET requests above to our query service is sufficient for most use cases, 
+        there are times you might find it more efficient to make batch queries (e.g., retrieving data 
+        for multiple inputs). Fortunately, you can also make batch queries via POST requests when you need to.
+
+
+        The "query” field in the returned object indicates the matching query term. If a query term has no match, 
+        it will return with a “notfound” field with the value “true”.
       parameters:
-      - $ref: '#/components/parameters/dotfield'
-        name: dotfield
-      - $ref: '#/components/parameters/email'
-        name: email
-      - $ref: '#/components/parameters/fields'
-        name: fields
-      - $ref: '#/components/parameters/size'
-        name: size
-      - $ref: '#/components/parameters/format'
-        name: format
+      - name: q
+        description: >-
+          Accepts multiple values separated by commas. Note that currently we only take the input values up to 1000 
+          maximum, the rest will be omitted.
+
+
+          The request body can also be used to provide these ids.
+        in: query
+        ## setting to false since putting this info in the request body seems to work as well
+        required: false
+        schema:
+          type: array
+          items:
+            type: string
+      - name: scopes
+        description: >-
+          Optional, specify one or more fields (separated by commas) to search. Default: _id
+
+
+          The request body can also be used to provide this information.
+        in: query
+        ## setting to false since putting this info in the request body seems to work as well
+        required: false
+        schema:
+          type: string
+      - "$ref": "#/components/parameters/fields"
+      - "$ref": "#/components/parameters/email"
+      ## this is useful even when it's not noted in the docs
+      - "$ref": "#/components/parameters/size"
+      - "$ref": "#/components/parameters/from"
+      - "$ref": "#/components/parameters/fetch_all"
+      - "$ref": "#/components/parameters/scroll_id"
+      ## these are noted in the https://mychem.info/v1/spec endpoint; commenting out for now
+      # - "$ref": "#/components/parameters/sort"
+      # - "$ref": "#/components/parameters/raw"
+      # - "$ref": "#/components/parameters/rawquery"
+      # - "$ref": "#/components/parameters/dotfield"
+      # - "$ref": "#/components/parameters/_sorted"
+      # - "$ref": "#/components/parameters/always_list"
+      # - "$ref": "#/components/parameters/allow_null"
+      # - "$ref": "#/components/parameters/format"
       requestBody:
-        required: true
         content:
-          application/x-www-form-urlencoded:
+          application/json:
+            example:
+              q:
+              - "DB16305"
+              - "DB09221"
+              scopes:
+              - "subject.DRUGBANK"
             schema:
+              type: object
               properties:
                 q:
-                  description: multiple query terms separated by comma (also "+" or
-                    whitespace).  Does not support wildcard queries
-                  type: string
+                  description: >-
+                    Accepts multiple values separated by commas. Note that currently we only take the input values 
+                    up to 1000 maximum, the rest will be omitted.
+                  type: array
+                  items:
+                    type: string
                 scopes:
-                  description: 'a comma-separated list of fields as the search "scopes"
-                    (fields to search through for query term). The available "fields"
-                    that can be passed to the "scopes" parameter are listed in the
-                    **/metadata/fields** endpoint.string Default: "scopes=_id".'
-                  type: string
+                  description: >-
+                    Specify one or more fields (separated by commas) to search. Default: _id
+                  type: array
+                  items:
+                    type: string
       responses:
         '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/QueryPOSTResult'
-          description: Query response objects with the "hits" property
-        '400':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResult'
-          description: A response indicating an improperly formatted query
-      summary: Make batch disease queries and return matching disease hits
+          description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
+      ## commenting out schemas and other status codes for now
+      #     content:
+      #       application/json:
+      #         schema:
+      #           "$ref": "#/components/schemas/QueryPOSTResult"
+      #   '400':
+      #     content:
+      #       application/json:
+      #         schema:
+      #           "$ref": "#/components/schemas/ErrorResult"
+      #     description: A response indicating an improperly formatted query
+      # summary: Make batch gene queries and return matching gene hits
       tags:
       - query
       x-bte-kgs-operations:
@@ -258,154 +339,262 @@ paths:
 components:
   parameters:
     callback:
-      description: 'you can pass a "callback" parameter to make a JSONP call. Type:
-        string.'
-      in: query
       name: callback
+      description: >-
+        Optional, you can pass a "callback" parameter to make a JSONP call.
+      in: query
+      required: false
       schema:
         type: string
     dotfield:
-      description: 'control the format of the returned chem object. If "true" or "1",
-        all fields will be collapsed into a single level deep object (all nested objects
-        will be a single level deep, using dotfield notation to signify the nested
-        structure) Type: boolean. Default: false.'
-      in: query
       name: dotfield
+      description: >-
+        Optional, can be used to control the format of the returned chemical object. 
+        If "dotfield" is true, the returned data object is returned flattened (no nested objects) 
+        using dotfield notation for key names. Default: false.
+      in: query
+      required: false
       schema:
         type: boolean
+        default: false
     email:
-      description: If you are regular users of our services, we encourage you to provide
-        us with an email, so that we can better track the usage or follow up with
-        you.
-      in: query
       name: email
+      description: >-
+        Optional, if you are regular users of our services, we encourage you to provide us an email, 
+        so that we can better track the usage or follow up with you.
+      in: query
+      required: false
       schema:
         type: string
     facet_size:
-      description: 'the number of facet buckets to return in the response. Type: integer.
-        Default: 10. Max: 1000.'
-      in: query
       name: facet_size
+      description: >-
+        Optional, an integer (1 <= facet_size <= 1000) that specifies how many buckets to return in a 
+        [faceted query](https://docs.mychem.info/en/latest/doc/chem_query_service.html?highlight=from#faceted-queries).
+      in: query
+      required: false
       schema:
         type: integer
+        default: 10
     facets:
-      description: 'a comma-separated list of fields to return facets on.  In addition
-        to query hits, the fields notated in "facets" will be aggregated by value
-        and bucklet counts will be displayed in the "facets" field of the response
-        object. Type: string (list). Default: None. Max: 1000.'
-      in: query
       name: facets
+      description: >-
+        Optional, a single field or comma-separated fields to return facets, can only be used on non-free text fields. 
+        E.g. “facets=chembl.molecule_properties.full_mwt”. See [examples of faceted queries for a core BioThings 
+        API](https://docs.mychem.info/en/latest/doc/chem_query_service.html?highlight=from#faceted-queries).
+      in: query
+      required: false
       schema:
-        type: string
+        type: array
+        items:
+          type: string
+    fetch_all:
+      name: fetch_all
+      description: >-
+        Optional, a boolean, which when TRUE, allows fast retrieval of all unsorted query hits. 
+        The return object contains a _scroll_id field, which when passed as a parameter to the query endpoint 
+        (see the scroll_id parameter), returns the next 1000 query results. Setting fetch_all = TRUE causes 
+        the results to be inherently unsorted, therefore the sort parameter is ignored. For more information, 
+        see [examples using fetch_all for a core BioThings 
+        API](https://docs.mychem.info/en/latest/doc/chem_query_service.html?highlight=from#scrolling-queries). 
+        Default: FALSE.
+      in: query
+      required: false
+      schema:
+        type: boolean
+        default: false
     fields:
-      description: 'a comma-separated list of fields (in dotfield notation) used to
-        limit the fields returned from the matching chem hit(s). The supported field
-        names can be found from any chem object or from the /metadata/fields endpoint.
-        If "fields=all", all available fields will be returned. Type: string (list).
-        Default: all. Max: 1000.'
-      in: query
       name: fields
-      schema:
-        type: string
-    format:
-      description: 'controls output format of server response, currently supports:
-        "json", "jsonld", "html". Type: string. Default: json.'
+      description: >-
+        Optional, can be a comma-separated list to limit the fields returned from the chemical object. 
+        If "fields=all", all available fields will be returned.
+        
+
+        Note that it supports dot notation as well, e.g., you can pass "chebi.name". 
+        Default: "fields=all". 
+        The parameter "filter" is an alias for this parameter.
       in: query
-      name: format
+      required: false
       schema:
         type: string
+        default: all
     from:
-      description: 'the number of matching chem hits to skip, starting from 0.  This
-        can be useful for paging in combination with the "size" parameter. Type: integer.
-        Default: None.'
-      in: query
       name: from
+      description: >-
+        Optional, the number of matching chemical hits to skip, starting from 0. Default: 0. 
+      in: query
+      required: false
       schema:
         type: integer
-    prefix:
-      description: 'Pass a prefix string to filter the available fields. Type: string.
-        Default: None.'
+        default: 0
+    scroll_id:
+      name: scroll_id
+      description: >-
+        Optional, a string containing the _scroll_id returned from a query request with fetch_all = TRUE. 
+        Supplying a valid scroll_id will return the next 1000 unordered results. If the next results are 
+        not obtained within 1 minute of the previous set of results, the scroll_id becomes stale, and a 
+        new one must be obtained with another query request with fetch_all = TRUE. All other parameters are 
+        ignored when the scroll_id parameter is supplied. For more information see [examples using scroll_id 
+        for a core BioThings 
+        API](https://docs.mychem.info/en/latest/doc/chem_query_service.html?highlight=from#scrolling-queries).
       in: query
-      name: prefix
-      schema:
-        type: string
-    search:
-      description: 'Pass a search term to filter the available fields. Type: string.
-        Default: None.'
-      in: query
-      name: search
+      required: false
       schema:
         type: string
     size:
-      description: 'the maximum number of matching chem hits to return per batch.
-        Type: integer. Default: 10.'
-      in: query
       name: size
-      schema:
-        type: integer
-    sort:
-      description: 'the comma-separated list of fields to sort on. Prefix each with
-        "-" for descending order, otherwise in ascending order. Default: sort by descending
-        score.'
+      description: >-
+        Optional, the maximum number of matching chemical hits to return (with a cap of 1000 at the moment). Default: 10.
+        The combination of "size" and "from" parameters can be used to get paging for a large query.
       in: query
-      name: sort
+      required: false
       schema:
-        type: string
-  schemas:
-    Association:
-      properties:
-        _id:
-          type: string
-      required:
-      - _id
-      type: object
-    ErrorResult:
-      properties:
-        message:
-          type: string
-        success:
-          type: boolean
-      type: object
-    QueryPOSTResult:
-      items:
-        allOf:
-        - $ref: '#/components/schemas/Association'
-        - properties:
-            _score:
-              format: float
-              type: number
-            query:
-              type: string
-          type: object
-      type: array
-    QueryResult:
-      properties:
-        hits:
-          items:
-            $ref: '#/components/schemas/Association'
-          type: array
-        max_score:
-          format: float
-          type: number
-        took:
-          type: integer
-        total:
-          type: integer
-      type: object
-    int64_or_array:
-      oneOf:
-      - items:
-          format: int64
-          type: integer
-        type: array
-      - format: int64
         type: integer
-    string_or_array:
-      oneOf:
-      - items:
-          type: string
+        default: 10
+    sort:
+      name: sort
+      description: >-
+        Optional, the comma-separated fields to sort on. Prefix with "-" for descending order, otherwise in ascending order. 
+        Default: sort by matching scores in descending order.
+      in: query
+      required: false
+      schema:
         type: array
-      - type: string
+        items:
+          type: string
+    ## these are noted in the https://mychem.info/v1/spec endpoint; commenting out for now
+    # _sorted:
+    #   name: _sorted
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: boolean
+    #     default: true
+    # aggs:
+    #   name: aggs
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: array
+    #     items:
+    #       type: string
+    # allow_null:
+    #   name: allow_null
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: array
+    #     items:
+    #       type: string
+    # always_list:
+    #   name: always_list
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: array
+    #     items:
+    #       type: string
+    # explain:
+    #   name: explain
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: boolean
+    # format:
+    #   name: format
+    #   description: 'controls output format of server response, currently supports:
+    #     "json", "jsonld", "html". Type: string. Default: json.'
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: string
+    #     default: json
+    # prefix:
+    #   name: prefix
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: string
+    # raw:
+    #   name: raw
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: boolean
+    # rawquery:
+    #   name: rawquery
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: boolean
+    # search:
+    #   name: search
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: string
+    # userquery:
+    #   name: userquery
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: string
+  ## commenting out schemas and other status codes for now
+  # schemas:
+  #   Association:
+  #     properties:
+  #       _id:
+  #         type: string
+  #     required:
+  #     - _id
+  #     type: object
+  #   ErrorResult:
+  #     properties:
+  #       message:
+  #         type: string
+  #       success:
+  #         type: boolean
+  #     type: object
+  #   QueryPOSTResult:
+  #     items:
+  #       allOf:
+  #       - $ref: '#/components/schemas/Association'
+  #       - properties:
+  #           _score:
+  #             format: float
+  #             type: number
+  #           query:
+  #             type: string
+  #         type: object
+  #     type: array
+  #   QueryResult:
+  #     properties:
+  #       hits:
+  #         items:
+  #           $ref: '#/components/schemas/Association'
+  #         type: array
+  #       max_score:
+  #         format: float
+  #         type: number
+  #       took:
+  #         type: integer
+  #       total:
+  #         type: integer
+  #     type: object
+  #   int64_or_array:
+  #     oneOf:
+  #     - items:
+  #         format: int64
+  #         type: integer
+  #       type: array
+  #     - format: int64
+  #       type: integer
+  #   string_or_array:
+  #     oneOf:
+  #     - items:
+  #         type: string
+  #       type: array
+  #     - type: string
   x-bte-kgs-operations:
   ## - examples aren't currently formatted to the standard. See https://github.com/biothings/BioThings_Explorer_TRAPI/issues/357#issue-1054150561
   ## - for reverse operations, some edge attributes may seem odd (reversed subj/obj)
