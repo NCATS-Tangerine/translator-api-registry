@@ -34,9 +34,9 @@ paths:
       parameters:
       - name: id
         in: query
-        description: Put Disease Ontology ID here, e.g. DOID:0050686
+        description: Put Disease Ontology ID here, e.g. "DOID:0050686"
         required: true
-        example: DOID:0050686
+        example: "DOID:0050686"
         schema:
           type: string
       responses:
@@ -48,17 +48,18 @@ components:
   x-bte-kgs-operations:
     ## BIG NOTE: there is likely more data in this API, but want to add stuff that would be helpful for use cases, that we regularly update
     disease_has_subclass_disease:
-    - inputs:
+    - supportBatch: false  ## no batch support (get operation)
+      useTemplating: true
+      inputs:
+      - id: DOID
+        semantic: Disease
+      parameters:
+        id: "{{ queryInputs }}"  ## HAS PREFIX (DOID)
+      outputs:
       - id: DOID
         semantic: Disease
       predicate: superclass_of  ## this is current biolink, same meaning as "has_subclass"
       source: "infores:disease-ontology"
-      outputs:
-      - id: DOID
-        semantic: Disease
-      parameters:
-        id: "{inputs[0]}"  ## HAS PREFIX (DOID)
-      supportBatch: false  ## no batch support (get operation)
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/disease_has_subclass_disease"
       # testExamples:
