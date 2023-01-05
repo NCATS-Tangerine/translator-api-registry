@@ -1,19 +1,22 @@
-openapi: 3.0.0
+openapi: 3.0.3
 info:
   contact:
     email: help@biothings.io
     name: BioThings Team
     x-id: https://github.com/biothings
     x-role: responsible developers
-  description: Documentation of the UBERON query web services.
+  description: >-
+    Documentation of the BioThings API for 
+    [UBERON ontology](https://obophenotype.github.io/uberon/) data.
   termsOfService: https://biothings.io/about
   title: UBERON Ontology API
-  version: '1.0'
+  version: '2019.11'
   x-translator:
     infores: "infores:biothings-uberon-ontology"
     component: KP
     team:
       - Service Provider
+    biolink-version: "2.2.13"
 servers:
 - description: Encrypted Production server
   url: https://biothings.ncats.io/uberon
@@ -22,565 +25,956 @@ servers:
   url: http://biothings.ncats.io/uberon
   x-maturity: production
 tags:
+- name: ontology
 - name: anatomy
 - name: query
 - name: translator
 - name: biothings
 paths:
-  /anatomy:
-    post:
+  "/anatomy/{id}":
+    get:
+      description: >-
+        By default, this will return the complete ontology term record in JSON format. If the input is not valid,
+        404 (NOT FOUND) will be returned.
+        
+
+        Optionally, you can pass a "fields" parameter to return only the annotation you want 
+        (by filtering returned object fields). "fields" accepts any attributes (a.k.a fields) available 
+        from the association. Multiple attributes should be separated by commas. If an attribute is not 
+        available for a specific ontology term, it will be ignored. Note that the attribute names are 
+        case-sensitive.
+
+
+        Just like the query service, you can also pass a "callback" parameter to make a JSONP call.
       parameters:
-      - $ref: '#/components/parameters/dotfield'
-        name: dotfield
-      - $ref: '#/components/parameters/fields'
-        name: fields
-      - $ref: '#/components/parameters/email'
-        name: email
-      - $ref: '#/components/parameters/format'
-        name: format
-      requestBody:
+      - name: id
+        in: path
         required: true
+        example: "UBERON:0005368"
+        schema:
+          type: string
+      - "$ref": "#/components/parameters/fields"
+      - "$ref": "#/components/parameters/callback"
+      - "$ref": "#/components/parameters/email"
+      ## this is useful even when it's not noted in the docs
+      - "$ref": "#/components/parameters/size"
+      ## these are noted in the /spec endpoint; commenting out for now
+      # - "$ref": "#/components/parameters/raw"
+      # - "$ref": "#/components/parameters/rawquery"
+      # - "$ref": "#/components/parameters/dotfield"
+      # - "$ref": "#/components/parameters/_sorted"
+      # - "$ref": "#/components/parameters/always_list"
+      # - "$ref": "#/components/parameters/allow_null"
+      # - "$ref": "#/components/parameters/format"
+      responses:
+        '200':
+          description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
+      ## commenting out schemas and other status codes for now
+      #     content:
+      #       application/json:
+      #         schema:
+      #           $ref: '#/components/schemas/Association'
+      #   '404':
+      #     description: A response indicating an unknown association ID
+      tags:
+      - ontology
+  "/anatomy":
+    post:
+      description: >-
+        Although making simple GET requests above to our service is sufficient in most use cases, 
+        there are some times you might find it easier to batch query (e.g., retrieving multiple ontology terms). 
+        Fortunately, you can also make batch queries via POST requests when you need to.
+      parameters:
+      - name: ids
+        description: >-
+          Accepts multiple ontology term ids separated by commas. Note that currently we only take ids up to 
+          1000 maximum, the rest will be omitted.
+
+
+          The request body can also be used to provide these ids.
+        in: query
+        ## setting to false since putting this info in the request body seems to work as well
+        required: false
+        schema:
+          type: string
+      - "$ref": "#/components/parameters/fields"
+      - "$ref": "#/components/parameters/email"
+      ## this is useful even when it's not noted in the docs
+      - "$ref": "#/components/parameters/size"
+      ## these are noted in the /spec endpoint; commenting out for now
+      # - "$ref": "#/components/parameters/raw"
+      # - "$ref": "#/components/parameters/rawquery"
+      # - "$ref": "#/components/parameters/dotfield"
+      # - "$ref": "#/components/parameters/_sorted"
+      # - "$ref": "#/components/parameters/always_list"
+      # - "$ref": "#/components/parameters/allow_null"
+      # - "$ref": "#/components/parameters/format"
+      requestBody:
         content:
-          application/x-www-form-urlencoded:
+          application/json:
+            example:
+              ids:
+              - "UBERON:0005368"
+              - "UBERON:0035213"
             schema:
+              type: object
               properties:
                 ids:
-                  description: 'multiple UBERON anatomy IDs separated by comma. Note
-                    that currently we only take the input ids up to 1000 maximum,
-                    the rest will be omitted. Type: string (list). Max: 1000.'
-                  type: string
-              required:
-              - ids
+                  description: >-
+                    Accepts multiple ontology term ids. Note that currently we only take the input ids 
+                    up to 1000 maximum, the rest will be omitted.
+                  type: array
+                  items:
+                    type: string
       responses:
         '200':
-          content:
-            application/json:
-              schema:
-                items:
-                  $ref: '#/components/schemas/Phenotype'
-                type: array
-          description: A list of matching anatomy objects
-        '400':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResult'
-          description: A response indicating an improperly formatted query
-      summary: For a list of anatomy IDs, return the matching anatomy object
+          description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
       tags:
-      - anatomy
-  /anatomy/{anatomyid}:
+      - ontology
+  "/metadata":
     get:
-      parameters:
-      - description: Retrieve anatomy objects based on UBERON anatomy ID  Supports
-          JSONP and CORS as well.
-        example: UBERON:2002108
-        in: path
-        name: anatomyid
-        required: true
-        schema:
-          type: string
-      - $ref: '#/components/parameters/dotfield'
-        name: dotfield
-      - $ref: '#/components/parameters/callback'
-        name: callback
-      - $ref: '#/components/parameters/fields'
-        name: fields
-      - $ref: '#/components/parameters/email'
-        name: email
-      - $ref: '#/components/parameters/format'
-        name: format
+      description: Get metadata about the data available from the API
+      ## these are noted in the https://mychem.info/v1/spec endpoint; commenting out for now
+      # parameters:
+      # - "$ref": "#/components/parameters/format"
+      # - "$ref": "#/components/parameters/raw"
       responses:
         '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Phenotype'
-          description: A matching anatomy object
-        '404':
-          description: A response indicating an unknown anatomy ID
-      summary: Retrieve anatomy objects based on ID
+          description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
       tags:
-      - anatomy
-  /metadata:
+      - metadata
+  "/metadata/fields":
     get:
+      description: Get metadata about the data fields available from the API
+      ## these are noted in the https://mychem.info/v1/spec endpoint; commenting out for now
+      # parameters:
+      # - "$ref": "#/components/parameters/format"
+      # - "$ref": "#/components/parameters/raw"
+      # - "$ref": "#/components/parameters/search"
+      # - "$ref": "#/components/parameters/prefix"
+      responses:
+        '200':
+          description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
+      tags:
+      - metadata
+  "/query":
+    get:
+      description: >-
+        Query service. In the output, "total" in the output gives the total number 
+        of matching hits, while the actual hits are returned under "hits" field.
       parameters:
-      - $ref: '#/components/parameters/callback'
+      - name: q
+        description: >-
+          Required, passing user query. The detailed query syntax for parameter is explained 
+          [here for a core BioThings 
+          API](https://docs.mychem.info/en/latest/doc/chem_query_service.html#query-syntax).
         in: query
-        name: callback
-      responses:
-        '200':
-          description: UBERON metadata object
-      summary: Get metadata about the data available from UBERON
-      tags:
-      - metadata
-  /metadata/fields:
-    get:
-      parameters:
-      - $ref: '#/components/parameters/search'
-        name: search
-      - $ref: '#/components/parameters/callback'
-        name: callback
-      - $ref: '#/components/parameters/prefix'
-        name: prefix
-      - $ref: '#/components/parameters/format'
-        name: format
-      responses:
-        '200':
-          description: UBERON metadata fields object
-      summary: Get metadata about the data fields available
-        object
-      tags:
-      - metadata
-  /query:
-    get:
-      parameters:
-      - description: Query string.
+        required: true
         example: parents:"UBERON:2001995"
-        in: query
-        name: q
-        required: true
         schema:
           type: string
-      - $ref: '#/components/parameters/dotfield'
-        name: dotfield
-      - $ref: '#/components/parameters/fields'
-        name: fields
-      - $ref: '#/components/parameters/facet_size'
-        name: facet_size
-      - $ref: '#/components/parameters/sort'
-        name: sort
-      - $ref: '#/components/parameters/callback'
-        name: callback
-      - $ref: '#/components/parameters/email'
-        name: email
-      - $ref: '#/components/parameters/facets'
-        name: facets
-      - $ref: '#/components/parameters/size'
-        name: size
-      - $ref: '#/components/parameters/from'
-        name: from
-      - $ref: '#/components/parameters/format'
-        name: format
+      - "$ref": "#/components/parameters/fields"
+      - "$ref": "#/components/parameters/size"
+      - "$ref": "#/components/parameters/from"
+      - "$ref": "#/components/parameters/fetch_all"
+      - "$ref": "#/components/parameters/scroll_id"
+      - "$ref": "#/components/parameters/sort"
+      - "$ref": "#/components/parameters/facets"
+      - "$ref": "#/components/parameters/facet_size"
+      - "$ref": "#/components/parameters/callback"
+      - "$ref": "#/components/parameters/dotfield"
+      - "$ref": "#/components/parameters/email"
+      ## these are noted in the /spec endpoint; commenting out for now
+      # - "$ref": "#/components/parameters/aggs"
+      # - "$ref": "#/components/parameters/userquery"
+      # - "$ref": "#/components/parameters/explain"
+      # - "$ref": "#/components/parameters/raw"
+      # - "$ref": "#/components/parameters/rawquery"
+      # - "$ref": "#/components/parameters/_sorted"
+      # - "$ref": "#/components/parameters/always_list"
+      # - "$ref": "#/components/parameters/allow_null"
+      # - "$ref": "#/components/parameters/format"
       responses:
         '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/QueryResult'
-          description: A query response with the "hits" property
-        '400':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResult'
-          description: A response indicating an improperly formatted query
-      summary: Make queries and return matching anatomy hits. Supports JSONP and CORS
-        as well.
+          description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
+      ## commenting out schemas and other status codes for now
+      #     content:
+      #       application/json:
+      #         schema:
+      #           "$ref": "#/components/schemas/QueryResult"
+      #   '400':
+      #     content:
+      #       application/json:
+      #         schema:
+      #           "$ref": "#/components/schemas/ErrorResult"
+      #     description: A response indicating an improperly formatted query
+      # summary: Make queries and return matching gene hits. Supports JSONP and CORS
+      #   as well.
       tags:
       - query
     post:
+      description: >-
+        Although making simple GET requests above to our query service is sufficient for most use cases, 
+        there are times you might find it more efficient to make batch queries (e.g., retrieving data 
+        for multiple inputs). Fortunately, you can also make batch queries via POST requests when you need to.
+
+
+        The "query” field in the returned object indicates the matching query term. If a query term has no match, 
+        it will return with a “notfound” field with the value “true”.
       parameters:
-      - $ref: '#/components/parameters/dotfield'
-        name: dotfield
-      - $ref: '#/components/parameters/email'
-        name: email
-      - $ref: '#/components/parameters/fields'
-        name: fields
-      - $ref: '#/components/parameters/size'
-        name: size
-      - $ref: '#/components/parameters/format'
-        name: format
+      - name: q
+        description: >-
+          Accepts multiple values separated by commas. Note that currently we only take the input values up to 1000 
+          maximum, the rest will be omitted.
+
+
+          The request body can also be used to provide these ids.
+        in: query
+        ## setting to false since putting this info in the request body seems to work as well
+        required: false
+        schema:
+          type: array
+          items:
+            type: string
+      - name: scopes
+        description: >-
+          Optional, specify one or more fields (separated by commas) to search. Default: _id
+
+
+          The request body can also be used to provide this information.
+        in: query
+        ## setting to false since putting this info in the request body seems to work as well
+        required: false
+        schema:
+          type: string
+      - "$ref": "#/components/parameters/fields"
+      - "$ref": "#/components/parameters/email"
+      ## this is useful even when it's not noted in the docs
+      - "$ref": "#/components/parameters/size"
+      - "$ref": "#/components/parameters/from"
+      - "$ref": "#/components/parameters/fetch_all"
+      - "$ref": "#/components/parameters/scroll_id"
+      ## these are noted in the https://mychem.info/v1/spec endpoint; commenting out for now
+      # - "$ref": "#/components/parameters/sort"
+      # - "$ref": "#/components/parameters/raw"
+      # - "$ref": "#/components/parameters/rawquery"
+      # - "$ref": "#/components/parameters/dotfield"
+      # - "$ref": "#/components/parameters/_sorted"
+      # - "$ref": "#/components/parameters/always_list"
+      # - "$ref": "#/components/parameters/allow_null"
+      # - "$ref": "#/components/parameters/format"
       requestBody:
-        required: true
         content:
-          application/x-www-form-urlencoded:
+          application/json:
+            example:
+              q:
+              - "UBERON:0005368"
+              - "UBERON:0035213"
+              scopes:
+              - "_id"
             schema:
+              type: object
               properties:
                 q:
-                  description: multiple query terms separated by comma (also "+" or
-                    whitespace).  Does not support wildcard queries
-                  type: string
+                  description: >-
+                    Accepts multiple values separated by commas. Note that currently we only take the input values 
+                    up to 1000 maximum, the rest will be omitted.
+                  type: array
+                  items:
+                    type: string
                 scopes:
-                  description: 'a comma-separated list of fields as the search "scopes"
-                    (fields to search through for query term). The available "fields"
-                    that can be passed to the "scopes" parameter are listed in the
-                    **/metadata/fields** endpoint.string Default: "scopes=_id".'
-                  type: string
+                  description: >-
+                    Specify one or more fields (separated by commas) to search. Default: _id
+                  type: array
+                  items:
+                    type: string
       responses:
         '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/QueryPOSTResult'
-          description: Query response objects with the "hits" propert
-        '400':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResult'
-          description: A response indicating an improperly formatted query
-      summary: Make batch anatomy queries and return matching anatomy hits
+          description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
+      ## commenting out schemas and other status codes for now
+      #     content:
+      #       application/json:
+      #         schema:
+      #           "$ref": "#/components/schemas/QueryPOSTResult"
+      #   '400':
+      #     content:
+      #       application/json:
+      #         schema:
+      #           "$ref": "#/components/schemas/ErrorResult"
+      #     description: A response indicating an improperly formatted query
+      # summary: Make batch gene queries and return matching gene hits
       tags:
       - query
       x-bte-kgs-operations:
+      - $ref: '#/components/x-bte-kgs-operations/adjacent_to'
+      - $ref: '#/components/x-bte-kgs-operations/adjacent_to-rev'
+      - $ref: '#/components/x-bte-kgs-operations/attaches_to'
+      - $ref: '#/components/x-bte-kgs-operations/attaches_to-rev'
       - $ref: '#/components/x-bte-kgs-operations/has_subclass'
       - $ref: '#/components/x-bte-kgs-operations/subclass_of'
-      - $ref: '#/components/x-bte-kgs-operations/part_of'
-      - $ref: '#/components/x-bte-kgs-operations/has_part'
       - $ref: '#/components/x-bte-kgs-operations/develops_from'
+      - $ref: '#/components/x-bte-kgs-operations/develops_from-rev'
+      - $ref: '#/components/x-bte-kgs-operations/extends_fibers_into'
+      - $ref: '#/components/x-bte-kgs-operations/extends_fibers_into-rev'
+      - $ref: '#/components/x-bte-kgs-operations/has_part'
+      - $ref: '#/components/x-bte-kgs-operations/has_part-rev'
       - $ref: '#/components/x-bte-kgs-operations/located_in'
-      - $ref: '#/components/x-bte-kgs-operations/location_of'
-      - $ref: '#/components/x-bte-kgs-operations/produced_by'
-      - $ref: '#/components/x-bte-kgs-operations/produces'
+      - $ref: '#/components/x-bte-kgs-operations/located_in-rev'
+      - $ref: '#/components/x-bte-kgs-operations/part_of'
+      - $ref: '#/components/x-bte-kgs-operations/part_of-rev'
 components:
   parameters:
     callback:
-      description: 'you can pass a "callback" parameter to make a JSONP call. Type:
-        string.'
-      in: query
       name: callback
+      description: >-
+        Optional, you can pass a "callback" parameter to make a JSONP call.
+      in: query
+      required: false
       schema:
         type: string
     dotfield:
-      description: 'control the format of the returned chem object. If "true" or "1",
-        all fields will be collapsed into a single level deep object (all nested objects
-        will be a single level deep, using dotfield notation to signify the nested
-        structure) Type: boolean. Default: false.'
-      in: query
       name: dotfield
+      description: >-
+        Optional, can be used to control the format of the returned chemical object. 
+        If "dotfield" is true, the returned data object is returned flattened (no nested objects) 
+        using dotfield notation for key names. Default: false.
+      in: query
+      required: false
       schema:
         type: boolean
+        default: false
     email:
-      description: If you are regular users of our services, we encourage you to provide
-        us with an email, so that we can better track the usage or follow up with
-        you.
-      in: query
       name: email
+      description: >-
+        Optional, if you are regular users of our services, we encourage you to provide us an email, 
+        so that we can better track the usage or follow up with you.
+      in: query
+      required: false
       schema:
         type: string
     facet_size:
-      description: 'the number of facet buckets to return in the response. Type: integer.
-        Default: 10. Max: 1000.'
-      in: query
       name: facet_size
+      description: >-
+        Optional, an integer (1 <= facet_size <= 1000) that specifies how many buckets to return in a 
+        [faceted query](https://docs.mychem.info/en/latest/doc/chem_query_service.html?highlight=from#faceted-queries).
+      in: query
+      required: false
       schema:
         type: integer
+        default: 10
     facets:
-      description: 'a comma-separated list of fields to return facets on.  In addition
-        to query hits, the fields notated in "facets" will be aggregated by value
-        and bucklet counts will be displayed in the "facets" field of the response
-        object. Type: string (list). Default: None. Max: 1000.'
-      in: query
       name: facets
+      description: >-
+        Optional, a single field or comma-separated fields to return facets, can only be used on non-free text fields. 
+        E.g. “facets=chembl.molecule_properties.full_mwt”. See [examples of faceted queries for a core BioThings 
+        API](https://docs.mychem.info/en/latest/doc/chem_query_service.html?highlight=from#faceted-queries).
+      in: query
+      required: false
       schema:
-        type: string
+        type: array
+        items:
+          type: string
+    fetch_all:
+      name: fetch_all
+      description: >-
+        Optional, a boolean, which when TRUE, allows fast retrieval of all unsorted query hits. 
+        The return object contains a _scroll_id field, which when passed as a parameter to the query endpoint 
+        (see the scroll_id parameter), returns the next 1000 query results. Setting fetch_all = TRUE causes 
+        the results to be inherently unsorted, therefore the sort parameter is ignored. For more information, 
+        see [examples using fetch_all for a core BioThings 
+        API](https://docs.mychem.info/en/latest/doc/chem_query_service.html?highlight=from#scrolling-queries). 
+        Default: FALSE.
+      in: query
+      required: false
+      schema:
+        type: boolean
+        default: false
     fields:
-      description: 'a comma-separated list of fields (in dotfield notation) used to
-        limit the fields returned from the matching chem hit(s). The supported field
-        names can be found from any chem object or from the /metadata/fields endpoint.
-        If "fields=all", all available fields will be returned. Type: string (list).
-        Default: all. Max: 1000.'
-      in: query
       name: fields
-      schema:
-        type: string
-    format:
-      description: 'controls output format of server response, currently supports:
-        "json", "jsonld", "html". Type: string. Default: json.'
+      description: >-
+        Optional, can be a comma-separated list to limit the fields returned from the chemical object. 
+        If "fields=all", all available fields will be returned.
+        
+
+        Note that it supports dot notation as well, e.g., you can pass "chebi.name". 
+        Default: "fields=all". 
+        The parameter "filter" is an alias for this parameter.
       in: query
-      name: format
+      required: false
       schema:
         type: string
+        default: all
     from:
-      description: 'the number of matching chem hits to skip, starting from 0.  This
-        can be useful for paging in combination with the "size" parameter. Type: integer.
-        Default: None.'
-      in: query
       name: from
+      description: >-
+        Optional, the number of matching chemical hits to skip, starting from 0. Default: 0. 
+      in: query
+      required: false
       schema:
         type: integer
-    prefix:
-      description: 'Pass a prefix string to filter the available fields. Type: string.
-        Default: None.'
+        default: 0
+    scroll_id:
+      name: scroll_id
+      description: >-
+        Optional, a string containing the _scroll_id returned from a query request with fetch_all = TRUE. 
+        Supplying a valid scroll_id will return the next 1000 unordered results. If the next results are 
+        not obtained within 1 minute of the previous set of results, the scroll_id becomes stale, and a 
+        new one must be obtained with another query request with fetch_all = TRUE. All other parameters are 
+        ignored when the scroll_id parameter is supplied. For more information see [examples using scroll_id 
+        for a core BioThings 
+        API](https://docs.mychem.info/en/latest/doc/chem_query_service.html?highlight=from#scrolling-queries).
       in: query
-      name: prefix
-      schema:
-        type: string
-    search:
-      description: 'Pass a search term to filter the available fields. Type: string.
-        Default: None.'
-      in: query
-      name: search
+      required: false
       schema:
         type: string
     size:
-      description: 'the maximum number of matching chem hits to return per batch.
-        Type: integer. Default: 10.'
-      in: query
       name: size
-      schema:
-        type: integer
-    sort:
-      description: 'the comma-separated list of fields to sort on. Prefix each with
-        "-" for descending order, otherwise in ascending order. Default: sort by descending
-        score.'
+      description: >-
+        Optional, the maximum number of matching chemical hits to return (with a cap of 1000 at the moment). Default: 10.
+        The combination of "size" and "from" parameters can be used to get paging for a large query.
       in: query
-      name: sort
+      required: false
       schema:
-        type: string
-  schemas:
-    Phenotype:
-      properties:
-        _id:
-          type: string
-      required:
-      - _id
-      type: object
-    ErrorResult:
-      properties:
-        message:
-          type: string
-        success:
-          type: boolean
-      type: object
-    QueryPOSTResult:
-      items:
-        allOf:
-        - $ref: '#/components/schemas/Phenotype'
-        - properties:
-            _score:
-              format: float
-              type: number
-            query:
-              type: string
-          type: object
-      type: array
-    QueryResult:
-      properties:
-        hits:
-          items:
-            $ref: '#/components/schemas/Phenotype'
-          type: array
-        max_score:
-          format: float
-          type: number
-        took:
-          type: integer
-        total:
-          type: integer
-      type: object
-    int64_or_array:
-      oneOf:
-      - items:
-          format: int64
-          type: integer
-        type: array
-      - format: int64
         type: integer
-    string_or_array:
-      oneOf:
-      - items:
-          type: string
+        default: 10
+    sort:
+      name: sort
+      description: >-
+        Optional, the comma-separated fields to sort on. Prefix with "-" for descending order, otherwise in ascending order. 
+        Default: sort by matching scores in descending order.
+      in: query
+      required: false
+      schema:
         type: array
-      - type: string
+        items:
+          type: string
+    ## these are noted in the https://mychem.info/v1/spec endpoint; commenting out for now
+    # _sorted:
+    #   name: _sorted
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: boolean
+    #     default: true
+    # aggs:
+    #   name: aggs
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: array
+    #     items:
+    #       type: string
+    # allow_null:
+    #   name: allow_null
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: array
+    #     items:
+    #       type: string
+    # always_list:
+    #   name: always_list
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: array
+    #     items:
+    #       type: string
+    # explain:
+    #   name: explain
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: boolean
+    # format:
+    #   name: format
+    #   description: 'controls output format of server response, currently supports:
+    #     "json", "jsonld", "html". Type: string. Default: json.'
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: string
+    #     default: json
+    # prefix:
+    #   name: prefix
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: string
+    # raw:
+    #   name: raw
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: boolean
+    # rawquery:
+    #   name: rawquery
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: boolean
+    # search:
+    #   name: search
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: string
+    # userquery:
+    #   name: userquery
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: string
+  ## commenting out schemas and other status codes for now
+  # schemas:
+  #   Association:
+  #     properties:
+  #       _id:
+  #         type: string
+  #     required:
+  #     - _id
+  #     type: object
+  #   ErrorResult:
+  #     properties:
+  #       message:
+  #         type: string
+  #       success:
+  #         type: boolean
+  #     type: object
+  #   QueryPOSTResult:
+  #     items:
+  #       allOf:
+  #       - $ref: '#/components/schemas/Association'
+  #       - properties:
+  #           _score:
+  #             format: float
+  #             type: number
+  #           query:
+  #             type: string
+  #         type: object
+  #     type: array
+  #   QueryResult:
+  #     properties:
+  #       hits:
+  #         items:
+  #           $ref: '#/components/schemas/Association'
+  #         type: array
+  #       max_score:
+  #         format: float
+  #         type: number
+  #       took:
+  #         type: integer
+  #       total:
+  #         type: integer
+  #     type: object
+  #   int64_or_array:
+  #     oneOf:
+  #     - items:
+  #         format: int64
+  #         type: integer
+  #       type: array
+  #     - format: int64
+  #       type: integer
+  #   string_or_array:
+  #     oneOf:
+  #     - items:
+  #         type: string
+  #       type: array
+  #     - type: string
   x-bte-kgs-operations:
-    has_subclass:
-    - inputSeparator: ','
+  ## UBERON can be multiple biolink categories/node-types. We use AnatomicalEntity for simplicity
+  ## has many possible operations, not fully annotated yet. looked at those with > 100 matching records
+  ## not annotating because there's no mapping in biolink-model, doesn't look useful
+  ## - disjoint_from: 440 records
+  ## - branching_part_of: 195 records
+  ## - composed_primarily_of: 152 records (biolink-model term doesn't have inverse)
+  ## - connects: 311 records
+  ## - contributes_to_morphology_of: 610 records
+  ## - has_muscle_insertion: 198 records
+  ## - has_muscle_origin: 192 records
+  ## - has_potential_to_develop_into: 196 records
+  ## - in_lateral_side_of: 128 records
+  ## - innervated_by: 134 records (mapped to related_to)
+  ## - present_in_taxon: 189 records
+  ## - supplies: 113 records
+    adjacent_to:
+    ## 241 records
+    - supportBatch: true
+      useTemplating: true
       inputs:
       - id: UBERON
         semantic: AnatomicalEntity
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"
+          scopes: _id  ## has prefix
+      outputs:
+      - id: UBERON
+        semantic: AnatomicalEntity
+      parameters:
+        fields: adjacent_to.uberon  ## has prefix
+      predicate: coexists_with  ## adjacent_to and terms like it are mapped to this in biolink-model...
+      source: "infores:uberon"
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/adjacent_to'
+      # testExamples:
+      #   - qInput: "UBERON:0000319"        ## cytotrophoblast
+      #     oneOutput: "UBERON:0000371"     ## syncytiotrophoblast
+    adjacent_to-rev:
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: UBERON
+        semantic: AnatomicalEntity
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"
+          scopes: adjacent_to.uberon  ## has prefix
+      outputs:
+      - id: UBERON
+        semantic: AnatomicalEntity
+      parameters:
+        fields: _id  ## has prefix
+      predicate: coexists_with
+      source: "infores:uberon"
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/id'
+      # testExamples:
+      #   - qInput: "UBERON:0004367"        ## Descemet's membrane
+      #     oneOutput: "UBERON:0001777"     ## substantia propria of cornea
+    attaches_to:
+    ## 125 records
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: UBERON
+        semantic: AnatomicalEntity
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"
+          scopes: _id  ## has prefix
+      outputs:
+      - id: UBERON
+        semantic: AnatomicalEntity
+      parameters:
+        fields: attaches_to.uberon  ## has prefix
+      predicate: coexists_with  ## attaches_to and terms like it are mapped to this in biolink-model...
+      source: "infores:uberon"
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/attaches_to'
+      # testExamples:
+      #   - qInput: "UBERON:0011312"        ## hyoepiglottic muscle
+      #     oneOutput: "UBERON:0000388"     ## epiglottis
+    attaches_to-rev:
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: UBERON
+        semantic: AnatomicalEntity
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"
+          scopes: attaches_to.uberon  ## has prefix
+      outputs:
+      - id: UBERON
+        semantic: AnatomicalEntity
+      parameters:
+        fields: _id  ## has prefix
+      predicate: coexists_with
+      source: "infores:uberon"
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/id'
+      # testExamples:
+      #   - qInput: "UBERON:0001075"        ## bony vertebral centrum
+      #     oneOutput: "UBERON:0011136"     ## vertebral column ligament / ligament of vertebral column
+    has_subclass:
+    ## 6741 records
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: UBERON
+        semantic: AnatomicalEntity
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"
+          scopes: _id
       outputs:
       - id: UBERON
         semantic: AnatomicalEntity
       parameters:
         fields: children
       predicate: superclass_of  ## this is the inverse of subclass_of right now
-      requestBody:
-        body:
-          q: '{inputs[0]}'
-          scopes: _id
-        header: application/x-www-form-urlencoded
+      source: "infores:uberon"
       response_mapping:
         $ref: '#/components/x-bte-response-mapping/has_subclass'
-      source: "infores:uberon"
-      supportBatch: true
+      # testExamples:
+      #   - qInput: "UBERON:0034709"        ## hindbrain marginal layer
+      #     oneOutput: "UBERON:0034708"     ## cerebellum marginal layer
     subclass_of:
-    - inputSeparator: ','
+    - supportBatch: true
+      useTemplating: true
       inputs:
       - id: UBERON
         semantic: AnatomicalEntity
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"
+          scopes: _id
       outputs:
       - id: UBERON
         semantic: AnatomicalEntity
       parameters:
         fields: parents
       predicate: subclass_of
-      requestBody:
-        body:
-          q: '{inputs[0]}'
-          scopes: _id
-        header: application/x-www-form-urlencoded
+      source: "infores:uberon"
       response_mapping:
         $ref: '#/components/x-bte-response-mapping/subclass_of'
-      source: "infores:uberon"
-      supportBatch: true
-    part_of:
-    - inputSeparator: ','
-      inputs:
-      - id: UBERON
-        semantic: AnatomicalEntity
-      outputs:
-      - id: UBERON
-        semantic: AnatomicalEntity
-      parameters:
-        fields: part_of.uberon
-      predicate: part_of
-      requestBody:
-        body:
-          q: '{inputs[0]}'
-          scopes: _id
-        header: application/x-www-form-urlencoded
-      response_mapping:
-        $ref: '#/components/x-bte-response-mapping/part_of'
-      source: "infores:uberon"
-      supportBatch: true
-    has_part:
-    - inputSeparator: ','
-      inputs:
-      - id: UBERON
-        semantic: AnatomicalEntity
-      outputs:
-      - id: UBERON
-        semantic: AnatomicalEntity
-      parameters:
-        fields: _id
-      predicate: has_part
-      requestBody:
-        body:
-          q: '{inputs[0]}'
-          scopes: part_of.uberon
-        header: application/x-www-form-urlencoded
-      response_mapping:
-        $ref: '#/components/x-bte-response-mapping/has_part'
-      source: "infores:uberon"
-      supportBatch: true
-    produces:
-    - inputSeparator: ','
-      inputs:
-      - id: UBERON
-        semantic: AnatomicalEntity
-      outputs:
-      - id: UBERON
-        semantic: AnatomicalEntity
-      parameters:
-        fields: _id
-      predicate: produces
-      requestBody:
-        body:
-          q: '{inputs[0]}'
-          scopes: produced_by.uberon
-        header: application/x-www-form-urlencoded
-      response_mapping:
-        $ref: '#/components/x-bte-response-mapping/produces'
-      source: "infores:uberon"
-      supportBatch: true
-    produced_by:
-    - inputSeparator: ','
-      inputs:
-      - id: UBERON
-        semantic: AnatomicalEntity
-      outputs:
-      - id: UBERON
-        semantic: AnatomicalEntity
-      parameters:
-        fields: produced_by.uberon
-      predicate: produced_by
-      requestBody:
-        body:
-          q: '{inputs[0]}'
-          scopes: _id
-        header: application/x-www-form-urlencoded
-      response_mapping:
-        $ref: '#/components/x-bte-response-mapping/produced_by'
-      source: "infores:uberon"
-      supportBatch: true
-    located_in:
-    - inputSeparator: ','
-      inputs:
-      - id: UBERON
-        semantic: AnatomicalEntity
-      outputs:
-      - id: UBERON
-        semantic: AnatomicalEntity
-      parameters:
-        fields: located_in.uberon
-      predicate: located_in
-      requestBody:
-        body:
-          q: '{inputs[0]}'
-          scopes: _id
-        header: application/x-www-form-urlencoded
-      response_mapping:
-        $ref: '#/components/x-bte-response-mapping/located_in'
-      source: "infores:uberon"
-      supportBatch: true
-    location_of:
-    - inputSeparator: ','
-      inputs:
-      - id: UBERON
-        semantic: AnatomicalEntity
-      outputs:
-      - id: UBERON
-        semantic: AnatomicalEntity
-      parameters:
-        fields: location_of.uberon
-      predicate: location_of
-      requestBody:
-        body:
-          q: '{inputs[0]}'
-          scopes: _id
-        header: application/x-www-form-urlencoded
-      response_mapping:
-        $ref: '#/components/x-bte-response-mapping/location_of'
-      source: "infores:uberon"
-      supportBatch: true
+      # testExamples:
+      #   - qInput: "UBERON:0034704"        ## inflow tract of left ventricle
+      #     oneOutput: "UBERON:0034698"     ## inflow tract of ventricle
     develops_from:
-    - inputSeparator: ','
+    ## 1354 records
+    - supportBatch: true
+      useTemplating: true
       inputs:
       - id: UBERON
         semantic: AnatomicalEntity
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"
+          scopes: _id
       outputs:
       - id: UBERON
         semantic: AnatomicalEntity
       parameters:
         fields: develops_from.uberon
       predicate: develops_from
-      requestBody:
-        body:
-          q: '{inputs[0]}'
-          scopes: _id
-        header: application/x-www-form-urlencoded
+      source: "infores:uberon"
       response_mapping:
         $ref: '#/components/x-bte-response-mapping/develops_from'
+      # testExamples:
+      #   - qInput: "UBERON:2000088"        ## yolk syncytial layer
+      #     oneOutput: "UBERON:2000084"     ## yolk
+    develops_from-rev:
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: UBERON
+        semantic: AnatomicalEntity
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"
+          scopes: develops_from.uberon  ## has prefix
+      outputs:
+      - id: UBERON
+        semantic: AnatomicalEntity
+      parameters:
+        fields: _id  ## has prefix
+      predicate: develops_into
       source: "infores:uberon"
-      supportBatch: true
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/id'
+      # testExamples:
+      #   - qInput: "UBERON:0006604"        ## lamina orbitonasalis
+      #     oneOutput: "UBERON:2000226"     ## lateral ethmoid bone
+    extends_fibers_into:
+    ## 109 records
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: UBERON
+        semantic: AnatomicalEntity
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"
+          scopes: _id
+      outputs:
+      - id: UBERON
+        semantic: AnatomicalEntity
+      parameters:
+        fields: extends_fibers_into.uberon
+      predicate: coexists_with     # extends_fibers_into and terms like it are mapped to this in biolink-model...
+      source: "infores:uberon"
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/extends_fibers_into'
+      # testExamples:
+      #   - qInput: "UBERON:0000959"        ## optic chiasma
+      #     oneOutput: "UBERON:0000941"     ## cranial nerve II
+    extends_fibers_into-rev:
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: UBERON
+        semantic: AnatomicalEntity
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"
+          scopes: extends_fibers_into.uberon  ## has prefix
+      outputs:
+      - id: UBERON
+        semantic: AnatomicalEntity
+      parameters:
+        fields: _id  ## has prefix
+      predicate: coexists_with
+      source: "infores:uberon"
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/id'
+      # testExamples:
+      #   - qInput: "UBERON:0002925"        ## trigeminal nucleus
+      #     oneOutput: "UBERON:0001645"     ## trigeminal nerve
+    has_part:
+    ## 263 records
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: UBERON
+        semantic: AnatomicalEntity
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"
+          scopes: _id
+      outputs:
+      - id: UBERON
+        semantic: AnatomicalEntity
+      parameters:
+        fields: has_part.uberon
+      predicate: has_part
+      source: "infores:uberon"
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/has_part'
+      # testExamples:
+      #   - qInput: "UBERON:0002364"        ## tympanic membrane
+      #     oneOutput: "UBERON:0005042"     ## inner epithelial layer of tympanic membrane
+    has_part-rev:
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: UBERON
+        semantic: AnatomicalEntity
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"
+          scopes: has_part.uberon  ## has prefix
+      outputs:
+      - id: UBERON
+        semantic: AnatomicalEntity
+      parameters:
+        fields: _id  ## has prefix
+      predicate: part_of
+      source: "infores:uberon"
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/id'
+      # testExamples:
+      #   - qInput: "UBERON:0001751"        ## dentine
+      #     oneOutput: "UBERON:0001091"     ## calcareous tooth
+    located_in:
+    ## 151 records
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: UBERON
+        semantic: AnatomicalEntity
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"
+          scopes: _id
+      outputs:
+      - id: UBERON
+        semantic: AnatomicalEntity
+      parameters:
+        fields: located_in.uberon
+      predicate: located_in
+      source: "infores:uberon"
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/located_in'
+      # testExamples:
+      #   - qInput: "UBERON:4000030"        ## oropharyngeal papilla
+      #     oneOutput: "UBERON:0001729"     ## oropharynx
+    located_in-rev:
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: UBERON
+        semantic: AnatomicalEntity
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"
+          scopes: located_in.uberon
+      outputs:
+      - id: UBERON
+        semantic: AnatomicalEntity
+      parameters:
+        fields: _id
+      predicate: location_of
+      source: "infores:uberon"
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/id'
+      # testExamples:
+      #   - qInput: "UBERON:0002224"        ## thoracic cavity
+      #     oneOutput: "UBERON:0000170"     ## pair of lungs
+    part_of:
+    ## 8248 records
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: UBERON
+        semantic: AnatomicalEntity
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"
+          scopes: _id
+      outputs:
+      - id: UBERON
+        semantic: AnatomicalEntity
+      parameters:
+        fields: part_of.uberon
+      predicate: part_of
+      source: "infores:uberon"
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/part_of'
+      # testExamples:
+      #   - qInput: "UBERON:0034754"        ## occipitofrontal fasciculus
+      #     oneOutput: "UBERON:0011299"     ## white matter of telencephalon
+    part_of-rev:
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: UBERON
+        semantic: AnatomicalEntity
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"
+          scopes: part_of.uberon
+      outputs:
+      - id: UBERON
+        semantic: AnatomicalEntity
+      parameters:
+        fields: _id
+      predicate: has_part
+      source: "infores:uberon"
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/id'
+      # testExamples:
+      #   - qInput: "UBERON:0002084"        ## heart left ventricle
+      #     oneOutput: "UBERON:0036285"     ## wall of left ventricle
   x-bte-response-mapping:
+    adjacent_to:
+      UBERON: adjacent_to.uberon
+    id:
+      UBERON: _id
+    attaches_to:
+      UBERON: attaches_to.uberon
     has_subclass:
       UBERON: children
     subclass_of:
       UBERON: parents
-    part_of:
-      UBERON: part_of.uberon
-    has_part:
-      UBERON: _id
     develops_from:
       UBERON: develops_from.uberon
-    location_of:
-      UBERON: location_of.uberon
+    extends_fibers_into:
+      UBERON: located_in.uberon
+    has_part:
+      UBERON: has_part.uberon
     located_in:
       UBERON: located_in.uberon
-    produced_by:
-      UBERON: produced_by.uberon
-    produces:
-      UBERON: _id
+    part_of:
+      UBERON: part_of.uberon
