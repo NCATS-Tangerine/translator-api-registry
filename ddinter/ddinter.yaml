@@ -1,42 +1,38 @@
 openapi: 3.0.3
 info:
   contact:
-    email: knarsinh@systemsbiology.org
-    name: Kamileh Narsinh
-    x-role: responsible developer
+    email: help@biothings.io
+    name: BioThings Team
+    x-id: https://github.com/biothings
+    x-role: responsible developers
   description: >-
-    Documentation of the BioThings API for the Translator Multiomics Team's 
-    ClinicalTrials KP (BioThings API). This API's data comes from additional processing 
-    of the [AACT](https://aact.ctti-clinicaltrials.org/points_to_consider) 
-    (Aggregate Analysis of ClinicalTrial.gov) database. The AACT database is from the 
-    [Clinical Trials Transformation Initiative](https://ctti-clinicaltrials.org/our-work/quality/state-of-clinical-trials/) 
-    and provides up-to-date information from ClinicalTrials.gov. 
+    Documentation of the BioThings API for
+    [DDInter](http://ddinter.scbdd.com/) data.
   termsOfService: https://biothings.io/about
-  title: Multiomics ClinicalTrials KP
-  version: '2022-08-22'
+  title: BioThings DDInter API
+  version: '1.0'
   x-translator:
-    infores: "infores:biothings-multiomics-clinicaltrials"
+    infores: "infores:biothings-ddinter"
     component: KP
     team:
-      - Multiomics Provider
       - Service Provider
     biolink-version: "2.4.8"
 servers:
 - description: Encrypted Production server
-  url: https://biothings.ncats.io/multiomics_clinicaltrials_kp
+  url: https://biothings.ncats.io/ddinter
   x-maturity: production
 - description: Production server
-  url: http://biothings.ncats.io/multiomics_clinicaltrials_kp
+  url: http://biothings.ncats.io/ddinter
   x-maturity: production
 tags:
-- name: association
-- name: treatment
-- name: disease
+- name: interaction
+- name: drug
+- name: metadata
 - name: query
 - name: translator
 - name: biothings
 paths:
-  "/association/{id}":
+  "/interaction/{id}":
     get:
       description: >-
         By default, this will return the complete association in JSON format. If the input is not valid,
@@ -55,7 +51,7 @@ paths:
       - name: id
         in: path
         required: true
-        example: "00065273_C0025362_C0009079"
+        example: "DDInter1414_DDInter1004_Moderate"
         schema:
           type: string
       - "$ref": "#/components/parameters/fields"
@@ -82,8 +78,8 @@ paths:
       #   '404':
       #     description: A response indicating an unknown association ID
       tags:
-      - association
-  "/association":
+      - interaction
+  "/interaction":
     post:
       description: >-
         Although making simple GET requests above to our service is sufficient in most use cases, 
@@ -119,8 +115,8 @@ paths:
           application/json:
             example:
               ids:
-              - "00065273_C0025362_C0009079"
-              - "00065273_C0025362_C0171023"
+              - "DDInter1214_DDInter100_Moderate"
+              - "DDInter1214_DDInter1017_Moderate"
             schema:
               type: object
               properties:
@@ -135,7 +131,7 @@ paths:
         '200':
           description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
       tags:
-      - association
+      - interaction
   "/metadata":
     get:
       description: Get metadata about the data available from the API
@@ -175,7 +171,7 @@ paths:
           API](https://docs.mychem.info/en/latest/doc/chem_query_service.html#query-syntax).
         in: query
         required: true
-        example: "subject.UMLS:C0006012"
+        example: "drug_a.drugbank:DB08880"
         schema:
           type: string
       - "$ref": "#/components/parameters/fields"
@@ -273,10 +269,10 @@ paths:
           application/json:
             example:
               q:
-              - "C0006012"
-              - "C0524620"
+              - "DB00707"
+              - "DB00997"
               scopes:
-              - "subject.UMLS"
+              - "drug_a.drugbank"
             schema:
               type: object
               properties:
@@ -312,8 +308,8 @@ paths:
       - query
       ## 2 operations
       x-bte-kgs-operations:
-      - $ref: '#/components/x-bte-kgs-operations/disease-intervention'
-      - $ref: '#/components/x-bte-kgs-operations/intervention-disease'
+      - $ref: '#/components/x-bte-kgs-operations/drugA-to-drugB'
+      - $ref: '#/components/x-bte-kgs-operations/drugB-to-drugA'
 components:
   parameters:
     callback:
@@ -574,64 +570,69 @@ components:
   #       type: array
   #     - type: string
   x-bte-kgs-operations:
-  ## currently 2 potential types: Disease and Treatment
-  ##   see biolink-model's Treatment section https://github.com/biolink/biolink-model/blob/v2.4.8/biolink-model.yaml#L9588
-  ##   can sometimes be a drug/chemical administered or a procedure (diagnostic, therapeutic, etc). maybe even observation?
-    disease-intervention:
-    ## 35,313 documents in the API 
+  ## Drug (drug_a) interacts with another Drug (drug_b): 160235
+  ## - looks like only 1 copy of each interaction exists in the data 
+  ##   (aka only "Drug A interacts with Drug B", without a repeat "Drug B interacts with Drug A")
+  ## using DRUGBANK namespace for both drugs (100% coverage)
+  ## - ddinter also has 100% coverage but is an internal database ID not supported by SRI
+  ## - chembl and pubchem coverage is 80-85%
+  ## levels of interaction: major, moderate, minor, unknown
+    drugA-to-drugB:
+    ## 160,235 records 
       - supportBatch: true
         useTemplating: true ## flag to say templating is being used below
         inputs:
-          - id: UMLS
-            semantic: Disease
+          - id: DRUGBANK
+            semantic: SmallMolecule
         requestBody:
           body:
             ## API data has no prefix
             ## joinSafe is only needed if the delimiter isn't a comma
             q: "{{ queryInputs }}"
-            scopes: subject.UMLS
+            scopes: >-
+              drug_a.drugbank
         outputs:
-          - id: UMLS
-            semantic: Treatment
+          - id: DRUGBANK
+            semantic: SmallMolecule
         parameters:
-          fields: >-
-            object.UMLS,
-            association.edge_attributes
+          fields: drug_b.drugbank,level
           size: 1000
-        predicate: related_to
+        predicate: interacts_with
+        source: "infores:ddinter"
         response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/treatment"
+          "$ref": "#/components/x-bte-response-mapping/drugB"
+        ## compare to http://ddinter.scbdd.com/ddinter/interact/977140/
         # testExamples:
-        #   - qInput: "UMLS:C0006012"        ## borderline personality disorder
-        #     oneOutput: "UMLS:C0171023"     ## olanzapine
-    intervention-disease:
+        #   - qInput: "DRUGBANK:DB00244"      ## Mesalazine 
+        #     oneOutput: "DRUGBANK:DB00414"   ## Acetohexamide
+    drugB-to-drugA:
       - supportBatch: true
         useTemplating: true
         inputs:
-          - id: UMLS
-            semantic: Treatment
+          - id: DRUGBANK
+            semantic: SmallMolecule
         requestBody:
           body:
             q: "{{ queryInputs }}"
-            scopes: object.UMLS
+            scopes: drug_b.drugbank
         outputs:
-          - id: UMLS
-            semantic: Disease
+          - id: DRUGBANK
+            semantic: SmallMolecule
         parameters:
-          fields: >-
-            subject.UMLS,
-            association.edge_attributes
+          fields: drug_a.drugbank,level
           size: 1000
-        predicate: related_to
+        predicate: interacts_with
+        source: "infores:ddinter"
         response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/disease"
+          "$ref": "#/components/x-bte-response-mapping/drugA"
+        ## compare to http://ddinter.scbdd.com/ddinter/interact/1047482/
         # testExamples:
-        #   - qInput: "UMLS:C0994515"         ## talampanel
-        #     oneOutput: "UMLS:C0334579"      ## anaplastic astrocytoma
+        #   - qInput: "DRUGBANK:DB00540"      ## Nortriptyline 
+        #     oneOutput: "DRUGBANK:DB00451"   ## Levothyroxine
   x-bte-response-mapping:
-    treatment:
-      UMLS: object.UMLS   ## no prefix
-      edge-attributes: association.edge_attributes
-    disease:
-      UMLS: subject.UMLS   ## no prefix
-      edge-attributes: association.edge_attributes
+    drugB:
+      DRUGBANK: drug_b.drugbank
+      "drug_interaction_severity_level": level
+    drugA:
+      DRUGBANK: drug_a.drugbank
+      "drug_interaction_severity_level": level

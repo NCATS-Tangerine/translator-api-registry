@@ -1,37 +1,34 @@
 openapi: 3.0.3
 info:
   contact:
-    email: knarsinh@systemsbiology.org
-    name: Kamileh Narsinh
-    x-role: responsible developer
+    email: help@biothings.io
+    name: BioThings Team
+    x-id: https://github.com/biothings
+    x-role: responsible developers
   description: >-
-    Documentation of the BioThings API for the Translator Multiomics Team's 
-    ClinicalTrials KP (BioThings API). This API's data comes from additional processing 
-    of the [AACT](https://aact.ctti-clinicaltrials.org/points_to_consider) 
-    (Aggregate Analysis of ClinicalTrial.gov) database. The AACT database is from the 
-    [Clinical Trials Transformation Initiative](https://ctti-clinicaltrials.org/our-work/quality/state-of-clinical-trials/) 
-    and provides up-to-date information from ClinicalTrials.gov. 
+    Documentation of the BioThings API for
+    [GTRx](https://gtrx.rbsapp.net/about.html) data.
   termsOfService: https://biothings.io/about
-  title: Multiomics ClinicalTrials KP
-  version: '2022-08-22'
+  title: BioThings GTRx API
+  version: '2022-02-01'
   x-translator:
-    infores: "infores:biothings-multiomics-clinicaltrials"
+    infores: "infores:biothings-gtrx"
     component: KP
     team:
-      - Multiomics Provider
       - Service Provider
     biolink-version: "2.4.8"
 servers:
 - description: Encrypted Production server
-  url: https://biothings.ncats.io/multiomics_clinicaltrials_kp
+  url: https://biothings.ncats.io/gtrx
   x-maturity: production
 - description: Production server
-  url: http://biothings.ncats.io/multiomics_clinicaltrials_kp
+  url: http://biothings.ncats.io/gtrx
   x-maturity: production
 tags:
 - name: association
-- name: treatment
+- name: chemical
 - name: disease
+- name: metadata
 - name: query
 - name: translator
 - name: biothings
@@ -55,7 +52,7 @@ paths:
       - name: id
         in: path
         required: true
-        example: "00065273_C0025362_C0009079"
+        example: "9752-OMIM:261630-4975G9NM6T"
         schema:
           type: string
       - "$ref": "#/components/parameters/fields"
@@ -119,8 +116,8 @@ paths:
           application/json:
             example:
               ids:
-              - "00065273_C0025362_C0009079"
-              - "00065273_C0025362_C0171023"
+              - "10031-OMIM:250250-66Y330CJHS"
+              - "1037-OMIM:612924-A3ULP0F556"
             schema:
               type: object
               properties:
@@ -175,7 +172,7 @@ paths:
           API](https://docs.mychem.info/en/latest/doc/chem_query_service.html#query-syntax).
         in: query
         required: true
-        example: "subject.UMLS:C0006012"
+        example: "subject.omim:617290"
         schema:
           type: string
       - "$ref": "#/components/parameters/fields"
@@ -273,10 +270,10 @@ paths:
           application/json:
             example:
               q:
-              - "C0006012"
-              - "C0524620"
+              - "660YQ98I10"
+              - "KV2JZ1BI6Z"
               scopes:
-              - "subject.UMLS"
+              - "object.intervention.inxight"
             schema:
               type: object
               properties:
@@ -312,8 +309,8 @@ paths:
       - query
       ## 2 operations
       x-bte-kgs-operations:
-      - $ref: '#/components/x-bte-kgs-operations/disease-intervention'
-      - $ref: '#/components/x-bte-kgs-operations/intervention-disease'
+      - $ref: '#/components/x-bte-kgs-operations/drug-disease'
+      - $ref: '#/components/x-bte-kgs-operations/disease-drug'
 components:
   parameters:
     callback:
@@ -574,64 +571,116 @@ components:
   #       type: array
   #     - type: string
   x-bte-kgs-operations:
-  ## currently 2 potential types: Disease and Treatment
-  ##   see biolink-model's Treatment section https://github.com/biolink/biolink-model/blob/v2.4.8/biolink-model.yaml#L9588
-  ##   can sometimes be a drug/chemical administered or a procedure (diagnostic, therapeutic, etc). maybe even observation?
-    disease-intervention:
-    ## 35,313 documents in the API 
+  ## 2 potential types:
+  ## - Disease: OMIM ID without prefixes in subject.omim
+  ## - SmallMolecule: UNII ID without prefix in object.intervention.inxight
+  ## 695 records total
+    disease-drug:
       - supportBatch: true
-        useTemplating: true ## flag to say templating is being used below
+        useTemplating: true
         inputs:
-          - id: UMLS
+          - id: OMIM
             semantic: Disease
         requestBody:
           body:
             ## API data has no prefix
             ## joinSafe is only needed if the delimiter isn't a comma
             q: "{{ queryInputs }}"
-            scopes: subject.UMLS
+            scopes: subject.omim
         outputs:
-          - id: UMLS
-            semantic: Treatment
+          - id: UNII
+            semantic: SmallMolecule
         parameters:
+        ## records and fields info:
+        ## - names: object.intervention.description and subject.condition_name. Excluding for now
+        ## - object: 
+        ##   - removing level2_group (why string and not int?), priority_class (int) since unclear what these fields mean
+        ## - not including journal / title / date of references for now. They'll be formatted oddly with
+        ##   our current default way of parsing them
+        ## - subject:
+        ##   - clinical_summary, condition_name, and freq_per_birth are wordy but useful free-text fields...
+        ##   - don't need the alternative_names
           fields: >-
-            object.UMLS,
-            association.edge_attributes
+            object.intervention.inxight,
+            references.pmid,
+            object.age_use,
+            object.contra,
+            object.intervention.int_class,
+            object.qualscale_reclass,
+            object.rev1_eff_reclass,
+            object.timeframe,
+            subject.clinical_summary,
+            subject.freq_per_birth,
+            subject.pattern_of_inheritance
           size: 1000
-        predicate: related_to
+        predicate: treated_by
+        source: "infores:gtrx"
         response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/treatment"
+          "$ref": "#/components/x-bte-response-mapping/drug"
+        ## compare to https://gtrx.rbsapp.net/?q=HEMOLYTIC%20UREMIC%20SYNDROME,%20ATYPICAL,%20SUSCEPTIBILITY%20TO,%204
         # testExamples:
-        #   - qInput: "UMLS:C0006012"        ## borderline personality disorder
-        #     oneOutput: "UMLS:C0171023"     ## olanzapine
-    intervention-disease:
+        #   - qInput: "OMIM:250250"            ## CARTILAGE-HAIR HYPOPLASIA;
+        #     oneOutput: "UNII:MZ1IW7Q79D"     ## Valaciclovir
+    drug-disease:
       - supportBatch: true
-        useTemplating: true
+        useTemplating: true ## flag to say templating is being used below
         inputs:
-          - id: UMLS
-            semantic: Treatment
+          - id: UNII
+            semantic: SmallMolecule
         requestBody:
           body:
+            ## API data has no prefix
+            ## joinSafe is only needed if the delimiter isn't a comma
             q: "{{ queryInputs }}"
-            scopes: object.UMLS
+            scopes: object.intervention.inxight
         outputs:
-          - id: UMLS
+          - id: OMIM
             semantic: Disease
         parameters:
           fields: >-
-            subject.UMLS,
-            association.edge_attributes
+            subject.omim,
+            references.pmid,
+            object.age_use,
+            object.contra,
+            object.intervention.int_class,
+            object.qualscale_reclass,
+            object.rev1_eff_reclass,
+            object.timeframe,
+            subject.clinical_summary,
+            subject.freq_per_birth,
+            subject.pattern_of_inheritance
           size: 1000
-        predicate: related_to
+        predicate: treats
+        source: "infores:gtrx"
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/disease"
+        ## compare to https://gtrx.rbsapp.net/?q=MALIGNANT%20HYPERTHERMIA,%20SUSCEPTIBILITY%20TO,%201
         # testExamples:
-        #   - qInput: "UMLS:C0994515"         ## talampanel
-        #     oneOutput: "UMLS:C0334579"      ## anaplastic astrocytoma
+        #   - qInput: "UNII:F64QU97QCR"     ## Dantrolene 
+        #     oneOutput: "OMIM:145600"      ## MALIGNANT HYPERTHERMIA, SUSCEPTIBILITY TO, 1
   x-bte-response-mapping:
-    treatment:
-      UMLS: object.UMLS   ## no prefix
-      edge-attributes: association.edge_attributes
+    drug:
+    ## using order and language from gtrx website for these fields
+      UNII: object.intervention.inxight   ## no prefix
+      pubmed: references.pmid  ## no prefix
+      type_of_intervention: object.intervention.int_class
+      intervention_MUST_be_started_within: object.timeframe
+      intervention_may_be_started_in_this_age_group: object.age_use
+      is_intervention_contraindicated_in_certain_groups: object.contra  ## seems to be "Yes"/"No"
+      intervention_level_of_evidence_available: object.qualscale_reclass
+      intervention_efficacy: object.rev1_eff_reclass
+      condition_incidence: subject.freq_per_birth
+      condition_pattern_of_inheritance: subject.pattern_of_inheritance
+      clinical_summary: subject.clinical_summary
     disease:
-      UMLS: subject.UMLS   ## no prefix
-      edge-attributes: association.edge_attributes
+      OMIM: subject.omim   ## no prefix
+      pubmed: references.pmid  ## no prefix
+      type_of_intervention: object.intervention.int_class
+      intervention_MUST_be_started_within: object.timeframe
+      intervention_may_be_started_in_this_age_group: object.age_use
+      is_intervention_contraindicated_in_certain_groups: object.contra  ## seems to be "Yes"/"No"
+      intervention_level_of_evidence_available: object.qualscale_reclass
+      intervention_efficacy: object.rev1_eff_reclass
+      condition_incidence: subject.freq_per_birth
+      condition_pattern_of_inheritance: subject.pattern_of_inheritance
+      clinical_summary: subject.clinical_summary
