@@ -712,7 +712,7 @@ components:
   ## notes:
   ## - not including Gene <-> Transcript <-> Protein or Gene <-> Protein due to conflation, lack of use in Translator right now
   ## - for ConsensusPathDB, look at "content information" tab at http://cpdb.molgen.mpg.de/CPDB to see versions of the pathway databases they used
-  ## - pathway info includes Reactome, KEGG, Wikipathways, Biocarta
+  ## - pathway info includes Reactome, , Wikipathways, Biocarta
   ##   However, SRI ID resolver only accepts SMPDB, REACT, GO, PANTHER.PATHWAY right now
   ##   not included: humancyc, mousecyc, netpath, pharmgkb, pid, yeastcyc
     PathwayHasGene1:    ## using Reactome, KEGG, Wikipathways, Biocarta
@@ -755,13 +755,13 @@ components:
             semantic: Gene
         parameters: 
           ## all records with pathway.kegg field also have entrezgene field
-          fields: entrezgene
+          fields: entrezgene,pathway.kegg.name
           species: human
           size: 1000  ## note the size limit
         predicate: has_participant
         source: "infores:cpdb"   ## ConsensusPathDB
         response_mapping: 
-          $ref: "#/components/x-bte-response-mapping/entrezgene"
+          $ref: "#/components/x-bte-response-mapping/entrezgene-keggname"
         # testExamples:
         #   - qInput: "KEGG.PATHWAY:hsa00120"  ## Primary bile acid biosynthesis - Homo sapiens (human)
         #     oneOutput: "NCBIGene:8309"  ## ACOX2
@@ -780,13 +780,13 @@ components:
             semantic: Gene
         parameters: 
           ## all records with pathway.wikipathways field also have entrezgene field
-          fields: entrezgene
+          fields: entrezgene,pathway.wikipathways.name
           species: human
           size: 1000  ## note the size limit
         predicate: has_participant
         source: "infores:cpdb"   ## ConsensusPathDB
         response_mapping: 
-          $ref: "#/components/x-bte-response-mapping/entrezgene"
+          $ref: "#/components/x-bte-response-mapping/entrezgene-wikiname"
         # testExamples:
         #   - qInput: "WIKIPATHWAYS:WP2034"  ## Leptin signaling pathway
         #     oneOutput: "NCBIGene:3953"  ## LEPR
@@ -805,13 +805,13 @@ components:
             semantic: Gene
         parameters: 
           ## all records with pathway.biocarta field also have entrezgene field
-          fields: entrezgene
+          fields: entrezgene,pathway.biocarta.name
           species: human
           size: 1000  ## note the size limit
         predicate: has_participant
         source: "infores:cpdb"   ## ConsensusPathDB
         response_mapping: 
-          $ref: "#/components/x-bte-response-mapping/entrezgene"
+          $ref: "#/components/x-bte-response-mapping/entrezgene-biocartaname"
         # testExamples:
         #   - qInput: "BIOCARTA:raspathway"
         #     oneOutput: "NCBIGene:3265"  ## HRAS
@@ -857,7 +857,7 @@ components:
         parameters: 
         ## not including name since BTE isn't ingesting properly right now
           fields: >-
-            pathway.kegg.id
+            pathway.kegg.id,pathway.kegg.name
           species: human
           size: 1000
         predicate: participates_in
@@ -883,7 +883,7 @@ components:
         parameters: 
         ## not including name since BTE isn't ingesting properly right now
           fields: >-
-            pathway.wikipathways.id
+            pathway.wikipathways.id,pathway.wikipathways.name
           species: human
           size: 1000
         predicate: participates_in
@@ -909,7 +909,7 @@ components:
         parameters: 
         ## not including name since BTE isn't ingesting properly right now
           fields: >-
-            pathway.biocarta.id
+            pathway.biocarta.id,pathway.biocarta.name
           species: human
           size: 1000
         predicate: participates_in
@@ -1203,18 +1203,26 @@ components:
   x-bte-response-mapping:
     entrezgene: 
       NCBIGene: entrezgene   ## no prefix
+    entrezgene-keggname: 
+      NCBIGene: entrezgene   ## no prefix
+      input_name: pathway.kegg.name
+    entrezgene-wikiname: 
+      NCBIGene: entrezgene   ## no prefix
+      input_name: pathway.wikipathways.name
+    entrezgene-biocartaname: 
+      NCBIGene: entrezgene   ## no prefix
+      input_name: pathway.biocarta.name
     reactomePathway: 
       REACT: pathway.reactome.id   ## no prefix
-      # name: pathway.reactome.name
     keggPathway: 
       "KEGG.PATHWAY": pathway.kegg.id   ## no prefix
-      # name: pathway.kegg.name
+      output_name: pathway.kegg.name
     wikipathway: 
       WIKIPATHWAYS: pathway.wikipathways.id   ## no prefix
-      # name: pathway.wikipathways.name
+      output_name: pathway.wikipathways.name
     biocarta: 
       BIOCARTA: pathway.biocarta.id   ## no prefix
-      # name: pathway.biocarta.name
+      output_name: pathway.biocarta.name
     biologicalProcess: 
       GO: go.BP.id  ## HAS PREFIX (GO)
       evidence: go.BP.evidence  ## categorical variable?

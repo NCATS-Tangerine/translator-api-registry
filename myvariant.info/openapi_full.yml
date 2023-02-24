@@ -638,6 +638,8 @@ components:
       NCBIGene: civic.entrez_id
     civic-variantDisease:
       DOID: civic.evidence_items.disease.doid
+      ## variant name
+      input_name: _id
       ## categorical var / relation
       civic_clinical_significance: civic.evidence_items.clinical_significance
       ## free text
@@ -658,10 +660,13 @@ components:
       civic_variant_origin: civic.evidence_items.variant_origin
     dbsnp-rsid:
       DBSNP: dbsnp.rsid  ## no prefix
+      output_name: _id   ## variant name
     dbsnp-gene:
       NCBIGene: dbsnp.gene.geneid  ## no prefix
+      input_name: _id              ## variant name
     clinvar-rsid:
       DBSNP: clinvar.rsid  ## no prefix
+      output_name: _id     ## variant name
     clinvar-geneDisease:
       OMIM: clinvar.rcv.conditions.identifiers.omim  ## no prefix
       ## edge attributes
@@ -671,10 +676,12 @@ components:
       clinvar_num_submitters: clinvar.rcv.number_submitters
       clinvar_variant_origin: clinvar.rcv.origin
       clinvar_review_status: clinvar.rcv.review_status
-    clinvar-gene:
+    clinvar-gene-variant-start:
       NCBIGene: clinvar.gene.id  ## no prefix
+      input_name: _id            ## variant name
     clinvar-variantDisease:
       OMIM: clinvar.rcv.conditions.identifiers.omim  ## no prefix
+      input_name: _id                                ## variant name
       ## edge attributes
       clinvar_clinical_significance: clinvar.rcv.clinical_significance  ## similar to relation
       clinvar_variant_in_gene: clinvar.gene.symbol    ## context: gene
@@ -682,12 +689,15 @@ components:
       clinvar_num_submitters: clinvar.rcv.number_submitters
       clinvar_variant_origin: clinvar.rcv.origin
       clinvar_review_status: clinvar.rcv.review_status
+    clinvar-gene:
+      NCBIGene: clinvar.gene.id  ## no prefix
     docm-disease-only:
       DOID: docm.doid
     docm-gene:
       ENSEMBL: docm.ensembl_gene_id
-    docm-disease-and-gene:
+    docm-disease-variant-start:
       DOID: docm.doid
+      input_name: _id      ## variant name
       docm_variant_in_gene: docm.genename
   ## not included:
   ## - cgi: only 323 records, doesn't have IDs for disease, gene, or drug ID...
@@ -781,7 +791,8 @@ components:
         ## using entrez gene name for now (human-readable) rather than id
           fields: >-
             civic.evidence_items,
-            civic.entrez_name
+            civic.entrez_name,
+            _id
           size: 1000        ## note size limit; added just in case
         predicate: affects
         source: "infores:civic"
@@ -789,7 +800,7 @@ components:
           "$ref": "#/components/x-bte-response-mapping/civic-variantDisease"
       ## this record has drug interaction: https://myvariant.info/v1/query?q=_exists_:%22civic.evidence_items.drug_interaction_type%22%20AND%20_exists_:%22dbsnp.rsid%22
       # testExamples:
-      #   - qInput: "DBSNP:rs121913521"   ## in KIT
+      #   - qInput: "DBSNP:rs121913521"   ## chr4:g.55593613T>G in KIT
       #     oneOutput: "DOID:9253"        ##  Gastrointestinal Stromal Tumor
     civic-variantDisease-rev:
       - supportBatch: true
@@ -805,7 +816,7 @@ components:
         - id: DBSNP
           semantic: SequenceVariant
         parameters:
-          fields: dbsnp.rsid
+          fields: dbsnp.rsid,_id
           size: 1000        ## note size limit; added just in case
         predicate: affected_by
         source: "infores:civic"
@@ -814,7 +825,7 @@ components:
       ## this record has drug interaction: https://myvariant.info/v1/query?q=_exists_:%22civic.evidence_items.drug_interaction_type%22%20AND%20_exists_:%22dbsnp.rsid%22
       # testExamples:
       #   - qInput: "DOID:219"                 ## Colon Cancer
-      #     oneOutput: "DBSNP:rs121913470"     ##  in ERBB2
+      #     oneOutput: "DBSNP:rs121913470"     ## chr17:g.37880220T>C in ERBB2
     dbsnp-variantGene:
     ## note: there may be redundant results in the response
     ## there are 446 million records
@@ -831,14 +842,14 @@ components:
       - id: NCBIGene
         semantic: Gene
       parameters:
-        fields: dbsnp.gene.geneid  ## no prefix
+        fields: dbsnp.gene.geneid,_id  ## no prefix
       predicate: is_sequence_variant_of
       source: "infores:dbsnp"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/dbsnp-gene"
       ## https://myvariant.info/v1/query?q=_exists_:%22dbsnp.rsid%22%20AND%20_exists_:%22dbsnp.gene.geneid%22
       # testExamples:
-      #   - qInput: "DBSNP:rs770112667"
+      #   - qInput: "DBSNP:rs770112667"    ## chr10:g.14260675G>A
       #     oneOutput: "NCBIGene:55691"    ## FRMD4A
     dbsnp-variantGene-rev:
     - supportBatch: true
@@ -854,7 +865,7 @@ components:
       - id: DBSNP
         semantic: SequenceVariant
       parameters:
-        fields: dbsnp.rsid
+        fields: dbsnp.rsid,_id
       predicate: has_sequence_variant
       source: "infores:dbsnp"
       response_mapping:
@@ -862,7 +873,7 @@ components:
       ## https://myvariant.info/v1/query?q=_exists_:%22dbsnp.rsid%22%20AND%20_exists_:%22dbsnp.gene.geneid%22
       # testExamples:
       #   - qInput: "NCBIGene:55691"          ## FRMD4A
-      #     oneOutput: "DBSNP:rs767038114"
+      #     oneOutput: "DBSNP:rs767038114"    ## chr10:g.13693999G>A
     clinvar-variantGene:
     ## there are 43k records with clinvar.rsid but no dbsnp
     ## https://myvariant.info/v1/query?q=_exists_:%22clinvar.rsid%22%20AND%20NOT%20_exists_:%22dbsnp.rsid%22
@@ -879,13 +890,13 @@ components:
       - id: NCBIGene
         semantic: Gene
       parameters:
-        fields: clinvar.gene.id  ## no prefix
+        fields: clinvar.gene.id,_id  ## no prefix
       predicate: is_sequence_variant_of
       source: "infores:clinvar"
       response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/clinvar-gene"
+        "$ref": "#/components/x-bte-response-mapping/clinvar-gene-variant-start"
       # testExamples:
-      #   - qInput: "DBSNP:rs794727661"
+      #   - qInput: "DBSNP:rs794727661"   ## chrX:g.32361300dup
       #     oneOutput: "NCBIGene:1756"    ## DMD
     clinvar-variantGene-rev:
     - supportBatch: true
@@ -901,14 +912,14 @@ components:
       - id: DBSNP
         semantic: SequenceVariant
       parameters:
-        fields: clinvar.rsid  ## no prefix
+        fields: clinvar.rsid,_id  ## no prefix
       predicate: has_sequence_variant
       source: "infores:clinvar"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/clinvar-rsid"
       # testExamples:
       #   - qInput: "NCBIGene:284098"          ## PIGW
-      #     oneOutput: "DBSNP:rs915498700"
+      #     oneOutput: "DBSNP:rs915498700"     ## chr17:g.34893784T>C
     clinvar-geneDisease:
     ## - conditions.identifiers can include multiple kinds
     ##   some conditions have no IDs, some have multiple IDs (not all have OMIM). 
@@ -993,6 +1004,7 @@ components:
       ## using gene symbol rather than gene.id so it's human-readable
         fields: >-
           clinvar.rcv.conditions.identifiers.omim,
+          _id,
           clinvar.rcv.clinical_significance,
           clinvar.gene.symbol,
           clinvar.rcv.last_evaluated,
@@ -1008,7 +1020,7 @@ components:
         "$ref": "#/components/x-bte-response-mapping/clinvar-variantDisease"
       ## https://myvariant.info/v1/query?q=_exists_:%22clinvar.rcv.conditions.identifiers.omim%22%20AND%20_exists_:%22dbsnp.rsid%22
       # testExamples:
-      #   - qInput: "DBSNP:rs1193171808"
+      #   - qInput: "DBSNP:rs1193171808"    ## chr8:g.42171847A>G
       #     oneOutput: "OMIM:615592"        ## severe combined immunodeficiency due to IKK2 deficiency
     clinvar-variantDisease-rev:
     - supportBatch: true
@@ -1024,7 +1036,7 @@ components:
       - id: DBSNP
         semantic: SequenceVariant
       parameters:
-        fields: dbsnp.rsid
+        fields: dbsnp.rsid,_id
         size: 1000  ## note size limit
       predicate: related_to
       source: "infores:clinvar"
@@ -1032,7 +1044,7 @@ components:
         "$ref": "#/components/x-bte-response-mapping/dbsnp-rsid"
       # testExamples:
       #   - qInput: "OMIM:602629"             ## Torsion dystonia 6 (DYT6)
-      #     oneOutput: "DBSNP:rs1480200060"
+      #     oneOutput: "DBSNP:rs1480200060"   ## chr8:g.42692270T>C
     docm-geneDisease:
     - supportBatch: true
       useTemplating: true
@@ -1103,6 +1115,7 @@ components:
       ## DOID has prefix, using gene name so it's human readable rather than gene id
         fields: >- 
           docm.doid,
+          _id,
           docm.genename
         size: 1000  ## note size limit; added just in case
       predicate: related_to
@@ -1110,10 +1123,10 @@ components:
       ## looks like it's from http://www.docm.info/
       source: "infores:docm"
       response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/docm-disease-and-gene"
+        "$ref": "#/components/x-bte-response-mapping/docm-disease-variant-start"
       ## https://myvariant.info/v1/query?q=_exists_:%22docm.ensembl_gene_id%22%20AND%20_exists_:%22dbsnp.rsid%22
       # testExamples:
-      #   - qInput: "DBSNP:rs759487569"    ## in GATA2
+      #   - qInput: "DBSNP:rs759487569"    ## chr3:g.128200743C>T in GATA2
       #     oneOutput: "DOID:9119"         ## acute myeloid leukemia (AML)
     docm-variantDisease-rev:
     - supportBatch: true
@@ -1129,7 +1142,7 @@ components:
       - id: DBSNP
         semantic: SequenceVariant
       parameters:
-        fields: dbsnp.rsid
+        fields: dbsnp.rsid,_id
         size: 1000  ## note size limit
       predicate: related_to
       source: "infores:docm"
@@ -1138,4 +1151,4 @@ components:
       ## https://myvariant.info/v1/query?q=_exists_:%22docm.ensembl_gene_id%22%20AND%20_exists_:%22dbsnp.rsid%22
       # testExamples:
       #   - qInput: "DOID:1781"              ## Thyroid Cancer
-      #     oneOutput: "DBSNP:rs121913254"   ## in NRAS
+      #     oneOutput: "DBSNP:rs121913254"   ## chr1:g.115256530G>T in NRAS
