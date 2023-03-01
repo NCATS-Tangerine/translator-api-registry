@@ -342,8 +342,7 @@ paths:
       - "$ref": "#/components/x-bte-kgs-operations/drugcentral-bioactivity-antibody"
       - "$ref": "#/components/x-bte-kgs-operations/drugcentral-bioactivity-antisense-inhibitor"
       - "$ref": "#/components/x-bte-kgs-operations/drugcentral-bioactivity-binding-agent"
-      - "$ref": "#/components/x-bte-kgs-operations/drugcentral-bioactivity-blocker"
-      - "$ref": "#/components/x-bte-kgs-operations/drugcentral-bioactivity-gating-inhibitor"
+      - "$ref": "#/components/x-bte-kgs-operations/drugcentral-bioactivity-blockage"
       - "$ref": "#/components/x-bte-kgs-operations/drugcentral-bioactivity-inhibitor"
       - "$ref": "#/components/x-bte-kgs-operations/drugcentral-bioactivity-opener"
       - "$ref": "#/components/x-bte-kgs-operations/drugcentral-bioactivity-positive-allosteric-modulator"
@@ -1309,25 +1308,24 @@ components:
       # testExamples:
       #   - qInput: "UMLS:C2346797"           ## moxetumomab pasudotox
       #     oneOutput: "UniProtKB:P20273"     ## CD22
-    drugcentral-bioactivity-blocker:
-    ## 152 records: https://mychem.info/v1/query?q=%20_exists_:%22drugcentral.bioactivity.uniprot.uniprot_id%22%20AND%20_exists_:%22drugcentral.xrefs.umlscui%22%20AND%20drugcentral.bioactivity.action_type:%22BLOCKER%22&fields=drugcentral
+    drugcentral-bioactivity-blockage:
+    ## includes action_type = 
+    ## - "BLOCKER", 152 records: https://mychem.info/v1/query?q=%20_exists_:%22drugcentral.bioactivity.uniprot.uniprot_id%22%20AND%20_exists_:%22drugcentral.xrefs.umlscui%22%20AND%20drugcentral.bioactivity.action_type:%22BLOCKER%22&fields=drugcentral
+    ## - "GATING INHIBITOR", 28 records: https://mychem.info/v1/query?q=%20_exists_:%22drugcentral.bioactivity.uniprot.uniprot_id%22%20AND%20_exists_:%22drugcentral.xrefs.umlscui%22%20AND%20drugcentral.bioactivity.action_type:%22GATING%20INHIBITOR%22&fields=drugcentral
     - supportBatch: true
       useTemplating: true
       inputs:
       - id: UMLS
         semantic: SmallMolecule
-      requestBodyType: object
       requestBody:
-        body: >-
-          {
-            "q": [ {{ queryInputs | wrap( '["' , '","BLOCKER"]') }} ],
-            "scopes": ["drugcentral.xrefs.umlscui", "drugcentral.bioactivity.action_type"]
-          }
+        body:
+          q: "{{ queryInputs }}"
+          scopes: drugcentral.xrefs.umlscui
       outputs:
       - id: UniProtKB
         semantic: Gene
       parameters:
-        list_filter: "drugcentral.bioactivity:action_type=BLOCKER"
+        list_filter: "drugcentral.bioactivity:action_type=BLOCKER,GATING INHIBITOR"
         fields: >-
           drugcentral.bioactivity.uniprot.uniprot_id,
           drugcentral.bioactivity.action_type,
@@ -1345,44 +1343,10 @@ components:
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/drugcentral-bioactivity"
       # testExamples:
+      ## for BLOCKER
       #   - qInput: "UMLS:C0242375"           ## lidocaine
       #     oneOutput: "UniProtKB:Q99250"     ## SCN2A
-    drugcentral-bioactivity-gating-inhibitor:
-    ## 28 records: https://mychem.info/v1/query?q=%20_exists_:%22drugcentral.bioactivity.uniprot.uniprot_id%22%20AND%20_exists_:%22drugcentral.xrefs.umlscui%22%20AND%20drugcentral.bioactivity.action_type:%22GATING%20INHIBITOR%22&fields=drugcentral
-    - supportBatch: true
-      useTemplating: true
-      inputs:
-      - id: UMLS
-        semantic: SmallMolecule
-      requestBodyType: object
-      requestBody:
-        body: >-
-          {
-            "q": [ {{ queryInputs | wrap( '["' , '","GATING INHIBITOR"]') }} ],
-            "scopes": ["drugcentral.xrefs.umlscui", "drugcentral.bioactivity.action_type"]
-          }
-      outputs:
-      - id: UniProtKB
-        semantic: Gene
-      parameters:
-        list_filter: "drugcentral.bioactivity:action_type=GATING INHIBITOR"
-        fields: >-
-          drugcentral.bioactivity.uniprot.uniprot_id,
-          drugcentral.bioactivity.action_type,
-          drugcentral.bioactivity.act_source,
-          drugcentral.bioactivity.organism
-        size: 1000  ## note size limit; added just in case
-      ## using same predicate/qualifiers as dgidb blocker
-      predicate: affects
-      qualifiers:
-        qualified_predicate: causes
-        object_aspect_qualifier: activity
-        object_direction_qualifier: decreased
-        causal_mechanism_qualifier: molecular_channel_blockage
-      source: "infores:drugcentral"
-      response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/drugcentral-bioactivity"
-      # testExamples:
+      ## for GATING INHIBITOR
       #   - qInput: "UMLS:C0028066"           ## nifedipine
       #     oneOutput: "UniProtKB:Q01668"     ## CACNA1D
     drugcentral-bioactivity-inhibitor:
