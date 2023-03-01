@@ -341,6 +341,7 @@ paths:
       - "$ref": "#/components/x-bte-kgs-operations/drugcentral-bioactivity-decreases-activity"
       - "$ref": "#/components/x-bte-kgs-operations/drugcentral-bioactivity-physically-interacts"
       - "$ref": "#/components/x-bte-kgs-operations/drugcentral-bioactivity-antisense-inhibitor"
+      - "$ref": "#/components/x-bte-kgs-operations/drugcentral-bioactivity-modulator"
       - "$ref": "#/components/x-bte-kgs-operations/drugcentral-bioactivity-rev"
       - "$ref": "#/components/x-bte-kgs-operations/drugcentral-contraindication"
       - "$ref": "#/components/x-bte-kgs-operations/drugcentral-contraindication-rev"
@@ -1073,10 +1074,6 @@ components:
   ##   - Common ones: "Rattus norvegicus" (765), "Mus musculus" (316), "Bos taurus" (226), Escherichia coli (156)
   ##   - Other: Sus scrofa (56), Bacillus anthracis (13), Lactobacillus casei (11), Enterococcus faecium (2)
   ################################################################################################################################
-  ## CAN ADD LATER? MISSING operations for the following action_type values 
-  ##   because of the partial matching, see https://github.com/biothings/mychem.info/issues/153
-  ##   * ALLOSTERIC MODULATOR 
-  ##   * MODULATOR 
     drugcentral-bioactivity-activator:
     ## 67 records: https://mychem.info/v1/query?q=%20_exists_:%22drugcentral.bioactivity.uniprot.uniprot_id%22%20AND%20_exists_:%22drugcentral.xrefs.umlscui%22%20AND%20drugcentral.bioactivity.action_type:%22ACTIVATOR%22&fields=drugcentral
     - supportBatch: true
@@ -1274,6 +1271,43 @@ components:
       # testExamples:
       #   - qInput: "UMLS:C4726970"           ## volanesorsen
       #     oneOutput: "UniProtKB:P02656"     ## APOC3
+    drugcentral-bioactivity-modulator:
+    ## includes action_type = 
+    ## - ALLOSTERIC MODULATOR: <= 61 chem/records
+    ## - MODULATOR: <= 92 chem/records  
+    ## not sure of the exact number of matching records, because of the partial matching issue
+    ## see https://github.com/biothings/mychem.info/issues/153
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: UMLS
+        semantic: SmallMolecule
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"
+          scopes: drugcentral.xrefs.umlscui
+      outputs:
+      - id: UniProtKB
+        semantic: Gene
+      parameters:
+        list_filter: "drugcentral.bioactivity:action_type=ALLOSTERIC MODULATOR,MODULATOR"
+        fields: >-
+          drugcentral.bioactivity.uniprot.uniprot_id,
+          drugcentral.bioactivity.action_type,
+          drugcentral.bioactivity.act_source,
+          drugcentral.bioactivity.organism
+        size: 1000  ## note size limit; added just in case
+      predicate: affects_activity_of
+      source: "infores:drugcentral"
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/drugcentral-bioactivity"
+      # testExamples:
+      ## for ALLOSTERIC MODULATOR
+      #   - qInput: "UMLS:C0109102"           ## cervoxan
+      #     oneOutput: "UniProtKB:P20309"     ## CHRM3
+      ## for MODULATOR
+      #   - qInput: "UMLS:C4548896"           ## siponimod
+      #     oneOutput: "UniProtKB:P21453"     ## S1PR1
     drugcentral-bioactivity-rev:
     - supportBatch: true
       useTemplating: true
