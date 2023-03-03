@@ -11,9 +11,19 @@ info:
     url: 'https://api.pharmgkb.org'
     email: api@pharmgkb.org
   version: '1.0'
+  x-translator:
+    infores: "infores:pharmgkb"
+    component: KP
+    team:
+      - "Service Provider"
+    biolink-version: "2.4.8"
+    ## 31 x-bte operations total
 servers:
-  - url: 'https://api.pharmgkb.org/v1'
+  - description: Production server
+    url: 'https://api.pharmgkb.org/v1'
+    x-maturity: production
 tags:
+  - name: translator
   - name: auth
     description: How to authenticate
   - name: data
@@ -25,6 +35,85 @@ tags:
   - name: services
     description: PharmGKB implementations of external services
 paths:
+## not annotating with x-bte:
+## - /data/pathway, /data/chemical: annotating {id} version instead
+## - /data/gene endpoints: no need, has info on gene and GO annotations
+## - /data/disease endpoints: no need, has info on disease
+## - /data/variant endpoints, /report/variantFrequency: no need, only has info on variant and its gene
+## - /data/literature endpoints, /report/literatureID: no need, literature-centric view
+## - /data/guidelineAnnotation/{id}, /data/label/{id}, /data/clinicalAnnotation/{id},
+##   /data/variantAnnotation/{id} : annotating non-id version instead
+## - data/vip/{id}, /data/dataAnnotation, report/guideline/{id}/annotations: 
+##   no need, must query with annotation's PharmGKB ID
+## - /data/ontologyTerm: lists possible values for some categorical variables
+## - /report/stats: info on API contents
+## - /report/crossReference: get equivalent IDs for a PharmGKB ID (need to know the PharmGKB type for the ID too)
+## - /report/pair: knowing PharmGKB IDs of two things, find specific kinds of relationships between them
+## - /report/connectedObjects: similar to /data/connection endpoint but less info
+  /data/connection:
+    get:
+      tags:
+        - data
+      summary: Query all objects connected to an ID and list the connections between them
+      parameters:
+        - name: object1Id
+          in: query
+          description: the subject ID (PA# or numeric ID)
+          example: PA154426155
+          schema:
+            type: string
+        - name: object1Name
+          in: query
+          description: the subject name (can be RSID for Variants)
+          schema:
+            type: string
+        - name: object1Type
+          in: query
+          description: the subject PharmGKB type
+          schema:
+            type: string
+        - name: object2Id
+          in: query
+          description: the object ID (PA# or numeric ID)
+          schema:
+            type: string
+        - name: object2Name
+          in: query
+          description: the object name (can be RSID for Variants)
+          schema:
+            type: string
+        - name: object2Type
+          in: query
+          description: the object PharmGKB type
+          example: Chemical
+          schema:
+            type: string
+      responses:
+        '200':
+          description: success
+          # content:
+          #   application/json:
+          #     schema:
+          #       type: array
+          #       items:
+          #         $ref: '#/components/schemas/Pathway'
+      x-bte-kgs-operations:
+        - "$ref": "#/components/x-bte-kgs-operations/connect-pathway-chemical"
+        - "$ref": "#/components/x-bte-kgs-operations/connect-chemical-pathway"
+        - "$ref": "#/components/x-bte-kgs-operations/connect-pathway-disease"
+        - "$ref": "#/components/x-bte-kgs-operations/connect-disease-pathway"
+        - "$ref": "#/components/x-bte-kgs-operations/connect-pathway-gene"
+        - "$ref": "#/components/x-bte-kgs-operations/connect-gene-pathway"
+        - "$ref": "#/components/x-bte-kgs-operations/connect-chemical-chemical"
+        - "$ref": "#/components/x-bte-kgs-operations/connect-chemical-disease"
+        - "$ref": "#/components/x-bte-kgs-operations/connect-disease-chemical"
+        - "$ref": "#/components/x-bte-kgs-operations/connect-disease-disease"
+        - "$ref": "#/components/x-bte-kgs-operations/connect-disease-gene"
+        - "$ref": "#/components/x-bte-kgs-operations/connect-gene-disease"
+        - "$ref": "#/components/x-bte-kgs-operations/connect-disease-variant"
+        - "$ref": "#/components/x-bte-kgs-operations/connect-variant-disease"
+        - "$ref": "#/components/x-bte-kgs-operations/connect-gene-gene"
+        - "$ref": "#/components/x-bte-kgs-operations/connect-gene-chemical"
   /data/pathway:
     get:
       tags:
@@ -67,13 +156,15 @@ paths:
       parameters:
         - name: id
           in: path
-          description: the Pathway's PharmGKB accession identifier
+          description: "the Pathway's PharmGKB accession identifier"
           required: true
+          example: PA2023
           schema:
             type: string
         - name: view
           in: query
           description: How much data to retrieve on the object
+          example: max
           schema:
             type: string
             enum:
@@ -87,6 +178,11 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Pathway'
+      x-bte-kgs-operations:
+        - "$ref": "#/components/x-bte-kgs-operations/pathwayEndpoint-chemical"
+        - "$ref": "#/components/x-bte-kgs-operations/pathwayEndpoint-disease"
+        - "$ref": "#/components/x-bte-kgs-operations/pathwayEndpoint-gene"
+        - "$ref": "#/components/x-bte-kgs-operations/pathwayEndpoint-pathway"
   /data/gene:
     get:
       tags:
@@ -129,7 +225,7 @@ paths:
       parameters:
         - name: id
           in: path
-          description: the Gene's PharmGKB accession identifier
+          description: "the Gene's PharmGKB accession identifier"
           required: true
           schema:
             type: string
@@ -157,7 +253,7 @@ paths:
       parameters:
         - name: id
           in: path
-          description: the Gene's PharmGKB accession identifier
+          description: "the Gene's PharmGKB accession identifier"
           required: true
           schema:
             type: string
@@ -187,7 +283,7 @@ paths:
       parameters:
         - name: id
           in: path
-          description: the Gene's PharmGKB accession identifier
+          description: "the Gene's PharmGKB accession identifier"
           required: true
           schema:
             type: string
@@ -251,13 +347,15 @@ paths:
       parameters:
         - name: id
           in: path
-          description: the Chemical's PharmGKB accession identifier
+          description: "the Chemical's PharmGKB accession identifier"
           required: true
+          example: PA166182864
           schema:
             type: string
         - name: view
           in: query
           description: How much data to retrieve on the object
+          example: max
           schema:
             type: string
             enum:
@@ -271,6 +369,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Chemical'
+      x-bte-kgs-operations:
+        - "$ref": "#/components/x-bte-kgs-operations/chemical-components"
+        - "$ref": "#/components/x-bte-kgs-operations/chemical-metabolites"
   /data/disease:
     get:
       tags:
@@ -313,7 +414,7 @@ paths:
       parameters:
         - name: id
           in: path
-          description: the Chemical's PharmGKB accession identifier
+          description: "the Chemical's PharmGKB accession identifier"
           required: true
           schema:
             type: string
@@ -341,7 +442,7 @@ paths:
       parameters:
         - name: symbol
           in: query
-          description: 'the Variant''s symbol, often the dbSNP RSID'
+          description: "the Variant's symbol, often the dbSNP RSID"
           schema:
             type: string
         - name: view
@@ -368,7 +469,7 @@ paths:
       parameters:
         - name: id
           in: path
-          description: the Variant's PharmGKB accession identifier
+          description: "the Variant's PharmGKB accession identifier"
           required: true
           schema:
             type: string
@@ -435,7 +536,7 @@ paths:
       parameters:
         - name: id
           in: path
-          description: The Literature's ID
+          description: "The Literature's ID"
           required: true
           schema:
             type: number
@@ -475,6 +576,7 @@ paths:
           description: >-
             the accession ID of a chemical associated with the Guideline
             Annotation
+          example: PA448004
           schema:
             type: string
         - name: relatedGenes.accessionId
@@ -485,6 +587,7 @@ paths:
         - name: view
           in: query
           description: How much data to retrieve on the object
+          example: base
           schema:
             type: string
             enum:
@@ -498,6 +601,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/GuidelineAnnotation'
+      x-bte-kgs-operations:
+        - "$ref": "#/components/x-bte-kgs-operations/guideline-chemical-gene"
+        - "$ref": "#/components/x-bte-kgs-operations/guideline-gene-chemical"
   '/data/guidelineAnnotation/{id}':
     get:
       tags:
@@ -506,7 +612,7 @@ paths:
       parameters:
         - name: id
           in: path
-          description: the Guideline Annotation's PharmGKB accession identifier
+          description: "the Guideline Annotation's PharmGKB accession identifier"
           required: true
           schema:
             type: string
@@ -545,6 +651,7 @@ paths:
         - name: relatedChemicals.accessionId
           in: query
           description: the accession ID of a chemical associated with the Drug Label
+          example: PA166153471
           schema:
             type: string
         - name: relatedChemicals.name
@@ -565,6 +672,7 @@ paths:
         - name: view
           in: query
           description: How much data to retrieve on the object
+          example: base
           schema:
             type: string
             enum:
@@ -578,6 +686,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/LabelAnnotation'
+      x-bte-kgs-operations:
+        - "$ref": "#/components/x-bte-kgs-operations/label-chemical-gene"
+        - "$ref": "#/components/x-bte-kgs-operations/label-gene-chemical"
   '/data/label/{id}':
     get:
       tags:
@@ -586,7 +697,7 @@ paths:
       parameters:
         - name: id
           in: path
-          description: the Drug Label's PharmGKB accession identifier
+          description: "the Drug Label's PharmGKB accession identifier"
           required: true
           schema:
             type: string
@@ -622,6 +733,7 @@ paths:
           description: >-
             the accession ID of a chemical associated with the Clinical
             Annotation
+          example: PA451250
           schema:
             type: string
         - name: relatedChemicals.name
@@ -656,6 +768,7 @@ paths:
         - name: view
           in: query
           description: How much data to retrieve on the object
+          example: base
           schema:
             type: string
             enum:
@@ -671,6 +784,10 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/ClinicalAnnotation'
+      x-bte-kgs-operations:
+        - "$ref": "#/components/x-bte-kgs-operations/clinicalAnnot-chem-variant"
+        - "$ref": "#/components/x-bte-kgs-operations/clinicalAnnot-variant-chem"
+        - "$ref": "#/components/x-bte-kgs-operations/clinicalAnnot-chemical-gene"
   '/data/clinicalAnnotation/{id}':
     get:
       tags:
@@ -679,7 +796,7 @@ paths:
       parameters:
         - name: id
           in: path
-          description: The annotation's ID
+          description: "The annotation's ID"
           required: true
           schema:
             type: number
@@ -715,11 +832,13 @@ paths:
           description: >-
             the fingerprint (most often RSID) of the Variant to get variant
             annotations for
+          example: rs319952
           schema:
             type: string
         - name: view
           in: query
           description: How much data to retrieve on the object
+          example: base
           schema:
             type: string
             enum:
@@ -735,6 +854,9 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/VariantDrugAnnotation'
+      x-bte-kgs-operations:
+        - "$ref": "#/components/x-bte-kgs-operations/variantAnnot-variant-chem"
+        - "$ref": "#/components/x-bte-kgs-operations/variantAnnot-chem-variant"
   '/data/variantAnnotation/{id}':
     get:
       tags:
@@ -743,7 +865,7 @@ paths:
       parameters:
         - name: id
           in: path
-          description: The annotation's ID
+          description: "The annotation's ID"
           required: true
           schema:
             type: number
@@ -771,7 +893,7 @@ paths:
       parameters:
         - name: id
           in: path
-          description: The annotation's ID
+          description: "The annotation's ID"
           required: true
           schema:
             type: number
@@ -997,7 +1119,7 @@ paths:
       parameters:
         - name: firstObjId
           in: path
-          description: 'an object''s unique identifier, either their PA# or numeric ID'
+          description: "an object's unique identifier, either their PA# or numeric ID"
           required: true
           schema:
             type: string
@@ -1060,7 +1182,7 @@ paths:
       parameters:
         - name: id
           in: path
-          description: 'an object''s unique identifier, either their PA# or numeric ID'
+          description: "an object's unique identifier, either their PA# or numeric ID"
           required: true
           schema:
             type: string
@@ -1083,7 +1205,7 @@ paths:
                     connectedObject:
                       type: object
                       properties: {}
-                      description: the object that's connected to the given ID
+                      description: "the object that's connected to the given ID"
                     connectionTypes:
                       type: array
                       description: >-
@@ -1179,6 +1301,769 @@ paths:
           description: A HTML document of PharmGKB data resulting from the query
           content: {}
 components:
+  x-bte-kgs-operations:
+  ## PharmGKB ID prefix spellings for biolink-model isn't set yet
+  ###############################################################
+  ## uses /data/connection endpoint
+  ## - has separate data-objects for subject -> object and object -> subject
+  ## - can find examples by setting only object1Type and object2Type
+  ## - added gene -> chem operaton to complement clinicalAnnot-chemical-gene operation, 
+  ##   since that /data/clinicalAnnotation endpoint doesn't allow querying using gene ID
+  ## - not annotating: 
+  ##   - pathway - pathway: 20 objects, likely covered already by the other operation's relatedPathways
+  ##   - pathway <-> variant: 2 objects
+  ##   - chem -> gene, chem <-> variant: already covered by other operations
+  ##   - gene <-> variant: already covered by other resources in Translator
+  ##   - variant <-> variant: 4 objects
+    connect-pathway-chemical:
+    - supportBatch: false
+      useTemplating: true
+      inputs:
+      - id: PHARMGKB
+        semantic: Pathway
+      parameters:
+        object1Id: "{{ queryInputs }}"
+        object2Type: Chemical 
+      outputs:
+      - id: PHARMGKB
+        semantic: SmallMolecule
+      predicate: has_participant
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/connection-obj"
+      # testExamples:
+      #   - qInput: "PHARMGKB:PA154426155"      ## Taxane Pathway, Pharmacokinetics
+      #     oneOutput: "PHARMGKB:PA449383"      ## docetaxel
+    connect-chemical-pathway:
+    - supportBatch: false
+      useTemplating: true
+      inputs:
+      - id: PHARMGKB
+        semantic: SmallMolecule 
+      parameters:
+        object1Id: "{{ queryInputs }}"
+        object2Type: Pathway
+      outputs:
+      - id: PHARMGKB
+        semantic: Pathway
+      predicate: participates_in
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/connection-obj"
+      # testExamples:
+      #   - qInput: "PHARMGKB:PA166131458"       ## doxorubicin semiquinone
+      #     oneOutput: "PHARMGKB:PA165292163"    ## Doxorubicin Pathway (Cancer Cell), Pharmacodynamics
+    connect-pathway-disease:
+    - supportBatch: false
+      useTemplating: true
+      inputs:
+      - id: PHARMGKB
+        semantic: Pathway
+      parameters:
+        object1Id: "{{ queryInputs }}"
+        object2Type: Disease
+      outputs:
+      - id: PHARMGKB
+        semantic: Disease
+      predicate: related_to
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/connection-obj"
+      # testExamples:
+      #   - qInput: "PHARMGKB:PA166163705"       ## Diclofenac Pathway, Pharmacokinetics
+      #     oneOutput: "PHARMGKB:PA164925725"    ## Toxic liver disease
+    connect-disease-pathway:
+    - supportBatch: false
+      useTemplating: true
+      inputs:
+      - id: PHARMGKB
+        semantic: Disease 
+      parameters:
+        object1Id: "{{ queryInputs }}"
+        object2Type: Pathway
+      outputs:
+      - id: PHARMGKB
+        semantic: Pathway
+      predicate: related_to
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/connection-obj"
+      # testExamples:
+      #   - qInput: "PHARMGKB:PA445876"          ## Tobacco Use Disorder
+      #     oneOutput: "PHARMGKB:PA166163828"    ## Haloperidol Pathway, Pharmacokinetics
+    connect-pathway-gene:
+    - supportBatch: false
+      useTemplating: true
+      inputs:
+      - id: PHARMGKB
+        semantic: Pathway
+      parameters:
+        object1Id: "{{ queryInputs }}"
+        object2Type: Gene
+      outputs:
+      - id: PHARMGKB
+        semantic: Gene
+      predicate: has_participant
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/connection-obj"
+      # testExamples:
+      #   - qInput: "PHARMGKB:PA166247041"    ## Acenocoumarol Pathway, Pharmacokinetics
+      #     oneOutput: "PHARMGKB:PA126"       ## CYP2C9
+    connect-gene-pathway:
+    - supportBatch: false
+      useTemplating: true
+      inputs:
+      - id: PHARMGKB
+        semantic: Gene 
+      parameters:
+        object1Id: "{{ queryInputs }}"
+        object2Type: Pathway
+      outputs:
+      - id: PHARMGKB
+        semantic: Pathway
+      predicate: participates_in
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/connection-obj"
+      # testExamples:
+      #   - qInput: "PHARMGKB:PA236"             ## MAOA
+      #     oneOutput: "PHARMGKB:PA166183426"    ## Propranolol Pathway, Pharmacokinetics
+    connect-chemical-chemical:
+    ## seems to be different from the chemical components/metabolites in other operations
+    - supportBatch: false
+      useTemplating: true
+      inputs:
+      - id: PHARMGKB
+        semantic: SmallMolecule 
+      parameters:
+        object1Id: "{{ queryInputs }}"
+        object2Type: Chemical
+      outputs:
+      - id: PHARMGKB
+        semantic: SmallMolecule
+      predicate: related_to
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/connection-obj"
+      # testExamples:
+      #   - qInput: "PHARMGKB:PA164888966"    ## raltegravir
+      #     oneOutput: "PHARMGKB:PA10251"     ## atazanavir
+    connect-chemical-disease:
+    - supportBatch: false
+      useTemplating: true
+      inputs:
+      - id: PHARMGKB
+        semantic: SmallMolecule  
+      parameters:
+        object1Id: "{{ queryInputs }}"
+        object2Type: Disease
+      outputs:
+      - id: PHARMGKB
+        semantic: Disease
+      predicate: related_to
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/connection-obj"
+      # testExamples:
+      #   - qInput: "PHARMGKB:PA164888966"    ## raltegravir
+      #     oneOutput: "PHARMGKB:PA447230"    ## HIV Infections
+    connect-disease-chemical:
+    - supportBatch: false
+      useTemplating: true
+      inputs:
+      - id: PHARMGKB
+        semantic: Disease   
+      parameters:
+        object1Id: "{{ queryInputs }}"
+        object2Type: Chemical
+      outputs:
+      - id: PHARMGKB
+        semantic: SmallMolecule
+      predicate: related_to
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/connection-obj"
+      # testExamples:
+      #   - qInput: "PHARMGKB:PA444418"          ## Gastrointestinal Hemorrhage
+      #     oneOutput: "PHARMGKB:PA165958395"    ## lornoxicam
+    connect-disease-disease:
+    - supportBatch: false
+      useTemplating: true
+      inputs:
+      - id: PHARMGKB
+        semantic: Disease   
+      parameters:
+        object1Id: "{{ queryInputs }}"
+        object2Type: Disease
+      outputs:
+      - id: PHARMGKB
+        semantic: Disease
+      predicate: related_to
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/connection-obj"
+      # testExamples:
+      #   - qInput: "PHARMGKB:PA447054"       ## Stroke
+      #     oneOutput: "PHARMGKB:PA443459"    ## Atrial Fibrillation
+    connect-disease-gene:
+    - supportBatch: false
+      useTemplating: true
+      inputs:
+      - id: PHARMGKB
+        semantic: Disease   
+      parameters:
+        object1Id: "{{ queryInputs }}"
+        object2Type: Gene
+      outputs:
+      - id: PHARMGKB
+        semantic: Gene
+      predicate: related_to
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/connection-obj"
+      # testExamples:
+      #   - qInput: "PHARMGKB:PA447054"    ## Stroke
+      #     oneOutput: "PHARMGKB:PA107"    ## CES1
+    connect-gene-disease:
+    - supportBatch: false
+      useTemplating: true
+      inputs:
+      - id: PHARMGKB
+        semantic: Gene   
+      parameters:
+        object1Id: "{{ queryInputs }}"
+        object2Type: Disease
+      outputs:
+      - id: PHARMGKB
+        semantic: Disease
+      predicate: related_to
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/connection-obj"
+      # testExamples:
+      #   - qInput: "PHARMGKB:PA133787052"       ## VKORC1
+      #     oneOutput: "PHARMGKB:PA166123298"    ## over-anticoagulation
+    connect-disease-variant:
+    - supportBatch: false
+      useTemplating: true
+      inputs:
+      - id: PHARMGKB
+        semantic: Disease   
+      parameters:
+        object1Id: "{{ queryInputs }}"
+        object2Type: Variant
+      outputs:
+      - id: DBSNP
+        semantic: SequenceVariant
+      predicate: related_to
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/connection-obj-dbsnp"
+      # testExamples:
+      #   - qInput: "PHARMGKB:PA443459"    ## Atrial Fibrillation
+      #     oneOutput: "DBSNP:rs2260863"    
+    connect-variant-disease:
+    - supportBatch: false
+      useTemplating: true
+      inputs:
+      - id: DBSNP
+        semantic: SequenceVariant
+      parameters:
+        object1Name: "{{ queryInputs }}"   ## DBSNP rs ID goes in as a name
+        object2Type: Disease
+      outputs:
+      - id: PHARMGKB
+        semantic: Disease
+      predicate: related_to
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/connection-obj"
+      # testExamples:
+      #   - qInput: "DBSNP:rs1057910"    
+      #     oneOutput: "PHARMGKB:PA443915"   ## Diplopia
+    connect-gene-gene:
+    - supportBatch: false
+      useTemplating: true
+      inputs:
+      - id: PHARMGKB
+        semantic: Gene   
+      parameters:
+        object1Id: "{{ queryInputs }}"
+        object2Type: Gene
+      outputs:
+      - id: PHARMGKB
+        semantic: Gene
+      predicate: related_to
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/connection-obj"
+      # testExamples:
+      #   - qInput: "PHARMGKB:PA126"             ## CYP2C9
+      #     oneOutput: "PHARMGKB:PA133787052"    ## VKORC1
+    connect-gene-chemical:
+    ## complements clinicalAnnot-chemical-gene operation, since that /data/clinicalAnnotation endpoint
+    ##   doesn't allow querying using gene ID
+    - supportBatch: false
+      useTemplating: true
+      inputs:
+      - id: PHARMGKB
+        semantic: Gene   
+      parameters:
+        object1Id: "{{ queryInputs }}"
+        object2Type: Chemical
+      outputs:
+      - id: PHARMGKB
+        semantic: SmallMolecule
+      predicate: related_to
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/connection-obj"
+      # testExamples:
+      #   - qInput: "PHARMGKB:PA27829"        ## EPHX1
+      #     oneOutput: "PHARMGKB:PA448785"    ## carbamazepine
+  ###############################################################
+  ## uses /pathway/{id} endpoint
+  ## annotates data.relatedChemicals, data.relatedDiseases, data.relatedGenes, data.relatedPathways
+  ## not annotated:
+  ## - data.chemicals, data.diseases, data.genes: which is different data from above! 
+  ##   accessible from and annotated for /data/connection endpoint
+  ## - data.interactions, data.pathwayComponents: each item seems to look like a biolink-model Reaction (pretty detailed)
+    pathwayEndpoint-chemical:
+    ## info maybe only retrievable in this direction (no relatedPathways in /chemical/{id} response)
+    - supportBatch: false
+      useTemplating: true
+      inputs:
+      - id: PHARMGKB
+        semantic: Pathway
+      parameters:
+        id: "{{ queryInputs }}"
+        view: max
+      outputs:
+      - id: PHARMGKB
+        semantic: SmallMolecule
+      predicate: related_to
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/pathEnd-chem"
+      # testExamples:
+      #   - qInput: "PHARMGKB:PA2023"           ## ACE Inhibitor Pathway, Pharmacodynamics
+      #     oneOutput: "PHARMGKB:PA448780"      ## captopril
+    pathwayEndpoint-disease:
+    ## info maybe only retrievable in this direction (no relatedPathways in /disease response)
+    - supportBatch: false
+      useTemplating: true
+      inputs:
+      - id: PHARMGKB
+        semantic: Pathway
+      parameters:
+        id: "{{ queryInputs }}"
+        view: max
+      outputs:
+      - id: PHARMGKB
+        semantic: Disease
+      predicate: related_to
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/pathEnd-disease"
+      # testExamples:
+      #   - qInput: "PHARMGKB:PA2023"           ## ACE Inhibitor Pathway, Pharmacodynamics
+      #     oneOutput: "PHARMGKB:PA444552"      ## Hypertension
+    pathwayEndpoint-gene:
+    ## info maybe only retrievable in this direction (no relatedPathways in /gene response)
+    - supportBatch: false
+      useTemplating: true
+      inputs:
+      - id: PHARMGKB
+        semantic: Pathway
+      parameters:
+        id: "{{ queryInputs }}"
+        view: max
+      outputs:
+      - id: PHARMGKB
+        semantic: Gene
+      predicate: related_to
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/pathEnd-gene"
+      # testExamples:
+      #   - qInput: "PHARMGKB:PA166114721"   ## Uricosurics Pathway, Pharmacodynamics
+      #     oneOutput: "PHARMGKB:PA397"      ## ABCC4
+    pathwayEndpoint-pathway:
+    ## relationships seem retrievable in both directions: PathwayA -> PathwayB and PathwayB -> PathwayA
+    - supportBatch: false
+      useTemplating: true
+      inputs:
+      - id: PHARMGKB
+        semantic: Pathway
+      parameters:
+        id: "{{ queryInputs }}"
+        view: max
+      outputs:
+      - id: PHARMGKB
+        semantic: Pathway
+      predicate: related_to
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/pathEnd-path"
+      # testExamples:
+      #   - qInput: "PHARMGKB:PA2023"              ## ACE Inhibitor Pathway, Pharmacodynamics
+      #     oneOutput: "PHARMGKB:PA166165076"      ## Verapamil Pathway, Pharmacokinetics
+  ###############################################################
+  ## uses /chemical/{id} endpoint
+  ## x-bte annotation for data.components, data.metabolites
+    chemical-components:
+    ## info maybe only retrievable in this direction
+    - supportBatch: false
+      useTemplating: true
+      inputs:
+      - id: PHARMGKB
+        semantic: SmallMolecule
+      parameters:
+        id: "{{ queryInputs }}"
+        view: max
+      outputs:
+      - id: PHARMGKB
+        semantic: SmallMolecule
+      predicate: has_active_ingredient      
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/chemComponents"
+      # testExamples:
+      #   - qInput: "PHARMGKB:PA166182864"   ## XELOX
+      #     oneOutput: "PHARMGKB:PA448771"   ## capecitabine
+    chemical-metabolites:
+    ## info maybe only retrievable in this direction
+    - supportBatch: false
+      useTemplating: true
+      inputs:
+      - id: PHARMGKB
+        semantic: SmallMolecule
+      parameters:
+        id: "{{ queryInputs }}"
+        view: max
+      outputs:
+      - id: PHARMGKB
+        semantic: SmallMolecule
+      predicate: has_metabolite      
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/chemMetabolites"
+      # testExamples:
+      #   - qInput: "PHARMGKB:PA451241"         ## ribavirin
+      #     oneOutput: "PHARMGKB:PA166271901"   ## 1,2,4-triazole-3-carboxamide
+  ###############################################################
+  ## uses /guidelineAnnotation endpoint
+  ##   view=base is enough to get useful info, I think...
+  ## can query for a chemical -> get clinical guidelines on whether to give/how to give this chemical,
+  ##   given possible effects on people with genetic variants in a gene
+    guideline-chemical-gene:
+    - supportBatch: false
+      useTemplating: true
+      inputs:
+      - id: PHARMGKB
+        semantic: SmallMolecule
+      parameters:
+        "relatedChemicals.accessionId": "{{ queryInputs }}"
+        view: base
+      outputs:
+      - id: PHARMGKB
+        semantic: Gene
+      predicate: related_to      
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/guidelineEnd-gene"
+      # testExamples:
+      #   - qInput: "PHARMGKB:PA448004"      ## abacavir
+      #     oneOutput: "PHARMGKB:PA35056"    ## HLA-B
+    guideline-gene-chemical:
+    - supportBatch: false
+      useTemplating: true
+      inputs:
+      - id: PHARMGKB
+        semantic: Gene
+      parameters:
+        "relatedGenes.accessionId": "{{ queryInputs }}"
+        view: base
+      outputs:
+      - id: PHARMGKB
+        semantic: SmallMolecule
+      predicate: related_to      
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/guidelineEnd-chem"
+      # testExamples:
+      #   - qInput: "PHARMGKB:PA189"          ## HMGCR
+      #     oneOutput: "PHARMGKB:PA449688"    ## fluvastatin 
+  ###############################################################
+  ## uses /label endpoint
+  ## can query for a chemical -> get drug label info on whether to give/how to give this chemical,
+  ##   given possible effect on people with genetic variants in a gene
+    label-chemical-gene:
+    - supportBatch: false
+      useTemplating: true
+      inputs:
+      - id: PHARMGKB
+        semantic: SmallMolecule
+      parameters:
+        "relatedChemicals.accessionId": "{{ queryInputs }}"
+        view: base
+      outputs:
+      - id: PHARMGKB
+        semantic: Gene
+      predicate: related_to      
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/labelEnd-gene"
+      # testExamples:
+      #   - qInput: "PHARMGKB:PA166153471"   ## abemaciclib
+      #     oneOutput: "PHARMGKB:PA27886"    ## ESR2
+    label-gene-chemical:
+    - supportBatch: false
+      useTemplating: true
+      inputs:
+      - id: PHARMGKB
+        semantic: Gene
+      parameters:
+        "relatedGenes.accessionId": "{{ queryInputs }}"
+        view: base
+      outputs:
+      - id: PHARMGKB
+        semantic: SmallMolecule
+      predicate: related_to      
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/labelEnd-chem"
+      # testExamples:
+      #   - qInput: "PHARMGKB:PA31111"           ## MS4A1
+      #     oneOutput: "PHARMGKB:PA165291493"    ## ofatumumab 
+  ###############################################################
+  ## uses /clinicalAnnotation endpoint, pharmgkb says this is variant-drug info
+  ## - can query for a chemical -> get clinical-supported info on whether to give/how to give this chemical,
+  ##   given possible effect on people with genetic variants 
+  ## - has related diseases/phenotypes from the variant-drug interaction:
+  ## - not documented in swagger, but can query with diseases using parameter: relatedDiseases.accessionId
+  ##   however, chemical <-> disease, variant <-> disease, gene <-> disease are covered by /data/connection operations
+    clinicalAnnot-chem-variant:
+    - supportBatch: false
+      useTemplating: true
+      inputs:
+      - id: PHARMGKB
+        semantic: SmallMolecule
+      parameters:
+        "relatedChemicals.accessionId": "{{ queryInputs }}"
+        view: base
+      outputs:
+      - id: DBSNP
+        semantic: SequenceVariant
+      predicate: related_to      
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/clinicalAnnotEnd-variant"
+      # testExamples:
+      #   - qInput: "PHARMGKB:PA134308647"   ## rosuvastatin
+      #     oneOutput: "DBSNP:rs4693075"    
+    clinicalAnnot-variant-chem:
+    - supportBatch: false
+      useTemplating: true
+      inputs:
+      - id: DBSNP
+        semantic: SequenceVariant
+      parameters:
+        "location.fingerprint": "{{ queryInputs }}" 
+        view: base
+      outputs:
+      - id: PHARMGKB
+        semantic: SmallMolecule
+      predicate: related_to      
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/clinicalAnnotEnd-chem"
+      # testExamples:
+      #   - qInput: "DBSNP:rs45445694"           
+      #     oneOutput: "PHARMGKB:PA450428"    ## methotrexate 
+    clinicalAnnot-chemical-gene:
+    ## using connect-gene-chemical operation to retrieve info in gene -> chem direction
+    ##   since this endpoint doesn't allow querying using gene ID
+    - supportBatch: false
+      useTemplating: true
+      inputs:
+      - id: PHARMGKB
+        semantic: SmallMolecule
+      parameters:
+        "relatedChemicals.accessionId": "{{ queryInputs }}"
+        view: base
+      outputs:
+      - id: PHARMGKB
+        semantic: Gene
+      predicate: related_to      
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/clinicalAnnotEnd-gene"
+      # testExamples:
+      #   - qInput: "PHARMGKB:PA451250"   ## rifampin
+      #     oneOutput: "PHARMGKB:PA18"    ## NAT2
+  ###############################################################
+  ## uses /variantAnnotation endpoint
+  ## - can query for a chemical -> get publication-supported info on whether to give/how to give this chemical,
+  ##   given possible effect on people with genetic variants 
+  ## - it seems to accept gene symbols as input (not ID)
+    variantAnnot-variant-chem:
+    - supportBatch: false
+      useTemplating: true
+      inputs:
+      - id: DBSNP
+        semantic: SequenceVariant
+      parameters:
+        "location.fingerprint": "{{ queryInputs }}" 
+        view: base
+      outputs:
+      - id: PHARMGKB
+        semantic: SmallMolecule
+      predicate: related_to      
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/variantAnnotEnd-chem"
+      # testExamples:
+      #   - qInput: "DBSNP:rs319952"           
+      #     oneOutput: "PHARMGKB:PA451250"    ## rifampin 
+    variantAnnot-chem-variant:
+    ## not documented in swagger, but you can query with chemicals using parameter: relatedChemicals.accessionId
+    - supportBatch: false
+      useTemplating: true
+      inputs:
+      - id: PHARMGKB
+        semantic: SmallMolecule
+      parameters:
+        "relatedChemicals.accessionId": "{{ queryInputs }}"
+        view: base
+      outputs:
+      - id: DBSNP
+        semantic: SequenceVariant
+      predicate: related_to      
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/variantAnnotEnd-variant"
+      # testExamples:
+      #   - qInput: "PHARMGKB:PA166123407"   ## abiraterone
+      #     oneOutput: "DBSNP:rs10493112"  
+  x-bte-response-mapping:
+    ## not annotating name fields in some cases because the fields will have multiple values that we aren't keeping separate
+    connection-obj:
+      PHARMGKB: data.obj2Id
+      output_name: data.obj2Name
+      input_name: data.obj1Name
+      pubmed: data.pmid
+      pharmgkb_source_of_connection: data.relType
+    connection-obj-dbsnp:
+      DBSNP: data.obj2Name    ## DBSNP rs ID is put there
+      input_name: data.obj1Name
+      pubmed: data.pmid
+      pharmgkb_source_of_connection: data.relType
+    pathEnd-chem:
+      PHARMGKB: data.relatedChemicals.id
+      input_name: data.name
+    pathEnd-disease:
+      PHARMGKB: data.relatedDiseases.id
+      input_name: data.name
+    pathEnd-gene:
+      PHARMGKB: data.relatedGenes.id
+      input_name: data.name
+    pathEnd-path:
+      PHARMGKB: data.relatedPathways.id
+      input_name: data.name
+    chemComponents:
+      PHARMGKB: data.components.id
+      input_name: data.name
+    chemMetabolites:
+      PHARMGKB: data.metabolites.id
+      input_name: data.name
+    guidelineEnd-gene:
+      PHARMGKB: data.relatedGenes.id
+      ## related gene alleles
+      related_gene_alleles: data.relatedAlleles.symbol
+      ## provenance
+      guideline_literature_urls: data.literature._sameAs
+      clinical_guideline_source: data.source      ## probably an enum of {cpic, dpwg, pro}
+      ## guideline annotation info
+      clinical_guideline_name: data.name
+      clinical_guideline_summary: data.summaryMarkdown.html
+      flag_has_recommendation: data.recommendation
+      flag_has_alternative_drug_info: data.alternateDrugAvailable
+      flag_gene_or_variant_in_cancer_cell: data.cancerGenome
+      flag_has_dosing_information: data.dosingInformation
+      flag_has_testing_information: data.hasTestingInfo
+      flag_has_pediatric_information: data.pediatric
+    guidelineEnd-chem:
+      PHARMGKB: data.relatedChemicals.id
+      ## related gene alleles
+      related_gene_alleles: data.relatedAlleles.symbol
+      ## provenance
+      guideline_literature_urls: data.literature._sameAs
+      clinical_guideline_source: data.source      ## probably an enum of {cpic, dpwg, pro}
+      ## guideline annotation info
+      clinical_guideline_name: data.name
+      clinical_guideline_summary: data.summaryMarkdown.html
+      flag_has_recommendation: data.recommendation
+      flag_has_alternative_drug_info: data.alternateDrugAvailable
+      flag_gene_or_variant_in_cancer_cell: data.cancerGenome
+      flag_has_dosing_information: data.dosingInformation
+      flag_has_testing_information: data.hasTestingInfo
+      flag_has_pediatric_information: data.pediatric
+    labelEnd-gene:
+      ## not sure if prescribingGenes provides different info or not. using relatedGenes section instead
+      PHARMGKB: data.relatedGenes.id
+      ## related gene alleles
+      related_gene_alleles: data.relatedAlleles.symbol
+      ## provenance
+      label_literature_urls: data.literature._sameAs
+      label_source: data.source      ## probably an enum of {fda, ema, pmda, hcsc}
+      ## label annotation info
+      label_title: data.name
+      label_summary: data.summaryMarkdown.html
+      pgx_level: data.testing.term
+      flag_has_alternative_drug_info: data.alternateDrugAvailable
+      flag_gene_or_variant_in_cancer_cell: data.cancerGenome
+      flag_has_dosing_information: data.dosingInformation
+      flag_has_pediatric_information: data.pediatric
+    labelEnd-chem:
+      PHARMGKB: data.relatedChemicals.id
+      ## related gene alleles
+      related_gene_alleles: data.relatedAlleles.symbol
+      ## provenance
+      label_literature_urls: data.literature._sameAs
+      label_source: data.source      ## probably an enum of {fda, ema, pmda, hcsc}
+      ## label annotation info
+      label_title: data.name
+      label_summary: data.summaryMarkdown.html
+      pgx_level: data.testing.term
+      flag_has_alternative_drug_info: data.alternateDrugAvailable
+      flag_gene_or_variant_in_cancer_cell: data.cancerGenome
+      flag_has_dosing_information: data.dosingInformation
+      flag_has_pediatric_information: data.pediatric
+    clinicalAnnotEnd-variant:
+      DBSNP: data.location.rsid
+      annotation_title: data.name
+      pharmgkb_annotation_phenotype_category: data.types
+      pharmgkb_annotation_level_of_evidence: data.levelOfEvidence.term  
+      allele_phenotype_information: data.allelePhenotypes.phenotype
+      related_genes: data.location.genes.symbol
+      related_diseases: data.relatedDiseases.name
+    clinicalAnnotEnd-chem:
+      PHARMGKB: data.relatedChemicals.id
+      annotation_title: data.name
+      pharmgkb_annotation_phenotype_category: data.types
+      pharmgkb_annotation_level_of_evidence: data.levelOfEvidence.term  
+      allele_phenotype_information: data.allelePhenotypes.phenotype
+      related_genes: data.location.genes.symbol
+      related_diseases: data.relatedDiseases.name
+    clinicalAnnotEnd-gene:
+      PHARMGKB: data.location.genes.id
+      annotation_title: data.name
+      pharmgkb_annotation_phenotype_category: data.types
+      pharmgkb_annotation_level_of_evidence: data.levelOfEvidence.term  
+      allele_phenotype_information: data.allelePhenotypes.phenotype
+      related_variants: data.location.rsid
+      related_diseases: data.relatedDiseases.name
+    variantAnnotEnd-chem:
+      PHARMGKB: data.relatedChemicals.id
+      related_genes: data.location.genes.symbol
+      flag_significant_association: data.significance.term  ## yes/no values?
+      ## provenance
+      annotation_literature_urls: data.literature._sameAs
+      sentence: data.sentence
+      description: data.description
+      ## phenotypic effect
+      phenotype_name: data.phenotypes.phenotype
+      phenotype_context: data.phenotypes.phenotypeContext
+      pharmgkb_annotation_phenotype_category: data.phenotypeCategories.term
+      direction_of_phenotypic_effect: data.polarity.term
+      ## context: what did the population start out with (there's more under data.studyParameters)
+      population_phenotype_name: data.populationPhenotypes.phenotype
+    variantAnnotEnd-variant:
+      DBSNP: data.location.rsid
+      related_genes: data.location.genes.symbol
+      flag_significant_association: data.significance.term  ## yes/no values?
+      ## provenance
+      annotation_literature_urls: data.literature._sameAs
+      sentence: data.sentence
+      description: data.description
+      ## phenotypic effect
+      phenotype_name: data.phenotypes.phenotype
+      phenotype_context: data.phenotypes.phenotypeContext
+      pharmgkb_annotation_phenotype_category: data.phenotypeCategories.term
+      direction_of_phenotypic_effect: data.polarity.term
+      ## context: what did the population start out with (there's more under data.studyParameters)
+      population_phenotype_name: data.populationPhenotypes.phenotype
   schemas:
     JSendSuccess:
       required:
@@ -2625,7 +3510,7 @@ components:
         linkText:
           type: string
           description: Text to display for the link
-          example: 'hi, I''m link text'
+          example: "hi, I'm link text"
         url:
           type: string
           description: The partial URL for this link
