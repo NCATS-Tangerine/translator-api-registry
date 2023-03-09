@@ -1,0 +1,3764 @@
+openapi: 3.0.1
+info:
+  title: PharmGKB REST API
+  description: >-
+    This is the RESTful API for accessing data stored in PharmGKB. All responses
+    are in JSON format and can be retrieved as either JSON or <a
+    href="http://www.w3.org/TR/json-ld/">JSON-LD</a> linked data format.
+  termsOfService: 'https://www.pharmgkb.org/page/policies'
+  contact:
+    name: PharmGKB
+    url: 'https://api.pharmgkb.org'
+    email: api@pharmgkb.org
+  version: '1.0'
+  x-translator:
+    infores: "infores:pharmgkb"
+    component: KP
+    team:
+      - "Service Provider"
+    biolink-version: "2.4.8"
+    ## 31 x-bte operations total
+servers:
+  - description: Production server
+    url: 'https://api.pharmgkb.org/v1'
+    x-maturity: production
+tags:
+  - name: translator
+  - name: auth
+    description: How to authenticate
+  - name: data
+    description: How to query specific objects in PharmGKB
+  - name: report
+    description: Helper queries for getting connected data in PharmGKB
+  - name: user
+    description: Managing your user account
+  - name: services
+    description: PharmGKB implementations of external services
+paths:
+## not annotating with x-bte:
+## - /data/pathway, /data/chemical: annotating {id} version instead
+## - /data/gene endpoints: no need, has info on gene and GO annotations
+## - /data/disease endpoints: no need, has info on disease
+## - /data/variant endpoints, /report/variantFrequency: no need, only has info on variant and its gene
+## - /data/literature endpoints, /report/literatureID: no need, literature-centric view
+## - /data/guidelineAnnotation/{id}, /data/label/{id}, /data/clinicalAnnotation/{id},
+##   /data/variantAnnotation/{id} : annotating non-id version instead
+## - data/vip/{id}, /data/dataAnnotation, report/guideline/{id}/annotations: 
+##   no need, must query with annotation's PharmGKB ID
+## - /data/ontologyTerm: lists possible values for some categorical variables
+## - /report/stats: info on API contents
+## - /report/crossReference: get equivalent IDs for a PharmGKB ID (need to know the PharmGKB type for the ID too)
+## - /report/pair: knowing PharmGKB IDs of two things, find specific kinds of relationships between them
+## - /report/connectedObjects: similar to /data/connection endpoint but less info
+  /data/connection:
+    get:
+      tags:
+        - data
+      summary: Query all objects connected to an ID and list the connections between them
+      parameters:
+        - name: object1Id
+          in: query
+          description: the subject ID (PA# or numeric ID)
+          example: PA154426155
+          schema:
+            type: string
+        - name: object1Name
+          in: query
+          description: the subject name (can be RSID for Variants)
+          schema:
+            type: string
+        - name: object1Type
+          in: query
+          description: the subject PharmGKB type
+          schema:
+            type: string
+        - name: object2Id
+          in: query
+          description: the object ID (PA# or numeric ID)
+          schema:
+            type: string
+        - name: object2Name
+          in: query
+          description: the object name (can be RSID for Variants)
+          schema:
+            type: string
+        - name: object2Type
+          in: query
+          description: the object PharmGKB type
+          example: Chemical
+          schema:
+            type: string
+      responses:
+        '200':
+          description: success
+          # content:
+          #   application/json:
+          #     schema:
+          #       type: array
+          #       items:
+          #         $ref: '#/components/schemas/Pathway'
+      x-bte-kgs-operations:
+        - "$ref": "#/components/x-bte-kgs-operations/connect-pathway-chemical"
+        - "$ref": "#/components/x-bte-kgs-operations/connect-chemical-pathway"
+        - "$ref": "#/components/x-bte-kgs-operations/connect-pathway-disease"
+        - "$ref": "#/components/x-bte-kgs-operations/connect-disease-pathway"
+        - "$ref": "#/components/x-bte-kgs-operations/connect-pathway-gene"
+        - "$ref": "#/components/x-bte-kgs-operations/connect-gene-pathway"
+        - "$ref": "#/components/x-bte-kgs-operations/connect-chemical-chemical"
+        - "$ref": "#/components/x-bte-kgs-operations/connect-chemical-disease"
+        - "$ref": "#/components/x-bte-kgs-operations/connect-disease-chemical"
+        - "$ref": "#/components/x-bte-kgs-operations/connect-disease-disease"
+        - "$ref": "#/components/x-bte-kgs-operations/connect-disease-gene"
+        - "$ref": "#/components/x-bte-kgs-operations/connect-gene-disease"
+        - "$ref": "#/components/x-bte-kgs-operations/connect-disease-variant"
+        - "$ref": "#/components/x-bte-kgs-operations/connect-variant-disease"
+        - "$ref": "#/components/x-bte-kgs-operations/connect-gene-gene"
+        - "$ref": "#/components/x-bte-kgs-operations/connect-gene-chemical"
+  /data/pathway:
+    get:
+      tags:
+        - data
+      summary: Query Pathway objects
+      parameters:
+        - name: name
+          in: query
+          description: the name of the Pathway
+          schema:
+            type: string
+        - name: accessionId
+          in: query
+          description: the PharmGKB identifier of the Pathway
+          example: PA2023
+          schema:
+            type: string
+        - name: view
+          in: query
+          description: How much data to retrieve on the object
+          example: min
+          schema:
+            type: string
+            enum:
+              - min
+              - base
+              - max
+      responses:
+        '200':
+          description: success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Pathway'
+  '/data/pathway/{id}':
+    get:
+      tags:
+        - data
+      summary: Retrieve Pathway object using the PharmGKB ID
+      parameters:
+        - name: id
+          in: path
+          description: "the Pathway's PharmGKB accession identifier"
+          required: true
+          example: PA2023
+          schema:
+            type: string
+        - name: view
+          in: query
+          description: How much data to retrieve on the object
+          example: max
+          schema:
+            type: string
+            enum:
+              - min
+              - base
+              - max
+      responses:
+        '200':
+          description: success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pathway'
+      x-bte-kgs-operations:
+        - "$ref": "#/components/x-bte-kgs-operations/pathwayEndpoint-chemical"
+        - "$ref": "#/components/x-bte-kgs-operations/pathwayEndpoint-disease"
+        - "$ref": "#/components/x-bte-kgs-operations/pathwayEndpoint-gene"
+        - "$ref": "#/components/x-bte-kgs-operations/pathwayEndpoint-pathway"
+  /data/gene:
+    get:
+      tags:
+        - data
+      summary: Query Gene objects
+      parameters:
+        - name: accessionId
+          in: query
+          description: the PharmGKB identifier of the Gene
+          example: PA18
+          schema:
+            type: string
+        - name: symbol
+          in: query
+          description: the HGNC symbol for the gene
+          schema:
+            type: string
+        - name: view
+          in: query
+          description: How much data to retrieve on the object
+          example: min
+          schema:
+            type: string
+            enum:
+              - min
+              - base
+              - max
+      responses:
+        '200':
+          description: success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Gene'
+  '/data/gene/{id}':
+    get:
+      tags:
+        - data
+      summary: Retrieve a Gene using the PharmGKB ID
+      parameters:
+        - name: id
+          in: path
+          description: "the Gene's PharmGKB accession identifier"
+          required: true
+          schema:
+            type: string
+        - name: view
+          in: query
+          description: How much data to retrieve on the object
+          schema:
+            type: string
+            enum:
+              - min
+              - base
+              - max
+      responses:
+        '200':
+          description: success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Gene'
+  '/data/gene/{id}/crossReferences':
+    get:
+      tags:
+        - data
+      summary: Retrieve the Cross References for a Gene using the PharmGKB ID
+      parameters:
+        - name: id
+          in: path
+          description: "the Gene's PharmGKB accession identifier"
+          required: true
+          schema:
+            type: string
+        - name: view
+          in: query
+          description: How much data to retrieve on the object
+          schema:
+            type: string
+            enum:
+              - min
+              - base
+              - max
+      responses:
+        '200':
+          description: success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CrossReference'
+  '/data/gene/{id}/ontologyTerms':
+    get:
+      tags:
+        - data
+      summary: Retrieve the Ontology Terms for a Gene using the PharmGKB ID
+      parameters:
+        - name: id
+          in: path
+          description: "the Gene's PharmGKB accession identifier"
+          required: true
+          schema:
+            type: string
+        - name: view
+          in: query
+          description: How much data to retrieve on the object
+          schema:
+            type: string
+            enum:
+              - min
+              - base
+              - max
+      responses:
+        '200':
+          description: success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OntologyTerm'
+  /data/chemical:
+    get:
+      tags:
+        - data
+      summary: Query Chemical objects
+      parameters:
+        - name: accessionId
+          in: query
+          description: the PharmGKB identifier of the Chemical
+          example: PA166182864
+          schema:
+            type: string
+        - name: name
+          in: query
+          description: the name of the Chemical
+          schema:
+            type: string
+        - name: view
+          in: query
+          description: How much data to retrieve on the object
+          example: min
+          schema:
+            type: string
+            enum:
+              - min
+              - base
+              - max
+      responses:
+        '200':
+          description: success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Chemical'
+  '/data/chemical/{id}':
+    get:
+      tags:
+        - data
+      summary: Retrieve a Chemical using the PharmGKB ID
+      parameters:
+        - name: id
+          in: path
+          description: "the Chemical's PharmGKB accession identifier"
+          required: true
+          example: PA166182864
+          schema:
+            type: string
+        - name: view
+          in: query
+          description: How much data to retrieve on the object
+          example: max
+          schema:
+            type: string
+            enum:
+              - min
+              - base
+              - max
+      responses:
+        '200':
+          description: success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Chemical'
+      x-bte-kgs-operations:
+        - "$ref": "#/components/x-bte-kgs-operations/chemical-components"
+        - "$ref": "#/components/x-bte-kgs-operations/chemical-metabolites"
+  /data/disease:
+    get:
+      tags:
+        - data
+      summary: Query Disease objects
+      parameters:
+        - name: accessionId
+          in: query
+          description: the PharmGKB identifier of the Disease
+          example: PA445876
+          schema:
+            type: string
+        - name: name
+          in: query
+          description: the name of the Disease
+          schema:
+            type: string
+        - name: view
+          in: query
+          description: How much data to retrieve on the object
+          example: min
+          schema:
+            type: string
+            enum:
+              - min
+              - base
+              - max
+      responses:
+        '200':
+          description: success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Disease'
+  '/data/disease/{id}':
+    get:
+      tags:
+        - data
+      summary: Retrieve a Disease using the PharmGKB ID
+      parameters:
+        - name: id
+          in: path
+          description: "the Chemical's PharmGKB accession identifier"
+          required: true
+          schema:
+            type: string
+        - name: view
+          in: query
+          description: How much data to retrieve on the object
+          schema:
+            type: string
+            enum:
+              - min
+              - base
+              - max
+      responses:
+        '200':
+          description: success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Disease'
+  /data/variant/:
+    get:
+      tags:
+        - data
+      summary: Query a Variant using the PharmGKB ID
+      parameters:
+        - name: symbol
+          in: query
+          description: "the Variant's symbol, often the dbSNP RSID"
+          required: true
+          schema:
+            type: string
+        - name: view
+          in: query
+          description: How much data to retrieve on the object
+          schema:
+            type: string
+            enum:
+              - min
+              - base
+              - max
+      responses:
+        '200':
+          description: success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Variant'
+  '/data/variant/{id}':
+    get:
+      tags:
+        - data
+      summary: Retrieve a Variant using the PharmGKB ID
+      parameters:
+        - name: id
+          in: path
+          description: "the Variant's PharmGKB accession identifier"
+          required: true
+          schema:
+            type: string
+        - name: view
+          in: query
+          description: How much data to retrieve on the object
+          schema:
+            type: string
+            enum:
+              - min
+              - base
+              - max
+      responses:
+        '200':
+          description: success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Variant'
+  /data/literature:
+    get:
+      tags:
+        - data
+      summary: Query Literature objects
+      parameters:
+        - name: id
+          in: query
+          description: the PharmGKB identifier of the Literature
+          example: "15097425"
+          schema:
+            type: string
+        - name: resourceId
+          in: query
+          description: the ID for this Literature in the original resource.
+          schema:
+            type: string
+        - name: type
+          in: query
+          description: the type of Literature to find
+          schema:
+            type: string
+        - name: view
+          in: query
+          description: How much data to retrieve on the object
+          example: min
+          schema:
+            type: string
+            enum:
+              - min
+              - base
+              - max
+      responses:
+        '200':
+          description: success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Literature'
+  '/data/literature/{id}':
+    get:
+      tags:
+        - data
+      summary: Retrieve a Literature object using the ID
+      parameters:
+        - name: id
+          in: path
+          description: "The Literature's ID"
+          required: true
+          schema:
+            type: number
+        - name: view
+          in: query
+          description: How much data to retrieve on the object
+          schema:
+            type: string
+            enum:
+              - min
+              - base
+              - max
+      responses:
+        '200':
+          description: success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Literature'
+  /data/guidelineAnnotation:
+    get:
+      tags:
+        - data
+      summary: Query GuidelineAnnotations
+      parameters:
+        - name: source
+          in: query
+          description: the source of the Guideline Annotation
+          schema:
+            type: string
+            enum:
+              - cpic
+              - dpwg
+              - pro
+        - name: relatedChemicals.accessionId
+          in: query
+          description: >-
+            the accession ID of a chemical associated with the Guideline
+            Annotation
+          example: PA448004
+          schema:
+            type: string
+        - name: relatedGenes.accessionId
+          in: query
+          description: the accession ID of a gene associated with the Guideline Annotation
+          schema:
+            type: string
+        - name: view
+          in: query
+          description: How much data to retrieve on the object
+          example: base
+          schema:
+            type: string
+            enum:
+              - min
+              - base
+              - max
+      responses:
+        '200':
+          description: success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GuidelineAnnotation'
+      x-bte-kgs-operations:
+        - "$ref": "#/components/x-bte-kgs-operations/guideline-chemical-gene"
+        - "$ref": "#/components/x-bte-kgs-operations/guideline-gene-chemical"
+  '/data/guidelineAnnotation/{id}':
+    get:
+      tags:
+        - data
+      summary: Retrieve a GuidelineAnnotation using the PharmGKB ID
+      parameters:
+        - name: id
+          in: path
+          description: "the Guideline Annotation's PharmGKB accession identifier"
+          required: true
+          schema:
+            type: string
+        - name: view
+          in: query
+          description: How much data to retrieve on the object
+          schema:
+            type: string
+            enum:
+              - min
+              - base
+              - max
+      responses:
+        '200':
+          description: success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GuidelineAnnotation'
+  /data/label:
+    get:
+      tags:
+        - data
+      summary: Query DrugLabels
+      parameters:
+        - name: source
+          in: query
+          description: the source of the Drug Label
+          schema:
+            type: string
+            enum:
+              - fda
+              - ema
+              - pmda
+              - hcsc
+        - name: relatedChemicals.accessionId
+          in: query
+          description: the accession ID of a chemical associated with the Drug Label
+          example: PA166153471
+          schema:
+            type: string
+        - name: relatedChemicals.name
+          in: query
+          description: the name of a chemical associated with the Drug Label
+          schema:
+            type: string
+        - name: relatedGenes.accessionId
+          in: query
+          description: the accession ID of a gene associated with the Drug Label
+          schema:
+            type: string
+        - name: relatedGenes.symbol
+          in: query
+          description: the symbol of a gene associated with the Drug Label
+          schema:
+            type: string
+        - name: view
+          in: query
+          description: How much data to retrieve on the object
+          example: base
+          schema:
+            type: string
+            enum:
+              - min
+              - base
+              - max
+      responses:
+        '200':
+          description: success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LabelAnnotation'
+      x-bte-kgs-operations:
+        - "$ref": "#/components/x-bte-kgs-operations/label-chemical-gene"
+        - "$ref": "#/components/x-bte-kgs-operations/label-gene-chemical"
+  '/data/label/{id}':
+    get:
+      tags:
+        - data
+      summary: Retrieve a Drug Label using the PharmGKB ID
+      parameters:
+        - name: id
+          in: path
+          description: "the Drug Label's PharmGKB accession identifier"
+          required: true
+          schema:
+            type: string
+        - name: view
+          in: query
+          description: How much data to retrieve on the object
+          schema:
+            type: string
+            enum:
+              - min
+              - base
+              - max
+      responses:
+        '200':
+          description: success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LabelAnnotation'
+  /data/clinicalAnnotation:
+    get:
+      tags:
+        - data
+      summary: Query Clinical Annotations
+      parameters:
+        - name: id
+          in: query
+          description: the PharmGKB identifier of the Clinical Annotation
+          schema:
+            type: string
+        - name: relatedChemicals.accessionId
+          in: query
+          description: >-
+            the accession ID of a chemical associated with the Clinical
+            Annotation
+          example: PA451250
+          schema:
+            type: string
+        - name: relatedChemicals.name
+          in: query
+          description: the name of a chemical associated with the Clinical Annotation
+          schema:
+            type: string
+        - name: location.genes.symbol
+          in: query
+          description: the symbol of the Gene to get Clinical Annotations for
+          schema:
+            type: string
+        - name: location.fingerprint
+          in: query
+          description: >-
+            the fingerprint (most often RSID) of the Variant to get Clinical
+            Annotations for
+          schema:
+            type: string
+        - name: levelOfEvidence.term
+          in: query
+          description: the level of Clinical Annotations to retrieve
+          schema:
+            type: string
+            enum:
+              - 1A
+              - 1B
+              - 2A
+              - 2B
+              - '3'
+              - '4'
+        - name: view
+          in: query
+          description: How much data to retrieve on the object
+          example: base
+          schema:
+            type: string
+            enum:
+              - min
+              - base
+              - max
+      responses:
+        '200':
+          description: success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ClinicalAnnotation'
+      x-bte-kgs-operations:
+        - "$ref": "#/components/x-bte-kgs-operations/clinicalAnnot-chem-variant"
+        - "$ref": "#/components/x-bte-kgs-operations/clinicalAnnot-variant-chem"
+        - "$ref": "#/components/x-bte-kgs-operations/clinicalAnnot-chemical-gene"
+  '/data/clinicalAnnotation/{id}':
+    get:
+      tags:
+        - data
+      summary: Retrieve a Clinical Annotation using the ID
+      parameters:
+        - name: id
+          in: path
+          description: "The annotation's ID"
+          required: true
+          schema:
+            type: number
+        - name: view
+          in: query
+          description: How much data to retrieve on the object
+          schema:
+            type: string
+            enum:
+              - min
+              - base
+              - max
+      responses:
+        '200':
+          description: success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClinicalAnnotation'
+  /data/variantAnnotation:
+    get:
+      tags:
+        - data
+      summary: Query VariantAnnotations
+      parameters:
+        - name: location.genes.symbol
+          in: query
+          description: the symbol of the Gene to get variant annotations for
+          schema:
+            type: string
+        - name: location.fingerprint
+          in: query
+          description: >-
+            the fingerprint (most often RSID) of the Variant to get variant
+            annotations for
+          example: rs319952
+          schema:
+            type: string
+        - name: view
+          in: query
+          description: How much data to retrieve on the object
+          example: base
+          schema:
+            type: string
+            enum:
+              - min
+              - base
+              - max
+      responses:
+        '200':
+          description: success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/VariantDrugAnnotation'
+      x-bte-kgs-operations:
+        - "$ref": "#/components/x-bte-kgs-operations/variantAnnot-variant-chem"
+        - "$ref": "#/components/x-bte-kgs-operations/variantAnnot-chem-variant"
+  '/data/variantAnnotation/{id}':
+    get:
+      tags:
+        - data
+      summary: Retrieve a VariantAnnotation using the ID
+      parameters:
+        - name: id
+          in: path
+          description: "The annotation's ID"
+          required: true
+          schema:
+            type: number
+        - name: view
+          in: query
+          description: How much data to retrieve on the object
+          schema:
+            type: string
+            enum:
+              - min
+              - base
+              - max
+      responses:
+        '200':
+          description: success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VariantDrugAnnotation'
+  '/data/vip/{id}':
+    get:
+      tags:
+        - data
+      summary: Retrieve a VIP annotation using the ID
+      parameters:
+        - name: id
+          in: path
+          description: "The annotation's ID"
+          required: true
+          schema:
+            type: number
+        - name: view
+          in: query
+          description: How much data to retrieve on the object
+          schema:
+            type: string
+            enum:
+              - min
+              - base
+              - max
+      responses:
+        '200':
+          description: success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VipOverviewDisplay'
+  /data/ontologyTerm:
+    get:
+      tags:
+        - data
+      summary: Query Ontology Terms
+      parameters:
+        - name: resource
+          in: query
+          description: the ontology resource to get terms for
+          required: true
+          schema:
+            type: string
+            enum:
+              - biomarkerStatus
+              - alleleFunction
+              - cpicLevelOfEvidence
+              - cpicStatus
+              - geneTestLevel
+              - guidelineStrength
+              - levelsOfEvidence
+        - name: view
+          in: query
+          description: How much data to retrieve on the object
+          schema:
+            type: string
+            enum:
+              - min
+              - base
+              - max
+      responses:
+        '200':
+          description: success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OntologyTerm'
+  /data/dataAnnotation:
+    get:
+      tags:
+        - data
+      summary: Query Data Annotations
+      parameters:
+        - name: targets.accessionId
+          in: query
+          description: the Accession ID for the object to find annotations for
+          required: true
+          schema:
+            type: string
+        - name: type
+          in: query
+          description: the type of annotation to return
+          schema:
+            type: string
+        - name: view
+          in: query
+          description: How much data to retrieve on the object
+          schema:
+            type: string
+            enum:
+              - min
+              - base
+              - max
+      responses:
+        '200':
+          description: success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DataAnnotation'
+  '/report/guideline/{id}/annotations':
+    post:
+      tags:
+        - report
+      summary: Query the annotations for a guideline by allele function
+      description: >-
+        This endpoint is meant to query `GuidelineAnnotation` model objects that
+        have extended
+
+        annotations. The front-end may show these options as allele names but
+        the backend stores and
+
+        queries by allele function so that is what must be queried on. Those
+        functions can be found in
+
+        the `guidelineGenes` property of the `DosingGuideline` object.
+
+
+        **IMPORTANT NOTE**: This data is PharmGKB annotation of CPIC guideline
+        information. Our annotations may contain typos or errors or may be out
+        of date. If you're interested in using this data please get it directly
+        from [the CPIC website](https://cpicpgx.org/).
+      parameters:
+        - name: id
+          in: path
+          description: The accession ID of a Guideline Annotation with annotations
+          required: true
+          schema:
+            type: string
+            default: PA166104948
+      requestBody:
+        description: >-
+          The functional phenotype to query for. Should be a map of gene symbol
+          (key) to an array of 2 allele functions (value). This can have more
+          than 1 gene specified, if needed.
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                CYP2C19:
+                  type: array
+                  items:
+                    type: string
+                    description: 'Allele function values, must be 2 per gene'
+        required: true
+      responses:
+        '200':
+          description: success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GuidelineAnnotationGroup'
+      x-codegen-request-body-name: body
+  /report/variantFrequency:
+    get:
+      tags:
+        - report
+      summary: Get all variant frequency data for a given variant fingerprint
+      parameters:
+        - name: fp
+          in: query
+          description: a variant fingerprint to query (e.g. RSID)
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FrequencyResult'
+  /report/stats:
+    get:
+      tags:
+        - report
+      summary: Get all the statistics for object counts in PharmGKB
+      responses:
+        '200':
+          description: success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatsResult'
+  /report/crossReference:
+    get:
+      tags:
+        - report
+      parameters:
+        - name: type
+          in: query
+          description: the type of object to get cross references for
+          required: true
+          schema:
+            type: string
+        - name: accId
+          in: query
+          description: the ID of the object to get cross references for
+          required: true
+          schema:
+            type: string
+        - name: resource
+          in: query
+          description: the resource to get cross references from
+          schema:
+            type: string
+        - name: view
+          in: query
+          description: How much data to retrieve on the object
+          schema:
+            type: string
+            enum:
+              - min
+              - base
+              - max
+      responses:
+        '200':
+          description: success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CrossReference'
+  '/report/pair/{firstObjId}/{secondObjId}/{resultType}':
+    get:
+      tags:
+        - report
+      summary: >-
+        Retrieve all <code>{type}</code> objects that connect <code>{id1}</code>
+        and <code>{id2}</code>
+      parameters:
+        - name: firstObjId
+          in: path
+          description: "an object's unique identifier, either their PA# or numeric ID"
+          required: true
+          schema:
+            type: string
+        - name: secondObjId
+          in: path
+          description: >-
+            a different object's unique identifier, either their PA# or numeric
+            ID
+          required: true
+          schema:
+            type: string
+        - name: resultType
+          in: path
+          description: >-
+            the type of objects that connect the two given IDs. this will also
+            be the type of the returned object
+          required: true
+          schema:
+            type: string
+            enum:
+              - variantAnnotation
+              - clinicalAnnotation
+              - literatureAnnotation
+              - multilinkAnnotation
+              - pathway
+              - guidelineAnnotation
+              - label
+              - vip
+              - vipVariant
+        - name: view
+          in: query
+          description: How much data to retrieve on the object
+          schema:
+            type: string
+            enum:
+              - min
+              - base
+              - max
+      responses:
+        '200':
+          description: success
+          content:
+            application/json:
+              schema:
+                type: array
+                description: >-
+                  the returned object schema depends on the requested
+                  <code>{type}</code>
+                items:
+                  type: object
+                  properties: {}
+                  description: The model depends on the <code>resultType</code> parameter
+  '/report/connectedObjects/{id}/{type}':
+    get:
+      tags:
+        - report
+      summary: >-
+        Query all objects connected to {id} of <code>{type}</code> and list all
+        types of connections between them
+      parameters:
+        - name: id
+          in: path
+          description: "an object's unique identifier, either their PA# or numeric ID"
+          required: true
+          schema:
+            type: string
+        - name: type
+          in: path
+          description: the type of connected object to search for
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    connectedObject:
+                      type: object
+                      properties: {}
+                      description: "the object that's connected to the given ID"
+                    connectionTypes:
+                      type: array
+                      description: >-
+                        the types of objects that connect the 'connectedObject'
+                        to the given ID
+                      items:
+                        type: string
+                        description: a type of object
+  '/report/literatureId/{pmid}':
+    get:
+      tags:
+        - report
+      summary: Submit a PMID and find the Literature ID for it
+      parameters:
+        - name: pmid
+          in: path
+          description: the PMID to search for
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 'found PMID in a Literature ID, ID in response'
+          content:
+            application/json:
+              schema:
+                type: number
+                format: integer
+        '204':
+          description: 'PMID not stored, no Literature ID to report'
+          content: {}
+  /infobutton:
+    get:
+      tags:
+        - services
+      summary: PharmGKB implementation of InfoButton service
+      description: >-
+        See [infobutton documentation](/infobutton.html) for more details on the
+        use of request parameters.
+      parameters:
+        - name: mainSearchCriteria.v.c
+          in: query
+          description: The code/identifier for given code system
+          schema:
+            type: string
+        - name: mainSearchCriteria.v.cs
+          in: query
+          description: The code system for given identifier
+          schema:
+            type: string
+            default: 2.16.840.1.113883.6.88
+        - name: mainSearchCriteria.v.dn
+          in: query
+          description: The name of a chemical
+          schema:
+            type: string
+        - name: mainSearchCriteria.v.ot
+          in: query
+          description: Text such as a drug name with specific form and/or dose
+          schema:
+            type: string
+      responses:
+        '200':
+          description: A HTML document of PharmGKB data resulting from the query
+          content: {}
+    post:
+      tags:
+        - services
+      summary: PharmGKB implementation of InfoButton service
+      description: >-
+        See [infobutton documentation](/infobutton.html) for more details on the
+        use of request parameters.
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              properties:
+                mainSearchCriteria.v.c:
+                  type: string
+                  description: The code/identifier for given code system
+                mainSearchCriteria.v.cs:
+                  type: string
+                  description: The code system for given identifier
+                  default: 2.16.840.1.113883.6.88
+                mainSearchCriteria.v.dn:
+                  type: string
+                  description: The name of a chemical
+                mainSearchCriteria.v.ot:
+                  type: string
+                  description: Text such as a drug name with specific form and/or dose
+      responses:
+        '200':
+          description: A HTML document of PharmGKB data resulting from the query
+          content: {}
+components:
+  x-bte-kgs-operations:
+  ## PharmGKB ID prefix spellings for biolink-model isn't set yet
+  ###############################################################
+  ## uses /data/connection endpoint
+  ## - has separate data-objects for subject -> object and object -> subject
+  ## - can find examples by setting only object1Type and object2Type
+  ## - added gene -> chem operaton to complement clinicalAnnot-chemical-gene operation, 
+  ##   since that /data/clinicalAnnotation endpoint doesn't allow querying using gene ID
+  ## - not annotating: 
+  ##   - pathway - pathway: 20 objects, likely covered already by the other operation's relatedPathways
+  ##   - pathway <-> variant: 2 objects
+  ##   - chem -> gene, chem <-> variant: already covered by other operations
+  ##   - gene <-> variant: already covered by other resources in Translator
+  ##   - variant <-> variant: 4 objects
+    connect-pathway-chemical:
+    - supportBatch: false
+      useTemplating: true
+      inputs:
+      - id: PHARMGKB
+        semantic: Pathway
+      parameters:
+        object1Id: "{{ queryInputs }}"
+        object2Type: Chemical 
+      outputs:
+      - id: PHARMGKB
+        semantic: SmallMolecule
+      predicate: has_participant
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/connection-obj"
+      # testExamples:
+      #   - qInput: "PHARMGKB:PA154426155"      ## Taxane Pathway, Pharmacokinetics
+      #     oneOutput: "PHARMGKB:PA449383"      ## docetaxel
+    connect-chemical-pathway:
+    - supportBatch: false
+      useTemplating: true
+      inputs:
+      - id: PHARMGKB
+        semantic: SmallMolecule 
+      parameters:
+        object1Id: "{{ queryInputs }}"
+        object2Type: Pathway
+      outputs:
+      - id: PHARMGKB
+        semantic: Pathway
+      predicate: participates_in
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/connection-obj"
+      # testExamples:
+      #   - qInput: "PHARMGKB:PA166131458"       ## doxorubicin semiquinone
+      #     oneOutput: "PHARMGKB:PA165292163"    ## Doxorubicin Pathway (Cancer Cell), Pharmacodynamics
+    connect-pathway-disease:
+    - supportBatch: false
+      useTemplating: true
+      inputs:
+      - id: PHARMGKB
+        semantic: Pathway
+      parameters:
+        object1Id: "{{ queryInputs }}"
+        object2Type: Disease
+      outputs:
+      - id: PHARMGKB
+        semantic: Disease
+      predicate: related_to
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/connection-obj"
+      # testExamples:
+      #   - qInput: "PHARMGKB:PA166163705"       ## Diclofenac Pathway, Pharmacokinetics
+      #     oneOutput: "PHARMGKB:PA164925725"    ## Toxic liver disease
+    connect-disease-pathway:
+    - supportBatch: false
+      useTemplating: true
+      inputs:
+      - id: PHARMGKB
+        semantic: Disease 
+      parameters:
+        object1Id: "{{ queryInputs }}"
+        object2Type: Pathway
+      outputs:
+      - id: PHARMGKB
+        semantic: Pathway
+      predicate: related_to
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/connection-obj"
+      # testExamples:
+      #   - qInput: "PHARMGKB:PA445876"          ## Tobacco Use Disorder
+      #     oneOutput: "PHARMGKB:PA166163828"    ## Haloperidol Pathway, Pharmacokinetics
+    connect-pathway-gene:
+    - supportBatch: false
+      useTemplating: true
+      inputs:
+      - id: PHARMGKB
+        semantic: Pathway
+      parameters:
+        object1Id: "{{ queryInputs }}"
+        object2Type: Gene
+      outputs:
+      - id: PHARMGKB
+        semantic: Gene
+      predicate: has_participant
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/connection-obj"
+      # testExamples:
+      #   - qInput: "PHARMGKB:PA166247041"    ## Acenocoumarol Pathway, Pharmacokinetics
+      #     oneOutput: "PHARMGKB:PA126"       ## CYP2C9
+    connect-gene-pathway:
+    - supportBatch: false
+      useTemplating: true
+      inputs:
+      - id: PHARMGKB
+        semantic: Gene 
+      parameters:
+        object1Id: "{{ queryInputs }}"
+        object2Type: Pathway
+      outputs:
+      - id: PHARMGKB
+        semantic: Pathway
+      predicate: participates_in
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/connection-obj"
+      # testExamples:
+      #   - qInput: "PHARMGKB:PA236"             ## MAOA
+      #     oneOutput: "PHARMGKB:PA166183426"    ## Propranolol Pathway, Pharmacokinetics
+    connect-chemical-chemical:
+    ## seems to be different from the chemical components/metabolites in other operations
+    - supportBatch: false
+      useTemplating: true
+      inputs:
+      - id: PHARMGKB
+        semantic: SmallMolecule 
+      parameters:
+        object1Id: "{{ queryInputs }}"
+        object2Type: Chemical
+      outputs:
+      - id: PHARMGKB
+        semantic: SmallMolecule
+      predicate: related_to
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/connection-obj"
+      # testExamples:
+      #   - qInput: "PHARMGKB:PA164888966"    ## raltegravir
+      #     oneOutput: "PHARMGKB:PA10251"     ## atazanavir
+    connect-chemical-disease:
+    - supportBatch: false
+      useTemplating: true
+      inputs:
+      - id: PHARMGKB
+        semantic: SmallMolecule  
+      parameters:
+        object1Id: "{{ queryInputs }}"
+        object2Type: Disease
+      outputs:
+      - id: PHARMGKB
+        semantic: Disease
+      predicate: related_to
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/connection-obj"
+      # testExamples:
+      #   - qInput: "PHARMGKB:PA164888966"    ## raltegravir
+      #     oneOutput: "PHARMGKB:PA447230"    ## HIV Infections
+    connect-disease-chemical:
+    - supportBatch: false
+      useTemplating: true
+      inputs:
+      - id: PHARMGKB
+        semantic: Disease   
+      parameters:
+        object1Id: "{{ queryInputs }}"
+        object2Type: Chemical
+      outputs:
+      - id: PHARMGKB
+        semantic: SmallMolecule
+      predicate: related_to
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/connection-obj"
+      # testExamples:
+      #   - qInput: "PHARMGKB:PA444418"          ## Gastrointestinal Hemorrhage
+      #     oneOutput: "PHARMGKB:PA165958395"    ## lornoxicam
+    connect-disease-disease:
+    - supportBatch: false
+      useTemplating: true
+      inputs:
+      - id: PHARMGKB
+        semantic: Disease   
+      parameters:
+        object1Id: "{{ queryInputs }}"
+        object2Type: Disease
+      outputs:
+      - id: PHARMGKB
+        semantic: Disease
+      predicate: related_to
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/connection-obj"
+      # testExamples:
+      #   - qInput: "PHARMGKB:PA447054"       ## Stroke
+      #     oneOutput: "PHARMGKB:PA443459"    ## Atrial Fibrillation
+    connect-disease-gene:
+    - supportBatch: false
+      useTemplating: true
+      inputs:
+      - id: PHARMGKB
+        semantic: Disease   
+      parameters:
+        object1Id: "{{ queryInputs }}"
+        object2Type: Gene
+      outputs:
+      - id: PHARMGKB
+        semantic: Gene
+      predicate: related_to
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/connection-obj"
+      # testExamples:
+      #   - qInput: "PHARMGKB:PA447054"    ## Stroke
+      #     oneOutput: "PHARMGKB:PA107"    ## CES1
+    connect-gene-disease:
+    - supportBatch: false
+      useTemplating: true
+      inputs:
+      - id: PHARMGKB
+        semantic: Gene   
+      parameters:
+        object1Id: "{{ queryInputs }}"
+        object2Type: Disease
+      outputs:
+      - id: PHARMGKB
+        semantic: Disease
+      predicate: related_to
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/connection-obj"
+      # testExamples:
+      #   - qInput: "PHARMGKB:PA133787052"       ## VKORC1
+      #     oneOutput: "PHARMGKB:PA166123298"    ## over-anticoagulation
+    connect-disease-variant:
+    - supportBatch: false
+      useTemplating: true
+      inputs:
+      - id: PHARMGKB
+        semantic: Disease   
+      parameters:
+        object1Id: "{{ queryInputs }}"
+        object2Type: Variant
+      outputs:
+      - id: DBSNP
+        semantic: SequenceVariant
+      predicate: related_to
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/connection-obj-dbsnp"
+      # testExamples:
+      #   - qInput: "PHARMGKB:PA443459"    ## Atrial Fibrillation
+      #     oneOutput: "DBSNP:rs2260863"    
+    connect-variant-disease:
+    - supportBatch: false
+      useTemplating: true
+      inputs:
+      - id: DBSNP
+        semantic: SequenceVariant
+      parameters:
+        object1Name: "{{ queryInputs }}"   ## DBSNP rs ID goes in as a name
+        object2Type: Disease
+      outputs:
+      - id: PHARMGKB
+        semantic: Disease
+      predicate: related_to
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/connection-obj"
+      # testExamples:
+      #   - qInput: "DBSNP:rs1057910"    
+      #     oneOutput: "PHARMGKB:PA443915"   ## Diplopia
+    connect-gene-gene:
+    - supportBatch: false
+      useTemplating: true
+      inputs:
+      - id: PHARMGKB
+        semantic: Gene   
+      parameters:
+        object1Id: "{{ queryInputs }}"
+        object2Type: Gene
+      outputs:
+      - id: PHARMGKB
+        semantic: Gene
+      predicate: related_to
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/connection-obj"
+      # testExamples:
+      #   - qInput: "PHARMGKB:PA126"             ## CYP2C9
+      #     oneOutput: "PHARMGKB:PA133787052"    ## VKORC1
+    connect-gene-chemical:
+    ## complements clinicalAnnot-chemical-gene operation, since that /data/clinicalAnnotation endpoint
+    ##   doesn't allow querying using gene ID
+    - supportBatch: false
+      useTemplating: true
+      inputs:
+      - id: PHARMGKB
+        semantic: Gene   
+      parameters:
+        object1Id: "{{ queryInputs }}"
+        object2Type: Chemical
+      outputs:
+      - id: PHARMGKB
+        semantic: SmallMolecule
+      predicate: related_to
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/connection-obj"
+      # testExamples:
+      #   - qInput: "PHARMGKB:PA27829"        ## EPHX1
+      #     oneOutput: "PHARMGKB:PA448785"    ## carbamazepine
+  ###############################################################
+  ## uses /pathway/{id} endpoint
+  ## annotates data.relatedChemicals, data.relatedDiseases, data.relatedGenes, data.relatedPathways
+  ## not annotated:
+  ## - data.chemicals, data.diseases, data.genes: which is different data from above! 
+  ##   accessible from and annotated for /data/connection endpoint
+  ## - data.interactions, data.pathwayComponents: each item seems to look like a biolink-model Reaction (pretty detailed)
+    pathwayEndpoint-chemical:
+    ## info maybe only retrievable in this direction (no relatedPathways in /chemical/{id} response)
+    - supportBatch: false
+      useTemplating: true
+      inputs:
+      - id: PHARMGKB
+        semantic: Pathway
+      parameters:
+        id: "{{ queryInputs }}"
+        view: max
+      outputs:
+      - id: PHARMGKB
+        semantic: SmallMolecule
+      predicate: related_to
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/pathEnd-chem"
+      # testExamples:
+      #   - qInput: "PHARMGKB:PA2023"           ## ACE Inhibitor Pathway, Pharmacodynamics
+      #     oneOutput: "PHARMGKB:PA448780"      ## captopril
+    pathwayEndpoint-disease:
+    ## info maybe only retrievable in this direction (no relatedPathways in /disease response)
+    - supportBatch: false
+      useTemplating: true
+      inputs:
+      - id: PHARMGKB
+        semantic: Pathway
+      parameters:
+        id: "{{ queryInputs }}"
+        view: max
+      outputs:
+      - id: PHARMGKB
+        semantic: Disease
+      predicate: related_to
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/pathEnd-disease"
+      # testExamples:
+      #   - qInput: "PHARMGKB:PA2023"           ## ACE Inhibitor Pathway, Pharmacodynamics
+      #     oneOutput: "PHARMGKB:PA444552"      ## Hypertension
+    pathwayEndpoint-gene:
+    ## info maybe only retrievable in this direction (no relatedPathways in /gene response)
+    - supportBatch: false
+      useTemplating: true
+      inputs:
+      - id: PHARMGKB
+        semantic: Pathway
+      parameters:
+        id: "{{ queryInputs }}"
+        view: max
+      outputs:
+      - id: PHARMGKB
+        semantic: Gene
+      predicate: related_to
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/pathEnd-gene"
+      # testExamples:
+      #   - qInput: "PHARMGKB:PA166114721"   ## Uricosurics Pathway, Pharmacodynamics
+      #     oneOutput: "PHARMGKB:PA397"      ## ABCC4
+    pathwayEndpoint-pathway:
+    ## relationships seem retrievable in both directions: PathwayA -> PathwayB and PathwayB -> PathwayA
+    - supportBatch: false
+      useTemplating: true
+      inputs:
+      - id: PHARMGKB
+        semantic: Pathway
+      parameters:
+        id: "{{ queryInputs }}"
+        view: max
+      outputs:
+      - id: PHARMGKB
+        semantic: Pathway
+      predicate: related_to
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/pathEnd-path"
+      # testExamples:
+      #   - qInput: "PHARMGKB:PA2023"              ## ACE Inhibitor Pathway, Pharmacodynamics
+      #     oneOutput: "PHARMGKB:PA166165076"      ## Verapamil Pathway, Pharmacokinetics
+  ###############################################################
+  ## uses /chemical/{id} endpoint
+  ## x-bte annotation for data.components, data.metabolites
+    chemical-components:
+    ## info maybe only retrievable in this direction
+    - supportBatch: false
+      useTemplating: true
+      inputs:
+      - id: PHARMGKB
+        semantic: SmallMolecule
+      parameters:
+        id: "{{ queryInputs }}"
+        view: max
+      outputs:
+      - id: PHARMGKB
+        semantic: SmallMolecule
+      predicate: has_active_ingredient      
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/chemComponents"
+      # testExamples:
+      #   - qInput: "PHARMGKB:PA166182864"   ## XELOX
+      #     oneOutput: "PHARMGKB:PA448771"   ## capecitabine
+    chemical-metabolites:
+    ## info maybe only retrievable in this direction
+    - supportBatch: false
+      useTemplating: true
+      inputs:
+      - id: PHARMGKB
+        semantic: SmallMolecule
+      parameters:
+        id: "{{ queryInputs }}"
+        view: max
+      outputs:
+      - id: PHARMGKB
+        semantic: SmallMolecule
+      predicate: has_metabolite      
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/chemMetabolites"
+      # testExamples:
+      #   - qInput: "PHARMGKB:PA451241"         ## ribavirin
+      #     oneOutput: "PHARMGKB:PA166271901"   ## 1,2,4-triazole-3-carboxamide
+  ###############################################################
+  ## uses /guidelineAnnotation endpoint
+  ##   view=base is enough to get useful info, I think...
+  ## can query for a chemical -> get clinical guidelines on whether to give/how to give this chemical,
+  ##   given possible effects on people with genetic variants in a gene
+    guideline-chemical-gene:
+    - supportBatch: false
+      useTemplating: true
+      inputs:
+      - id: PHARMGKB
+        semantic: SmallMolecule
+      parameters:
+        "relatedChemicals.accessionId": "{{ queryInputs }}"
+        view: base
+      outputs:
+      - id: PHARMGKB
+        semantic: Gene
+      predicate: related_to      
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/guidelineEnd-gene"
+      # testExamples:
+      #   - qInput: "PHARMGKB:PA448004"      ## abacavir
+      #     oneOutput: "PHARMGKB:PA35056"    ## HLA-B
+    guideline-gene-chemical:
+    - supportBatch: false
+      useTemplating: true
+      inputs:
+      - id: PHARMGKB
+        semantic: Gene
+      parameters:
+        "relatedGenes.accessionId": "{{ queryInputs }}"
+        view: base
+      outputs:
+      - id: PHARMGKB
+        semantic: SmallMolecule
+      predicate: related_to      
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/guidelineEnd-chem"
+      # testExamples:
+      #   - qInput: "PHARMGKB:PA189"          ## HMGCR
+      #     oneOutput: "PHARMGKB:PA449688"    ## fluvastatin 
+  ###############################################################
+  ## uses /label endpoint
+  ## can query for a chemical -> get drug label info on whether to give/how to give this chemical,
+  ##   given possible effect on people with genetic variants in a gene
+    label-chemical-gene:
+    - supportBatch: false
+      useTemplating: true
+      inputs:
+      - id: PHARMGKB
+        semantic: SmallMolecule
+      parameters:
+        "relatedChemicals.accessionId": "{{ queryInputs }}"
+        view: base
+      outputs:
+      - id: PHARMGKB
+        semantic: Gene
+      predicate: related_to      
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/labelEnd-gene"
+      # testExamples:
+      #   - qInput: "PHARMGKB:PA166153471"   ## abemaciclib
+      #     oneOutput: "PHARMGKB:PA27886"    ## ESR2
+    label-gene-chemical:
+    - supportBatch: false
+      useTemplating: true
+      inputs:
+      - id: PHARMGKB
+        semantic: Gene
+      parameters:
+        "relatedGenes.accessionId": "{{ queryInputs }}"
+        view: base
+      outputs:
+      - id: PHARMGKB
+        semantic: SmallMolecule
+      predicate: related_to      
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/labelEnd-chem"
+      # testExamples:
+      #   - qInput: "PHARMGKB:PA31111"           ## MS4A1
+      #     oneOutput: "PHARMGKB:PA165291493"    ## ofatumumab 
+  ###############################################################
+  ## uses /clinicalAnnotation endpoint, pharmgkb says this is variant-drug info
+  ## - can query for a chemical -> get clinical-supported info on whether to give/how to give this chemical,
+  ##   given possible effect on people with genetic variants 
+  ## - has related diseases/phenotypes from the variant-drug interaction:
+  ## - not documented in swagger, but can query with diseases using parameter: relatedDiseases.accessionId
+  ##   however, chemical <-> disease, variant <-> disease, gene <-> disease are covered by /data/connection operations
+    clinicalAnnot-chem-variant:
+    - supportBatch: false
+      useTemplating: true
+      inputs:
+      - id: PHARMGKB
+        semantic: SmallMolecule
+      parameters:
+        "relatedChemicals.accessionId": "{{ queryInputs }}"
+        view: base
+      outputs:
+      - id: DBSNP
+        semantic: SequenceVariant
+      predicate: related_to      
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/clinicalAnnotEnd-variant"
+      # testExamples:
+      #   - qInput: "PHARMGKB:PA134308647"   ## rosuvastatin
+      #     oneOutput: "DBSNP:rs4693075"    
+    clinicalAnnot-variant-chem:
+    - supportBatch: false
+      useTemplating: true
+      inputs:
+      - id: DBSNP
+        semantic: SequenceVariant
+      parameters:
+        "location.fingerprint": "{{ queryInputs }}" 
+        view: base
+      outputs:
+      - id: PHARMGKB
+        semantic: SmallMolecule
+      predicate: related_to      
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/clinicalAnnotEnd-chem"
+      # testExamples:
+      #   - qInput: "DBSNP:rs45445694"           
+      #     oneOutput: "PHARMGKB:PA450428"    ## methotrexate 
+    clinicalAnnot-chemical-gene:
+    ## using connect-gene-chemical operation to retrieve info in gene -> chem direction
+    ##   since this endpoint doesn't allow querying using gene ID
+    - supportBatch: false
+      useTemplating: true
+      inputs:
+      - id: PHARMGKB
+        semantic: SmallMolecule
+      parameters:
+        "relatedChemicals.accessionId": "{{ queryInputs }}"
+        view: base
+      outputs:
+      - id: PHARMGKB
+        semantic: Gene
+      predicate: related_to      
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/clinicalAnnotEnd-gene"
+      # testExamples:
+      #   - qInput: "PHARMGKB:PA451250"   ## rifampin
+      #     oneOutput: "PHARMGKB:PA18"    ## NAT2
+  ###############################################################
+  ## uses /variantAnnotation endpoint
+  ## - can query for a chemical -> get publication-supported info on whether to give/how to give this chemical,
+  ##   given possible effect on people with genetic variants 
+  ## - it seems to accept gene symbols as input (not ID)
+    variantAnnot-variant-chem:
+    - supportBatch: false
+      useTemplating: true
+      inputs:
+      - id: DBSNP
+        semantic: SequenceVariant
+      parameters:
+        "location.fingerprint": "{{ queryInputs }}" 
+        view: base
+      outputs:
+      - id: PHARMGKB
+        semantic: SmallMolecule
+      predicate: related_to      
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/variantAnnotEnd-chem"
+      # testExamples:
+      #   - qInput: "DBSNP:rs319952"           
+      #     oneOutput: "PHARMGKB:PA451250"    ## rifampin 
+    variantAnnot-chem-variant:
+    ## not documented in swagger, but you can query with chemicals using parameter: relatedChemicals.accessionId
+    - supportBatch: false
+      useTemplating: true
+      inputs:
+      - id: PHARMGKB
+        semantic: SmallMolecule
+      parameters:
+        "relatedChemicals.accessionId": "{{ queryInputs }}"
+        view: base
+      outputs:
+      - id: DBSNP
+        semantic: SequenceVariant
+      predicate: related_to      
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/variantAnnotEnd-variant"
+      # testExamples:
+      #   - qInput: "PHARMGKB:PA166123407"   ## abiraterone
+      #     oneOutput: "DBSNP:rs10493112"  
+  x-bte-response-mapping:
+    ## not annotating name fields in some cases because the fields will have multiple values that we aren't keeping separate
+    connection-obj:
+      PHARMGKB: data.obj2Id
+      output_name: data.obj2Name
+      input_name: data.obj1Name
+      pubmed: data.pmid
+      pharmgkb_source_of_connection: data.relType
+    connection-obj-dbsnp:
+      DBSNP: data.obj2Name    ## DBSNP rs ID is put there
+      input_name: data.obj1Name
+      pubmed: data.pmid
+      pharmgkb_source_of_connection: data.relType
+    pathEnd-chem:
+      PHARMGKB: data.relatedChemicals.id
+      input_name: data.name
+    pathEnd-disease:
+      PHARMGKB: data.relatedDiseases.id
+      input_name: data.name
+    pathEnd-gene:
+      PHARMGKB: data.relatedGenes.id
+      input_name: data.name
+    pathEnd-path:
+      PHARMGKB: data.relatedPathways.id
+      input_name: data.name
+    chemComponents:
+      PHARMGKB: data.components.id
+      input_name: data.name
+    chemMetabolites:
+      PHARMGKB: data.metabolites.id
+      input_name: data.name
+    guidelineEnd-gene:
+      PHARMGKB: data.relatedGenes.id
+      ## related gene alleles
+      related_gene_alleles: data.relatedAlleles.symbol
+      ## provenance
+      guideline_literature_urls: data.literature._sameAs
+      clinical_guideline_source: data.source      ## probably an enum of {cpic, dpwg, pro}
+      ## guideline annotation info
+      clinical_guideline_name: data.name
+      clinical_guideline_summary: data.summaryMarkdown.html
+      flag_has_recommendation: data.recommendation
+      flag_has_alternative_drug_info: data.alternateDrugAvailable
+      flag_gene_or_variant_in_cancer_cell: data.cancerGenome
+      flag_has_dosing_information: data.dosingInformation
+      flag_has_testing_information: data.hasTestingInfo
+      flag_has_pediatric_information: data.pediatric
+    guidelineEnd-chem:
+      PHARMGKB: data.relatedChemicals.id
+      ## related gene alleles
+      related_gene_alleles: data.relatedAlleles.symbol
+      ## provenance
+      guideline_literature_urls: data.literature._sameAs
+      clinical_guideline_source: data.source      ## probably an enum of {cpic, dpwg, pro}
+      ## guideline annotation info
+      clinical_guideline_name: data.name
+      clinical_guideline_summary: data.summaryMarkdown.html
+      flag_has_recommendation: data.recommendation
+      flag_has_alternative_drug_info: data.alternateDrugAvailable
+      flag_gene_or_variant_in_cancer_cell: data.cancerGenome
+      flag_has_dosing_information: data.dosingInformation
+      flag_has_testing_information: data.hasTestingInfo
+      flag_has_pediatric_information: data.pediatric
+    labelEnd-gene:
+      ## not sure if prescribingGenes provides different info or not. using relatedGenes section instead
+      PHARMGKB: data.relatedGenes.id
+      ## related gene alleles
+      related_gene_alleles: data.relatedAlleles.symbol
+      ## provenance
+      label_literature_urls: data.literature._sameAs
+      label_source: data.source      ## probably an enum of {fda, ema, pmda, hcsc}
+      ## label annotation info
+      label_title: data.name
+      label_summary: data.summaryMarkdown.html
+      pgx_level: data.testing.term
+      flag_has_alternative_drug_info: data.alternateDrugAvailable
+      flag_gene_or_variant_in_cancer_cell: data.cancerGenome
+      flag_has_dosing_information: data.dosingInformation
+      flag_has_pediatric_information: data.pediatric
+    labelEnd-chem:
+      PHARMGKB: data.relatedChemicals.id
+      ## related gene alleles
+      related_gene_alleles: data.relatedAlleles.symbol
+      ## provenance
+      label_literature_urls: data.literature._sameAs
+      label_source: data.source      ## probably an enum of {fda, ema, pmda, hcsc}
+      ## label annotation info
+      label_title: data.name
+      label_summary: data.summaryMarkdown.html
+      pgx_level: data.testing.term
+      flag_has_alternative_drug_info: data.alternateDrugAvailable
+      flag_gene_or_variant_in_cancer_cell: data.cancerGenome
+      flag_has_dosing_information: data.dosingInformation
+      flag_has_pediatric_information: data.pediatric
+    clinicalAnnotEnd-variant:
+      DBSNP: data.location.rsid
+      annotation_title: data.name
+      pharmgkb_annotation_phenotype_category: data.types
+      pharmgkb_annotation_level_of_evidence: data.levelOfEvidence.term  
+      allele_phenotype_information: data.allelePhenotypes.phenotype
+      related_genes: data.location.genes.symbol
+      related_diseases: data.relatedDiseases.name
+    clinicalAnnotEnd-chem:
+      PHARMGKB: data.relatedChemicals.id
+      annotation_title: data.name
+      pharmgkb_annotation_phenotype_category: data.types
+      pharmgkb_annotation_level_of_evidence: data.levelOfEvidence.term  
+      allele_phenotype_information: data.allelePhenotypes.phenotype
+      related_genes: data.location.genes.symbol
+      related_diseases: data.relatedDiseases.name
+    clinicalAnnotEnd-gene:
+      PHARMGKB: data.location.genes.id
+      annotation_title: data.name
+      pharmgkb_annotation_phenotype_category: data.types
+      pharmgkb_annotation_level_of_evidence: data.levelOfEvidence.term  
+      allele_phenotype_information: data.allelePhenotypes.phenotype
+      related_variants: data.location.rsid
+      related_diseases: data.relatedDiseases.name
+    variantAnnotEnd-chem:
+      PHARMGKB: data.relatedChemicals.id
+      related_genes: data.location.genes.symbol
+      flag_significant_association: data.significance.term  ## yes/no values?
+      ## provenance
+      annotation_literature_urls: data.literature._sameAs
+      sentence: data.sentence
+      description: data.description
+      ## phenotypic effect
+      phenotype_name: data.phenotypes.phenotype
+      phenotype_context: data.phenotypes.phenotypeContext
+      pharmgkb_annotation_phenotype_category: data.phenotypeCategories.term
+      direction_of_phenotypic_effect: data.polarity.term
+      ## context: what did the population start out with (there's more under data.studyParameters)
+      population_phenotype_name: data.populationPhenotypes.phenotype
+    variantAnnotEnd-variant:
+      DBSNP: data.location.rsid
+      related_genes: data.location.genes.symbol
+      flag_significant_association: data.significance.term  ## yes/no values?
+      ## provenance
+      annotation_literature_urls: data.literature._sameAs
+      sentence: data.sentence
+      description: data.description
+      ## phenotypic effect
+      phenotype_name: data.phenotypes.phenotype
+      phenotype_context: data.phenotypes.phenotypeContext
+      pharmgkb_annotation_phenotype_category: data.phenotypeCategories.term
+      direction_of_phenotypic_effect: data.polarity.term
+      ## context: what did the population start out with (there's more under data.studyParameters)
+      population_phenotype_name: data.populationPhenotypes.phenotype
+  schemas:
+    JSendSuccess:
+      required:
+        - data
+        - status
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+            - success
+        data:
+          type: object
+          properties: {}
+      description: >-
+        Standard [JSend](https://labs.omniti.com/labs/jsend)-formatted success
+        response.
+    JSendFailure:
+      required:
+        - data
+        - status
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+            - fail
+        data:
+          type: object
+          properties: {}
+      description: >-
+        Standard [JSend](https://labs.omniti.com/labs/jsend)-formatted failure
+        response.
+    JSendError:
+      required:
+        - message
+        - status
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+            - error
+        data:
+          type: object
+          properties: {}
+        code:
+          type: string
+        message:
+          type: string
+      description: >-
+        Standard [JSend](https://labs.omniti.com/labs/jsend)-formatted error
+        response.
+    Pathway:
+      required:
+        - id
+        - name
+      type: object
+      properties:
+        '@id':
+          type: string
+          description: >-
+            JSON-LD property used to uniquely identify things that are being
+            described in the document with IRIs or blank node identifiers
+          example: 'https://api.pharmgkb.org/v1/data/pathway/PA1234'
+        '@context':
+          type: string
+          description: >-
+            JSON-LD property used to define the short-hand names that are used
+            throughout a JSON-LD document.
+          example: 'https://www.pharmgkb.org/jsonld/pathway.jsonld'
+        id:
+          type: string
+          description: The accession identifier for the Pathway
+          example: PA1234
+        name:
+          type: string
+          description: The name of the pathway
+          example: Abacavir PD Pathway
+        authors:
+          type: array
+          description: List of all authors of the pathway
+          items:
+            type: string
+            description: Author name
+            example: John A. Smith
+        chemicals:
+          type: array
+          description: Chemicals related to this pathway
+          items:
+            $ref: '#/components/schemas/AccessionIdentifier'
+        gene:
+          type: array
+          description: Genes related to this pathway
+          items:
+            $ref: '#/components/schemas/AccessionIdentifier'
+        pathwayComponents:
+          type: array
+          description: Components of the pathway graph
+          items:
+            $ref: '#/components/schemas/AccessionIdentifier'
+        citation:
+          $ref: '#/components/schemas/Literature'
+        pharmacodynamic:
+          type: boolean
+          description: Is this a pharmacodynamic pathway?
+        pharmacokinetic:
+          type: boolean
+          description: Is this a pharmacokinetic pathway?
+    Gene:
+      required:
+        - id
+        - name
+        - symbol
+      type: object
+      properties:
+        '@id':
+          type: string
+          description: >-
+            JSON-LD property used to uniquely identify things that are being
+            described in the document with IRIs or blank node identifiers
+          example: 'https://www.pharmgkb.org/jsonld/pathway.jsonld'
+        '@context':
+          type: string
+          description: >-
+            JSON-LD property used to define the short-hand names that are used
+            throughout a JSON-LD document.
+          example: 'https://api.pharmgkb.org/v1/data/pathway/PA1234'
+        id:
+          type: string
+          description: the accession identifier for this object
+          example: PA356
+        name:
+          type: string
+          description: the full name for this gene
+          example: thiopurine S-methyltransferase
+        symbol:
+          type: string
+          description: The HGNC symbol for this gene
+          example: TPMT
+        objCls:
+          type: string
+          description: The class of this object
+          example: Gene
+          enum:
+            - Gene
+        buildVersion:
+          type: string
+          description: The reference genome used to define the location of this gene
+          example: GRCh37.p10
+        altNames:
+          type: array
+          description: All other names used to identify this gene
+          items:
+            $ref: '#/components/schemas/AltNames'
+        cbStart:
+          type: string
+          description: The cytogenetic band this gene starts in
+          example: q12.34
+        cbStop:
+          type: string
+          description: The cytogenetic band this gene ends in
+          example: q12.35
+        chr:
+          $ref: '#/components/schemas/AccessionIdentifier'
+        chrStart:
+          type: integer
+          description: 'Chromosomal start position, 1-based'
+          format: int32
+          example: 100000
+        chrStop:
+          type: integer
+          description: 'Chromosomal stop position, 1-based'
+          format: int32
+          example: 120000
+        strand:
+          type: string
+          description: 'The strand the gene appears on, +=plus, -=minus'
+          example: +
+          enum:
+            - +
+            - '-'
+        alleleFile:
+          type: string
+          description: the name of the file with allele definitions for this gene
+          example: allelesForGene.xlsx
+      description: A gene object. Gene objects originate from either HGNC or NCBI Gene.
+    Vip:
+      type: object
+      properties:
+        id:
+          type: number
+          description: the accession identifier for this object
+          format: integer
+          example: 1234
+      description: A VIP annotation on a gene
+    VipOverviewDisplay:
+      type: object
+      properties:
+        vip:
+          $ref: '#/components/schemas/VipDisplay'
+        citation:
+          $ref: '#/components/schemas/Literature'
+        spliceVips:
+          type: array
+          items:
+            $ref: '#/components/schemas/VipDisplay'
+        variantVips:
+          type: array
+          items:
+            $ref: '#/components/schemas/VipDisplay'
+        haplotypeVips:
+          type: array
+          items:
+            $ref: '#/components/schemas/VipDisplay'
+        submitted:
+          type: string
+          description: text describing the submission history
+        updated:
+          type: string
+          description: text describing the update history
+        reviewed:
+          type: string
+          description: text describing the review history
+      description: A simplified and enhanced VIP annotation suitable for display
+    VipDisplay:
+      type: object
+      properties:
+        id:
+          type: number
+          description: the ID for this specific VIP
+          format: integer
+        title:
+          type: string
+          description: the title of this VIP
+        text:
+          type: string
+          description: 'the main body text of this VIP, in HTML'
+        appendix:
+          type: string
+          description: 'the appendix text of this VIP, in HTML'
+        related:
+          type: array
+          description: objects related to this VIP
+          items:
+            type: object
+            properties:
+              typeName:
+                type: string
+                description: The name of the types of objects described here
+              objects:
+                type: array
+                description: The related objects
+                items:
+                  type: object
+                  properties:
+                    text:
+                      type: string
+                      description: >-
+                        The text name of this object and what the link text
+                        should be
+                    url:
+                      type: string
+                      description: 'The url to this object, may be null'
+            description: a group of objects related to this VIP
+      description: ''
+    VipGene:
+      type: object
+      properties:
+        id:
+          type: string
+          description: the accession identifier for this VIP
+          example: PA123456
+        target:
+          $ref: '#/components/schemas/AccessionIdentifier'
+        citation:
+          $ref: '#/components/schemas/Literature'
+        summary:
+          $ref: '#/components/schemas/Markdown'
+        sections:
+          $ref: '#/components/schemas/DataAnnotation'
+        relationships:
+          $ref: '#/components/schemas/MultilinkAnnotation'
+        keyLiterature:
+          type: array
+          description: >-
+            important literature to this VIP (is the set of all literature from
+            each section)
+          items:
+            $ref: '#/components/schemas/Literature'
+      description: A representation of a VIP object
+    Markdown:
+      type: object
+      properties:
+        markdown:
+          type: string
+          description: Markdown formatted text
+          example: Some __markdown__ formatted text
+        html:
+          type: string
+          description: Rendered HTML of markdown property
+          example: Some <strong>markdown</strong> formatted text
+        rsids:
+          type: array
+          description: Array of RSIDs extracted from the markdown text
+          items:
+            type: string
+            example: rs12345
+        relatedObjects:
+          type: array
+          description: >-
+            Array of Accession Ids of Accession Objects extracted from the
+            markdown text
+          items:
+            type: string
+            example: PA12345
+        internalLinks:
+          type: array
+          description: >-
+            Array of links to webpages on the PharmGKB domain extracted from the
+            markdown text
+          items:
+            type: string
+            example: /gene/PA123
+      description: Represents a piece of text in markdown format
+    AccessionIdentifier:
+      required:
+        - id
+        - name
+      type: object
+      properties:
+        id:
+          type: string
+          description: the accession identifier for this object
+          example: PA356
+        name:
+          type: string
+          description: the full name for this object
+          example: thiopurine S-methyltransferase
+        symbol:
+          type: string
+          description: A short symbolic representation of this object
+          example: TPMT
+        objCls:
+          type: string
+          description: The class of this object
+          example: Gene
+          enum:
+            - Gene
+            - Chemical
+            - Disease
+            - Pathway
+            - Haplotype
+            - Diplotype
+            - VariantDrugAnnotation
+      description: >-
+        A basic representation of an accession object. These are major domain
+        objects and retain a durable identifier (in the form of 'PA####' that
+        does not change over time.
+    AltNames:
+      type: object
+      properties:
+        symbols:
+          type: array
+          description: Other symbols that can be used to identify this object
+          items:
+            type: string
+        synonyms:
+          type: array
+          description: Other names that can be used to identify this object
+          items:
+            type: string
+        generic:
+          type: array
+          description: >-
+            Generic names, usually from a naming standards body like USN or INN
+            (only applicable to chemicals)
+          items:
+            type: string
+        trade:
+          type: array
+          description: >-
+            Trade names used by manufacturers for a drug (only applicable to
+            chemicals)
+          items:
+            type: string
+    VariantLocation:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: >-
+            System-generated identifier for this location, (more than one ID can
+            exist for the same position
+          format: int32
+        name:
+          type: string
+          description: A name to identify this variant. This will be used if type=undefined
+          example: Splice acceptor site
+        chromosomeName:
+          type: string
+          description: name of the chromosome this variant location is on
+          example: chr12
+        copyNumber:
+          type: integer
+          description: the number of copies of this variation
+          format: int32
+          example: 2
+        displayName:
+          type: string
+          description: a human-readable name for this variant that varies depending on type
+          example: 'rs12345, GENEA *1'
+        genes:
+          type: array
+          description: genes that this variant is associated with
+          items:
+            $ref: '#/components/schemas/AccessionIdentifier'
+        gpPosition:
+          type: integer
+          description: 'Chromosomal position of this variant, 1-based, on the plus strand'
+          format: int32
+        refSeqCrossReference:
+          type: object
+          properties: {}
+          description: >-
+            The reference sequence this variant appears on, should be either
+            NCBI RefSeq or GenBank
+        refSeqPosition:
+          type: integer
+          description: >-
+            Position of this variant on the reference sequence specified in
+            <code>refSeqCrossReference</code>
+          format: int32
+        rsid:
+          type: string
+          description: The dbSNP identifier for this variant
+          example: rs12345
+        haplotypes:
+          type: array
+          description: >-
+            The haplotype(s) this variant represents. This will only be used if
+            type=haplotype
+          items:
+            $ref: '#/components/schemas/AccessionIdentifier'
+        diplotypes:
+          type: array
+          description: The diplotype(s) this variant represents
+          items:
+            $ref: '#/components/schemas/Diplotype'
+        genePhenotype:
+          $ref: '#/components/schemas/OntologyTerm'
+        tagGene:
+          type: boolean
+          description: >-
+            Indicates that <code>genes</code> has been overridden from the
+            default set for this location (and there will only be one gene)
+        type:
+          type: string
+          description: >-
+            The type of this variant: snp = single location SNP, haplotype = one
+            or more haplotypes, cnv = copy number variation, undefinedSnp =
+            variation with an undefined location
+          enum:
+            - snp
+            - haplotype
+            - cnv
+            - undefinedSnp
+        variant:
+          $ref: '#/components/schemas/AccessionIdentifier'
+        linkedObjects:
+          type: array
+          description: >-
+            A collection of both the 'haplotypes' and 'variant' fields. This is
+            a definitive set of what this object is about
+          items:
+            $ref: '#/components/schemas/AccessionIdentifier'
+    HaplotypeAllele:
+      type: object
+      properties:
+        id:
+          type: number
+          description: the identifier for this allele
+          format: integer
+          example: 1234
+        allele:
+          type: string
+          description: the allele at this location
+          example: G
+        location:
+          $ref: '#/components/schemas/VariantLocation'
+    Haplotype:
+      type: object
+      properties:
+        '@id':
+          type: string
+          description: >-
+            JSON-LD property used to uniquely identify things that are being
+            described in the document with IRIs or blank node identifiers
+          example: 'https://www.pharmgkb.org/jsonld/pathway.jsonld'
+        '@context':
+          type: string
+          description: >-
+            JSON-LD property used to define the short-hand names that are used
+            throughout a JSON-LD document.
+          example: 'https://api.pharmgkb.org/v1/data/pathway/PA1234'
+        id:
+          type: string
+          description: the accession identifier for this object
+          example: PA1234
+        name:
+          type: string
+          description: the full name for this haplotype
+          example: '*1'
+        objCls:
+          type: string
+          description: The class of this object
+          example: Haplotype
+          enum:
+            - Haplotype
+        alleles:
+          type: array
+          description: the alleles and their location that constitute this haplotype
+          items:
+            $ref: '#/components/schemas/HaplotypeAllele'
+        copyNumber:
+          type: string
+          description: ''
+          example: '1'
+        gene:
+          $ref: '#/components/schemas/AccessionIdentifier'
+    HaplotypeSet:
+      type: object
+      properties:
+        '@id':
+          type: string
+          description: >-
+            JSON-LD property used to uniquely identify things that are being
+            described in the document with IRIs or blank node identifiers
+          example: 'https://www.pharmgkb.org/jsonld/pathway.jsonld'
+        '@context':
+          type: string
+          description: >-
+            JSON-LD property used to define the short-hand names that are used
+            throughout a JSON-LD document.
+          example: 'https://api.pharmgkb.org/v1/data/pathway/PA1234'
+        id:
+          type: string
+          description: the accession identifier for this object
+          example: PA1234
+        name:
+          type: string
+          description: the full name for this Haplotype Set
+          example: Haplotypes for TPMT
+        objCls:
+          type: string
+          description: The class of this object
+          example: HaplotypeSet
+          enum:
+            - HaplotypeSet
+        haplotypes:
+          type: array
+          description: the haplotypes included in this set
+          items:
+            $ref: '#/components/schemas/Haplotype'
+        gene:
+          $ref: '#/components/schemas/AccessionIdentifier'
+    Diplotype:
+      required:
+        - allele1
+      type: object
+      properties:
+        allele1:
+          type: string
+          description: >-
+            The first allele in the Diplotype, will be an allele of a SNP or a
+            Haplotype name
+          example: '*1'
+        allele2:
+          type: string
+          description: >-
+            The second allele in the Diplotype, will be an allele of a SNP or a
+            Haplotype name. This can be null if on a sex chromosome or is
+            mitochondrial.
+          example: '*3'
+    CrossReference:
+      required:
+        - id
+      type: object
+      properties:
+        '@id':
+          type: string
+          description: >-
+            JSON-LD property used to uniquely identify things that are being
+            described in the document with IRIs or blank node identifiers
+          example: 'https://api.pharmgkb.org/v1/data/pathway/PA1234'
+        '@context':
+          type: string
+          description: >-
+            JSON-LD property used to define the short-hand names that are used
+            throughout a JSON-LD document.
+          example: 'https://www.pharmgkb.org/jsonld/pathway.jsonld'
+        id:
+          type: integer
+          description: System-generated identifier for this crossReference
+          format: int32
+        name:
+          type: string
+          description: The name to display in the cross reference link (optional)
+        _url:
+          type: string
+          description: URL to the other resource
+        resource:
+          type: string
+          description: The name of the other resource
+        termId:
+          type: string
+          description: The identifier for this object in the other resource
+      description: Cross reference to this object in another resource
+    OntologyTerm:
+      required:
+        - src
+        - term
+        - termId
+      type: object
+      properties:
+        '@id':
+          type: string
+          description: >-
+            JSON-LD property used to uniquely identify things that are being
+            described in the document with IRIs or blank node identifiers
+          example: 'https://api.pharmgkb.org/v1/data/ontologyTerm/ATC/A01AB'
+        '@context':
+          type: string
+          description: >-
+            JSON-LD property used to define the short-hand names that are used
+            throughout a JSON-LD document.
+          example: 'https://www.pharmgkb.org/jsonld/pathway.jsonld'
+        id:
+          type: number
+          description: The accession identifier for the Ontology Term
+          example: 12345
+        src:
+          type: string
+          description: The resource this ontology term comes from
+          example: ATC
+        term:
+          type: string
+          description: The resource-specific term of this ontology term
+          example: Antiinfectives and antiseptics for local oral treatment
+        termId:
+          type: string
+          description: The resource-specific ID of this ontology term
+          example: A01AB
+    VariantDrugAnnotation:
+      required:
+        - id
+      type: object
+      properties:
+        '@id':
+          type: string
+          description: >-
+            JSON-LD property used to uniquely identify things that are being
+            described in the document with IRIs or blank node identifiers
+          example: 'https://api.pharmgkb.org/v1/data/variantAnnotation/12345'
+        '@context':
+          type: string
+          description: >-
+            JSON-LD property used to define the short-hand names that are used
+            throughout a JSON-LD document.
+          example: 'https://www.pharmgkb.org/jsonld/pathway.jsonld'
+        id:
+          type: integer
+          description: The identifier for this annotation
+          format: int32
+        objCls:
+          type: string
+          description: The class of this object
+          example: VariantAnnotation
+          enum:
+            - VariantAnnotation
+            - VariantDrugAnnotation
+            - VariantPhenotypeAnnotation
+            - VariantFunctionalAssayAnnotation
+        alleleGenotype:
+          type: string
+          description: The allele/genotype that is being annotated
+          example: T
+        comparison:
+          type: string
+          description: The allele/genotype to compare against
+          example: G
+        connWords1:
+          $ref: '#/components/schemas/OntologyTerm'
+        description:
+          type: string
+          description: An optional further description of this annotation
+        drugsConnWord:
+          $ref: '#/components/schemas/OntologyTerm'
+        isAssociated:
+          type: boolean
+          description: >-
+            Whether this is a positive association (true) or a negative
+            association (false)
+        isPlural:
+          type: boolean
+          description: >-
+            Whether <code>alleleGenotype</code> is single (false) or plural
+            (true), used when generating the <code>sentence</code>
+        literature:
+          $ref: '#/components/schemas/Literature'
+        location:
+          $ref: '#/components/schemas/VariantLocation'
+        phenotypeCategories:
+          type: array
+          description: ''
+          items:
+            $ref: '#/components/schemas/OntologyTerm'
+        relatedChemicals:
+          type: array
+          description: The chemicals used in this annotation
+          items:
+            $ref: '#/components/schemas/AccessionIdentifier'
+        sentence:
+          type: string
+          description: >-
+            The annotation. This is generated from most of the other properties
+            in this object.
+        significance:
+          $ref: '#/components/schemas/OntologyTerm'
+        studyParameters:
+          type: array
+          description: >-
+            The statistical parameters found in the <code>literature</code> that
+            support this annotation.
+          items:
+            $ref: '#/components/schemas/StudyParameters'
+    StudyParameters:
+      required:
+        - id
+        - ratioStatType
+      type: object
+      properties:
+        id:
+          type: integer
+          description: The identifier for this annotation
+          format: int32
+        alleleOfFreqInCases:
+          type: string
+        alleleOfFreqInControls:
+          type: string
+        characteristics:
+          type: string
+        characteristicsType:
+          type: string
+        confidenceIntervalStart:
+          type: number
+          format: float
+        confidenceIntervalStop:
+          type: number
+          format: float
+        frequencyInCases:
+          type: number
+          format: float
+        frequencyInControls:
+          type: number
+          format: float
+        mixedPopulation:
+          type: boolean
+        populationTypes:
+          type: array
+          items:
+            $ref: '#/components/schemas/OntologyTerm'
+        pvalue:
+          type: number
+          format: float
+        pvalueOp:
+          $ref: '#/components/schemas/OntologyTerm'
+        pvalueString:
+          type: string
+        ratioStat:
+          type: number
+          format: float
+        ratioStatType:
+          $ref: '#/components/schemas/OntologyTerm'
+        statTests:
+          type: array
+          items:
+            $ref: '#/components/schemas/OntologyTerm'
+        studyCases:
+          type: number
+          format: int32
+        studyControls:
+          type: number
+          format: int32
+        studyType:
+          type: string
+          description: A description of the type of study being quantified
+        unknownRace:
+          type: boolean
+          description: 'Was race description missing in this study? yes = true, no = false'
+    Literature:
+      required:
+        - id
+        - resourceId
+        - title
+        - type
+      type: object
+      properties:
+        '@id':
+          type: string
+          description: >-
+            JSON-LD property used to uniquely identify things that are being
+            described in the document with IRIs or blank node identifiers
+          example: 'https://api.pharmgkb.org/v1/data/literature/12920170'
+        '@context':
+          type: string
+          description: >-
+            JSON-LD property used to define the short-hand names that are used
+            throughout a JSON-LD document.
+          example: 'https://api.pharmgkb.org/v1/data/literature.jsonld'
+        id:
+          type: integer
+          description: The PharmGKB identifier for this literature
+          format: int32
+        resourceId:
+          type: string
+          description: >-
+            The unique external identifier for this literature: PubMed ID for
+            type=pubmed; URL for type=url; ISBN for type=book
+          example: '12345678'
+        title:
+          type: string
+          description: The full title of this literature
+        authors:
+          type: array
+          description: The list of author names for this literature
+          items:
+            type: string
+            description: Author name
+            example: Jane Q. Doe
+        journal:
+          type: string
+          description: The name of the journal this literature was published in
+        month:
+          type: integer
+          description: The month of publication
+          format: int32
+          example: 5
+        page:
+          type: string
+          description: The pages where this literature can be found in the journal
+        pubDate:
+          type: string
+          description: The ISO 8601 date-time representation of the date of publication
+          format: date-time
+        type:
+          type: string
+          description: The type of this piece of literature
+          enum:
+            - article
+            - book
+            - url
+        volume:
+          type: string
+          description: The volume where this literature can be found in the journal
+        year:
+          type: integer
+          description: The year of publication
+          format: int32
+          example: 2009
+    Chemical:
+      required:
+        - id
+        - name
+      type: object
+      properties:
+        '@id':
+          type: string
+          description: >-
+            JSON-LD property used to uniquely identify things that are being
+            described in the document with IRIs or blank node identifiers
+          example: 'https://www.pharmgkb.org/jsonld/chemical.jsonld'
+        '@context':
+          type: string
+          description: >-
+            JSON-LD property used to define the short-hand names that are used
+            throughout a JSON-LD document.
+          example: 'https://api.pharmgkb.org/v1/data/pathway/PA1234'
+        id:
+          type: string
+          description: the accession identifier for this object
+          example: PA452632
+        name:
+          type: string
+          description: the full name for this chemical
+          example: non-existium
+        objCls:
+          type: string
+          description: The class of this object
+          example: Chemical
+          enum:
+            - Chemical
+        altNames:
+          type: array
+          description: All other names used to identify this Chemical
+          items:
+            $ref: '#/components/schemas/AltNames'
+        terms:
+          type: array
+          description: The ontology terms this Chemical is equivalent to
+          items:
+            $ref: '#/components/schemas/OntologyTerm'
+        types:
+          type: array
+          description: What types this Chemical could be categorized as
+          items:
+            type: string
+            description: A Chemical type as defined by PharmGKB
+            enum:
+              - drug
+              - smallmolecule
+              - prodrug
+              - metabolite
+        xrefs:
+          type: array
+          description: The cross references to this Chemical in other systems
+          items:
+            $ref: '#/components/schemas/CrossReference'
+      description: >-
+        A chemical object. Chemical objects are some compound of small
+        molecules, a subset of which can be used for therapeutic purposes.
+    Disease:
+      required:
+        - id
+        - name
+      type: object
+      properties:
+        '@id':
+          type: string
+          description: >-
+            JSON-LD property used to uniquely identify things that are being
+            described in the document with IRIs or blank node identifiers
+          example: 'https://www.pharmgkb.org/jsonld/chemical.jsonld'
+        '@context':
+          type: string
+          description: >-
+            JSON-LD property used to define the short-hand names that are used
+            throughout a JSON-LD document.
+          example: 'https://api.pharmgkb.org/v1/data/pathway/PA1234'
+        id:
+          type: string
+          description: the accession identifier for this object
+          example: PA452632
+        name:
+          type: string
+          description: the full name for this disease
+          example: non-existium
+        objCls:
+          type: string
+          description: The class of this object
+          example: Disease
+          enum:
+            - Disease
+        altNames:
+          type: array
+          description: All other names used to identify this Disease
+          items:
+            $ref: '#/components/schemas/AltNames'
+        terms:
+          type: array
+          description: The ontology terms this Disease is equivalent to
+          items:
+            $ref: '#/components/schemas/OntologyTerm'
+      description: >-
+        A Disease object. This also includes other phenotypes that may not
+        technically be diseases
+    ClinicalAnnotation:
+      required:
+        - id
+      type: object
+      properties:
+        id:
+          type: integer
+          description: The identifier for this annotation
+          format: int32
+        levelOfEvidence:
+          $ref: '#/components/schemas/OntologyTerm'
+        location:
+          $ref: '#/components/schemas/VariantLocation'
+        relatedChemicals:
+          type: array
+          description: The chemicals described in this annotation
+          items:
+            $ref: '#/components/schemas/AccessionIdentifier'
+        relatedChemicalsLogic:
+          type: string
+          description: >-
+            Describes the logic that links all the Chemicals in
+            relatedChemicals. A value of AND  means a combination of all those
+            chemicals, a value of OR means any one of the listed chemicals
+          example: OR
+          enum:
+            - AND
+            - OR
+        allelePhenotypes:
+          $ref: '#/components/schemas/AllelePhenotype'
+      description: ''
+    AllelePhenotype:
+      type: object
+      properties:
+        allele:
+          type: string
+          description: >-
+            The genotype allele at the annotation's location that the phenotype
+            applies to
+          example: AT
+        phenotype:
+          type: string
+          description: The phenotype description for the associated allele
+          example: Patients with the AT genotype are more likely to understand this API
+      description: ''
+    StatsResult:
+      type: object
+      properties:
+        statName:
+          type: object
+          properties:
+            count:
+              type: number
+              description: the count for this statistic
+              format: integer
+              example: 12345
+            comment:
+              type: string
+              description: an explanatory comment for this statistic
+              example: the number of annotated kittens in PharmGKB
+            category:
+              type: string
+              description: the category of this statistic
+              example: DbStat
+          description: >-
+            The statistic payload, the key for this property will change per
+            statistic type
+      description: An object to hold all the counts keyed by the count type
+    PublicationsResult:
+      type: object
+      properties:
+        pathways:
+          type: array
+          description: A list of literature with their associated pathways
+          items:
+            type: object
+            properties:
+              literature:
+                $ref: '#/components/schemas/Literature'
+              pathways:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LinkObject'
+        dosingGuidelines:
+          type: array
+          description: A list of literature with their associated Guideline Annotations
+          items:
+            type: object
+            properties:
+              literature:
+                $ref: '#/components/schemas/Literature'
+              guidelines:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LinkObject'
+        vips:
+          type: array
+          description: A list of literature with their associated Guideline Annotations
+          items:
+            type: object
+            properties:
+              literature:
+                $ref: '#/components/schemas/Literature'
+              vips:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LinkObject'
+        other:
+          type: array
+          description: A list of other literature objects to link to
+          items:
+            $ref: '#/components/schemas/Literature'
+      description: An object to hold all the publications by PharmGKB grouped by annotation
+    FrequencyResult:
+      type: object
+      properties:
+        frequencyMap:
+          $ref: '#/components/schemas/FrequencyMap'
+        refBases:
+          type: array
+          description: The reference alleles
+          items:
+            type: string
+            example: A
+        varBases:
+          type: array
+          description: The variant alleles
+          items:
+            type: string
+            example: G
+        dbSnpId:
+          type: string
+          description: The dbSNP identifier (RSID) for this variant
+          example: rs2228001
+      description: >-
+        An object that holds variant frequency information for a given variant
+        in multiple populations
+    FrequencyMap:
+      type: object
+      properties:
+        popCode:
+          type: object
+          properties:
+            baseFrequencies:
+              type: object
+              properties:
+                allele:
+                  type: number
+                  format: double
+                  example: 0.825
+              description: the frequency of all samples in this population with this allele
+            baseSize:
+              type: object
+              properties:
+                allele:
+                  type: number
+                  format: integer
+                  example: 124
+              description: the number of samples with this allele
+          description: >-
+            a collection of samples from a particular HapMap population (defined
+            by HapMap)
+      description: >-
+        a mapping of population codes to objects describing that population's
+        frequencies
+    GuidelineAnnotation:
+      type: object
+      properties:
+        '@id':
+          type: string
+          description: >-
+            JSON-LD property used to uniquely identify things that are being
+            described in the document with IRIs or blank node identifiers
+          example: 'https://www.pharmgkb.org/jsonld/chemical.jsonld'
+        '@context':
+          type: string
+          description: >-
+            JSON-LD property used to define the short-hand names that are used
+            throughout a JSON-LD document.
+          example: 'https://api.pharmgkb.org/v1/data/pathway/PA1234'
+        id:
+          type: string
+          description: the accession identifier for this object
+          example: PA452632
+        name:
+          type: string
+          description: the full name for this guideline
+        objCls:
+          type: string
+          description: The class of this object
+          example: guideline
+          enum:
+            - guideline
+        relatedChemicals:
+          type: array
+          items:
+            $ref: '#/components/schemas/AccessionIdentifier'
+        relatedGenes:
+          type: array
+          items:
+            $ref: '#/components/schemas/AccessionIdentifier'
+        source:
+          type: string
+          description: the group that authored this guideline
+          enum:
+            - cpic
+            - dpwg
+            - pro
+        summaryMarkdown:
+          $ref: '#/components/schemas/Markdown'
+        textMarkdown:
+          $ref: '#/components/schemas/Markdown'
+    LabelAnnotation:
+      type: object
+      properties:
+        '@id':
+          type: string
+          description: >-
+            JSON-LD property used to uniquely identify things that are being
+            described in the document with IRIs or blank node identifiers
+          example: 'https://www.pharmgkb.org/jsonld/chemical.jsonld'
+        '@context':
+          type: string
+          description: >-
+            JSON-LD property used to define the short-hand names that are used
+            throughout a JSON-LD document.
+          example: 'https://api.pharmgkb.org/v1/data/pathway/PA1234'
+        id:
+          type: string
+          description: the accession identifier for this object
+          example: PA452632
+        name:
+          type: string
+          description: the full name for this guideline
+        objCls:
+          type: string
+          description: The class of this object
+          example: label
+          enum:
+            - label
+        relatedChemicals:
+          type: array
+          items:
+            $ref: '#/components/schemas/AccessionIdentifier'
+        relatedGenes:
+          type: array
+          items:
+            $ref: '#/components/schemas/AccessionIdentifier'
+        source:
+          type: string
+          description: the group that authored this label
+          enum:
+            - fda
+            - hcsc
+            - ema
+        summaryMarkdown:
+          $ref: '#/components/schemas/Markdown'
+        textMarkdown:
+          $ref: '#/components/schemas/Markdown'
+        biomarkerStatus:
+          $ref: '#/components/schemas/OntologyTerm'
+        labelXref:
+          $ref: '#/components/schemas/CrossReference'
+        testing:
+          $ref: '#/components/schemas/OntologyTerm'
+    SequenceLocation:
+      type: object
+      properties:
+        id:
+          type: number
+          description: The pharmgkb-assigned identifier for this
+          format: integer
+          example: 12345
+        name:
+          type: string
+          description: the name of this sequence location
+          example: '[GRCh37]chrN:########'
+        begin:
+          type: number
+          description: >-
+            the beginning index of the sequence location of this variant,
+            1-based
+          format: integer
+          example: 98765
+        end:
+          type: number
+          description: >-
+            the ending index of the sequence location of this variant, 1-based
+            (can be same as begin if only 1bp long)
+          format: integer
+          example: 98766
+        reference:
+          type: string
+          description: the reference allele for this variant
+          example: A
+        sequence:
+          $ref: '#/components/schemas/CrossReference'
+        source:
+          type: string
+          description: the source of this location data
+          example: dbSNP
+        type:
+          type: string
+          description: the type of sequence this is
+          enum:
+            - g
+            - c
+            - m
+            - 'n'
+            - r
+            - p
+        variants:
+          type: array
+          description: the variant alleles for this variant
+          items:
+            type: string
+            description: a variant allele
+            example: G
+    Variant:
+      type: object
+      properties:
+        '@id':
+          type: string
+          description: >-
+            JSON-LD property used to uniquely identify things that are being
+            described in the document with IRIs or blank node identifiers
+          example: 'https://www.pharmgkb.org/jsonld/chemical.jsonld'
+        '@context':
+          type: string
+          description: >-
+            JSON-LD property used to define the short-hand names that are used
+            throughout a JSON-LD document.
+          example: 'https://api.pharmgkb.org/v1/data/pathway/PA1234'
+        id:
+          type: string
+          description: the accession identifier for this object
+          example: PA452632
+        name:
+          type: string
+          description: the full name for this variant
+        symbol:
+          type: string
+          description: 'the symbol for this variant, optional, often a dbSNP identifier'
+        objCls:
+          type: string
+          description: The class of this object
+          example: label
+          enum:
+            - label
+        altNames:
+          type: array
+          description: All other names used to identify this gene
+          items:
+            $ref: '#/components/schemas/AltNames'
+        alternateLocations:
+          type: array
+          description: All other locations this variant has been mapped to
+          items:
+            $ref: '#/components/schemas/SequenceLocation'
+        location:
+          $ref: '#/components/schemas/SequenceLocation'
+        changeClassification:
+          type: string
+          description: >-
+            the type of change this variation may produce or where it falls in
+            relation to the gene
+        clinicalSignificance:
+          type: string
+          description: the clinical significance of this variation as report by dbSNP
+        relatedGenes:
+          type: array
+          items:
+            $ref: '#/components/schemas/AccessionIdentifier'
+        type:
+          type: string
+          description: the type of variant this is
+    DataAnnotation:
+      type: object
+      properties:
+        id:
+          type: number
+          description: The pharmgkb-assigned identifier for this annotation
+          format: integer
+          example: 12345
+        text:
+          type: string
+          description: >-
+            The plain text of the annotation - non-null if the annotation's
+            source is not PharmGKB or its DataAnnotationType does not support
+            markdown text
+          example: Will turn your hair purple and your teeth green
+        markdown:
+          $ref: '#/components/schemas/Markdown'
+        sources:
+          type: array
+          description: the sources this information comes from
+          items:
+            type: string
+            description: The name of the source of this information
+            example: drugBank
+        targets:
+          type: array
+          description: >-
+            the things this annotation should be displayed on, what this
+            annotation is about
+          items:
+            $ref: '#/components/schemas/AccessionIdentifier'
+        type:
+          type: string
+          description: the type of annotation that this is
+          example: description
+        userId:
+          type: string
+          description: who entered this annotation
+          example: joeblow
+    MultilinkAnnotation:
+      type: object
+      properties:
+        id:
+          type: number
+          description: The pharmgkb-assigned identifier for this annotation
+          format: integer
+          example: 12345
+        literature:
+          type: array
+          description: Literature supporting this annotation
+          items:
+            $ref: '#/components/schemas/Literature'
+        object1s:
+          type: array
+          description: Objects making up one side of the relationship
+          items:
+            $ref: '#/components/schemas/AccessionIdentifier'
+        object2s:
+          type: array
+          description: Objects making up the second side of the relationship
+          items:
+            $ref: '#/components/schemas/AccessionIdentifier'
+        operator1:
+          type: boolean
+          description: The operator for how the objects in object1s property are associated
+        operator2:
+          type: boolean
+          description: The operator for how the objects in object2s property are associated
+        related:
+          type: boolean
+          description: >-
+            Whether the object1s group is (or is not) related to the object2s
+            group
+        terms:
+          type: array
+          description: >-
+            An array of ontology terms that describe the relationship between
+            the object1s group and object2s group
+          items:
+            $ref: '#/components/schemas/OntologyTerm'
+    LiteratureAnnotation:
+      type: object
+      properties:
+        id:
+          type: number
+          description: The pharmgkb-assigned identifier for this annotation
+          format: integer
+          example: 12345
+    LinkObject:
+      type: object
+      properties:
+        linkText:
+          type: string
+          description: Text to display for the link
+          example: "hi, I'm link text"
+        url:
+          type: string
+          description: The partial URL for this link
+          example: /class/PA1234
+    Page:
+      type: object
+      properties:
+        id:
+          type: number
+          description: a unique integer identifier
+          format: integer
+        key:
+          type: string
+          description: 'a unique short String for this page, camel-cased'
+          example: pageKey
+        title:
+          type: string
+          description: a title to be displayed as the main heading for this page
+          example: I have a HAM radio
+        markdown:
+          $ref: '#/components/schemas/Markdown'
+        version:
+          type: number
+          description: 'the version number of this page, iterates on edits'
+          format: integer
+      description: Full or partial page content generated from markdown text
+    DosingGuidelineAnnotation:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        markdown:
+          $ref: '#/components/schemas/Markdown'
+        type:
+          $ref: '#/components/schemas/OntologyTerm'
+    GuidelineAnnotationGroup:
+      type: object
+      properties:
+        id:
+          type: string
+          example: PA0000
+        annotations:
+          type: array
+          items:
+            $ref: '#/components/schemas/DosingGuidelineAnnotation'
+        rxChangeStatus:
+          $ref: '#/components/schemas/OntologyTerm'
+        strength:
+          $ref: '#/components/schemas/OntologyTerm'
+    VersionResponse:
+      type: array
+      items:
+        type: object
+        properties:
+          name:
+            type: string
+            description: the name of the property
+            example: dbSNP
+          version:
+            type: string
+            description: >-
+              the description of the version, could be build, date, or any
+              textual descriptor
+            example: build 146
+        description: Version information for a data source
+    UserResponse:
+      type: object
+      properties:
+        userId:
+          type: string
+        email:
+          type: string
+        displayName:
+          type: string
+        fullName:
+          type: string
+        position:
+          type: string
+        dept:
+          type: string
+        institution:
+          type: string
+        country:
+          type: string
+    LabelSummary:
+      type: object
+      properties:
+        url:
+          type: string
+          description: a partial URL for this label
+        status:
+          type: string
+          description: what does this label say about genetic testing
+        biomarker:
+          type: boolean
+          description: is this label part of the FDA biomarker list
+        dosingInfo:
+          type: boolean
+          description: does this label include information on dosing
+    GuidelineSummary:
+      type: object
+      properties:
+        url:
+          type: string
+          description: a partial URL for this guideline
+        genes:
+          type: string
+          description: a comma-delimited list of gene symbols for this guideline
+        updatedDate:
+          type: string
+          description: 'the date of the last published change to this guideline, may be null'
+          format: date-time
+    DisplayLiteratureResponse:
+      required:
+        - publication
+      type: object
+      properties:
+        publication:
+          $ref: '#/components/schemas/Literature'
+        variantAnnotations:
+          type: array
+          items:
+            $ref: '#/components/schemas/VariantDrugAnnotation'
+        literatureAnnotation:
+          $ref: '#/components/schemas/LiteratureAnnotation'
+        relationships:
+          type: array
+          items:
+            type: object
+            properties: {}
+            description: A multilink annotation
+        pathways:
+          type: array
+          items:
+            $ref: '#/components/schemas/Pathway'
+        dosingInfo:
+          type: array
+          items:
+            $ref: '#/components/schemas/DataAnnotation'
+        dosingGuidelines:
+          type: array
+          items:
+            $ref: '#/components/schemas/AccessionIdentifier'
+    VariantAnnotationDisplay:
+      type: object
+      properties:
+        id:
+          type: number
+          format: integer
+        variants:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              id:
+                type: string
+              url:
+                type: string
+        literature:
+          type: string
+          description: the PMID of the annotated literature
+        literatureUrl:
+          type: string
+          description: the URL for the annotated literature
+        significance:
+          type: string
+          description: was the annotation significant? yes or no
+        chemicals:
+          type: array
+          items:
+            $ref: '#/components/schemas/AccessionIdentifier'
+        genes:
+          type: array
+          items:
+            $ref: '#/components/schemas/AccessionIdentifier'
+        phenotypeCategories:
+          type: string
+        sentence:
+          type: string
+        notes:
+          type: string
+        cases:
+          type: number
+          format: integer
+        controls:
+          type: number
+          format: integer
+        pvalue:
+          type: string
+        race:
+          type: string
+      description: >-
+        a simplified version of a variant annotation model for display on the
+        site
+  responses:
+    '400':
+      description: Bad request.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/JSendFailure'
+    '401':
+      description: Not authorized.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/JSendFailure'
+    '403':
+      description: Forbidden.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/JSendFailure'
+    '404':
+      description: Not found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/JSendFailure'
+  requestBodies:
+    authForm:
+      content:
+        '*/*':
+          schema:
+            required:
+              - email
+              - password
+            type: object
+            properties:
+              email:
+                type: string
+              password:
+                type: string
+                format: password
+      required: false
