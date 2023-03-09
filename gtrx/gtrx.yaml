@@ -6,42 +6,44 @@ info:
     x-id: https://github.com/biothings
     x-role: responsible developers
   description: >-
-    Documentation of the BioThings API for 
-    [UBERON ontology](https://obophenotype.github.io/uberon/) data.
+    Documentation of the BioThings API for
+    [GTRx](https://gtrx.rbsapp.net/about.html) data.
   termsOfService: https://biothings.io/about
-  title: BioThings UBERON API
-  version: '2019.11'
+  title: BioThings GTRx API
+  version: '2022-02-01'
   x-translator:
-    infores: "infores:biothings-uberon-ontology"
+    infores: "infores:biothings-gtrx"
     component: KP
     team:
       - Service Provider
-    biolink-version: "2.2.13"
+    biolink-version: "2.4.8"
 servers:
 - description: Encrypted Production server
-  url: https://biothings.ncats.io/uberon
+  url: https://biothings.ncats.io/gtrx
   x-maturity: production
 - description: Production server
-  url: http://biothings.ncats.io/uberon
+  url: http://biothings.ncats.io/gtrx
   x-maturity: production
 tags:
-- name: ontology
-- name: anatomy
+- name: association
+- name: chemical
+- name: disease
+- name: metadata
 - name: query
 - name: translator
 - name: biothings
 paths:
-  "/anatomy/{id}":
+  "/association/{id}":
     get:
       description: >-
-        By default, this will return the complete ontology term record in JSON format. If the input is not valid,
+        By default, this will return the complete association in JSON format. If the input is not valid,
         404 (NOT FOUND) will be returned.
         
 
         Optionally, you can pass a "fields" parameter to return only the annotation you want 
         (by filtering returned object fields). "fields" accepts any attributes (a.k.a fields) available 
         from the association. Multiple attributes should be separated by commas. If an attribute is not 
-        available for a specific ontology term, it will be ignored. Note that the attribute names are 
+        available for a specific association, it will be ignored. Note that the attribute names are 
         case-sensitive.
 
 
@@ -50,7 +52,7 @@ paths:
       - name: id
         in: path
         required: true
-        example: "UBERON:0005368"
+        example: "9752-OMIM:261630-4975G9NM6T"
         schema:
           type: string
       - "$ref": "#/components/parameters/fields"
@@ -77,17 +79,17 @@ paths:
       #   '404':
       #     description: A response indicating an unknown association ID
       tags:
-      - ontology
-  "/anatomy":
+      - association
+  "/association":
     post:
       description: >-
         Although making simple GET requests above to our service is sufficient in most use cases, 
-        there are some times you might find it easier to batch query (e.g., retrieving multiple ontology terms). 
+        there are some times you might find it easier to batch query (e.g., retrieving multiple associations). 
         Fortunately, you can also make batch queries via POST requests when you need to.
       parameters:
       - name: ids
         description: >-
-          Accepts multiple ontology term ids separated by commas. Note that currently we only take ids up to 
+          Accepts multiple association ids separated by commas. Note that currently we only take ids up to 
           1000 maximum, the rest will be omitted.
 
 
@@ -114,14 +116,14 @@ paths:
           application/json:
             example:
               ids:
-              - "UBERON:0005368"
-              - "UBERON:0035213"
+              - "10031-OMIM:250250-66Y330CJHS"
+              - "1037-OMIM:612924-A3ULP0F556"
             schema:
               type: object
               properties:
                 ids:
                   description: >-
-                    Accepts multiple ontology term ids. Note that currently we only take the input ids 
+                    Accepts multiple association ids. Note that currently we only take the input ids 
                     up to 1000 maximum, the rest will be omitted.
                   type: array
                   items:
@@ -130,7 +132,7 @@ paths:
         '200':
           description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
       tags:
-      - ontology
+      - association
   "/metadata":
     get:
       description: Get metadata about the data available from the API
@@ -170,7 +172,7 @@ paths:
           API](https://docs.mychem.info/en/latest/doc/chem_query_service.html#query-syntax).
         in: query
         required: true
-        example: parents:"UBERON:2001995"
+        example: "subject.omim:617290"
         schema:
           type: string
       - "$ref": "#/components/parameters/fields"
@@ -268,10 +270,10 @@ paths:
           application/json:
             example:
               q:
-              - "UBERON:0005368"
-              - "UBERON:0035213"
+              - "660YQ98I10"
+              - "KV2JZ1BI6Z"
               scopes:
-              - "_id"
+              - "object.intervention.inxight"
             schema:
               type: object
               properties:
@@ -305,23 +307,10 @@ paths:
       # summary: Make batch gene queries and return matching gene hits
       tags:
       - query
+      ## 2 operations
       x-bte-kgs-operations:
-      - $ref: '#/components/x-bte-kgs-operations/adjacent_to'
-      - $ref: '#/components/x-bte-kgs-operations/adjacent_to-rev'
-      - $ref: '#/components/x-bte-kgs-operations/attaches_to'
-      - $ref: '#/components/x-bte-kgs-operations/attaches_to-rev'
-      - $ref: '#/components/x-bte-kgs-operations/has_subclass'
-      - $ref: '#/components/x-bte-kgs-operations/subclass_of'
-      - $ref: '#/components/x-bte-kgs-operations/develops_from'
-      - $ref: '#/components/x-bte-kgs-operations/develops_from-rev'
-      - $ref: '#/components/x-bte-kgs-operations/extends_fibers_into'
-      - $ref: '#/components/x-bte-kgs-operations/extends_fibers_into-rev'
-      - $ref: '#/components/x-bte-kgs-operations/has_part'
-      - $ref: '#/components/x-bte-kgs-operations/has_part-rev'
-      - $ref: '#/components/x-bte-kgs-operations/located_in'
-      - $ref: '#/components/x-bte-kgs-operations/located_in-rev'
-      - $ref: '#/components/x-bte-kgs-operations/part_of'
-      - $ref: '#/components/x-bte-kgs-operations/part_of-rev'
+      - $ref: '#/components/x-bte-kgs-operations/drug-disease'
+      - $ref: '#/components/x-bte-kgs-operations/disease-drug'
 components:
   parameters:
     callback:
@@ -582,399 +571,116 @@ components:
   #       type: array
   #     - type: string
   x-bte-kgs-operations:
-  ## UBERON can be multiple biolink categories/node-types. We use AnatomicalEntity for simplicity
-  ## has many possible operations, not fully annotated yet. looked at those with > 100 matching records
-  ## not annotating because there's no mapping in biolink-model, doesn't look useful
-  ## - disjoint_from: 440 records
-  ## - branching_part_of: 195 records
-  ## - composed_primarily_of: 152 records (biolink-model term doesn't have inverse)
-  ## - connects: 311 records
-  ## - contributes_to_morphology_of: 610 records
-  ## - has_muscle_insertion: 198 records
-  ## - has_muscle_origin: 192 records
-  ## - has_potential_to_develop_into: 196 records
-  ## - in_lateral_side_of: 128 records
-  ## - innervated_by: 134 records (mapped to related_to)
-  ## - present_in_taxon: 189 records
-  ## - supplies: 113 records
-    adjacent_to:
-    ## 241 records
-    - supportBatch: true
-      useTemplating: true
-      inputs:
-      - id: UBERON
-        semantic: AnatomicalEntity
-      requestBody:
-        body:
-          q: "{{ queryInputs }}"
-          scopes: _id  ## has prefix
-      outputs:
-      - id: UBERON
-        semantic: AnatomicalEntity
-      parameters:
-        fields: adjacent_to.uberon  ## has prefix
-      predicate: coexists_with  ## adjacent_to and terms like it are mapped to this in biolink-model...
-      source: "infores:uberon"
-      response_mapping:
-        $ref: '#/components/x-bte-response-mapping/adjacent_to'
-      # testExamples:
-      #   - qInput: "UBERON:0000319"        ## cytotrophoblast
-      #     oneOutput: "UBERON:0000371"     ## syncytiotrophoblast
-    adjacent_to-rev:
-    - supportBatch: true
-      useTemplating: true
-      inputs:
-      - id: UBERON
-        semantic: AnatomicalEntity
-      requestBody:
-        body:
-          q: "{{ queryInputs }}"
-          scopes: adjacent_to.uberon  ## has prefix
-      outputs:
-      - id: UBERON
-        semantic: AnatomicalEntity
-      parameters:
-        fields: _id  ## has prefix
-      predicate: coexists_with
-      source: "infores:uberon"
-      response_mapping:
-        $ref: '#/components/x-bte-response-mapping/id'
-      # testExamples:
-      #   - qInput: "UBERON:0004367"        ## Descemet's membrane
-      #     oneOutput: "UBERON:0001777"     ## substantia propria of cornea
-    attaches_to:
-    ## 125 records
-    - supportBatch: true
-      useTemplating: true
-      inputs:
-      - id: UBERON
-        semantic: AnatomicalEntity
-      requestBody:
-        body:
-          q: "{{ queryInputs }}"
-          scopes: _id  ## has prefix
-      outputs:
-      - id: UBERON
-        semantic: AnatomicalEntity
-      parameters:
-        fields: attaches_to.uberon  ## has prefix
-      predicate: coexists_with  ## attaches_to and terms like it are mapped to this in biolink-model...
-      source: "infores:uberon"
-      response_mapping:
-        $ref: '#/components/x-bte-response-mapping/attaches_to'
-      # testExamples:
-      #   - qInput: "UBERON:0011312"        ## hyoepiglottic muscle
-      #     oneOutput: "UBERON:0000388"     ## epiglottis
-    attaches_to-rev:
-    - supportBatch: true
-      useTemplating: true
-      inputs:
-      - id: UBERON
-        semantic: AnatomicalEntity
-      requestBody:
-        body:
-          q: "{{ queryInputs }}"
-          scopes: attaches_to.uberon  ## has prefix
-      outputs:
-      - id: UBERON
-        semantic: AnatomicalEntity
-      parameters:
-        fields: _id  ## has prefix
-      predicate: coexists_with
-      source: "infores:uberon"
-      response_mapping:
-        $ref: '#/components/x-bte-response-mapping/id'
-      # testExamples:
-      #   - qInput: "UBERON:0001075"        ## bony vertebral centrum
-      #     oneOutput: "UBERON:0011136"     ## vertebral column ligament / ligament of vertebral column
-    has_subclass:
-    ## 6741 records
-    - supportBatch: true
-      useTemplating: true
-      inputs:
-      - id: UBERON
-        semantic: AnatomicalEntity
-      requestBody:
-        body:
-          q: "{{ queryInputs }}"
-          scopes: _id
-      outputs:
-      - id: UBERON
-        semantic: AnatomicalEntity
-      parameters:
-        fields: children
-      predicate: superclass_of  ## this is the inverse of subclass_of right now
-      source: "infores:uberon"
-      response_mapping:
-        $ref: '#/components/x-bte-response-mapping/has_subclass'
-      # testExamples:
-      #   - qInput: "UBERON:0034709"        ## hindbrain marginal layer
-      #     oneOutput: "UBERON:0034708"     ## cerebellum marginal layer
-    subclass_of:
-    - supportBatch: true
-      useTemplating: true
-      inputs:
-      - id: UBERON
-        semantic: AnatomicalEntity
-      requestBody:
-        body:
-          q: "{{ queryInputs }}"
-          scopes: _id
-      outputs:
-      - id: UBERON
-        semantic: AnatomicalEntity
-      parameters:
-        fields: parents
-      predicate: subclass_of
-      source: "infores:uberon"
-      response_mapping:
-        $ref: '#/components/x-bte-response-mapping/subclass_of'
-      # testExamples:
-      #   - qInput: "UBERON:0034704"        ## inflow tract of left ventricle
-      #     oneOutput: "UBERON:0034698"     ## inflow tract of ventricle
-    develops_from:
-    ## 1354 records
-    - supportBatch: true
-      useTemplating: true
-      inputs:
-      - id: UBERON
-        semantic: AnatomicalEntity
-      requestBody:
-        body:
-          q: "{{ queryInputs }}"
-          scopes: _id
-      outputs:
-      - id: UBERON
-        semantic: AnatomicalEntity
-      parameters:
-        fields: develops_from.uberon
-      predicate: develops_from
-      source: "infores:uberon"
-      response_mapping:
-        $ref: '#/components/x-bte-response-mapping/develops_from'
-      # testExamples:
-      #   - qInput: "UBERON:2000088"        ## yolk syncytial layer
-      #     oneOutput: "UBERON:2000084"     ## yolk
-    develops_from-rev:
-    - supportBatch: true
-      useTemplating: true
-      inputs:
-      - id: UBERON
-        semantic: AnatomicalEntity
-      requestBody:
-        body:
-          q: "{{ queryInputs }}"
-          scopes: develops_from.uberon  ## has prefix
-      outputs:
-      - id: UBERON
-        semantic: AnatomicalEntity
-      parameters:
-        fields: _id  ## has prefix
-      predicate: develops_into
-      source: "infores:uberon"
-      response_mapping:
-        $ref: '#/components/x-bte-response-mapping/id'
-      # testExamples:
-      #   - qInput: "UBERON:0006604"        ## lamina orbitonasalis
-      #     oneOutput: "UBERON:2000226"     ## lateral ethmoid bone
-    extends_fibers_into:
-    ## 109 records
-    - supportBatch: true
-      useTemplating: true
-      inputs:
-      - id: UBERON
-        semantic: AnatomicalEntity
-      requestBody:
-        body:
-          q: "{{ queryInputs }}"
-          scopes: _id
-      outputs:
-      - id: UBERON
-        semantic: AnatomicalEntity
-      parameters:
-        fields: extends_fibers_into.uberon
-      predicate: coexists_with     # extends_fibers_into and terms like it are mapped to this in biolink-model...
-      source: "infores:uberon"
-      response_mapping:
-        $ref: '#/components/x-bte-response-mapping/extends_fibers_into'
-      # testExamples:
-      #   - qInput: "UBERON:0000959"        ## optic chiasma
-      #     oneOutput: "UBERON:0000941"     ## cranial nerve II
-    extends_fibers_into-rev:
-    - supportBatch: true
-      useTemplating: true
-      inputs:
-      - id: UBERON
-        semantic: AnatomicalEntity
-      requestBody:
-        body:
-          q: "{{ queryInputs }}"
-          scopes: extends_fibers_into.uberon  ## has prefix
-      outputs:
-      - id: UBERON
-        semantic: AnatomicalEntity
-      parameters:
-        fields: _id  ## has prefix
-      predicate: coexists_with
-      source: "infores:uberon"
-      response_mapping:
-        $ref: '#/components/x-bte-response-mapping/id'
-      # testExamples:
-      #   - qInput: "UBERON:0002925"        ## trigeminal nucleus
-      #     oneOutput: "UBERON:0001645"     ## trigeminal nerve
-    has_part:
-    ## 263 records
-    - supportBatch: true
-      useTemplating: true
-      inputs:
-      - id: UBERON
-        semantic: AnatomicalEntity
-      requestBody:
-        body:
-          q: "{{ queryInputs }}"
-          scopes: _id
-      outputs:
-      - id: UBERON
-        semantic: AnatomicalEntity
-      parameters:
-        fields: has_part.uberon
-      predicate: has_part
-      source: "infores:uberon"
-      response_mapping:
-        $ref: '#/components/x-bte-response-mapping/has_part'
-      # testExamples:
-      #   - qInput: "UBERON:0002364"        ## tympanic membrane
-      #     oneOutput: "UBERON:0005042"     ## inner epithelial layer of tympanic membrane
-    has_part-rev:
-    - supportBatch: true
-      useTemplating: true
-      inputs:
-      - id: UBERON
-        semantic: AnatomicalEntity
-      requestBody:
-        body:
-          q: "{{ queryInputs }}"
-          scopes: has_part.uberon  ## has prefix
-      outputs:
-      - id: UBERON
-        semantic: AnatomicalEntity
-      parameters:
-        fields: _id  ## has prefix
-      predicate: part_of
-      source: "infores:uberon"
-      response_mapping:
-        $ref: '#/components/x-bte-response-mapping/id'
-      # testExamples:
-      #   - qInput: "UBERON:0001751"        ## dentine
-      #     oneOutput: "UBERON:0001091"     ## calcareous tooth
-    located_in:
-    ## 151 records
-    - supportBatch: true
-      useTemplating: true
-      inputs:
-      - id: UBERON
-        semantic: AnatomicalEntity
-      requestBody:
-        body:
-          q: "{{ queryInputs }}"
-          scopes: _id
-      outputs:
-      - id: UBERON
-        semantic: AnatomicalEntity
-      parameters:
-        fields: located_in.uberon
-      predicate: located_in
-      source: "infores:uberon"
-      response_mapping:
-        $ref: '#/components/x-bte-response-mapping/located_in'
-      # testExamples:
-      #   - qInput: "UBERON:4000030"        ## oropharyngeal papilla
-      #     oneOutput: "UBERON:0001729"     ## oropharynx
-    located_in-rev:
-    - supportBatch: true
-      useTemplating: true
-      inputs:
-      - id: UBERON
-        semantic: AnatomicalEntity
-      requestBody:
-        body:
-          q: "{{ queryInputs }}"
-          scopes: located_in.uberon
-      outputs:
-      - id: UBERON
-        semantic: AnatomicalEntity
-      parameters:
-        fields: _id
-      predicate: location_of
-      source: "infores:uberon"
-      response_mapping:
-        $ref: '#/components/x-bte-response-mapping/id'
-      # testExamples:
-      #   - qInput: "UBERON:0002224"        ## thoracic cavity
-      #     oneOutput: "UBERON:0000170"     ## pair of lungs
-    part_of:
-    ## 8248 records
-    - supportBatch: true
-      useTemplating: true
-      inputs:
-      - id: UBERON
-        semantic: AnatomicalEntity
-      requestBody:
-        body:
-          q: "{{ queryInputs }}"
-          scopes: _id
-      outputs:
-      - id: UBERON
-        semantic: AnatomicalEntity
-      parameters:
-        fields: part_of.uberon
-      predicate: part_of
-      source: "infores:uberon"
-      response_mapping:
-        $ref: '#/components/x-bte-response-mapping/part_of'
-      # testExamples:
-      #   - qInput: "UBERON:0034754"        ## occipitofrontal fasciculus
-      #     oneOutput: "UBERON:0011299"     ## white matter of telencephalon
-    part_of-rev:
-    - supportBatch: true
-      useTemplating: true
-      inputs:
-      - id: UBERON
-        semantic: AnatomicalEntity
-      requestBody:
-        body:
-          q: "{{ queryInputs }}"
-          scopes: part_of.uberon
-      outputs:
-      - id: UBERON
-        semantic: AnatomicalEntity
-      parameters:
-        fields: _id
-      predicate: has_part
-      source: "infores:uberon"
-      response_mapping:
-        $ref: '#/components/x-bte-response-mapping/id'
-      # testExamples:
-      #   - qInput: "UBERON:0002084"        ## heart left ventricle
-      #     oneOutput: "UBERON:0036285"     ## wall of left ventricle
+  ## 2 potential types:
+  ## - Disease: OMIM ID without prefixes in subject.omim
+  ## - SmallMolecule: UNII ID without prefix in object.intervention.inxight
+  ## 695 records total
+    disease-drug:
+      - supportBatch: true
+        useTemplating: true
+        inputs:
+          - id: OMIM
+            semantic: Disease
+        requestBody:
+          body:
+            ## API data has no prefix
+            ## joinSafe is only needed if the delimiter isn't a comma
+            q: "{{ queryInputs }}"
+            scopes: subject.omim
+        outputs:
+          - id: UNII
+            semantic: SmallMolecule
+        parameters:
+        ## records and fields info:
+        ## - names: object.intervention.description and subject.condition_name. Excluding for now
+        ## - object: 
+        ##   - removing level2_group (why string and not int?), priority_class (int) since unclear what these fields mean
+        ## - not including journal / title / date of references for now. They'll be formatted oddly with
+        ##   our current default way of parsing them
+        ## - subject:
+        ##   - clinical_summary, condition_name, and freq_per_birth are wordy but useful free-text fields...
+        ##   - don't need the alternative_names
+          fields: >-
+            object.intervention.inxight,
+            references.pmid,
+            object.age_use,
+            object.contra,
+            object.intervention.int_class,
+            object.qualscale_reclass,
+            object.rev1_eff_reclass,
+            object.timeframe,
+            subject.clinical_summary,
+            subject.freq_per_birth,
+            subject.pattern_of_inheritance
+          size: 1000
+        predicate: treated_by
+        source: "infores:gtrx"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/drug"
+        ## compare to https://gtrx.rbsapp.net/?q=HEMOLYTIC%20UREMIC%20SYNDROME,%20ATYPICAL,%20SUSCEPTIBILITY%20TO,%204
+        # testExamples:
+        #   - qInput: "OMIM:250250"            ## CARTILAGE-HAIR HYPOPLASIA;
+        #     oneOutput: "UNII:MZ1IW7Q79D"     ## Valaciclovir
+    drug-disease:
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: UNII
+            semantic: SmallMolecule
+        requestBody:
+          body:
+            ## API data has no prefix
+            ## joinSafe is only needed if the delimiter isn't a comma
+            q: "{{ queryInputs }}"
+            scopes: object.intervention.inxight
+        outputs:
+          - id: OMIM
+            semantic: Disease
+        parameters:
+          fields: >-
+            subject.omim,
+            references.pmid,
+            object.age_use,
+            object.contra,
+            object.intervention.int_class,
+            object.qualscale_reclass,
+            object.rev1_eff_reclass,
+            object.timeframe,
+            subject.clinical_summary,
+            subject.freq_per_birth,
+            subject.pattern_of_inheritance
+          size: 1000
+        predicate: treats
+        source: "infores:gtrx"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/disease"
+        ## compare to https://gtrx.rbsapp.net/?q=MALIGNANT%20HYPERTHERMIA,%20SUSCEPTIBILITY%20TO,%201
+        # testExamples:
+        #   - qInput: "UNII:F64QU97QCR"     ## Dantrolene 
+        #     oneOutput: "OMIM:145600"      ## MALIGNANT HYPERTHERMIA, SUSCEPTIBILITY TO, 1
   x-bte-response-mapping:
-    adjacent_to:
-      UBERON: adjacent_to.uberon
-    id:
-      UBERON: _id
-    attaches_to:
-      UBERON: attaches_to.uberon
-    has_subclass:
-      UBERON: children
-    subclass_of:
-      UBERON: parents
-    develops_from:
-      UBERON: develops_from.uberon
-    extends_fibers_into:
-      UBERON: located_in.uberon
-    has_part:
-      UBERON: has_part.uberon
-    located_in:
-      UBERON: located_in.uberon
-    part_of:
-      UBERON: part_of.uberon
+    drug:
+    ## using order and language from gtrx website for these fields
+      UNII: object.intervention.inxight   ## no prefix
+      pubmed: references.pmid  ## no prefix
+      type_of_intervention: object.intervention.int_class
+      intervention_MUST_be_started_within: object.timeframe
+      intervention_may_be_started_in_this_age_group: object.age_use
+      is_intervention_contraindicated_in_certain_groups: object.contra  ## seems to be "Yes"/"No"
+      intervention_level_of_evidence_available: object.qualscale_reclass
+      intervention_efficacy: object.rev1_eff_reclass
+      condition_incidence: subject.freq_per_birth
+      condition_pattern_of_inheritance: subject.pattern_of_inheritance
+      clinical_summary: subject.clinical_summary
+    disease:
+      OMIM: subject.omim   ## no prefix
+      pubmed: references.pmid  ## no prefix
+      type_of_intervention: object.intervention.int_class
+      intervention_MUST_be_started_within: object.timeframe
+      intervention_may_be_started_in_this_age_group: object.age_use
+      is_intervention_contraindicated_in_certain_groups: object.contra  ## seems to be "Yes"/"No"
+      intervention_level_of_evidence_available: object.qualscale_reclass
+      intervention_efficacy: object.rev1_eff_reclass
+      condition_incidence: subject.freq_per_birth
+      condition_pattern_of_inheritance: subject.pattern_of_inheritance
+      clinical_summary: subject.clinical_summary

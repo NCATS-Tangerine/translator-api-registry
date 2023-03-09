@@ -38,11 +38,9 @@ paths:
 ## - there are more parameters in the endpoints below. Only included parameters we're using
 ## - potentially interesting operation to annotate:
 ##   - disease -> treatment: doesn't have same output format as the other endpoints...
-##   - function <-> gene: looks like MolecularActivity GO <-> Gene
+##   - function <-> gene: looks like GO terms <-> Gene (tricky Gene -> GO because no separation between the sub-ontologies bp/cc/mf)
 ##   - bioentity/gene/{id}/expression/anatomy: same as gene/anatomy endpoint (already annotated)?
-##   - bioentity/gene/{id}/homologs: same as gene/anatomy endpoint (already annotated)
-##   - /bioentity/gene/{id}/ortholog/diseases: for non-human genes to diseases?
-##   - /bioentity/gene/{id}/ortholog/phenotypes: for non-human genes to phenotypes?
+##   - bioentity/gene/{id}/homologs: gene -> gene homologs in other species (could annotate MyGene instead?)
 ##   - gene <-> pathway 
 ##   - ontology/shared/{subject}/{object}:
 ##     the shared ancestry operation looks kinda interesting...but it's only for GO terms? 
@@ -349,6 +347,74 @@ paths:
       - gene
       x-bte-kgs-operations:
       - "$ref": "#/components/x-bte-kgs-operations/gene-interaction"
+  "/bioentity/gene/{id}/ortholog/diseases":
+    get:
+      parameters:
+      - name: id
+        description: "CURIE identifier of gene, e.g. NCBIGene:4750"
+        in: path
+        required: true
+        example: "HGNC:8548"
+        schema:
+          type: string
+      - "$ref": "#/components/parameters/rows"
+      - "$ref": "#/components/parameters/start"
+      - "$ref": "#/components/parameters/facet"
+      - "$ref": "#/components/parameters/facet_fields"
+      - "$ref": "#/components/parameters/unselect_evidence"
+      - "$ref": "#/components/parameters/exclude_automatic_assertions"
+      - "$ref": "#/components/parameters/fetch_objects"
+      - "$ref": "#/components/parameters/use_compact_associations"
+      - "$ref": "#/components/parameters/slim"
+      - "$ref": "#/components/parameters/evidence"
+      - "$ref": "#/components/parameters/direct"
+      - "$ref": "#/components/parameters/taxon"
+      - "$ref": "#/components/parameters/direct_taxon"
+      - "$ref": "#/components/parameters/relation"
+      - "$ref": "#/components/parameters/sort"
+      - "$ref": "#/components/parameters/q"
+      responses:
+        '200':
+          description: Success
+      summary: Returns diseases associated with orthologs of a gene
+      tags:
+      - gene
+      x-bte-kgs-operations:
+      - "$ref": "#/components/x-bte-kgs-operations/geneOrtholog-disease"
+  "/bioentity/gene/{id}/ortholog/phenotypes":
+    get:
+      parameters:
+      - name: id
+        description: "CURIE identifier of gene, e.g. NCBIGene:4750"
+        in: path
+        required: true
+        example: "HGNC:8548"
+        schema:
+          type: string
+      - "$ref": "#/components/parameters/rows"
+      - "$ref": "#/components/parameters/start"
+      - "$ref": "#/components/parameters/facet"
+      - "$ref": "#/components/parameters/facet_fields"
+      - "$ref": "#/components/parameters/unselect_evidence"
+      - "$ref": "#/components/parameters/exclude_automatic_assertions"
+      - "$ref": "#/components/parameters/fetch_objects"
+      - "$ref": "#/components/parameters/use_compact_associations"
+      - "$ref": "#/components/parameters/slim"
+      - "$ref": "#/components/parameters/evidence"
+      - "$ref": "#/components/parameters/direct"
+      - "$ref": "#/components/parameters/taxon"
+      - "$ref": "#/components/parameters/direct_taxon"
+      - "$ref": "#/components/parameters/relation"
+      - "$ref": "#/components/parameters/sort"
+      - "$ref": "#/components/parameters/q"
+      responses:
+        '200':
+          description: Success
+      summary: Returns phenotypes associated with orthologs for a gene
+      tags:
+      - gene
+      x-bte-kgs-operations:
+      - "$ref": "#/components/x-bte-kgs-operations/geneOrtholog-phenotype"
   "/bioentity/gene/{id}/phenotypes":
     get:
       parameters:
@@ -792,6 +858,14 @@ components:
       ## this often has "expressed in" with inverse: true. Meaning the actual relation should be "expresses"
       "biolink:original_predicate": associations.relation.label
       pubmed: associations.publications.id
+    gene-hgnc-dbsnp-start:
+      HGNC: associations.object.HGNC
+      input_name: associations.subject.label   ## for the dbsnp input
+      monarch_source_database: associations.provided_by
+      ## there's also a relation.id and relation.inverse.
+      ## this often has "expressed in" with inverse: true. Meaning the actual relation should be "expresses"
+      "biolink:original_predicate": associations.relation.label
+      pubmed: associations.publications.id
     pathway-react:
       REACT: associations.object.REACT
       monarch_source_database: associations.provided_by
@@ -802,8 +876,15 @@ components:
       monarch_source_database: associations.provided_by
       pubmed: associations.publications.id
       "biolink:original_predicate": associations.relation.label
+    phenotype-hp-dbsnp-start:
+      HP: associations.object.HP
+      input_name: associations.subject.label   ## for the dbsnp input
+      monarch_source_database: associations.provided_by
+      pubmed: associations.publications.id
+      "biolink:original_predicate": associations.relation.label
     variant-dbsnp:
       DBSNP: associations.object.dbSNP
+      output_name: associations.object.label
       monarch_source_database: associations.provided_by
       pubmed: associations.publications.id
       "biolink:original_predicate": associations.relation.label
@@ -817,6 +898,26 @@ components:
       monarch_source_database: associations.provided_by
       "biolink:original_predicate": associations.relation.label
       pubmed: associations.publications.id
+    disease-mondo-dbsnp-start:
+      MONDO: associations.object.MONDO
+      input_name: associations.subject.label   ## for the dbsnp input
+      monarch_source_database: associations.provided_by
+      "biolink:original_predicate": associations.relation.label
+      pubmed: associations.publications.id
+    orthologGene2diseaseMondo:
+      MONDO: associations.object.MONDO
+      homologous_gene_model_id: associations.subject.id  ## what is directly annotated to the disease
+      homologous_gene_model_name: associations.subject.label
+      monarch_source_database: associations.provided_by
+      "biolink:original_predicate": associations.relation.label
+      pubmed: associations.publications.id    ## not all of these are pubmed though...saw some WormBase:WBPaper ones
+    orthologGene2phenoHP:
+      HP: associations.object.HP
+      homologous_gene_model_id: associations.subject.id  ## what is directly annotated to the disease
+      homologous_gene_model_name: associations.subject.label
+      monarch_source_database: associations.provided_by
+      "biolink:original_predicate": associations.relation.label
+      pubmed: associations.publications.id    ## not all of these are pubmed though...saw some WormBase:WBPaper ones
   x-bte-kgs-operations:
   ## other useful endpoints for x-bte annotation are...
   ## /relation/usage/between/{subject_category}/{object_category}
@@ -1104,6 +1205,68 @@ components:
       #   - qInput: "HGNC:2950"     ## DNAH5 
       #     oneOutput: "HGNC:9069"  ## PLEC
       ## another possible input: HGNC:7551, MYBPC3
+    geneOrtholog-disease:
+    ## - starting with HGNC = starting with human gene, getting non-human gene orthologs
+    ##   then finding directly-related diseases
+    ##   finds info that isn't found through gene-phenotype direct relationships
+    ## - don't have a way to get information in reverse direction (Disease -> human gene through ortholog)
+    ##   can get from Disease -> gene-ortholog
+    ## - noticed Wormbase-related data/homologs (C. elegans)
+    ## - can find more examples from /relation/usage/between/model/disease
+    - supportBatch: false
+      useTemplating: true
+      inputs:
+      - id: HGNC
+        semantic: Gene  ## aka start with human gene
+      parameters:
+        id: "{{ queryInputs | addPrefix('HGNC') }}"
+        ## add prefix since Monarch expects this, while BTE automatically removes
+        rows: -1
+        direct: true
+        unselect_evidence: true
+        ## don't need to set disease to human-only...
+      outputs:
+      - id: MONDO
+        semantic: Disease
+      ## gene -> gene ortholog -(is model of)-> disease...not sure what predicate to use
+      predicate: related_to
+      source: "infores:monarchinitiative"
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/orthologGene2diseaseMondo"
+      # testExamples:
+      #   - qInput: "HGNC:9508"           ## PSEN1
+      #     oneOutput: "MONDO:0006559"   ## hidradenitis suppurativa, not found through gene-disease endpoints
+    geneOrtholog-phenotype:
+    ## - starting with HGNC = starting with human gene, getting non-human gene orthologs
+    ##   then finding directly-related phenotypes
+    ##   finds info that isn't found through gene-phenotype direct relationships
+    ## - don't have a way to get information in reverse direction (Phenotype -> human gene through ortholog)
+    ##   can get from Phenotype -> gene-ortholog
+    ## - noticed MGI-related data/homologs
+    - supportBatch: false
+      useTemplating: true
+      inputs:
+      - id: HGNC
+        semantic: Gene  ## aka start with human gene
+      parameters:
+        id: "{{ queryInputs | addPrefix('HGNC') }}"
+        ## add prefix since Monarch expects this, while BTE automatically removes
+        rows: -1
+        direct: true
+        unselect_evidence: true
+        ## don't need to set phenotype to human-only...
+      outputs:
+      - id: HP
+        semantic: PhenotypicFeature
+      ## gene -> gene ortholog -(has phenotype)-> phenotype...not sure what predicate to use
+      predicate: related_to
+      source: "infores:monarchinitiative"
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/orthologGene2phenoHP"
+      # testExamples:
+      #   - qInput: "HGNC:8548"        ## P4HB
+      #     oneOutput: "HP:0003540"    ## Impaired platelet aggregation, not found from gene-phenotype operation
+      ## another possible input: HGNC:9508, PSEN1 -> HP:0009121, Abnormal axial skeleton morphology
     gene-phenotype:
     ## will include non-human phenotypes because Monarch doesn't include the taxon for phenotypes
     ##   but prefixes show the species (MP = mouse)
@@ -1273,7 +1436,7 @@ components:
       predicate: contributes_to
       source: "infores:monarchinitiative"
       response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/disease-mondo"
+        "$ref": "#/components/x-bte-response-mapping/disease-mondo-dbsnp-start"
       # testExamples:
       #   - qInput: "DBSNP:rs227731" 
       #     oneOutput: "MONDO:0004747"  ## cleft lip (disease)
@@ -1299,7 +1462,7 @@ components:
       predicate: is_sequence_variant_of
       source: "infores:monarchinitiative"
       response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/gene-hgnc"
+        "$ref": "#/components/x-bte-response-mapping/gene-hgnc-dbsnp-start"
       # testExamples:
       #   - qInput: "DBSNP:rs11879191" 
       #     oneOutput: "HGNC:1735"  ## CDC37
@@ -1325,7 +1488,7 @@ components:
       predicate: related_to
       source: "infores:monarchinitiative"
       response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/phenotype-hp"
+        "$ref": "#/components/x-bte-response-mapping/phenotype-hp-dbsnp-start"
       # testExamples:
       #   - qInput: "DBSNP:rs115165302" 
       #     oneOutput: "HP:0002944"  ## Thoracolumbar scoliosis
