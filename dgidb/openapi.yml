@@ -16,7 +16,7 @@ info:
     component: KP
     team:
       - Service Provider
-    biolink-version: "2.2.13"
+    biolink-version: "3.1.1"
 servers:
 - description: Encrypted Production server
   url: https://biothings.ncats.io/dgidb
@@ -647,10 +647,15 @@ components:
         outputs:
           - id: NCBIGene
             semantic: Gene
-        ## for biolink 2.2.8, DGIdb:activator and CHEMBL.MECHANISM:activator map to the mixin positively_regulates (under regulates)
-        ##                    vs GAMMA:activator maps to increases_activity_of (under affects)
-        ## CX decided to use the entity-entity version of positively_regulates, after reading some triples' linked pubmed papers
-        predicate: entity_positively_regulates_entity
+        ## biolink 2.4.8: used entity_positively_regulates_entity
+        predicate: affects
+        ## nesting allows this main key to stay the same even with future changes
+        qualifiers:
+        ## key is the "qualifier_type_id", value is the "qualifier_value" in the TRAPI Edge.qualifiers spec
+          qualified_predicate: causes
+          object_aspect_qualifier: activity
+          object_direction_qualifier: increased
+          causal_mechanism_qualifier: activation   ## extra since DGIdb labels these as "activator"
         source: "infores:dgidb"
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/forward"
@@ -678,10 +683,13 @@ components:
         outputs:
           - id: "CHEMBL.COMPOUND"
             semantic: SmallMolecule
-        ## for biolink 2.2.8, DGIdb:activator and CHEMBL.MECHANISM:activator map to the mixin positively_regulates (under regulates)
-        ##                    vs GAMMA:activator maps to increases_activity_of (under affects)
-        ## CX decided to use the entity-entity version of positively_regulates, after reading some triples' linked pubmed papers
-        predicate: entity_positively_regulated_by_entity
+        ## biolink 2.4.8: used entity_positively_regulated_by_entity
+        predicate: affected_by
+        qualifiers:
+          qualified_predicate: caused_by
+          subject_aspect_qualifier: activity
+          subject_direction_qualifier: increased
+          causal_mechanism_qualifier: activation   ## extra since DGIdb labels these as "activator"
         source: "infores:dgidb"
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/reverse"
@@ -711,8 +719,13 @@ components:
         outputs:
           - id: NCBIGene
             semantic: Gene
-        ## for biolink 2.2.8, DGIdb:agonist maps to this predicate
-        predicate: increases_activity_of
+        ## for biolink 2.4.8, DGIdb:agonist maps to increases_activity_of
+        predicate: affects
+        qualifiers:
+          qualified_predicate: causes
+          object_aspect_qualifier: activity
+          object_direction_qualifier: increased
+          causal_mechanism_qualifier: agonism   ## extra since DGIdb labels these as "agonist"
         source: "infores:dgidb"
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/forward"
@@ -743,8 +756,13 @@ components:
         outputs:
           - id: "CHEMBL.COMPOUND"
             semantic: SmallMolecule
-        ## for biolink 2.2.8, DGIdb:agonist maps to the inverse of this predicate
-        predicate: activity_increased_by
+        ## for biolink 2.4.8, DGIdb:agonist maps to the inverse of increases_activity_of
+        predicate: affected_by
+        qualifiers:
+          qualified_predicate: caused_by
+          subject_aspect_qualifier: activity
+          subject_direction_qualifier: increased
+          causal_mechanism_qualifier: agonism   ## extra since DGIdb labels these as "agonist"
         source: "infores:dgidb"
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/reverse"
@@ -774,8 +792,11 @@ components:
         outputs:
           - id: NCBIGene
             semantic: Gene
-        ## for biolink 2.2.8, DGIdb:allosteric_modulator maps to this predicate
-        predicate: affects_activity_of
+        ## for biolink 2.4.8, DGIdb:allosteric_modulator maps to affects_activity_of
+        predicate: affects
+        qualifiers:
+          object_aspect_qualifier: activity
+          ## no causal_mechanism_qualifier for "allosteric modulator" (not negative or positive)
         source: "infores:dgidb"
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/forward"
@@ -803,8 +824,11 @@ components:
         outputs:
           - id: "CHEMBL.COMPOUND"
             semantic: SmallMolecule
-        ## for biolink 2.2.8, DGIdb:allosteric_modulator maps to the inverse of this predicate
-        predicate: activity_affected_by
+        ## for biolink 2.4.8, DGIdb:allosteric_modulator maps to the inverse of affects_activity_of
+        predicate: affected_by
+        qualifiers:
+          subject_aspect_qualifier: activity
+          ## no causal_mechanism_qualifier for "allosteric modulator" (not negative or positive)
         source: "infores:dgidb"
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/reverse"
@@ -834,15 +858,13 @@ components:
         outputs:
           - id: NCBIGene
             semantic: Gene
-        ## for biolink 2.2.8, DGIdb:antagonist maps to this predicate
-        predicate: decreases_activity_of
-        ## CX: confusion over whether to use a "negatively_regulates" (what is being done / the process) vs
-        ##     "decreases activity of" (the effect)
-        ## - def https://dgidb.org/interaction_types and https://en.wikipedia.org/wiki/Receptor_antagonist: 
-        ##   antagonists do bind to the protein
-        ##   They often "don't induce the protein to do a thing".
-        ##   Instead they block the agonist or signal / dampen the response to the agonist or signal...
-        ##   think of the drug that blocks a binding site so the body's signals can't bind as often, to reduce overactivity
+        ## for biolink 2.4.8, DGIdb:antagonist maps to decreases_activity_of
+        predicate: affects
+        qualifiers:
+          qualified_predicate: causes
+          object_aspect_qualifier: activity
+          object_direction_qualifier: decreased
+          causal_mechanism_qualifier: antagonism   ## extra since DGIdb labels these as "antagonist"
         source: "infores:dgidb"
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/forward"
@@ -872,8 +894,13 @@ components:
         outputs:
           - id: "CHEMBL.COMPOUND"
             semantic: SmallMolecule
-        ## for biolink 2.2.8, DGIdb:antagonist maps to the inverse of this predicate
-        predicate: activity_decreased_by
+        ## for biolink 2.4.8, DGIdb:antagonist maps to the inverse of decreases_activity_of
+        predicate: affected_by
+        qualifiers:
+          qualified_predicate: caused_by
+          subject_aspect_qualifier: activity
+          subject_direction_qualifier: decreased
+          causal_mechanism_qualifier: antagonism   ## extra since DGIdb labels these as "antagonist"
         source: "infores:dgidb"
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/reverse"
@@ -903,8 +930,10 @@ components:
         outputs:
           - id: NCBIGene
             semantic: Gene
-        ## biolink 2.2.8: using the mapping for GAMMA:antibody, rather than mapping for the relation (molecularly_interacts_with)
-        predicate: directly_interacts_with
+        ## for biolink 2.4.8, was using directly_interacts_with (mapping for GAMMA:antibody) 
+        predicate: physically_interacts_with
+        qualifiers:
+          causal_mechanism_qualifier: antibody_inhibition   ## extra since DGIdb labels these as "antibody"
         source: "infores:dgidb"
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/forward"
@@ -932,8 +961,10 @@ components:
         outputs:
           - id: "CHEMBL.COMPOUND"
             semantic: SmallMolecule
-        ## biolink 2.2.8: using the mapping for GAMMA:antibody, rather than mapping for the relation (molecularly_interacts_with)
-        predicate: directly_interacts_with
+        ## for biolink 2.4.8, was using directly_interacts_with (mapping for GAMMA:antibody) 
+        predicate: physically_interacts_with
+        qualifiers:
+          causal_mechanism_qualifier: antibody_inhibition   ## extra since DGIdb labels these as "antibody"
         source: "infores:dgidb"
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/reverse"
@@ -964,8 +995,13 @@ components:
     #     outputs:
     #       - id: NCBIGene
     #         semantic: Gene
-    #     ## for biolink 2.2.8, DGIdb:antisense_oligonucleotide maps to this predicate
-    #     predicate: decreases_expression_of
+    #     ## for biolink 2.4.8, DGIdb:antisense_oligonucleotide maps to decreases_expression_of
+    #     ## but dgidb definition is: translation from mRNA to protein is inhibited..
+    #     predicate: affects
+    #     qualifiers:
+    #       qualified_predicate: causes
+    #       object_aspect_qualifier: synthesis
+    #       object_direction_qualifier: decreased
     #     source: "infores:dgidb"
     #     response_mapping:
     #       "$ref": "#/components/x-bte-response-mapping/forward"
@@ -993,8 +1029,13 @@ components:
     #     outputs:
     #       - id: "CHEMBL.COMPOUND"
     #         semantic: SmallMolecule
-    #     ## for biolink 2.2.8, DGIdb:antisense_oligonucleotide maps to the inverse of this predicate
-    #     predicate: expression_decreased_by
+    #     ## for biolink 2.4.8, DGIdb:antisense_oligonucleotide maps to the inverse of decreases_expression_of
+    #     ## but dgidb definition is: translation from mRNA to protein is inhibited..
+    #     predicate: affected_by
+    #     qualifiers:
+    #       qualified_predicate: caused_by
+    #       subject_aspect_qualifier: synthesis
+    #       subject_direction_qualifier: decreased
     #     source: "infores:dgidb"
     #     response_mapping:
     #       "$ref": "#/components/x-bte-response-mapping/reverse"
@@ -1024,10 +1065,14 @@ components:
         outputs:
           - id: NCBIGene
             semantic: Gene
-        ## CX: has the same issue as "antagonist"
-        ## - def https://dgidb.org/interaction_types and https://en.wikipedia.org/wiki/Receptor_antagonist: 
-        ## for biolink 2.2.8, DGIdb:blocker maps to this predicate
-        predicate: decreases_activity_of
+        ## biolink 3.0.3: not sure if all data fits molecular_channel_blockage
+        ## for biolink 2.4.8, DGIdb:blocker maps to decreases_activity_of
+        predicate: affects
+        qualifiers:
+          qualified_predicate: causes
+          object_aspect_qualifier: activity
+          object_direction_qualifier: decreased
+          causal_mechanism_qualifier: molecular_channel_blockage
         source: "infores:dgidb"
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/forward"
@@ -1058,8 +1103,13 @@ components:
         outputs:
           - id: "CHEMBL.COMPOUND"
             semantic: SmallMolecule
-        ## for biolink 2.2.8, DGIdb:blocker maps to the inverse of this predicate
-        predicate: activity_decreased_by
+        ## for biolink 2.4.8, DGIdb:blocker maps to the inverse of decreases_activity_of
+        predicate: affected_by
+        qualifiers:
+          qualified_predicate: caused_by
+          subject_aspect_qualifier: activity
+          subject_direction_qualifier: decreased
+          causal_mechanism_qualifier: molecular_channel_blockage
         source: "infores:dgidb"
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/reverse"
@@ -1090,8 +1140,14 @@ components:
     #     outputs:
     #       - id: NCBIGene
     #         semantic: Gene
-    #     ## for biolink 2.2.8, DGIdb:inducer maps to this predicate
-    #     predicate: increases_activity_of
+    #     ## for biolink 2.4.8, DGIdb:inducer maps to increases_activity_of
+    #     predicate: affects
+    #     ## dgidb definition doesn't match biolink 3.0.3's inducer definition
+    #     ##   so not using that causal_mechanism_qualifier
+    #     qualifiers:
+    #       qualified_predicate: causes
+    #       object_aspect_qualifier: activity
+    #       object_direction_qualifier: increased
     #     source: "infores:dgidb"
     #     response_mapping:
     #       "$ref": "#/components/x-bte-response-mapping/forward"
@@ -1119,8 +1175,12 @@ components:
     #     outputs:
     #       - id: "CHEMBL.COMPOUND"
     #         semantic: SmallMolecule
-    #     ## for biolink 2.2.8, DGIdb:inducer maps to the inverse of this predicate
-    #     predicate: activity_increased_by
+    #     ## for biolink 2.4.8, DGIdb:inducer maps to the inverse of increases_activity_of
+    #     predicate: affected_by
+    #     qualifiers:
+    #       qualified_predicate: caused_by
+    #       subject_aspect_qualifier: activity
+    #       subject_direction_qualifier: increased
     #     source: "infores:dgidb"
     #     response_mapping:
     #       "$ref": "#/components/x-bte-response-mapping/reverse"
@@ -1150,8 +1210,14 @@ components:
         outputs:
           - id: NCBIGene
             semantic: Gene
-        ## for biolink 2.2.8, DGIdb:inhibitor maps to this predicate
-        predicate: decreases_activity_of
+        ## for biolink 2.4.8, DGIdb:inhibitor maps to decreases_activity_of
+        predicate: affects
+        ## uses activity_or_abundance because dgidb definition says decrease of expression or activity
+        qualifiers:
+          qualified_predicate: causes
+          object_aspect_qualifier: activity_or_abundance
+          object_direction_qualifier: decreased
+          causal_mechanism_qualifier: inhibition   ## extra since DGIdb labels these as "inhibitor"
         source: "infores:dgidb"
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/forward"
@@ -1179,8 +1245,14 @@ components:
         outputs:
           - id: "CHEMBL.COMPOUND"
             semantic: SmallMolecule
-        ## for biolink 2.2.8, DGIdb:inhibitor maps to the inverse of this predicate
-        predicate: activity_decreased_by
+        ## for biolink 2.4.8, DGIdb:inhibitor maps to the inverse of decreases_activity_of
+        predicate: affected_by
+        ## uses activity_or_abundance because dgidb definition says decrease of expression or activity
+        qualifiers:
+          qualified_predicate: caused_by
+          subject_aspect_qualifier: activity_or_abundance
+          subject_direction_qualifier: decreased
+          causal_mechanism_qualifier: inhibition   ## extra since DGIdb labels these as "inhibitor"
         source: "infores:dgidb"
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/reverse"
@@ -1211,8 +1283,13 @@ components:
     #     outputs:
     #       - id: NCBIGene
     #         semantic: Gene
-    #     ## for biolink 2.2.8, DGIdb:inhibitory_allosteric_modulator maps to this predicate
-    #     predicate: decreases_activity_of
+    #     ## for biolink 2.4.8, DGIdb:inhibitory_allosteric_modulator maps to decreases_activity_of
+    #     predicate: affects
+    #     qualifiers:
+    #       qualified_predicate: causes
+    #       object_aspect_qualifier: activity
+    #       object_direction_qualifier: decreased
+    #       causal_mechanism_qualifier: negative_allosteric_modulation   ## extra
     #     source: "infores:dgidb"
     #     response_mapping:
     #       "$ref": "#/components/x-bte-response-mapping/forward"
@@ -1240,8 +1317,13 @@ components:
     #     outputs:
     #       - id: "CHEMBL.COMPOUND"
     #         semantic: SmallMolecule
-    #     ## for biolink 2.2.8, DGIdb:inhibitory_allosteric_modulator maps to the inverse of this predicate
-    #     predicate: activity_decreased_by
+    #     ## for biolink 2.4.8, DGIdb:inhibitory_allosteric_modulator maps to the inverse of decreases_activity_of
+    #     predicate: affected_by
+    #     qualifiers:
+    #       qualified_predicate: caused_by
+    #       subject_aspect_qualifier: activity
+    #       subject_direction_qualifier: decreased
+    #       causal_mechanism_qualifier: negative_allosteric_modulation   ## extra
     #     source: "infores:dgidb"
     #     response_mapping:
     #       "$ref": "#/components/x-bte-response-mapping/reverse"
@@ -1271,8 +1353,13 @@ components:
         outputs:
           - id: NCBIGene
             semantic: Gene
-        ## for biolink 2.2.8, DGIdb:inverse_agonist maps to this predicate
-        predicate: decreases_activity_of
+        ## for biolink 2.4.8, DGIdb:inverse_agonist maps to decreases_activity_of
+        predicate: affects
+        qualifiers:
+          qualified_predicate: causes
+          object_aspect_qualifier: activity
+          object_direction_qualifier: decreased
+          causal_mechanism_qualifier: inverse_agonism
         source: "infores:dgidb"
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/forward"
@@ -1300,8 +1387,13 @@ components:
         outputs:
           - id: "CHEMBL.COMPOUND"
             semantic: SmallMolecule
-        ## for biolink 2.2.8, DGIdb:inverse_agonist maps to the inverse of this predicate
-        predicate: activity_decreased_by
+        ## for biolink 2.4.8, DGIdb:inverse_agonist maps to the inverse of decreases_activity_of
+        predicate: affected_by
+        qualifiers:
+          qualified_predicate: caused_by
+          subject_aspect_qualifier: activity
+          subject_direction_qualifier: decreased
+          causal_mechanism_qualifier: inverse_agonism
         source: "infores:dgidb"
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/reverse"
@@ -1332,8 +1424,12 @@ components:
           - id: NCBIGene
             semantic: Gene
         ## could also use "entity regulates entity"? see def: https://dgidb.org/interaction_types 
-        ## for biolink 2.2.8, DGIdb:modulator maps to this predicate
-        predicate: affects_activity_of
+        ## for biolink 2.4.8, DGIdb:modulator maps to affects_activity_of
+        predicate: affects
+        ## uses activity_or_abundance because dgidb "negative modulator" definition uses amount or activity
+        qualifiers:
+          object_aspect_qualifier: activity_or_abundance
+          ## no causal_mechanism_qualifier for "modulator"
         source: "infores:dgidb"
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/forward"
@@ -1361,8 +1457,11 @@ components:
         outputs:
           - id: "CHEMBL.COMPOUND"
             semantic: SmallMolecule
-        ## for biolink 2.2.8, DGIdb:modulator maps to the inverse of this predicate
-        predicate: activity_affected_by
+        ## for biolink 2.4.8, DGIdb:modulator maps to the inverse of affects_activity_of
+        predicate: affected_by
+        qualifiers:
+          subject_aspect_qualifier: activity_or_abundance
+          ## no causal_mechanism_qualifier for "modulator"
         source: "infores:dgidb"
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/reverse"
@@ -1393,8 +1492,14 @@ components:
     #     outputs:
     #       - id: NCBIGene
     #         semantic: Gene
-    #     ## for biolink 2.2.8, DGIdb:negative_modulator maps to this predicate
-    #     predicate: decreases_activity_of
+    #     ## for biolink 2.4.8, DGIdb:negative_modulator maps to decreases_activity_of
+    #     predicate: affects
+    #     ## uses activity_or_abundance because dgidb definition says both
+    #     qualifiers:
+    #       qualified_predicate: causes
+    #       object_aspect_qualifier: activity_or_abundance
+    #       object_direction_qualifier: decreased
+    #       ## no causal_mechanism_qualifier for "negative modulator"
     #     source: "infores:dgidb"
     #     response_mapping:
     #       "$ref": "#/components/x-bte-response-mapping/forward"
@@ -1422,8 +1527,13 @@ components:
     #     outputs:
     #       - id: "CHEMBL.COMPOUND"
     #         semantic: SmallMolecule
-    #     ## for biolink 2.2.8, DGIdb:negative_modulator maps to the inverse of this predicate
-    #     predicate: activity_decreased_by
+    #     ## for biolink 2.4.8, DGIdb:negative_modulator maps to the inverse of decreases_activity_of
+    #     predicate: affected_by
+    #     qualifiers:
+    #       qualified_predicate: caused_by
+    #       subject_aspect_qualifier: activity_or_abundance
+    #       subject_direction_qualifier: decreased
+    #       ## no causal_mechanism_qualifier for "negative modulator"
     #     source: "infores:dgidb"
     #     response_mapping:
     #       "$ref": "#/components/x-bte-response-mapping/reverse"
@@ -1454,7 +1564,6 @@ components:
         outputs:
           - id: NCBIGene
             semantic: Gene
-        ## DGIdb drug-gene interactions
         predicate: interacts_with
         source: "infores:dgidb"
         response_mapping:
@@ -1483,7 +1592,6 @@ components:
         outputs:
           - id: "CHEMBL.COMPOUND"
             semantic: SmallMolecule
-        ## DGIdb drug-gene interactions
         predicate: interacts_with
         source: "infores:dgidb"
         response_mapping:
@@ -1514,8 +1622,13 @@ components:
         outputs:
           - id: NCBIGene
             semantic: Gene
-        ## for biolink 2.2.8, DGIdb:partial_agonist maps to this predicate
-        predicate: increases_activity_of
+        ## for biolink 2.4.8, DGIdb:partial_agonist maps to increases_activity_of
+        predicate: affects
+        qualifiers:
+          qualified_predicate: causes
+          object_aspect_qualifier: activity
+          object_direction_qualifier: increased
+          causal_mechanism_qualifier: agonism
         source: "infores:dgidb"
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/forward"
@@ -1543,8 +1656,13 @@ components:
         outputs:
           - id: "CHEMBL.COMPOUND"
             semantic: SmallMolecule
-        ## for biolink 2.2.8, DGIdb:partial_agonist maps to the inverse of this predicate
-        predicate: activity_increased_by
+        ## for biolink 2.4.8, DGIdb:partial_agonist maps to the inverse of increases_activity_of
+        predicate: affected_by
+        qualifiers:
+          qualified_predicate: caused_by
+          subject_aspect_qualifier: activity
+          subject_direction_qualifier: increased
+          causal_mechanism_qualifier: agonism
         source: "infores:dgidb"
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/reverse"
@@ -1574,8 +1692,14 @@ components:
         outputs:
           - id: NCBIGene
             semantic: Gene
-        ## biolink 2.2.8: using mapping to GAMMA / CHEMBL.MECHANISM positive_modulator term  
-        predicate: increases_activity_of
+        ## biolink 2.4.8: using mapping to GAMMA / CHEMBL.MECHANISM positive_modulator term. using increases_activity_of  
+        predicate: affects
+        ## not using activity_or_abundance because dgidb definition only mentions activity
+        qualifiers:
+          qualified_predicate: causes
+          object_aspect_qualifier: activity
+          object_direction_qualifier: increased
+          ## no causal_mechanism_qualifier for "positive modulator"
         source: "infores:dgidb"
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/forward"
@@ -1603,8 +1727,13 @@ components:
         outputs:
           - id: "CHEMBL.COMPOUND"
             semantic: SmallMolecule
-        ## biolink 2.2.8: using inverse of mapping to GAMMA / CHEMBL.MECHANISM positive_modulator term  
-        predicate: activity_increased_by
+        ## biolink 2.4.8: using inverse of mapping to GAMMA / CHEMBL.MECHANISM positive_modulator term (activity_increased_by) 
+        predicate: affected_by
+        qualifiers:
+          qualified_predicate: caused_by
+          subject_aspect_qualifier: activity
+          subject_direction_qualifier: increased
+          ## no causal_mechanism_qualifier for "positive modulator"
         source: "infores:dgidb"
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/reverse"
@@ -1635,8 +1764,14 @@ components:
     #     outputs:
     #       - id: NCBIGene
     #         semantic: Gene
-    #     ## biolink 2.2.8: using mapping for GAMMA:suppressor
-    #     predicate: decreases_activity_of
+    #     ## biolink 2.4.8: using mapping for GAMMA:suppressor, so using decreases_activity_of
+    #     predicate: affects
+    #     ## using activity_or_abundance because the drugbank examples involve both
+    #     qualifiers:
+    #       qualified_predicate: causes
+    #       object_aspect_qualifier: activity_or_abundance
+    #       object_direction_qualifier: decreased
+    #       ## no causal_mechanism_qualifier for "suppressor"
     #     source: "infores:dgidb"
     #     response_mapping:
     #       "$ref": "#/components/x-bte-response-mapping/forward"
@@ -1664,8 +1799,13 @@ components:
     #     outputs:
     #       - id: "CHEMBL.COMPOUND"
     #         semantic: SmallMolecule
-    #     ## biolink 2.2.8: using inverse of mapping for GAMMA:suppressor
-    #     predicate: activity_decreased_by
+    #     ## biolink 2.4.8: using inverse of mapping for GAMMA:suppressor (so using activity_decreased_by)
+    #     predicate: affected_by
+    #     qualifiers:
+    #       qualified_predicate: caused_by
+    #       subject_aspect_qualifier: activity_or_abundance
+    #       subject_direction_qualifier: decreased
+    #       ## no causal_mechanism_qualifier for "suppressor"
     #     source: "infores:dgidb"
     #     response_mapping:
     #       "$ref": "#/components/x-bte-response-mapping/reverse"
@@ -1696,8 +1836,8 @@ components:
     #     outputs:
     #       - id: NCBIGene
     #         semantic: Gene
-    #     ## using a different predicate than the biolink 2.2.8 mapping (decreases_activity_of)
-    #     ## reasoning: thought its def https://dgidb.org/interaction_types was similar to https://github.com/biolink/biolink-model/blob/c73899cd33753c5d2ff937213b6c5911c579b001/biolink-model.yaml#L2918
+    #     ## using a different predicate than the biolink mapping (decreases_activity_of)
+    #     ## reasoning: thought its def https://dgidb.org/interaction_types was similar to https://github.com/biolink/biolink-model/blob/master/biolink-model.yaml#L2381
     #     predicate: affects_response_to
     #     source: "infores:dgidb"
     #     response_mapping:
@@ -1726,8 +1866,6 @@ components:
     #     outputs:
     #       - id: "CHEMBL.COMPOUND"
     #         semantic: SmallMolecule
-    #     ## using a different predicate than the biolink 2.2.8 mapping (decreases_activity_of)
-    #     ## reasoning: thought its def https://dgidb.org/interaction_types was similar to https://github.com/biolink/biolink-model/blob/c73899cd33753c5d2ff937213b6c5911c579b001/biolink-model.yaml#L2918
     #     predicate: response_affected_by
     #     source: "infores:dgidb"
     #     response_mapping:
