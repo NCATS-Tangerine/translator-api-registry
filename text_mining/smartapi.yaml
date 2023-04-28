@@ -10,7 +10,7 @@ info:
     query web services.
   termsOfService: https://biothings.io/about
   title: Text Mining Targeted Association API
-  version: '2022-12-14'
+  version: '2023-04-28'
   x-translator:
     infores: "infores:text-mining-provider-targeted"
     component: KP
@@ -312,18 +312,10 @@ paths:
       tags:
       - query
       x-bte-kgs-operations:
-      - "$ref": "#/components/x-bte-kgs-operations/chebi-treats-mondo"
-      - "$ref": "#/components/x-bte-kgs-operations/chebi-treats-mondo-rev"
-      - "$ref": "#/components/x-bte-kgs-operations/chebi-treats-hp"
-      - "$ref": "#/components/x-bte-kgs-operations/chebi-treats-hp-rev"
       - "$ref": "#/components/x-bte-kgs-operations/drugbank-treats-mondo"
       - "$ref": "#/components/x-bte-kgs-operations/drugbank-treats-mondo-rev"
       - "$ref": "#/components/x-bte-kgs-operations/drugbank-treats-hp"
       - "$ref": "#/components/x-bte-kgs-operations/drugbank-treats-hp-rev"
-      - "$ref": "#/components/x-bte-kgs-operations/chebi-positively_regulates-uniprotkb"
-      - "$ref": "#/components/x-bte-kgs-operations/chebi-positively_regulates-uniprotkb-rev"
-      - "$ref": "#/components/x-bte-kgs-operations/chebi-negatively_regulates-uniprotkb"
-      - "$ref": "#/components/x-bte-kgs-operations/chebi-negatively_regulates-uniprotkb-rev"
       - "$ref": "#/components/x-bte-kgs-operations/drugbank-positively_regulates-uniprotkb"
       - "$ref": "#/components/x-bte-kgs-operations/drugbank-positively_regulates-uniprotkb-rev"
       - "$ref": "#/components/x-bte-kgs-operations/drugbank-negatively_regulates-uniprotkb"
@@ -338,12 +330,8 @@ paths:
       - "$ref": "#/components/x-bte-kgs-operations/uniprotkb-contributes_to-hp-rev"
       - "$ref": "#/components/x-bte-kgs-operations/drugbank-contributes_to-hp"
       - "$ref": "#/components/x-bte-kgs-operations/drugbank-contributes_to-hp-rev"
-      - "$ref": "#/components/x-bte-kgs-operations/chebi-contributes_to-hp"
-      - "$ref": "#/components/x-bte-kgs-operations/chebi-contributes_to-hp-rev"
       - "$ref": "#/components/x-bte-kgs-operations/drugbank-contributes_to-mondo"
       - "$ref": "#/components/x-bte-kgs-operations/drugbank-contributes_to-mondo-rev"
-      - "$ref": "#/components/x-bte-kgs-operations/chebi-contributes_to-mondo"
-      - "$ref": "#/components/x-bte-kgs-operations/chebi-contributes_to-mondo-rev"
       - "$ref": "#/components/x-bte-kgs-operations/uniprotkb-gain_of_function_contributes_to-mondo"
       - "$ref": "#/components/x-bte-kgs-operations/uniprotkb-gain_of_function_contributes_to-mondo-rev"
       - "$ref": "#/components/x-bte-kgs-operations/uniprotkb-gain_of_function_contributes_to-hp"
@@ -624,114 +612,6 @@ components:
   ## - currently, BTE handles prefix (CHEBI / MONDO / HP keep their prefixes, DRUGBANK / UniProtKB does not).  
   ##   in the future, could edit parser + queries to handle prefixes
   ## - joinSafe is only needed if the delimiter isn't a comma
-    chebi-treats-mondo:
-    ## https://biothings.ncats.io/text_mining_targeted_association/query?q=_exists_:subject.CHEBI AND association.edge_label:treats AND _exists_:object.MONDO
-    ## I find 30389 records (out of 30395) have object.type:Disease
-      - supportBatch: true
-        useTemplating: true ## flag to say templating is being used below
-        inputs:
-          - id: CHEBI
-            semantic: SmallMolecule
-        requestBodyType: object
-        requestBody:
-          body: >-
-            {
-              "q": [ {{ queryInputs | wrap( '["' , '","treats"]') }} ],
-              "scopes": ["subject.CHEBI", "association.edge_label"]
-            }
-        parameters:
-          fields: object.MONDO,association.edge_attributes
-          size: 1000
-        outputs:
-          - id: MONDO
-            semantic: Disease
-        predicate: treats
-        response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/mondo-object"
-        ## Examples:
-        ## - CHEBI:10034 (warfarin sodium) -> MONDO:0000831 (thrombotic disease)
-        ## - CHEBI:31346 (calcium sulfate) -> MONDO:0005246 (osteomyelitis (disease))
-    chebi-treats-mondo-rev:
-    ## https://biothings.ncats.io/text_mining_targeted_association/query?q=_exists_:subject.CHEBI AND association.edge_label:treats AND _exists_:object.MONDO
-    ## Not going to specify subject.type since CHEBI IDs were mapped to NamedThing, ChemicalEntity mostly (a little SmallMolecule, MolecularMixture) 
-      - supportBatch: true
-        useTemplating: true ## flag to say templating is being used below
-        inputs:
-          - id: MONDO
-            semantic: Disease
-        requestBodyType: object
-        requestBody:
-          body: >-
-            {
-              "q": [ {{ queryInputs | wrap( '["' , '","treats"]') }} ],
-              "scopes": ["object.MONDO", "association.edge_label"]
-            }
-        parameters:
-          fields: subject.CHEBI,association.edge_attributes
-          size: 1000
-        outputs:
-          - id: CHEBI
-            semantic: SmallMolecule
-        predicate: treated_by
-        response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/chebi-subject"
-        ## Examples:
-        ## - MONDO:0000831 (thrombotic disease) -> CHEBI:10034 (warfarin sodium) 
-        ## - MONDO:0005246 (osteomyelitis (disease)) -> CHEBI:31346 (calcium sulfate) 
-    chebi-treats-hp:
-    ## https://biothings.ncats.io/text_mining_targeted_association/query?q=_exists_:subject.CHEBI AND association.edge_label:treats AND _exists_:object.HP
-    ## I find only 648 records (out of 2152) have object.type:PhenotypicFeature...most are Disease (1503)
-      - supportBatch: true
-        useTemplating: true ## flag to say templating is being used below
-        inputs:
-          - id: CHEBI
-            semantic: SmallMolecule
-        requestBodyType: object
-        requestBody:
-          body: >-
-            {
-              "q": [ {{ queryInputs | wrap( '["' , '","treats"]') }} ],
-              "scopes": ["subject.CHEBI", "association.edge_label"]
-            }
-        parameters:
-          fields: object.HP,association.edge_attributes
-          size: 1000
-        outputs:
-          - id: HP
-            semantic: PhenotypicFeature
-        predicate: treats
-        response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/hp-object"
-        ## Examples:
-        ## - CHEBI:3309 (calcium gluconate) -> HP:0002197 (Generalized-onset seizure)
-        ## - CHEBI:5147 (formoterol) -> HP:0004326 (Cachexia)
-    chebi-treats-hp-rev:
-    ## https://biothings.ncats.io/text_mining_targeted_association/query?q=_exists_:subject.CHEBI AND association.edge_label:treats AND _exists_:object.HP
-    ## Not going to specify subject.type since CHEBI IDs were mapped to NamedThing, ChemicalEntity mostly (a little SmallMolecule, MolecularMixture) 
-      - supportBatch: true
-        useTemplating: true ## flag to say templating is being used below
-        inputs:
-          - id: HP
-            semantic: PhenotypicFeature
-        requestBodyType: object
-        requestBody:
-          body: >-
-            {
-              "q": [ {{ queryInputs | wrap( '["' , '","treats"]') }} ],
-              "scopes": ["object.MONDO", "association.edge_label"]
-            }
-        parameters:
-          fields: subject.CHEBI,association.edge_attributes
-          size: 1000
-        outputs:
-          - id: CHEBI
-            semantic: SmallMolecule
-        predicate: treated_by
-        response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/chebi-subject"
-        ## Examples:
-        ## - HP:0002197 (Generalized-onset seizure) -> CHEBI:3309 (calcium gluconate) 
-        ## - HP:0004326 (Cachexia) -> CHEBI:5147 (formoterol) 
     drugbank-treats-mondo:
     ## https://biothings.ncats.io/text_mining_targeted_association/query?q=_exists_:subject.DRUGBANK AND association.edge_label:treats AND _exists_:object.MONDO
     ## I find all records (249143) use object.type:Disease
@@ -826,7 +706,7 @@ components:
           body: >-
             {
               "q": [ {{ queryInputs | wrap( '["' , '","treats"]') }} ],
-              "scopes": ["object.MONDO", "association.edge_label"]
+              "scopes": ["object.HP", "association.edge_label"]
             }
         parameters:
           fields: subject.DRUGBANK,association.edge_attributes
@@ -840,132 +720,6 @@ components:
         ## Examples:
         ## - HP:0002153 (Hyperkalemia) -> DRUGBANK:DB00202 (Succinylcholine) 
         ## - HP:0020219 (Motor seizure) -> DRUGBANK:DB00829 (Diazepam) 
-    chebi-positively_regulates-uniprotkb:
-    ##  https://biothings.ncats.io/text_mining_targeted_association/query?q=_exists_:subject.CHEBI AND association.edge_label:entity_positively_regulates_entity AND _exists_:object.UniProtKB
-      - supportBatch: true
-        useTemplating: true ## flag to say templating is being used below
-        inputs:
-          - id: CHEBI
-            semantic: SmallMolecule
-        requestBodyType: object
-        requestBody:
-          body: >-
-            {
-              "q": [ {{ queryInputs | wrap( '["' , '","entity_positively_regulates_entity"]') }} ],
-              "scopes": ["subject.CHEBI", "association.edge_label"]
-            }
-        parameters:
-          fields: object.UniProtKB,association.edge_attributes
-          size: 1000
-        outputs:
-          - id: UniProtKB
-            semantic: Gene
-        ## biolink 2.4.8: used entity_positively_regulates_entity
-        predicate: affects
-        qualifiers:
-          qualified_predicate: causes
-          object_aspect_qualifier: activity_or_abundance
-          object_direction_qualifier: increased
-        response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/uniprotkb-object"
-        ## Examples:
-        ## - CHEBI:60311 (thyroid hormone) -> UniProtKB:P27361 (MAPK3) 
-        ## - CHEBI:3215 (bupivacaine) -> UniProtKB:Q9P2L0 (WDR35)
-    chebi-positively_regulates-uniprotkb-rev:
-    ##  https://biothings.ncats.io/text_mining_targeted_association/query?q=_exists_:subject.CHEBI AND association.edge_label:entity_positively_regulates_entity AND _exists_:object.UniProtKB
-    ## Not going to specify subject.type since CHEBI IDs were mapped to NamedThing, ChemicalEntity mostly (a little SmallMolecule, MolecularMixture) 
-      - supportBatch: true
-        useTemplating: true ## flag to say templating is being used below
-        inputs:
-          - id: UniProtKB
-            semantic: Gene
-        requestBodyType: object
-        requestBody:
-          body: >-
-            {
-              "q": [ {{ queryInputs | wrap( '["' , '","entity_positively_regulates_entity"]') }} ],
-              "scopes": ["object.UniProtKB", "association.edge_label"]
-            }
-        parameters:
-          fields: subject.CHEBI,association.edge_attributes
-          size: 1000
-        outputs:
-          - id: CHEBI
-            semantic: SmallMolecule
-        ## biolink 2.4.8: used entity_positively_regulated_by_entity
-        predicate: affected_by
-        qualifiers:
-          qualified_predicate: caused_by
-          subject_aspect_qualifier: activity_or_abundance
-          subject_direction_qualifier: increased
-        response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/chebi-subject"
-        ## Examples:
-        ## - UniProtKB:P27361 (MAPK3) -> CHEBI:60311 (thyroid hormone) 
-        ## - UniProtKB:Q9P2L0 (WDR35) -> CHEBI:3215 (bupivacaine) 
-    chebi-negatively_regulates-uniprotkb:
-    ##  https://biothings.ncats.io/text_mining_targeted_association/query?q=_exists_:subject.CHEBI AND association.edge_label:entity_negatively_regulates_entity AND _exists_:object.UniProtKB
-      - supportBatch: true
-        useTemplating: true ## flag to say templating is being used below
-        inputs:
-          - id: CHEBI
-            semantic: SmallMolecule
-        requestBodyType: object
-        requestBody:
-          body: >-
-            {
-              "q": [ {{ queryInputs | wrap( '["' , '","entity_negatively_regulates_entity"]') }} ],
-              "scopes": ["subject.CHEBI", "association.edge_label"]
-            }
-        parameters:
-          fields: object.UniProtKB,association.edge_attributes
-          size: 1000
-        outputs:
-          - id: UniProtKB
-            semantic: Gene
-        ## biolink 2.4.8: used entity_negatively_regulates_entity
-        predicate: affects
-        qualifiers:
-          qualified_predicate: causes
-          object_aspect_qualifier: activity_or_abundance
-          object_direction_qualifier: decreased
-        response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/uniprotkb-object"
-        ## Examples:
-        ## - CHEBI:2659 (aminophylline) -> UniProtKB:P10415 (BCL2) 
-        ## - CHEBI:47519 (ketoconazole) -> UniProtKB:P08684 (CYP3A4)
-    chebi-negatively_regulates-uniprotkb-rev:
-    ##  https://biothings.ncats.io/text_mining_targeted_association/query?q=_exists_:subject.CHEBI AND association.edge_label:entity_negatively_regulates_entity AND _exists_:object.UniProtKB
-    ## Not going to specify subject.type since CHEBI IDs were mapped to NamedThing, ChemicalEntity mostly (a little SmallMolecule, MolecularMixture) 
-      - supportBatch: true
-        useTemplating: true ## flag to say templating is being used below
-        inputs:
-          - id: UniProtKB
-            semantic: Gene
-        requestBodyType: object
-        requestBody:
-          body: >-
-            {
-              "q": [ {{ queryInputs | wrap( '["' , '","entity_negatively_regulates_entity"]') }} ],
-              "scopes": ["object.UniProtKB", "association.edge_label"]
-            }
-        parameters:
-          fields: subject.CHEBI,association.edge_attributes
-          size: 1000
-        outputs:
-          - id: CHEBI
-            semantic: SmallMolecule
-        ## biolink 2.4.8: used entity_negatively_regulated_by_entity
-        predicate: affected_by
-        qualifiers:
-          qualified_predicate: caused_by
-          subject_aspect_qualifier: activity_or_abundance
-          subject_direction_qualifier: decreased
-        response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/chebi-subject"
-        ## Examples:
-        ## - UniProtKB:P10415 (BCL2) -> CHEBI:2659 (aminophylline) 
-        ## - UniProtKB:P08684 (CYP3A4) -> CHEBI:47519 (ketoconazole) 
     drugbank-positively_regulates-uniprotkb:
     ##  https://biothings.ncats.io/text_mining_targeted_association/query?q=_exists_:subject.DRUGBANK AND association.edge_label:entity_positively_regulates_entity AND _exists_:object.UniProtKB
       - supportBatch: true
@@ -1364,52 +1118,6 @@ components:
         predicate: contribution_from
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/drugbank-subject"
-    chebi-contributes_to-hp:
-    ##  https://biothings.ncats.io/text_mining_targeted_association/query?q=_exists_:subject.CHEBI AND association.edge_label:contributes_to AND _exists_:object.HP
-      - supportBatch: true
-        useTemplating: true ## flag to say templating is being used below
-        inputs:
-          - id: CHEBI
-            semantic: SmallMolecule
-        requestBodyType: object
-        requestBody:
-          body: >-
-            {
-              "q": [ {{ queryInputs | wrap( '["' , '","contributes_to"]') }} ],
-              "scopes": ["subject.CHEBI", "association.edge_label"]
-            }
-        parameters:
-          fields: object.HP,association.edge_attributes
-          size: 1000
-        outputs:
-          - id: HP
-            semantic: PhenotypicFeature
-        predicate: contributes_to
-        response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/hp-object"
-    chebi-contributes_to-hp-rev:
-    ##  https://biothings.ncats.io/text_mining_targeted_association/query?q=_exists_:subject.CHEBI AND association.edge_label:contributes_to AND _exists_:object.HP
-      - supportBatch: true
-        useTemplating: true ## flag to say templating is being used below
-        inputs:
-          - id: HP
-            semantic: PhenotypicFeature
-        requestBodyType: object
-        requestBody:
-          body: >-
-            {
-              "q": [ {{ queryInputs | wrap( '["' , '","contributes_to"]') }} ],
-              "scopes": ["object.HP", "association.edge_label"]
-            }
-        parameters:
-          fields: subject.CHEBI,association.edge_attributes
-          size: 1000
-        outputs:
-          - id: CHEBI
-            semantic: SmallMolecule
-        predicate: contribution_from
-        response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/chebi-subject"
     drugbank-contributes_to-mondo:
     ##  https://biothings.ncats.io/text_mining_targeted_association/query?q=_exists_:subject.DRUGBANK AND association.edge_label:contributes_to AND _exists_:object.MONDO
       - supportBatch: true
@@ -1456,52 +1164,6 @@ components:
         predicate: contribution_from
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/drugbank-subject"
-    chebi-contributes_to-mondo:
-    ##  https://biothings.ncats.io/text_mining_targeted_association/query?q=_exists_:subject.CHEBI AND association.edge_label:contributes_to AND _exists_:object.MONDO
-      - supportBatch: true
-        useTemplating: true ## flag to say templating is being used below
-        inputs:
-          - id: CHEBI
-            semantic: SmallMolecule
-        requestBodyType: object
-        requestBody:
-          body: >-
-            {
-              "q": [ {{ queryInputs | wrap( '["' , '","contributes_to"]') }} ],
-              "scopes": ["subject.CHEBI", "association.edge_label"]
-            }
-        parameters:
-          fields: object.MONDO,association.edge_attributes
-          size: 1000
-        outputs:
-          - id: MONDO
-            semantic: Disease
-        predicate: contributes_to
-        response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/mondo-object"
-    chebi-contributes_to-mondo-rev:
-    ##  https://biothings.ncats.io/text_mining_targeted_association/query?q=_exists_:subject.CHEBI AND association.edge_label:contributes_to AND _exists_:object.MONDO
-      - supportBatch: true
-        useTemplating: true ## flag to say templating is being used below
-        inputs:
-          - id: MONDO
-            semantic: Disease
-        requestBodyType: object
-        requestBody:
-          body: >-
-            {
-              "q": [ {{ queryInputs | wrap( '["' , '","contributes_to"]') }} ],
-              "scopes": ["object.MONDO", "association.edge_label"]
-            }
-        parameters:
-          fields: subject.CHEBI,association.edge_attributes
-          size: 1000
-        outputs:
-          - id: CHEBI
-            semantic: SmallMolecule
-        predicate: contribution_from
-        response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/chebi-subject"
     uniprotkb-gain_of_function_contributes_to-hp:
     ##  https://biothings.ncats.io/text_mining_targeted_association/query?q=_exists_:subject.UniProtKB AND association.edge_label:gain_of_function_contributes_to AND _exists_:object.HP
       - supportBatch: true
