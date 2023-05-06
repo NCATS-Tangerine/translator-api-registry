@@ -572,6 +572,7 @@ components:
   #     - type: string
   x-bte-kgs-operations:
   ##   API pathway IDs don't have a bioplanet prefix on them (but they are in the format bioplanet_276)
+  ## also has pathway categories but that's more of a node-attribute
     pathway-gene:
       - supportBatch: true
         useTemplating: true ## flag to say templating is being used below
@@ -590,7 +591,7 @@ components:
         parameters:
           fields: >-
             subject.GENE_ID,
-            object.PATHWAY_NAME,object.PATHWAY_CATEGORIES
+            object.PATHWAY_NAME
           size: 1000
         ## using the same predicate that biolink (monarch) api uses
         predicate: has_participant
@@ -618,7 +619,7 @@ components:
         parameters:
           fields: >-
             object.PATHWAY_ID,
-            object.PATHWAY_NAME,object.PATHWAY_CATEGORIES
+            object.PATHWAY_NAME
           size: 1000
         predicate: participates_in
         source: "infores:bioplanet"
@@ -631,8 +632,6 @@ components:
     gene:
       NCBIGene: subject.GENE_ID           ## no prefix
       input_name: object.PATHWAY_NAME     ## BTE will use this for node name (node normalizer doesn't provide)
-      pathway_categories: object.PATHWAY_CATEGORIES
     pathway:
       "ncats.bioplanet": object.PATHWAY_ID  ## no prefix
       output_name: object.PATHWAY_NAME      ## BTE will use this for node name (node normalizer doesn't provide)
-      pathway_categories: object.PATHWAY_CATEGORIES

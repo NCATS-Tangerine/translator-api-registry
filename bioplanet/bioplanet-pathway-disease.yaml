@@ -575,6 +575,7 @@ components:
   ## - API pathway IDs don't have a bioplanet prefix on them (but they are in the format bioplanet_276)
   ## - Gene is an "intermediate" / explanation for Disease <-> Pathway associations
   ##   so I'm currently only doing Disease <-> Pathway
+  ## also has pathway categories but that's more of a node-attribute
     pathway-disease:
     ## 44,084 documents in the API 
       - supportBatch: true
@@ -594,7 +595,7 @@ components:
         parameters:
           fields: >-
             subject.PHENO_TYPE,
-            object.PATHWAY_NAME,object.PATHWAY_CATEGORIES,
+            object.PATHWAY_NAME,
             subject.DISEASE_NAME,
             relation.GENE_SYMBOL,relation.GENE_ID
           size: 1000
@@ -624,7 +625,7 @@ components:
         parameters:
           fields: >-
             object.PATHWAY_ID,
-            object.PATHWAY_NAME,object.PATHWAY_CATEGORIES,
+            object.PATHWAY_NAME,
             subject.DISEASE_NAME,
             relation.GENE_SYMBOL,relation.GENE_ID
           size: 1000
@@ -640,14 +641,12 @@ components:
     disease:
       OMIM: subject.PHENO_TYPE                         ## no prefix
       input_name: object.PATHWAY_NAME                  ## BTE will use this for node name (node normalizer doesn't provide)
-      pathway_categories: object.PATHWAY_CATEGORIES
       output_name: subject.DISEASE_NAME                ## BTE will use this for node name if node normalizer didn't provide
       related_genes_symbol: relation.GENE_SYMBOL
       related_genes_ncbigene: relation.GENE_ID
     pathway:
       "ncats.bioplanet": object.PATHWAY_ID              ## no prefix
       output_name: object.PATHWAY_NAME                  ## BTE will use this for node name (node normalizer doesn't provide)
-      pathway_categories: object.PATHWAY_CATEGORIES
       input_name: subject.DISEASE_NAME                  ## BTE will use this for node name if node normalizer didn't provide
       related_genes_symbol: relation.GENE_SYMBOL
       related_genes_ncbigene: relation.GENE_ID
