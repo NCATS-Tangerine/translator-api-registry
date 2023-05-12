@@ -355,7 +355,7 @@ components:
     dotfield:
       name: dotfield
       description: >-
-        Optional, can be used to control the format of the returned chemical object. 
+        Optional, can be used to control the format of the returned object. 
         If "dotfield" is true, the returned data object is returned flattened (no nested objects) 
         using dotfield notation for key names. Default: false.
       in: query
@@ -412,7 +412,7 @@ components:
     fields:
       name: fields
       description: >-
-        Optional, can be a comma-separated list to limit the fields returned from the chemical object. 
+        Optional, can be a comma-separated list to limit the fields returned from the object. 
         If "fields=all", all available fields will be returned. Look 
         [here](https://docs.mychem.info/en/latest/doc/data.html#available-fields) for a list of available fields. 
         
@@ -428,7 +428,7 @@ components:
     from:
       name: from
       description: >-
-        Optional, the number of matching chemical hits to skip, starting from 0. Default: 0. 
+        Optional, the number of matching hits to skip, starting from 0. Default: 0. 
       in: query
       required: false
       schema:
@@ -450,7 +450,7 @@ components:
     size:
       name: size
       description: >-
-        Optional, the maximum number of matching chemical hits to return (with a cap of 1000 at the moment). Default: 10.
+        Optional, the maximum number of matching hits to return (with a cap of 1000 at the moment). Default: 10.
         The combination of "size" and "from" parameters can be used to get paging for a large query.
       in: query
       required: false
@@ -656,7 +656,7 @@ components:
     omim:
       OMIM: hpo.omim  ## no prefix
     orphanet:
-      ORPHANET: hpo.orphanet  ## no prefix
+      orphanet: hpo.orphanet  ## no prefix
     mondo:  ## added for a bunch of operations
       MONDO: mondo.mondo  ## HAS PREFIX (MONDO)
     ctd-mesh-disease:  ## added for chemical-disease operation
@@ -757,8 +757,8 @@ components:
         #   - qInput: "UMLS:C0023264"     ## Leigh Disease
         #     oneOutput: "DBSNP:rs1161932777"
   ## for hpo-annotation-based operations:
-  ## - currently, the mydisease parser for hpo maps the resources' IDs (OMIM or ORPHANET) to MONDO. 
-  ##   If two IDs (ex: OMIM:218340 and ORPHANET:1777 for Temtamy syndrome) map to the same MONDO ID, it looks like only the OMIM data was kept.
+  ## - currently, the mydisease parser for hpo maps the resources' IDs (OMIM or orphanet) to MONDO. 
+  ##   If two IDs (ex: OMIM:218340 and orphanet:1777 for Temtamy syndrome) map to the same MONDO ID, it looks like only the OMIM data was kept.
   ##   However, then data is missing: in the raw data, those two IDs have different sets of annotated phenotypes...
   ## - there is DECIPHER-ID-based disease-pheno info that isn't captured by BTE right now.
   ##   however, this is not much info (~22 diseases) and we don't have mappings from SRI-based ID resolver
@@ -808,7 +808,7 @@ components:
       - supportBatch: true
         useTemplating: true
         inputs:
-        - id: ORPHANET
+        - id: orphanet
           semantic: Disease
         requestBody:
           body:
@@ -841,7 +841,7 @@ components:
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/disease-phenotype"
         # testExamples:
-        #   - qInput: "ORPHANET:881"    ## Turner Syndrome
+        #   - qInput: "orphanet:881"    ## Turner Syndrome
         #     oneOutput: "HP:0000137"   ## Abnormality of the ovary
   ## for ctd-based operations:
   ## - when the mydisease parser maps the resources' IDs to MONDO, are there situations where a MESH and a OMIM ID map to the same MONDO? 
@@ -1001,7 +1001,7 @@ components:
             q: "{{ queryInputs }}"
             scopes: hpo.phenotype_related_to_disease.hpo_id
         outputs:
-        - id: ORPHANET
+        - id: orphanet
           semantic: Disease
         parameters:
           fields: hpo.orphanet
@@ -1012,7 +1012,7 @@ components:
           "$ref": "#/components/x-bte-response-mapping/orphanet"
         # testExamples:
         #   - qInput: "HP:0000224"          ## Hypogeusia
-        #     oneOutput: "ORPHANET:99857"   ## Secondary Syringomyelia
+        #     oneOutput: "orphanet:99857"   ## Secondary Syringomyelia
     chemical-disease:
       - supportBatch: true
         useTemplating: true
