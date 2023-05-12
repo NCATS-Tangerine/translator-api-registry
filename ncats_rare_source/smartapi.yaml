@@ -574,7 +574,7 @@ components:
   ## look here for more details: https://raresource.nih.gov/genes/
   ## gene ids: using entrezgene
   ##   all have entrezgene and symbol, most have hgnc (2864/2901) or ensemblgene (2863/2901)
-  ## disease ids: using omim
+  ## disease ids: using orphanet
   ##   no support for gard in biolink-model or sri node normalizer right now
   ##   practically all have gard, most have orphanet (2846/2901) or omim (2774/2901) or umls (2529/2901)
   ##   some have mesh (1450/2901), very few have icd10cm (7/2901)
@@ -596,12 +596,12 @@ components:
           q: "{{ queryInputs }}"   ## no prefix
           scopes: entrezgene
       outputs:
-      - id: OMIM
+      - id: ORPHANET
         semantic: Disease
       parameters:
-      ## omim ID has no prefix
+      ## orphanet ID has no prefix
         fields: >-
-          raresource.disease.omim,
+          raresource.disease.orphanet,
           raresource.disease.cooccurrence_url
         size: 1000              ## note size limit
       predicate: gene_associated_with_condition
@@ -609,18 +609,18 @@ components:
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/disease-object"
       # testExamples:
-      #   - qInput: "NCBIGene:100"        ## ADA
-      #     oneOutput: "OMIM:603554"      ## Omenn syndrome
+      #   - qInput: "NCBIGene:100"           ## ADA
+      #     oneOutput: "ORPHANET:39041"      ## Omenn syndrome
     disease-gene:
     - supportBatch: true
       useTemplating: true
       inputs:
-      - id: OMIM
+      - id: ORPHANET
         semantic: Disease
       requestBody:
         body:
           q: "{{ queryInputs }}"   ## no prefix
-          scopes: raresource.disease.omim
+          scopes: raresource.disease.orphanet
       outputs:
       - id: NCBIGene
         semantic: Gene
@@ -634,11 +634,11 @@ components:
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/gene-object"
       # testExamples:
-      #   - qInput: "OMIM:615994"          ## Bardet-Biedl syndrome
+      #   - qInput: "ORPHANET:110"          ## Bardet-Biedl syndrome
       #     oneOutput: "NCBIGene:10806"    ## SDCCAG8
   x-bte-response-mapping:
     disease-object:
-      OMIM: raresource.disease.omim    ## no prefix
+      ORPHANET: raresource.disease.orphanet    ## no prefix
       "biolink:xref": raresource.disease.cooccurrence_url    
       ## this url leads to a webpage with literature supporting the gene-disease relationship 
     gene-object:
