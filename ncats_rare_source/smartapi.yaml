@@ -309,8 +309,10 @@ paths:
       tags:
       - query
       x-bte-kgs-operations:
-      - "$ref": "#/components/x-bte-kgs-operations/gene-disease"
-      - "$ref": "#/components/x-bte-kgs-operations/disease-gene"
+      - "$ref": "#/components/x-bte-kgs-operations/gene-diseaseOrphanet"
+      - "$ref": "#/components/x-bte-kgs-operations/diseaseOrphanet-gene"
+      - "$ref": "#/components/x-bte-kgs-operations/gene-diseaseUMLS"
+      - "$ref": "#/components/x-bte-kgs-operations/diseaseUMLS-gene"
 components:
   parameters:
     callback:
@@ -571,13 +573,14 @@ components:
   #       type: array
   #     - type: string
   x-bte-kgs-operations:
-  ## look here for more details: https://raresource.nih.gov/genes/
-  ## gene ids: using entrezgene
-  ##   all have entrezgene and symbol, most have hgnc (2864/2901) or ensemblgene (2863/2901)
-  ## disease ids: using orphanet
-  ##   no support for gard in biolink-model or sri node normalizer right now
-  ##   practically all have gard, most have orphanet (2846/2901) or omim (2774/2901) or umls (2529/2901)
-  ##   some have mesh (1450/2901), very few have icd10cm (7/2901)
+  ## - look here for more details: https://raresource.nih.gov/genes/
+  ## - gene ids: using entrezgene
+  ##   - all have entrezgene and symbol, most have hgnc (2864/2901) or ensemblgene (2863)
+  ## - disease ids: using orphanet and umls
+  ##   - seems like all diseases have gard IDs, but there's no support in biolink-model or sri node normalizer right now
+  ##   - most have orphanet (2846/2901) and the 55 that don't have orphanet seem to have umls (2529)
+  ##     https://biothings.ncats.io/rare_source/query?q=NOT%20_exists_:raresource.disease.orphanet%20AND%20_exists_:raresource.disease.umls
+  ##   - other ID namespaces are omim (2774), mesh (1450), very few have icd10cm (7)
   ## available data:
   ## - cooccurrence_url isn't indexed so I can't tell how many records have this info
   ##     format is https://raresource.nih.gov/literature/cooccurrence/WDPCP/0006866 (gene symbol, then disease gard id)
@@ -585,7 +588,7 @@ components:
   ##     format is https://raresource.nih.gov/literature/gene/SDCCAG8 (gene symbol)
   ## - raresource.disease.annotation_url isn't indexed and links to resource's lit page for the disease
     ##     format is https://raresource.nih.gov/literature/disease/0006866 (disease gard id)
-    gene-disease:
+    gene-diseaseOrphanet:
     - supportBatch: true
       useTemplating: true
       inputs:
@@ -607,11 +610,11 @@ components:
       predicate: gene_associated_with_condition
       source: "infores:rare-source"
       response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/disease-object"
+        "$ref": "#/components/x-bte-response-mapping/diseaseOrphanet-object"
       # testExamples:
       #   - qInput: "NCBIGene:100"           ## ADA
       #     oneOutput: "ORPHANET:39041"      ## Omenn syndrome
-    disease-gene:
+    diseaseOrphanet-gene:
     - supportBatch: true
       useTemplating: true
       inputs:
@@ -627,7 +630,7 @@ components:
       parameters:
       ## no prefix on output
         fields: >-
-          entrezgene
+          entrezgene,symbol
         size: 1000  ## size limit; adding just in case
       predicate: condition_associated_with_gene
       source: "infores:rare-source"
@@ -636,10 +639,69 @@ components:
       # testExamples:
       #   - qInput: "ORPHANET:110"          ## Bardet-Biedl syndrome
       #     oneOutput: "NCBIGene:10806"    ## SDCCAG8
+    gene-diseaseUMLS:
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: NCBIGene
+        semantic: Gene
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"   ## no prefix
+          scopes: entrezgene
+      outputs:
+      - id: UMLS
+        semantic: Disease
+      parameters:
+      ## umls ID has no prefix
+        fields: >-
+          raresource.disease.umls,
+          raresource.disease.cooccurrence_url
+        size: 1000              ## note size limit
+      predicate: gene_associated_with_condition
+      source: "infores:rare-source"
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/diseaseUMLS-object"
+      # testExamples:
+      #   - qInput: "NCBIGene:10075"        ## HUWE1
+      #     oneOutput: "UMLS:C0796003"      ## Intellectual developmental disorder, x-linked, syndromic, turner type
+    diseaseUMLS-gene:
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: UMLS
+        semantic: Disease
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"   ## no prefix
+          scopes: raresource.disease.umls
+      outputs:
+      - id: NCBIGene
+        semantic: Gene
+      parameters:
+      ## no prefix on output
+        fields: >-
+          entrezgene,symbol
+        size: 1000  ## size limit; adding just in case
+      predicate: condition_associated_with_gene
+      source: "infores:rare-source"
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/gene-object"
+      # testExamples:
+      #   - qInput: "UMLS:C3887743"            ## Wilms tumor 2
+      #     oneOutput: "NCBIGene:105259599"    ## H19-ICR (will use output_name)
+      ## testing with "UMLS:C2675767" (Epiphyseal dysplasia, multiple, 6) ->
+      ##   "NCBIGene:1297" (COL9A1) will use SRI-Node-Norm-retrieved name
   x-bte-response-mapping:
-    disease-object:
+  ## didn't add names for gene -> disease. when I tried, the co-occurrence urls would appear on every Edge, 
+  ##   when they're supposed to show up only on the edge they correspond to
+    diseaseOrphanet-object:
       ORPHANET: raresource.disease.orphanet    ## no prefix
       "biolink:xref": raresource.disease.cooccurrence_url    
       ## this url leads to a webpage with literature supporting the gene-disease relationship 
+    diseaseUMLS-object:
+      UMLS: raresource.disease.umls    ## no prefix
+      "biolink:xref": raresource.disease.cooccurrence_url    
     gene-object:
       NCBIGene: entrezgene    ## no prefix
+      output_name: symbol   ## SRI Node Norm sometimes doesn't know the NCBIGene name. Using "gene" symbol as name
