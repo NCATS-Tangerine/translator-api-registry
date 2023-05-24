@@ -8,10 +8,12 @@ info:
   description: >-
     Documentation of the BioThings API for [SEMMEDDB](https://pubmed.ncbi.nlm.nih.gov/23044550/) 
     data (download data 
-    [here](https://lhncbc.nlm.nih.gov/ii/tools/SemRep_SemMedDB_SKR/SemMedDB_download.html)).
+    [here](https://lhncbc.nlm.nih.gov/ii/tools/SemRep_SemMedDB_SKR/SemMedDB_download.html)). 
+    This is a newer version where each record is a unique combination of subjectID-predicate-
+    objectID and contains a count of the unique pmids and predications supporting it.
   termsOfService: https://biothings.io/about
   title: BioThings SEMMEDDB API
-  version: '2.0'
+  version: '43'
   x-translator:
     infores: "infores:biothings-semmeddb"
     component: KP
@@ -20,7 +22,7 @@ info:
     biolink-version: "3.1.1"
 servers:
 - description: Production server
-  url: https://biothings.ncats.io/semmeddb
+  url: https://biothings.ncats.io/semmeddb2
   x-maturity: production
 tags:
 ## has many biolink-model semantic types, more than the tags here
@@ -32,7 +34,8 @@ tags:
 - name: query
 - name: translator
 - name: biothings
-- name: ngd
+## might not have ngd endpoints
+# - name: ngd
 paths:
   "/association/{id}":
     get:
@@ -53,7 +56,7 @@ paths:
       - name: id
         in: path
         required: true
-        example: "85213740"
+        example: "C0015063-CAUSES-C0544884"
         schema:
           type: string
       - "$ref": "#/components/parameters/fields"
@@ -117,8 +120,8 @@ paths:
           application/json:
             example:
               ids:
-              - "85213740"
-              - "85203385"
+              - "C0015063-CAUSES-C0544884"
+              - "C0543800-CAUSES-C0392525"
             schema:
               type: object
               properties:
@@ -160,60 +163,61 @@ paths:
           description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
       tags:
       - metadata
-  "/query/ngd":
-    get:
-      parameters:
-      - name: umls
-        description: Query string.
-        in: query
-        required: true
-        example: 
-        - "C0003762,C0262587"
-        schema:
-          type: array
-          items:
-            type: string
-      ## these are noted in the /spec endpoint; commenting out for now
-      # - "$ref": "#/components/parameters/format"
-      responses:
-        '200':
-          description: Success
-      tags:
-      - ngd
-    post:
-      parameters:
-      - name: umls
-        description: Query string.
-        in: query
-        required: false
-        schema:
-          type: array
-          items:
-            type: string
-      ## these are noted in the /spec endpoint; commenting out for now
-      # - "$ref": "#/components/parameters/format"
-      requestBody:
-        content:
-          application/json:
-            example:
-              umls:
-              - 
-                - C0003762
-                - C0262587
-            schema:
-              type: object
-              properties:
-                umls:
-                  type: array
-                  items:
-                    type: array
-                    items:
-                      type: string
-      responses:
-        '200':
-          description: Success
-      tags:
-      - ngd
+## might not have ngd endpoints
+  # "/query/ngd":
+  #   get:
+  #     parameters:
+  #     - name: umls
+  #       description: Query string.
+  #       in: query
+  #       required: true
+  #       example: 
+  #       - "C0003762,C0262587"
+  #       schema:
+  #         type: array
+  #         items:
+  #           type: string
+  #     ## these are noted in the /spec endpoint; commenting out for now
+  #     # - "$ref": "#/components/parameters/format"
+  #     responses:
+  #       '200':
+  #         description: Success
+  #     tags:
+  #     - ngd
+  #   post:
+  #     parameters:
+  #     - name: umls
+  #       description: Query string.
+  #       in: query
+  #       required: false
+  #       schema:
+  #         type: array
+  #         items:
+  #           type: string
+  #     ## these are noted in the /spec endpoint; commenting out for now
+  #     # - "$ref": "#/components/parameters/format"
+  #     requestBody:
+  #       content:
+  #         application/json:
+  #           example:
+  #             umls:
+  #             - 
+  #               - C0003762
+  #               - C0262587
+  #           schema:
+  #             type: object
+  #             properties:
+  #               umls:
+  #                 type: array
+  #                 items:
+  #                   type: array
+  #                   items:
+  #                     type: string
+  #     responses:
+  #       '200':
+  #         description: Success
+  #     tags:
+  #     - ngd
   "/query":
     get:
       description: >-
@@ -625,7 +629,10 @@ components:
   x-bte-response-mapping:
     umls-obj:
       UMLS: object.umls  ## no prefix
-      pubmed: pmid       ## no prefix
+      pubmed: predication.pmid       ## no prefix
+      "biolink:supporting_text": predication.sentence
+      publication_count: pmid_count
+      semmeddb_predication_count: predication_count
       "biolink:original_subject": subject.umls
       original_subject_name: subject.name
       "biolink:original_predicate": predicate
@@ -633,7 +640,10 @@ components:
       original_object_name: object.name
     umls-subj:
       UMLS: subject.umls  ## no prefix
-      pubmed: pmid       ## no prefix
+      pubmed: predication.pmid       ## no prefix
+      "biolink:supporting_text": predication.sentence
+      publication_count: pmid_count
+      semmeddb_predication_count: predication_count
       "biolink:original_subject": subject.umls
       original_subject_name: subject.name
       "biolink:original_predicate": predicate
