@@ -6,43 +6,43 @@ info:
     x-id: https://github.com/biothings
     x-role: responsible developers
   description: >-
-    Documentation of the BioThings API for 
-    [Gene Ontology Cellular Component sub-ontology](http://geneontology.org/docs/ontology-documentation/) data.
+    Documentation of the BioThings API for [NCATS RARe-SOURCE](https://raresource.nih.gov/) 
+    data.
   termsOfService: https://biothings.io/about
-  title: BioThings GO Cellular Component API
-  version: '2020.07'
+  title: BioThings RARe-SOURCE API
+  version: '03-21-2023'
   x-translator:
-    infores: "infores:biothings-go-cc"
+    infores: "infores:biothings-rare-source"
     component: KP
     team:
       - Service Provider
     biolink-version: "3.1.1"
 servers:
 - description: Encrypted Production server
-  url: https://biothings.ncats.io/go_cc
+  url: https://biothings.ncats.io/rare_source
   x-maturity: production
 - description: Production server
-  url: http://biothings.ncats.io/go_cc
+  url: http://biothings.ncats.io/rare_source
   x-maturity: production
 tags:
-- name: ontology
-- name: cellular component
+- name: gene
+- name: disease
+- name: annotation
 - name: query
 - name: translator
 - name: biothings
 paths:
-## /geneset is a confusing path name because these don't have genes, only ontology terms
-  "/geneset/{id}":
+  "/gene/{id}":
     get:
       description: >-
-        By default, this will return the complete ontology term record in JSON format. If the input is not valid,
+        By default, this will return the complete gene record in JSON format. If the input is not valid,
         404 (NOT FOUND) will be returned.
         
 
         Optionally, you can pass a "fields" parameter to return only the annotation you want 
         (by filtering returned object fields). "fields" accepts any attributes (a.k.a fields) available 
         from the association. Multiple attributes should be separated by commas. If an attribute is not 
-        available for a specific ontology term, it will be ignored. Note that the attribute names are 
+        available for a specific gene, it will be ignored. Note that the attribute names are 
         case-sensitive.
 
 
@@ -51,7 +51,8 @@ paths:
       - name: id
         in: path
         required: true
-        example: "GO:0043034"
+        example: "9897"
+        ## no prefix, entrez/NCBIGene IDs
         schema:
           type: string
       - "$ref": "#/components/parameters/fields"
@@ -78,17 +79,17 @@ paths:
       #   '404':
       #     description: A response indicating an unknown association ID
       tags:
-      - ontology
-  "/geneset":
+      - gene
+  "/gene":
     post:
       description: >-
         Although making simple GET requests above to our service is sufficient in most use cases, 
-        there are some times you might find it easier to batch query (e.g., retrieving multiple ontology terms). 
+        there are some times you might find it easier to batch query (e.g., retrieving multiple gene). 
         Fortunately, you can also make batch queries via POST requests when you need to.
       parameters:
       - name: ids
         description: >-
-          Accepts multiple ontology term ids separated by commas. Note that currently we only take ids up to 
+          Accepts multiple gene ids separated by commas. Note that currently we only take ids up to 
           1000 maximum, the rest will be omitted.
 
 
@@ -114,15 +115,16 @@ paths:
         content:
           application/json:
             example:
+            ## no prefix, entrez/NCBIGene IDs
               ids:
-              - "GO:0043034"
-              - "GO:1990111"
+              - "9364"
+              - "9631"
             schema:
               type: object
               properties:
                 ids:
                   description: >-
-                    Accepts multiple ontology term ids. Note that currently we only take the input ids 
+                    Accepts multiple gene ids. Note that currently we only take the input ids 
                     up to 1000 maximum, the rest will be omitted.
                   type: array
                   items:
@@ -131,7 +133,7 @@ paths:
         '200':
           description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
       tags:
-      - ontology
+      - gene
   "/metadata":
     get:
       description: Get metadata about the data available from the API
@@ -171,7 +173,7 @@ paths:
           API](https://docs.mychem.info/en/latest/doc/chem_query_service.html#query-syntax).
         in: query
         required: true
-        example: go:"GO:0043034"
+        example: "entrezgene:100"
         schema:
           type: string
       - "$ref": "#/components/parameters/fields"
@@ -269,10 +271,10 @@ paths:
           application/json:
             example:
               q:
-              - "GO:0043034"
-              - "GO:1990111"
+              - "10000"
+              - "10002"
               scopes:
-              - "go"
+              - entrezgene
             schema:
               type: object
               properties:
@@ -307,10 +309,10 @@ paths:
       tags:
       - query
       x-bte-kgs-operations:
-      - $ref: '#/components/x-bte-kgs-operations/has_subclass'
-      - $ref: '#/components/x-bte-kgs-operations/subclass_of'
-      - $ref: '#/components/x-bte-kgs-operations/part_of'
-      - $ref: '#/components/x-bte-kgs-operations/has_part'
+      - "$ref": "#/components/x-bte-kgs-operations/gene-diseaseOrphanet"
+      - "$ref": "#/components/x-bte-kgs-operations/diseaseOrphanet-gene"
+      - "$ref": "#/components/x-bte-kgs-operations/gene-diseaseUMLS"
+      - "$ref": "#/components/x-bte-kgs-operations/diseaseUMLS-gene"
 components:
   parameters:
     callback:
@@ -571,102 +573,135 @@ components:
   #       type: array
   #     - type: string
   x-bte-kgs-operations:
-    has_subclass:
-    ## 1403 records https://biothings.ncats.io/go_cc/query?q=_exists_:children
+  ## - look here for more details: https://raresource.nih.gov/genes/
+  ## - gene ids: using entrezgene
+  ##   - all have entrezgene and symbol, most have hgnc (2864/2901) or ensemblgene (2863)
+  ## - disease ids: using orphanet and umls
+  ##   - seems like all diseases have gard IDs, but there's no support in biolink-model or sri node normalizer right now
+  ##   - most have orphanet (2846/2901) and the 55 that don't have orphanet seem to have umls (2529)
+  ##     https://biothings.ncats.io/rare_source/query?q=NOT%20_exists_:raresource.disease.orphanet%20AND%20_exists_:raresource.disease.umls
+  ##   - other ID namespaces are omim (2774), mesh (1450), very few have icd10cm (7)
+  ## available data:
+  ## - cooccurrence_url isn't indexed so I can't tell how many records have this info
+  ##     format is https://raresource.nih.gov/literature/cooccurrence/WDPCP/0006866 (gene symbol, then disease gard id)
+  ## - annotation_url isn't indexed and links to resource's lit page for the gene
+  ##     format is https://raresource.nih.gov/literature/gene/SDCCAG8 (gene symbol)
+  ## - raresource.disease.annotation_url isn't indexed and links to resource's lit page for the disease
+    ##     format is https://raresource.nih.gov/literature/disease/0006866 (disease gard id)
+    gene-diseaseOrphanet:
     - supportBatch: true
       useTemplating: true
       inputs:
-      - id: GO
-        semantic: CellularComponent
+      - id: NCBIGene
+        semantic: Gene
       requestBody:
         body:
-          q: "{{ queryInputs }}"
-          scopes: _id
+          q: "{{ queryInputs }}"   ## no prefix
+          scopes: entrezgene
       outputs:
-      - id: GO
-        semantic: CellularComponent
+      - id: ORPHANET
+        semantic: Disease
       parameters:
-        fields: children
-      predicate: superclass_of  ## this is the inverse of subclass_of right now
-      source: "infores:go"
+      ## orphanet ID has no prefix
+        fields: >-
+          raresource.disease.orphanet,
+          raresource.disease.cooccurrence_url
+        size: 1000              ## note size limit
+      predicate: gene_associated_with_condition
+      source: "infores:rare-source"
       response_mapping:
-        $ref: '#/components/x-bte-response-mapping/has_subclass'
+        "$ref": "#/components/x-bte-response-mapping/diseaseOrphanet-object"
       # testExamples:
-      #   - qInput: "GO:0000136"        ## mannan polymerase complex
-      #     oneOutput: "GO:0140497"     ## mannan polymerase II complex
-    subclass_of:
+      #   - qInput: "NCBIGene:100"           ## ADA
+      #     oneOutput: "ORPHANET:39041"      ## Omenn syndrome
+    diseaseOrphanet-gene:
     - supportBatch: true
       useTemplating: true
       inputs:
-      - id: GO
-        semantic: CellularComponent
+      - id: ORPHANET
+        semantic: Disease
       requestBody:
         body:
-          q: "{{ queryInputs }}"
-          scopes: _id
+          q: "{{ queryInputs }}"   ## no prefix
+          scopes: raresource.disease.orphanet
       outputs:
-      - id: GO
-        semantic: CellularComponent
+      - id: NCBIGene
+        semantic: Gene
       parameters:
-        fields: parents
-      predicate: subclass_of
-      source: "infores:go"
+      ## no prefix on output
+        fields: >-
+          entrezgene,symbol
+        size: 1000  ## size limit; adding just in case
+      predicate: condition_associated_with_gene
+      source: "infores:rare-source"
       response_mapping:
-        $ref: '#/components/x-bte-response-mapping/subclass_of'
+        "$ref": "#/components/x-bte-response-mapping/gene-object"
       # testExamples:
-      #   - qInput: "GO:0000835"        ## ER ubiquitin ligase complex
-      #     oneOutput: "GO:0000153"     ## cytoplasmic ubiquitin ligase complex
-    part_of:
-    ## 2056 records https://biothings.ncats.io/go_cc/query?q=_exists_:part_of
+      #   - qInput: "ORPHANET:110"          ## Bardet-Biedl syndrome
+      #     oneOutput: "NCBIGene:10806"    ## SDCCAG8
+    gene-diseaseUMLS:
     - supportBatch: true
       useTemplating: true
       inputs:
-      - id: GO
-        semantic: CellularComponent
+      - id: NCBIGene
+        semantic: Gene
       requestBody:
         body:
-          q: "{{ queryInputs }}"
-          scopes: _id
+          q: "{{ queryInputs }}"   ## no prefix
+          scopes: entrezgene
       outputs:
-      - id: GO
-        semantic: CellularComponent
+      - id: UMLS
+        semantic: Disease
       parameters:
-        fields: part_of.go
-      predicate: part_of
-      source: "infores:go"
+      ## umls ID has no prefix
+        fields: >-
+          raresource.disease.umls,
+          raresource.disease.cooccurrence_url
+        size: 1000              ## note size limit
+      predicate: gene_associated_with_condition
+      source: "infores:rare-source"
       response_mapping:
-        $ref: '#/components/x-bte-response-mapping/part_of'
+        "$ref": "#/components/x-bte-response-mapping/diseaseUMLS-object"
       # testExamples:
-      #   - qInput: "GO:0000136"        ## mannan polymerase complex
-      #     oneOutput: "GO:0000137"     ## Golgi cis cisterna
-    has_part:
+      #   - qInput: "NCBIGene:10075"        ## HUWE1
+      #     oneOutput: "UMLS:C0796003"      ## Intellectual developmental disorder, x-linked, syndromic, turner type
+    diseaseUMLS-gene:
     - supportBatch: true
       useTemplating: true
       inputs:
-      - id: GO
-        semantic: CellularComponent
+      - id: UMLS
+        semantic: Disease
       requestBody:
         body:
-          q: "{{ queryInputs }}"
-          scopes: part_of.go
+          q: "{{ queryInputs }}"   ## no prefix
+          scopes: raresource.disease.umls
       outputs:
-      - id: GO
-        semantic: CellularComponent
+      - id: NCBIGene
+        semantic: Gene
       parameters:
-        fields: _id
-      predicate: has_part
-      source: "infores:go"
+      ## no prefix on output
+        fields: >-
+          entrezgene,symbol
+        size: 1000  ## size limit; adding just in case
+      predicate: condition_associated_with_gene
+      source: "infores:rare-source"
       response_mapping:
-        $ref: '#/components/x-bte-response-mapping/has_part'
+        "$ref": "#/components/x-bte-response-mapping/gene-object"
       # testExamples:
-      #   - qInput: "GO:0005753"        ## mitochondrial proton-transporting ATP synthase complex
-      #     oneOutput: "GO:0000275"     ## mitochondrial proton-transporting ATP synthase complex, catalytic sector F(1)
+      #   - qInput: "UMLS:C3887743"            ## Wilms tumor 2
+      #     oneOutput: "NCBIGene:105259599"    ## H19-ICR (will use output_name)
+      ## testing with "UMLS:C2675767" (Epiphyseal dysplasia, multiple, 6) ->
+      ##   "NCBIGene:1297" (COL9A1) will use SRI-Node-Norm-retrieved name
   x-bte-response-mapping:
-    has_subclass:
-      GO: children
-    subclass_of:
-      GO: parents
-    part_of:
-      GO: part_of.go
-    has_part:
-      GO: _id
+  ## didn't add names for gene -> disease. when I tried, the co-occurrence urls would appear on every Edge, 
+  ##   when they're supposed to show up only on the edge they correspond to
+    diseaseOrphanet-object:
+      ORPHANET: raresource.disease.orphanet    ## no prefix
+      "biolink:xref": raresource.disease.cooccurrence_url    
+      ## this url leads to a webpage with literature supporting the gene-disease relationship 
+    diseaseUMLS-object:
+      UMLS: raresource.disease.umls    ## no prefix
+      "biolink:xref": raresource.disease.cooccurrence_url    
+    gene-object:
+      NCBIGene: entrezgene    ## no prefix
+      output_name: symbol   ## SRI Node Norm sometimes doesn't know the NCBIGene name. Using "gene" symbol as name
