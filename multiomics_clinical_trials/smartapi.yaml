@@ -55,7 +55,7 @@ paths:
       - name: id
         in: path
         required: true
-        example: "00065273_C0025362_C0009079"
+        example: "00065273_C0009079_C0025362"
         schema:
           type: string
       - "$ref": "#/components/parameters/fields"
@@ -119,8 +119,8 @@ paths:
           application/json:
             example:
               ids:
-              - "00065273_C0025362_C0009079"
-              - "00065273_C0025362_C0171023"
+              - "00065273_C0009079_C0025362"
+              - "00065273_C0171023_C0025362"
             schema:
               type: object
               properties:
@@ -175,7 +175,7 @@ paths:
           API](https://docs.mychem.info/en/latest/doc/chem_query_service.html#query-syntax).
         in: query
         required: true
-        example: "subject.UMLS:C0006012"
+        example: "object.UMLS:C0006012"
         schema:
           type: string
       - "$ref": "#/components/parameters/fields"
@@ -276,7 +276,7 @@ paths:
               - "C0006012"
               - "C0524620"
               scopes:
-              - "subject.UMLS"
+              - "object.UMLS"
             schema:
               type: object
               properties:
@@ -589,15 +589,14 @@ components:
             ## API data has no prefix
             ## joinSafe is only needed if the delimiter isn't a comma
             q: "{{ queryInputs }}"
-            scopes: subject.UMLS
+            scopes: object.UMLS
         outputs:
           - id: UMLS
             semantic: Treatment
         parameters:
           fields: >-
-            object.UMLS,
-            association.edge_attributes,
-            source.edge_sources
+            subject.UMLS,
+            association.edge_attributes
           size: 1000
         predicate: related_to
         response_mapping:
@@ -614,15 +613,14 @@ components:
         requestBody:
           body:
             q: "{{ queryInputs }}"
-            scopes: object.UMLS
+            scopes: subject.UMLS
         outputs:
           - id: UMLS
             semantic: Disease
         parameters:
           fields: >-
-            subject.UMLS,
-            association.edge_attributes,
-            source.edge_sources
+            object.UMLS,
+            association.edge_attributes
           size: 1000
         predicate: related_to
         response_mapping:
@@ -632,10 +630,8 @@ components:
         #     oneOutput: "UMLS:C0334579"      ## anaplastic astrocytoma
   x-bte-response-mapping:
     treatment:
-      UMLS: object.UMLS   ## no prefix
-      edge-attributes: association.edge_attributes
-      trapi_sources: source.edge_sources
-    disease:
       UMLS: subject.UMLS   ## no prefix
       edge-attributes: association.edge_attributes
-      trapi_sources: source.edge_sources
+    disease:
+      UMLS: object.UMLS   ## no prefix
+      edge-attributes: association.edge_attributes
