@@ -1,0 +1,122 @@
+openapi: 3.0.3
+info:
+  contact:
+    email: help@biothings.io
+    name: BioThings Team
+    x-id: https://github.com/biothings
+    x-role: responsible developers
+  description: Translator Annotation Service.
+  termsOfService: https://biothings.io/about
+  title: Translator Annotation Service
+  version: '1.0'
+  x-translator:
+    component: Utility
+    team:
+      - Service Provider
+servers:
+- description: Production server
+  url: https://biothings.ncats.io/annotator
+  x-maturity: production
+- description: Staging server
+  url: http://biothings.test.transltr.io/annotator
+- description: CI server
+  url: http://biothings.ci.transltr.io/annotator
+tags:
+- name: gene
+- name: chemical
+- name: drug
+- name: disease
+- name: phenotype
+- name: annotation
+- name: translator
+paths:
+  /:
+    post:
+      parameters:
+      - $ref: '#/components/parameters/append'
+        name: append
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                ids:
+                  description: 'multiple association IDs separated by comma. Note that currently we only take the input ids up to 1000 maximum, the rest will be omitted. Type: string (list). Max: 1000.'
+                  type: string
+              required:
+              - ids
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/Annotation'
+                type: array
+          description: A list of matching annotation objects
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResult'
+          description: A response indicating an improperly formatted query
+      summary: For a list of curie IDs, return the expanded annotation objects
+  /{curieid}:
+    get:
+      parameters:
+      - description: Retrieve expanded annotation object based on a given curie ID.
+        example: "NCBIGene:695"
+        in: path
+        name: curieid
+        required: true
+        schema:
+          type: string
+      - $ref: '#/components/parameters/raw'
+        name: raw
+      - $ref: '#/components/parameters/fields'
+        name: fields
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Annotation'
+          description: A matching annotation object
+        '404':
+          description: A response indicating an unknown or unsupported curie ID
+      summary: Retrieve annotation objects based on a curie ID
+components:
+  parameters:
+    append:
+      description: 'When true, append annotations to the existing "attributes" field, otherwise, overwrite the existing "attributes" field. Default: false.'
+      in: query
+      name: append
+      schema:
+        type: boolean
+    raw:
+      description: 'Whem true, return annotation fields in their original data structure before transformation. It's useful when doing some debugging. Default: false.'
+      in: query
+      name: raw
+      schema:
+        type: boolean
+    fields:
+      description: Can provide a comma-separated fields to override the default set of annotation fields, or passing "fields=all" to return all available fields from the original annotation source.
+      in: query
+      name: fields
+      schema:
+        type: string
+  schemas:
+    Annotation:
+      properties:
+        _id:
+          type: string
+      required:
+      - _id
+      type: object
+    ErrorResult:
+      properties:
+        message:
+          type: string
+        success:
+          type: boolean
+      type: object
