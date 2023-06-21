@@ -7,12 +7,13 @@ info:
     x-role: responsible developers
   description: >-
     Documentation of the BioThings API for
-    [SuppKG](https://github.com/zhang-informatics/SemRep_DS/tree/main/SuppKG) data.
+    [SuppKG](https://github.com/zhang-informatics/SemRep_DS/tree/main/SuppKG) data. SuppKG contains relations
+    between dietary supplements and other entities, such as diseases. 
   termsOfService: https://biothings.io/about
   title: BioThings SuppKG API
   version: '1.0'
   x-translator:
-    infores: "infores:" # no infores for suppkg yet
+    infores: "infores:biothings-suppkg"
     component: KP
     team:
       - Service Provider
@@ -80,7 +81,7 @@ paths:
       #   '404':
       #     description: A response indicating an unknown association ID
       tags:
-      - interaction
+      - association
   "/association":
     post:
       description: >-
@@ -133,7 +134,7 @@ paths:
         '200':
           description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
       tags:
-      - interaction
+      - association
   "/metadata":
     get:
       description: Get metadata about the data available from the API
@@ -579,68 +580,67 @@ components:
   ## - Predicate: Describes association between subject and object in predicate
   ## The PubMed articles that contain the relationships between the subject and object are in relation
   ## A subject or object's semantic type can be found in either subject.semtypes or object.semtypes 
-    subject-to-object:
+    SmallMolecule-treats-Disease:
     ## 595,222 records 
       - supportBatch: true
         useTemplating: true ## flag to say templating is being used below
         inputs:
           - id: UMLS
-            semantic: NamedThing
+            semantic: SmallMolecule
+        requestBodyType: object
         requestBody:
-          body:
-            ## API data has no prefix
-            ## joinSafe is only needed if the delimiter isn't a comma
-            q: "{{ queryInputs }}"
-            scopes: >-
-              subject.umls
+          body: >-
+            {"q": {{ queryInputs | replPrefix('predicate:TREATS AND object.semtypes:((dsyn) OR (neop))
+            AND subject.umls')| dump }}, "scopes": []}
         outputs:
           - id: UMLS
-            semantic: NamedThing
+            semantic: Disease
         parameters:
-          fields: object.umls
+          fields: object.umls,relation,subject.name,object.name
           size: 1000
-        predicate: occurs_together_in_literature_with
-        source: "infores:" # no infores for suppkg yet
+        predicate: treats
+        source: "infores:suppkg"
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/object"
         # testExamples:
-        #   - qInput: "C0001617"      ## adrenal cortex hormone 
-        #     oneOutput: "C0002103"   ## allergic rhinitis
-        #     predicate "TREATS"
-    object-to-subject:
+        #   - qInput: "UMLS:C0062737"      ## histaglobin
+        #     oneOutput: "UMLS:C0002103"   ## allergic rhinitis
+    SmallMolecule-treats-Disease-rev:
       - supportBatch: true
         useTemplating: true
         inputs:
           - id: UMLS
-            semantic: NamedThing
+            semantic: Disease
+        requestBodyType: object
         requestBody:
-          body:
-            q: "{{ queryInputs }}"
-            scopes: object.umls
+          body: >-
+            {"q": {{ queryInputs | replPrefix('predicate:TREATS AND subject.semtypes:((phsu) OR (orch))
+            AND object.umls')| dump }}, "scopes": []}
         outputs:
           - id: UMLS
-            semantic: NamedThing
+            semantic: SmallMolecule
         parameters:
-          fields: subject.umls
+          fields: subject.umls,relation,subject.name,object.name
           size: 1000
-        predicate: occurs_together_in_literature_with
-        source: "infores:" # no infores for suppkg yet
+        predicate: treated_by
+        source: "infores:suppkg"
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/subject"
         # testExamples:
-        #   - qInput: "C0012426"      ## dimethylformamide 
-        #     oneOutput: "C0007634"   ## cell
-        #     predicate: "LOCATION_OF"
+        #   - qInput: "UMLS:C0263338"      ## urticaria, chronic
+        #     oneOutput: "UMLS:C0062737"   ## histaglobin
   x-bte-response-mapping:
-    subject:
-      UMLS: subject.umls
-      pubmed: relation.pmid 
-      input-name: subject.name
-      output-name: object.name
-      predicate: predicate
     object:
       UMLS: object.umls
+      suppkg_confidence_score: relation.conf  ## not sure what to name this...you may know better?
       pubmed: relation.pmid
-      input-name: object.name
-      output-name: subject.name
-      predicate: predicate
+      "biolink:supporting_text": relation.sentence
+      input_name: subject.name 
+      output_name: object.name
+    subject:
+      UMLS: subject.umls
+      suppkg_confidence_score: relation.conf  ## not sure what to name this...you may know better?
+      pubmed: relation.pmid
+      "biolink:supporting_text": relation.sentence
+      input_name: object.name
+      output_name: subject.name 
