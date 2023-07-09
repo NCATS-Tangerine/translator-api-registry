@@ -7,29 +7,27 @@ info:
     x-role: responsible developers
   description: >-
     Documentation of the BioThings API for
-    [SuppKG](https://github.com/zhang-informatics/SemRep_DS/tree/main/SuppKG) data. SuppKG contains relations
-    between dietary supplements and other entities, such as diseases. 
+    [AGR](https://www.alliancegenome.org/downloads) data.
   termsOfService: https://biothings.io/about
-  title: BioThings SuppKG API
-  version: '1.0'
+  title: BioThings AGR API
+  version: '2023-06-15'
   x-translator:
-    infores: "infores:biothings-suppkg"
+    infores: "infores:agrkb"
     component: KP
     team:
       - Service Provider
     biolink-version: "3.1.1"
 servers:
 - description: Encrypted Production server
-  url: https://biothings.ncats.io/suppkg
+  url: https://biothings.ncats.io/agr
   x-maturity: production
 - description: Production server
-  url: https://biothings.ncats.io/suppkg
+  url: https://biothings.ncats.io/agr
   x-maturity: production
 tags:
-- name: drug
-- name: disease
 - name: association
-- name: chemical
+- name: gene
+- name: disease
 - name: metadata
 - name: query
 - name: translator
@@ -54,7 +52,7 @@ paths:
       - name: id
         in: path
         required: true
-        example: "C0005847_DC0242726_PART_OF"
+        example: "MGI:2386296"
         schema:
           type: string
       - "$ref": "#/components/parameters/fields"
@@ -118,8 +116,8 @@ paths:
           application/json:
             example:
               ids:
-              - "C0013227_C0000737_TREATS"
-              - "C0013227_C0000768_TREATS"
+              - "MGI:2384568"
+              - "RGD:2320289"
             schema:
               type: object
               properties:
@@ -174,7 +172,7 @@ paths:
           API](https://docs.mychem.info/en/latest/doc/chem_query_service.html#query-syntax).
         in: query
         required: true
-        example: "subject.umls:C0013227"
+        example: "agr.symbol:Kank2"
         schema:
           type: string
       - "$ref": "#/components/parameters/fields"
@@ -272,10 +270,10 @@ paths:
           application/json:
             example:
               q:
-              - "C0040383"
-              - "C0013227"
+              - "Acot2"
+              - "Kank2"
               scopes:
-              - "subject.umls"
+              - "agr.symbol"
             schema:
               type: object
               properties:
@@ -311,8 +309,8 @@ paths:
       - query
       ## 2 operations
       x-bte-kgs-operations:
-      - $ref: '#/components/x-bte-kgs-operations/subject-to-object'
-      - $ref: '#/components/x-bte-kgs-operations/object-to-subject'
+      - $ref: '#/components/x-bte-kgs-operations/gene-disease'
+      - $ref: '#/components/x-bte-kgs-operations/disease-gene'
 components:
   parameters:
     callback:
@@ -573,74 +571,85 @@ components:
   #       type: array
   #     - type: string
   x-bte-kgs-operations:
-  ## SuppKG mainly relates a dietary supplement (ex. chemical, drug) to an object (ex. body part, disease) with a predicate
-  ## SuppKG also contains records unrelated to dietary supplements (ex. abcess root is part of blood vessel)
-  ## - Subject: UMLS ID without prefixes in subject.umls
-  ## - Object: UMLS ID without prefixes in object.umls
-  ## - Predicate: Describes association between subject and object in predicate
-  ## The PubMed articles that contain the relationships between the subject and object are in relation
-  ## A subject or object's semantic type can be found in either subject.semtypes or object.semtypes 
-    SmallMolecule-treats-Disease:
-    ## 595,222 records 
-      - supportBatch: true
-        useTemplating: true ## flag to say templating is being used below
-        inputs:
-          - id: UMLS
-            semantic: SmallMolecule
-        requestBodyType: object
-        requestBody:
-          body: >-
-            {"q": {{ queryInputs | replPrefix('predicate:TREATS AND object.semtypes:((dsyn) OR (neop))
-            AND subject.umls')| dump }}, "scopes": []}
-        outputs:
-          - id: UMLS
-            semantic: Disease
-        parameters:
-          fields: object.umls,relation,subject.name,object.name
-          size: 1000
-        predicate: treats
-        source: "infores:suppkg"
-        response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/object"
-        # testExamples:
-        #   - qInput: "UMLS:C0062737"      ## histaglobin
-        #     oneOutput: "UMLS:C0002103"   ## allergic rhinitis
-    SmallMolecule-treats-Disease-rev:
+  ## 2 potential types:
+  ## - Gene: MGI ID with prefixes in _id
+  ## - Disease: DOID ID with prefixes in 'doid' field
+  ## 37,994 records total
+    gene-disease:
       - supportBatch: true
         useTemplating: true
         inputs:
-          - id: UMLS
-            semantic: Disease
-        requestBodyType: object
+          - id: MGI
+            semantic: Gene
         requestBody:
-          body: >-
-            {"q": {{ queryInputs | replPrefix('predicate:TREATS AND subject.semtypes:((phsu) OR (orch))
-            AND object.umls')| dump }}, "scopes": []}
+          body:
+            ## API data has no prefix
+            ## joinSafe is only needed if the delimiter isn't a comma
+            q: "{{ queryInputs }}"
+            scopes: _id
         outputs:
-          - id: UMLS
-            semantic: SmallMolecule
+          - id: DOID
+            semantic: Disease
         parameters:
-          fields: subject.umls,relation,subject.name,object.name
+          fields: >-
+            _id
+            implicated_via_orthology.doid
+            implicated_via_orthology.term_name
+            is_implicated_in.doid
+            is_implicated_in.term_name
+            is_marker_for.doid
+            is_marker_for.term_name
+            is_not_implicated_in.doid
+            is_not_implicated_in.term_name
+            biomarker_via_orthology.doid
+            biomarker_via_orthology.term_name
           size: 1000
-        predicate: treated_by
-        source: "infores:suppkg"
+        predicate: gene_associated_with_condition
+        source: "infores:agrkb"
         response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/subject"
+          "$ref": "#/components/x-bte-response-mapping/disease"
+        ## compare to https://gtrx.rbsapp.net/?q=HEMOLYTIC%20UREMIC%20SYNDROME,%20ATYPICAL,%20SUSCEPTIBILITY%20TO,%204
         # testExamples:
-        #   - qInput: "UMLS:C0263338"      ## urticaria, chronic
-        #     oneOutput: "UMLS:C0062737"   ## histaglobin
+        #   - qInput: "OMIM:250250"            ## CARTILAGE-HAIR HYPOPLASIA;
+        #     oneOutput: "UNII:MZ1IW7Q79D"     ## Valaciclovir
+    disease-gene:
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: DOID
+            semantic: Disease
+        requestBody:
+          body:
+            ## API data has no prefix
+            ## joinSafe is only needed if the delimiter isn't a comma
+            q: "{{ queryInputs }}"
+            scopes: implicated_via_orthology.doid, is_implicated_in.doid, is_marker_for.doid, is_not_implicated_in.doid,biomarker_via_orthology.doid 
+        outputs:
+          - id: MGI
+            semantic: Gene
+        parameters:
+          fields: >-
+            _id
+            implicated_via_orthology.doid
+            implicated_via_orthology.term_name
+            is_implicated_in.doid
+            is_implicated_in.term_name
+            is_marker_for.doid
+            is_marker_for.term_name
+            is_not_implicated_in.doid
+            is_not_implicated_in.term_name
+            biomarker_via_orthology.doid
+            biomarker_via_orthology.term_name
+          size: 1000
+        predicate: treats
+        source: "infores:agbkb"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/gene"
+        # testExamples:
+        #   - qInput: "UNII:F64QU97QCR"     ## Dantrolene 
+        #     oneOutput: "OMIM:145600"      ## MALIGNANT HYPERTHERMIA, SUSCEPTIBILITY TO, 1
   x-bte-response-mapping:
-    object:
-      UMLS: object.umls
-      suppkg_confidence_score: relation.conf  ## not sure what to name this...you may know better?
-      pubmed: relation.pmid
-      "biolink:supporting_text": relation.sentence
-      input_name: subject.name 
-      output_name: object.name
-    subject:
-      UMLS: subject.umls
-      suppkg_confidence_score: relation.conf  ## not sure what to name this...you may know better?
-      pubmed: relation.pmid
-      "biolink:supporting_text": relation.sentence
-      input_name: object.name
-      output_name: subject.name 
+    drug:
+      MGI: _id
+    disease:
+      DOID: implicated_via_orthology.doid
