@@ -15,7 +15,7 @@ info:
     component: KP
     team:
       - Service Provider
-    biolink-version: "3.1.1"
+    biolink-version: "3.5.0"
 servers:
 - description: Encrypted Production server
   url: https://mydisease.info/v1
@@ -77,9 +77,9 @@ paths:
       #     content:
       #       application/json:
       #         schema:
-      #           $ref: '#/components/schemas/Chem'
+      #           $ref: '#/components/schemas/Disease'
       #   '404':
-      #     description: A response indicating an unknown chemical ID
+      #     description: A response indicating an unknown disease ID
       tags:
       - disease
   "/disease":
@@ -92,7 +92,7 @@ paths:
       ## these are provided in the docs https://docs.mydisease.info/en/latest/doc/disease_annotation_service.html
       - name: ids
         description: >-
-          Accepts multiple chemical ids separated by commas. 
+          Accepts multiple disease ids (e.g. MONDO or DO ids) separated by commas. 
           Note that currently we only take the input ids up to 1000 maximum, the rest will be omitted.
 
 
@@ -165,7 +165,7 @@ paths:
   "/query":
     get:
       description: >-
-        MyDisease.info chemical query web service. In the output, "total" in the output gives the total number 
+        MyDisease.info disease query web service. In the output, "total" in the output gives the total number 
         of matching hits, while the actual hits are returned under "hits" field.
       parameters:
       - name: q
@@ -376,7 +376,7 @@ components:
       name: facet_size
       description: >-
         Optional, an integer (1 <= facet_size <= 1000) that specifies how many buckets to return in a 
-        [faceted query](https://docs.mychem.info/en/latest/doc/chem_query_service.html?highlight=from#faceted-queries).
+        [faceted query](https://docs.mydisease.info/en/latest/doc/disease_query_service.html?highlight=from#faceted-queries).
       in: query
       required: false
       schema:
@@ -386,8 +386,8 @@ components:
       name: facets
       description: >-
         Optional, a single field or comma-separated fields to return facets, can only be used on non-free text fields. 
-        E.g. "facets=chembl.molecule_properties.full_mwt". See [examples of faceted queries 
-        here](https://docs.mychem.info/en/latest/doc/chem_query_service.html?highlight=from#faceted-queries).
+        E.g. "facets=disgenet.genes_related_to_disease.YearFinal". See [examples of faceted queries 
+        here](https://docs.mydisease.info/en/latest/doc/disease_query_service.html?highlight=from#faceted-queries).
       in: query
       required: false
       schema:
@@ -402,7 +402,7 @@ components:
         (see the scroll_id parameter), returns the next 1000 query results. Setting fetch_all = TRUE causes 
         the results to be inherently unsorted, therefore the sort parameter is ignored. For more information, 
         see [examples using fetch_all 
-        here](https://docs.mychem.info/en/latest/doc/chem_query_service.html?highlight=from#scrolling-queries). 
+        here](https://docs.mydisease.info/en/latest/doc/disease_query_service.html?highlight=from#scrolling-queries). 
         Default: FALSE.
       in: query
       required: false
@@ -414,7 +414,7 @@ components:
       description: >-
         Optional, can be a comma-separated list to limit the fields returned from the object. 
         If "fields=all", all available fields will be returned. Look 
-        [here](https://docs.mychem.info/en/latest/doc/data.html#available-fields) for a list of available fields. 
+        [here](https://docs.mydisease.info/en/latest/doc/data.html#available-fields) for a list of available fields. 
         
 
         Note that it supports dot notation as well, e.g., you can pass "chebi.name". 
@@ -442,7 +442,7 @@ components:
         not obtained within 1 minute of the previous set of results, the scroll_id becomes stale, and a 
         new one must be obtained with another query request with fetch_all = TRUE. All other parameters are 
         ignored when the scroll_id parameter is supplied. For more information see [examples using scroll_id 
-        here](https://docs.mychem.info/en/latest/doc/chem_query_service.html?highlight=from#scrolling-queries).
+        here](https://docs.mydisease.info/en/latest/doc/disease_query_service.html?highlight=from#scrolling-queries).
       in: query
       required: false
       schema:
@@ -468,7 +468,7 @@ components:
         type: array
         items:
           type: string
-    ## these are noted in the https://mychem.info/v1/spec endpoint; commenting out for now
+    ## these are noted in the https://mydisease.info/v1/spec endpoint; commenting out for now
     # _sorted:
     #   name: _sorted
     #   in: query
@@ -564,7 +564,7 @@ components:
   #   QueryPOSTResult:
   #     items:
   #       allOf:
-  #       - "$ref": "#/components/schemas/Chem"
+  #       - "$ref": "#/components/schemas/Disease"
   #       - properties:
   #           _score:
   #             format: float
@@ -577,7 +577,7 @@ components:
   #     properties:
   #       hits:
   #         items:
-  #           "$ref": "#/components/schemas/Chem"
+  #           "$ref": "#/components/schemas/Disease"
   #         type: array
   #       max_score:
   #         format: float
