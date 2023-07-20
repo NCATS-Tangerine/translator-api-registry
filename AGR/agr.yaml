@@ -309,8 +309,24 @@ paths:
       - query
       ## 2 operations
       x-bte-kgs-operations:
-      - $ref: '#/components/x-bte-kgs-operations/gene-disease'
-      - $ref: '#/components/x-bte-kgs-operations/disease-gene'
+      - $ref: '#/components/x-bte-kgs-operations/mgi-gene-disease'
+      - $ref: '#/components/x-bte-kgs-operations/disease-mgi-gene'
+      - $ref: '#/components/x-bte-kgs-operations/rgd-gene-disease'
+      - $ref: '#/components/x-bte-kgs-operations/disease-rgd-gene'
+      - $ref: '#/components/x-bte-kgs-operations/sgd-gene-disease'
+      - $ref: '#/components/x-bte-kgs-operations/disease-sgd-gene'
+      - $ref: '#/components/x-bte-kgs-operations/zfin-gene-disease'
+      - $ref: '#/components/x-bte-kgs-operations/disease-zfin-gene'
+      - $ref: '#/components/x-bte-kgs-operations/fb-gene-disease'
+      - $ref: '#/components/x-bte-kgs-operations/disease-fb-gene'
+      - $ref: '#/components/x-bte-kgs-operations/wb-gene-disease'
+      - $ref: '#/components/x-bte-kgs-operations/disease-wb-gene'
+      - $ref: '#/components/x-bte-kgs-operations/xenbase-gene-disease'
+      - $ref: '#/components/x-bte-kgs-operations/disease-xenbase-gene'
+      - $ref: '#/components/x-bte-kgs-operations/go-gene-disease'
+      - $ref: '#/components/x-bte-kgs-operations/disease-go-gene'
+      - $ref: '#/components/x-bte-kgs-operations/hgnc-gene-disease'
+      - $ref: '#/components/x-bte-kgs-operations/disease-hgnc-gene'
 components:
   parameters:
     callback:
@@ -571,11 +587,21 @@ components:
   #       type: array
   #     - type: string
   x-bte-kgs-operations:
-  ## 2 potential types:
-  ## - Gene: MGI ID with prefixes in _id
-  ## - Disease: DOID ID with prefixes in 'doid' field
+  ## AGR relates Genes to Diseases
+  ## - Gene: Multiple ID types possible, IDs include prefix (field: _id)
+  ##         - Mouse Genome Database (MGI)
+  ##         - Rat Genome Database (RGD)
+  ##         - Saccharomyces Genome Database (SGD)
+  ##         - Zebrafish Information Network (ZFIN)
+  ##         - FlyBase (FB)
+  ##         - WormBase (WB)
+  ##         - Xenbase (Xenbase)
+  ##         - GO Consortium (GO)
+  ##         - HGNC Gene ID
+  ## - Disease: DOID ID with prefixes (field: "doid")
   ## 37,994 records total
-    gene-disease:
+  # mgi gene to disease
+    mgi-gene-disease:
       - supportBatch: true
         useTemplating: true
         inputs:
@@ -583,7 +609,7 @@ components:
             semantic: Gene
         requestBody:
           body:
-            ## API data has no prefix
+            ## API data has prefix
             ## joinSafe is only needed if the delimiter isn't a comma
             q: "{{ queryInputs }}"
             scopes: _id
@@ -608,11 +634,8 @@ components:
         source: "infores:agrkb"
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/disease"
-        ## compare to https://gtrx.rbsapp.net/?q=HEMOLYTIC%20UREMIC%20SYNDROME,%20ATYPICAL,%20SUSCEPTIBILITY%20TO,%204
-        # testExamples:
-        #   - qInput: "OMIM:250250"            ## CARTILAGE-HAIR HYPOPLASIA;
-        #     oneOutput: "UNII:MZ1IW7Q79D"     ## Valaciclovir
-    disease-gene:
+    # disease to mgi gene
+    disease-mgi-gene:
       - supportBatch: true
         useTemplating: true ## flag to say templating is being used below
         inputs:
@@ -641,15 +664,564 @@ components:
             biomarker_via_orthology.doid
             biomarker_via_orthology.term_name
           size: 1000
-        predicate: treats
+        predicate: condition_associated_with_gene
         source: "infores:agbkb"
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/gene"
-        # testExamples:
-        #   - qInput: "UNII:F64QU97QCR"     ## Dantrolene 
-        #     oneOutput: "OMIM:145600"      ## MALIGNANT HYPERTHERMIA, SUSCEPTIBILITY TO, 1
+    # rgd gene to disease
+    rgd-gene-disease:
+      - supportBatch: true
+        useTemplating: true
+        inputs:
+          - id: RGD
+            semantic: Gene
+        requestBody:
+          body:
+            ## API data has prefix
+            ## joinSafe is only needed if the delimiter isn't a comma
+            q: "{{ queryInputs }}"
+            scopes: _id
+        outputs:
+          - id: DOID
+            semantic: Disease
+        parameters:
+          fields: >-
+            _id
+            implicated_via_orthology.doid
+            implicated_via_orthology.term_name
+            is_implicated_in.doid
+            is_implicated_in.term_name
+            is_marker_for.doid
+            is_marker_for.term_name
+            is_not_implicated_in.doid
+            is_not_implicated_in.term_name
+            biomarker_via_orthology.doid
+            biomarker_via_orthology.term_name
+          size: 1000
+        predicate: gene_associated_with_condition
+        source: "infores:agrkb"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/disease"
+    # disease to rgd gene
+    disease-rgd-gene:
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: DOID
+            semantic: Disease
+        requestBody:
+          body:
+            ## API data has no prefix
+            ## joinSafe is only needed if the delimiter isn't a comma
+            q: "{{ queryInputs }}"
+            scopes: implicated_via_orthology.doid, is_implicated_in.doid, is_marker_for.doid, is_not_implicated_in.doid,biomarker_via_orthology.doid 
+        outputs:
+          - id: MGI
+            semantic: Gene
+        parameters:
+          fields: >-
+            _id
+            implicated_via_orthology.doid
+            implicated_via_orthology.term_name
+            is_implicated_in.doid
+            is_implicated_in.term_name
+            is_marker_for.doid
+            is_marker_for.term_name
+            is_not_implicated_in.doid
+            is_not_implicated_in.term_name
+            biomarker_via_orthology.doid
+            biomarker_via_orthology.term_name
+          size: 1000
+        predicate: condition_associated_with_gene
+        source: "infores:agbkb"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/gene"
+    # sgd gene to disease
+    sgd-gene-disease:
+      - supportBatch: true
+        useTemplating: true
+        inputs:
+          - id: SGD
+            semantic: Gene
+        requestBody:
+          body:
+            ## API data has prefix
+            ## joinSafe is only needed if the delimiter isn't a comma
+            q: "{{ queryInputs }}"
+            scopes: _id
+        outputs:
+          - id: DOID
+            semantic: Disease
+        parameters:
+          fields: >-
+            _id
+            implicated_via_orthology.doid
+            implicated_via_orthology.term_name
+            is_implicated_in.doid
+            is_implicated_in.term_name
+            is_marker_for.doid
+            is_marker_for.term_name
+            is_not_implicated_in.doid
+            is_not_implicated_in.term_name
+            biomarker_via_orthology.doid
+            biomarker_via_orthology.term_name
+          size: 1000
+        predicate: gene_associated_with_condition
+        source: "infores:agrkb"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/disease"
+    # disease to sgd gene
+    disease-rgd-gene:
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: DOID
+            semantic: Disease
+        requestBody:
+          body:
+            ## API data has no prefix
+            ## joinSafe is only needed if the delimiter isn't a comma
+            q: "{{ queryInputs }}"
+            scopes: implicated_via_orthology.doid, is_implicated_in.doid, is_marker_for.doid, is_not_implicated_in.doid,biomarker_via_orthology.doid 
+        outputs:
+          - id: SGD
+            semantic: Gene
+        parameters:
+          fields: >-
+            _id
+            implicated_via_orthology.doid
+            implicated_via_orthology.term_name
+            is_implicated_in.doid
+            is_implicated_in.term_name
+            is_marker_for.doid
+            is_marker_for.term_name
+            is_not_implicated_in.doid
+            is_not_implicated_in.term_name
+            biomarker_via_orthology.doid
+            biomarker_via_orthology.term_name
+          size: 1000
+        predicate: condition_associated_with_gene
+        source: "infores:agbkb"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/gene"
+    # zfin gene to disease
+    zfin-gene-disease:
+      - supportBatch: true
+        useTemplating: true
+        inputs:
+          - id: ZFIN
+            semantic: Gene
+        requestBody:
+          body:
+            ## API data has prefix
+            ## joinSafe is only needed if the delimiter isn't a comma
+            q: "{{ queryInputs }}"
+            scopes: _id
+        outputs:
+          - id: DOID
+            semantic: Disease
+        parameters:
+          fields: >-
+            _id
+            implicated_via_orthology.doid
+            implicated_via_orthology.term_name
+            is_implicated_in.doid
+            is_implicated_in.term_name
+            is_marker_for.doid
+            is_marker_for.term_name
+            is_not_implicated_in.doid
+            is_not_implicated_in.term_name
+            biomarker_via_orthology.doid
+            biomarker_via_orthology.term_name
+          size: 1000
+        predicate: gene_associated_with_condition
+        source: "infores:agrkb"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/disease"
+    # disease to zfin gene
+    disease-zfin-gene:
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: DOID
+            semantic: Disease
+        requestBody:
+          body:
+            ## API data has no prefix
+            ## joinSafe is only needed if the delimiter isn't a comma
+            q: "{{ queryInputs }}"
+            scopes: implicated_via_orthology.doid, is_implicated_in.doid, is_marker_for.doid, is_not_implicated_in.doid,biomarker_via_orthology.doid 
+        outputs:
+          - id: ZFIN
+            semantic: Gene
+        parameters:
+          fields: >-
+            _id
+            implicated_via_orthology.doid
+            implicated_via_orthology.term_name
+            is_implicated_in.doid
+            is_implicated_in.term_name
+            is_marker_for.doid
+            is_marker_for.term_name
+            is_not_implicated_in.doid
+            is_not_implicated_in.term_name
+            biomarker_via_orthology.doid
+            biomarker_via_orthology.term_name
+          size: 1000
+        predicate: condition_associated_with_gene
+        source: "infores:agbkb"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/gene"
+    # fb gene to disease
+    fb-gene-disease:
+      - supportBatch: true
+        useTemplating: true
+        inputs:
+          - id: FB
+            semantic: Gene
+        requestBody:
+          body:
+            ## API data has prefix
+            ## joinSafe is only needed if the delimiter isn't a comma
+            q: "{{ queryInputs }}"
+            scopes: _id
+        outputs:
+          - id: DOID
+            semantic: Disease
+        parameters:
+          fields: >-
+            _id
+            implicated_via_orthology.doid
+            implicated_via_orthology.term_name
+            is_implicated_in.doid
+            is_implicated_in.term_name
+            is_marker_for.doid
+            is_marker_for.term_name
+            is_not_implicated_in.doid
+            is_not_implicated_in.term_name
+            biomarker_via_orthology.doid
+            biomarker_via_orthology.term_name
+          size: 1000
+        predicate: gene_associated_with_condition
+        source: "infores:agrkb"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/disease"
+    # disease to rgd gene
+    disease-fb-gene:
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: DOID
+            semantic: Disease
+        requestBody:
+          body:
+            ## API data has no prefix
+            ## joinSafe is only needed if the delimiter isn't a comma
+            q: "{{ queryInputs }}"
+            scopes: implicated_via_orthology.doid, is_implicated_in.doid, is_marker_for.doid, is_not_implicated_in.doid,biomarker_via_orthology.doid 
+        outputs:
+          - id: FB
+            semantic: Gene
+        parameters:
+          fields: >-
+            _id
+            implicated_via_orthology.doid
+            implicated_via_orthology.term_name
+            is_implicated_in.doid
+            is_implicated_in.term_name
+            is_marker_for.doid
+            is_marker_for.term_name
+            is_not_implicated_in.doid
+            is_not_implicated_in.term_name
+            biomarker_via_orthology.doid
+            biomarker_via_orthology.term_name
+          size: 1000
+        predicate: condition_associated_with_gene
+        source: "infores:agbkb"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/gene"
+    # wb gene to disease
+    wb-gene-disease:
+      - supportBatch: true
+        useTemplating: true
+        inputs:
+          - id: WB
+            semantic: Gene
+        requestBody:
+          body:
+            ## API data has prefix
+            ## joinSafe is only needed if the delimiter isn't a comma
+            q: "{{ queryInputs }}"
+            scopes: _id
+        outputs:
+          - id: DOID
+            semantic: Disease
+        parameters:
+          fields: >-
+            _id
+            implicated_via_orthology.doid
+            implicated_via_orthology.term_name
+            is_implicated_in.doid
+            is_implicated_in.term_name
+            is_marker_for.doid
+            is_marker_for.term_name
+            is_not_implicated_in.doid
+            is_not_implicated_in.term_name
+            biomarker_via_orthology.doid
+            biomarker_via_orthology.term_name
+          size: 1000
+        predicate: gene_associated_with_condition
+        source: "infores:agrkb"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/disease"
+    # disease to wb gene
+    disease-wb-gene:
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: DOID
+            semantic: Disease
+        requestBody:
+          body:
+            ## API data has no prefix
+            ## joinSafe is only needed if the delimiter isn't a comma
+            q: "{{ queryInputs }}"
+            scopes: implicated_via_orthology.doid, is_implicated_in.doid, is_marker_for.doid, is_not_implicated_in.doid,biomarker_via_orthology.doid 
+        outputs:
+          - id: WB
+            semantic: Gene
+        parameters:
+          fields: >-
+            _id
+            implicated_via_orthology.doid
+            implicated_via_orthology.term_name
+            is_implicated_in.doid
+            is_implicated_in.term_name
+            is_marker_for.doid
+            is_marker_for.term_name
+            is_not_implicated_in.doid
+            is_not_implicated_in.term_name
+            biomarker_via_orthology.doid
+            biomarker_via_orthology.term_name
+          size: 1000
+        predicate: condition_associated_with_gene
+        source: "infores:agbkb"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/gene"
+    # xenbase gene to disease
+    xenbase-gene-disease:
+      - supportBatch: true
+        useTemplating: true
+        inputs:
+          - id: Xenbase
+            semantic: Gene
+        requestBody:
+          body:
+            ## API data has prefix
+            ## joinSafe is only needed if the delimiter isn't a comma
+            q: "{{ queryInputs }}"
+            scopes: _id
+        outputs:
+          - id: DOID
+            semantic: Disease
+        parameters:
+          fields: >-
+            _id
+            implicated_via_orthology.doid
+            implicated_via_orthology.term_name
+            is_implicated_in.doid
+            is_implicated_in.term_name
+            is_marker_for.doid
+            is_marker_for.term_name
+            is_not_implicated_in.doid
+            is_not_implicated_in.term_name
+            biomarker_via_orthology.doid
+            biomarker_via_orthology.term_name
+          size: 1000
+        predicate: gene_associated_with_condition
+        source: "infores:agrkb"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/disease"
+    # disease to xenbase gene
+    disease-xenbase-gene:
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: DOID
+            semantic: Disease
+        requestBody:
+          body:
+            ## API data has no prefix
+            ## joinSafe is only needed if the delimiter isn't a comma
+            q: "{{ queryInputs }}"
+            scopes: implicated_via_orthology.doid, is_implicated_in.doid, is_marker_for.doid, is_not_implicated_in.doid,biomarker_via_orthology.doid 
+        outputs:
+          - id: Xenbase
+            semantic: Gene
+        parameters:
+          fields: >-
+            _id
+            implicated_via_orthology.doid
+            implicated_via_orthology.term_name
+            is_implicated_in.doid
+            is_implicated_in.term_name
+            is_marker_for.doid
+            is_marker_for.term_name
+            is_not_implicated_in.doid
+            is_not_implicated_in.term_name
+            biomarker_via_orthology.doid
+            biomarker_via_orthology.term_name
+          size: 1000
+        predicate: condition_associated_with_gene
+        source: "infores:agbkb"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/gene"
+    # go gene to disease
+    go-gene-disease:
+      - supportBatch: true
+        useTemplating: true
+        inputs:
+          - id: GO
+            semantic: Gene
+        requestBody:
+          body:
+            ## API data has prefix
+            ## joinSafe is only needed if the delimiter isn't a comma
+            q: "{{ queryInputs }}"
+            scopes: _id
+        outputs:
+          - id: DOID
+            semantic: Disease
+        parameters:
+          fields: >-
+            _id
+            implicated_via_orthology.doid
+            implicated_via_orthology.term_name
+            is_implicated_in.doid
+            is_implicated_in.term_name
+            is_marker_for.doid
+            is_marker_for.term_name
+            is_not_implicated_in.doid
+            is_not_implicated_in.term_name
+            biomarker_via_orthology.doid
+            biomarker_via_orthology.term_name
+          size: 1000
+        predicate: gene_associated_with_condition
+        source: "infores:agrkb"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/disease"
+    # disease to go gene
+    disease-go-gene:
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: DOID
+            semantic: Disease
+        requestBody:
+          body:
+            ## API data has no prefix
+            ## joinSafe is only needed if the delimiter isn't a comma
+            q: "{{ queryInputs }}"
+            scopes: implicated_via_orthology.doid, is_implicated_in.doid, is_marker_for.doid, is_not_implicated_in.doid,biomarker_via_orthology.doid 
+        outputs:
+          - id: GO
+            semantic: Gene
+        parameters:
+          fields: >-
+            _id
+            implicated_via_orthology.doid
+            implicated_via_orthology.term_name
+            is_implicated_in.doid
+            is_implicated_in.term_name
+            is_marker_for.doid
+            is_marker_for.term_name
+            is_not_implicated_in.doid
+            is_not_implicated_in.term_name
+            biomarker_via_orthology.doid
+            biomarker_via_orthology.term_name
+          size: 1000
+        predicate: condition_associated_with_gene
+        source: "infores:agbkb"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/gene"
+    # hgnc gene to disease
+    hgnc-gene-disease:
+      - supportBatch: true
+        useTemplating: true
+        inputs:
+          - id: HGNC
+            semantic: Gene
+        requestBody:
+          body:
+            ## API data has prefix
+            ## joinSafe is only needed if the delimiter isn't a comma
+            q: "{{ queryInputs }}"
+            scopes: _id
+        outputs:
+          - id: DOID
+            semantic: Disease
+        parameters:
+          fields: >-
+            _id
+            implicated_via_orthology.doid
+            implicated_via_orthology.term_name
+            is_implicated_in.doid
+            is_implicated_in.term_name
+            is_marker_for.doid
+            is_marker_for.term_name
+            is_not_implicated_in.doid
+            is_not_implicated_in.term_name
+            biomarker_via_orthology.doid
+            biomarker_via_orthology.term_name
+          size: 1000
+        predicate: gene_associated_with_condition
+        source: "infores:agrkb"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/disease"
+    # disease to hgnc gene
+    disease-hgnc-gene:
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: DOID
+            semantic: Disease
+        requestBody:
+          body:
+            ## API data has no prefix
+            ## joinSafe is only needed if the delimiter isn't a comma
+            q: "{{ queryInputs }}"
+            scopes: implicated_via_orthology.doid, is_implicated_in.doid, is_marker_for.doid, is_not_implicated_in.doid,biomarker_via_orthology.doid 
+        outputs:
+          - id: HGNC
+            semantic: Gene
+        parameters:
+          fields: >-
+            _id
+            implicated_via_orthology.doid
+            implicated_via_orthology.term_name
+            is_implicated_in.doid
+            is_implicated_in.term_name
+            is_marker_for.doid
+            is_marker_for.term_name
+            is_not_implicated_in.doid
+            is_not_implicated_in.term_name
+            biomarker_via_orthology.doid
+            biomarker_via_orthology.term_name
+          size: 1000
+        predicate: condition_associated_with_gene
+        source: "infores:agbkb"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/gene"
   x-bte-response-mapping:
     drug:
-      MGI: _id
+      MGI: _id  ## with prefix
+      RGD: _id  ## with prefix
+      SGD: _id  ## with prefix
+      ZFIN: _id  ## with prefix
+      FB: _id  ## with prefix
+      WB: _id  ## with prefix
+      Xenbase: _id  ## with prefix
+      GO: _id  ## with prefix
+      HGNC: _id  ## with prefix
     disease:
       DOID: implicated_via_orthology.doid
