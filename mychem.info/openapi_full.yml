@@ -630,39 +630,63 @@ components:
     chebiXrefs-rhea:
       RHEA: chebi.xrefs.rhea
     drugMechChembl_EnsemblOutput:
-      ENSEMBL: chembl.drug_mechanisms.target_components.ensembl_gene  ## no prefix
-      ref_pmid: chembl.drug_mechanisms.mechanism_refs.PubMed  ## no prefix
+      ENSEMBL: chembl.drug_mechanisms.target_components.ensembl_gene               ## no prefix
+      ref_pmid: chembl.drug_mechanisms.mechanism_refs.PubMed                       ## no prefix
+      ref_clinicaltrials: chembl.drug_mechanisms.mechanism_refs.ClinicalTrials     ## no prefix
+      ref_doi: chembl.drug_mechanisms.mechanism_refs.DOI                           ## no prefix
+      ref_pmc: chembl.drug_mechanisms.mechanism_refs.PMC                           ## no prefix (europepcm IDs)
+      ## this url field will include expanded PMID / clinicaltrials / doi / PMC (aka duplicates!)
+      ##   but is required for other references: 
+      ##   DailyMed, Expert, FDA, ISBN,
+      ##   IUPHAR, InterPro, KEGG, Other,
+      ##   Patent, PubChem, UniProt, Wikipedia
+      ## notes on some specific fields:
+      ## - chembl.drug_mechanisms.mechanism_refs.ISBN: includes ID and page number
+      ## - chembl.drug_mechanisms.mechanism_refs.Other: seem to be urls
+      ## - chembl.drug_mechanisms.mechanism_refs.Patent: related urls seem to be from surechembl
+      ## - chembl.drug_mechanisms.mechanism_refs.PubMed: related urls seem to be from europepcm...
       ref_url: chembl.drug_mechanisms.mechanism_refs.url
       output_name: chembl.drug_mechanisms.target_name
       ## commenting out because data-processing / biolink-modeling issues
       # chembl_drug_action_type: chembl.drug_mechanisms.action_type
       # chembl_binding_site_name: chembl.drug_mechanisms.binding_site_name
-      # reference_isbn_note: chembl.drug_mechanisms.mechanism_refs.ISBN
       # in_taxon: chembl.drug_mechanisms.target_organism
       # chembl_target_type: chembl.drug_mechanisms.target_type
     drugMechChembl-rev:
       "CHEMBL.COMPOUND": chembl.molecule_chembl_id  ## no prefix
       input_name: chembl.drug_mechanisms.target_name
     drugMechChembl_UniprotOutput:
-      UniProtKB: chembl.drug_mechanisms.target_components.uniprot  ## no prefix
-      ref_pmid: chembl.drug_mechanisms.mechanism_refs.PubMed  ## no prefix
+      UniProtKB: chembl.drug_mechanisms.target_components.uniprot                  ## no prefix
+      ref_pmid: chembl.drug_mechanisms.mechanism_refs.PubMed                       ## no prefix
+      ref_clinicaltrials: chembl.drug_mechanisms.mechanism_refs.ClinicalTrials     ## no prefix
+      ref_doi: chembl.drug_mechanisms.mechanism_refs.DOI                           ## no prefix
+      ref_pmc: chembl.drug_mechanisms.mechanism_refs.PMC                           ## no prefix (europepcm IDs)
+      ## this url field will include expanded PMID / clinicaltrials / doi / PMC (aka duplicates!)
+      ##   but is required for other references: 
+      ##   DailyMed, Expert, FDA, ISBN,
+      ##   IUPHAR, InterPro, KEGG, Other,
+      ##   Patent, PubChem, UniProt, Wikipedia
+      ## notes on some specific fields:
+      ## - chembl.drug_mechanisms.mechanism_refs.ISBN: includes ID and page number
+      ## - chembl.drug_mechanisms.mechanism_refs.Other: seem to be urls
+      ## - chembl.drug_mechanisms.mechanism_refs.Patent: related urls seem to be from surechembl
+      ## - chembl.drug_mechanisms.mechanism_refs.PubMed: related urls seem to be from europepcm...
       ref_url: chembl.drug_mechanisms.mechanism_refs.url
       output_name: chembl.drug_mechanisms.target_name
       ## commenting out because data-processing / biolink-modeling issues
       # chembl_drug_action_type: chembl.drug_mechanisms.action_type
       # chembl_binding_site_name: chembl.drug_mechanisms.binding_site_name
-      # reference_isbn_note: chembl.drug_mechanisms.mechanism_refs.ISBN
       # in_taxon: chembl.drug_mechanisms.target_organism
       # chembl_target_type: chembl.drug_mechanisms.target_type
     chembl-treats:
       MESH: chembl.drug_indications.mesh_id
-      ref_url: chembl.drug_indications.indication_refs.url
+      ref_clinicaltrials: chembl.drug_mechanisms.mechanism_refs.ClinicalTrials     ## no prefix
+      ## this url field will include expanded clinicaltrials (aka duplicates!)
+      ##   but is required for other references: ATC, DailyMed, FDA
+      ref_url: chembl.drug_mechanisms.mechanism_refs.url
       ## commenting out because data-processing / biolink-modeling issues
-      # ## edge attributes
       # max_clinical_phase_for_indication: chembl.drug_indications.max_phase_for_ind
       # year_first_approved: chembl.drug_indications.first_approval
-      # ## provenance-related field. Sources are ATC, ClinicalTrial, DailyMed, FDA
-      # chembl_source: chembl.drug_indications.indication_refs.type
     chembl:
       "CHEMBL.COMPOUND": chembl.molecule_chembl_id  ## no prefix
     drugcentral-bioactivity:
@@ -903,8 +927,11 @@ components:
         #   chembl.drug_mechanisms.target_type
         fields: >-
           chembl.drug_mechanisms.target_components.ensembl_gene,
-          chembl.drug_mechanisms.mechanism_refs.url,
           chembl.drug_mechanisms.mechanism_refs.PubMed,
+          chembl.drug_mechanisms.mechanism_refs.ClinicalTrials,
+          chembl.drug_mechanisms.mechanism_refs.DOI,
+          chembl.drug_mechanisms.mechanism_refs.PMC,
+          chembl.drug_mechanisms.mechanism_refs.url,
           chembl.drug_mechanisms.target_name
         size: 1000  ## note size limit; added just in case
       ## using the same predicate as dgidb's no-relationship-specified. 
@@ -969,8 +996,11 @@ components:
         #   chembl.drug_mechanisms.target_type
         fields: >-
           chembl.drug_mechanisms.target_components.uniprot,
-          chembl.drug_mechanisms.mechanism_refs.url,
           chembl.drug_mechanisms.mechanism_refs.PubMed,
+          chembl.drug_mechanisms.mechanism_refs.ClinicalTrials,
+          chembl.drug_mechanisms.mechanism_refs.DOI,
+          chembl.drug_mechanisms.mechanism_refs.PMC,
+          chembl.drug_mechanisms.mechanism_refs.url,
           chembl.drug_mechanisms.target_name
         size: 1000  ## note size limit; added just in case
       ## see drugMechChemblEnsembl operation for more info on predicate
@@ -1026,10 +1056,10 @@ components:
         #   chembl.drug_indications.mesh_id,
         #   chembl.drug_indications.max_phase_for_ind,
         #   chembl.drug_indications.indication_refs.url,
-        #   chembl.drug_indications.indication_refs.type,
         #   chembl.drug_indications.first_approval
         fields: >-
           chembl.drug_indications.mesh_id,
+          chembl.drug_mechanisms.mechanism_refs.ClinicalTrials,
           chembl.drug_indications.indication_refs.url
         size: 1000  ## note size limit; added just in case
       predicate: treats
