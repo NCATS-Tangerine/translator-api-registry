@@ -634,8 +634,8 @@ components:
       ref_pmid: chembl.drug_mechanisms.mechanism_refs.PubMed                       ## no prefix
       ref_clinicaltrials: chembl.drug_mechanisms.mechanism_refs.ClinicalTrials     ## no prefix
       ref_doi: chembl.drug_mechanisms.mechanism_refs.DOI                           ## no prefix
-      ref_pmc: chembl.drug_mechanisms.mechanism_refs.PMC                           ## no prefix (europepcm IDs)
-      ## this url field will include expanded PMID / clinicaltrials / doi / PMC (aka duplicates!)
+      ref_pmcid: chembl.drug_mechanisms.mechanism_refs.PMC                         ## no prefix (but IDs start with "PMC")
+      ## this url field will include expanded PMID / clinicaltrials / doi / PMCID (aka duplicates!)
       ##   but is required for other references: 
       ##   DailyMed, Expert, FDA, ISBN,
       ##   IUPHAR, InterPro, KEGG, Other,
@@ -656,28 +656,14 @@ components:
       "CHEMBL.COMPOUND": chembl.molecule_chembl_id  ## no prefix
       input_name: chembl.drug_mechanisms.target_name
     drugMechChembl_UniprotOutput:
+    ## basically the same response-mapping as drugMechChembl_EnsemblOutput
       UniProtKB: chembl.drug_mechanisms.target_components.uniprot                  ## no prefix
       ref_pmid: chembl.drug_mechanisms.mechanism_refs.PubMed                       ## no prefix
       ref_clinicaltrials: chembl.drug_mechanisms.mechanism_refs.ClinicalTrials     ## no prefix
       ref_doi: chembl.drug_mechanisms.mechanism_refs.DOI                           ## no prefix
-      ref_pmc: chembl.drug_mechanisms.mechanism_refs.PMC                           ## no prefix (europepcm IDs)
-      ## this url field will include expanded PMID / clinicaltrials / doi / PMC (aka duplicates!)
-      ##   but is required for other references: 
-      ##   DailyMed, Expert, FDA, ISBN,
-      ##   IUPHAR, InterPro, KEGG, Other,
-      ##   Patent, PubChem, UniProt, Wikipedia
-      ## notes on some specific fields:
-      ## - chembl.drug_mechanisms.mechanism_refs.ISBN: includes ID and page number
-      ## - chembl.drug_mechanisms.mechanism_refs.Other: seem to be urls
-      ## - chembl.drug_mechanisms.mechanism_refs.Patent: related urls seem to be from surechembl
-      ## - chembl.drug_mechanisms.mechanism_refs.PubMed: related urls seem to be from europepcm...
+      ref_pmcid: chembl.drug_mechanisms.mechanism_refs.PMC                         ## no prefix (but IDs start with "PMC")
       ref_url: chembl.drug_mechanisms.mechanism_refs.url
       output_name: chembl.drug_mechanisms.target_name
-      ## commenting out because data-processing / biolink-modeling issues
-      # chembl_drug_action_type: chembl.drug_mechanisms.action_type
-      # chembl_binding_site_name: chembl.drug_mechanisms.binding_site_name
-      # in_taxon: chembl.drug_mechanisms.target_organism
-      # chembl_target_type: chembl.drug_mechanisms.target_type
     chembl-treats:
       MESH: chembl.drug_indications.mesh_id
       ref_clinicaltrials: chembl.drug_mechanisms.mechanism_refs.ClinicalTrials     ## no prefix
@@ -909,11 +895,7 @@ components:
       - id: ENSEMBL
         semantic: Gene
       parameters:
-      ## chembl.drug_mechanisms.mechanism_refs.url will get info from:
-      ##   ClinicalTrials, DOI, DailyMed, Expert, FDA, ISBN, IUPHAR, InterPro, KEGG, Other, 
-      ##   PMC, Patent, PubChem, Pubmed, UniProt, Wikipedia
-      ## chembl.drug_mechanisms.mechanism_refs.ISBN will include page number. ex: "9780702034718 PP. 164"
-      ## chembl.drug_mechanisms.mechanism_refs.PubMed will include only the PMID (no prefix)
+      ## see response-mapping for more info on fields
       ## commenting out because data-processing / biolink-modeling issues
         # fields: >-
         #   chembl.drug_mechanisms.target_components.ensembl_gene,
@@ -982,7 +964,7 @@ components:
       - id: UniProtKB
         semantic: Gene
       parameters:
-      ## see drugMechChemblEnsembl operation for more info on fields
+      ## see response-mapping drugMechChembl_EnsemblOutput for more info on fields
       ## commenting out because data-processing / biolink-modeling issues
         # fields: >-
         #   chembl.drug_mechanisms.target_components.uniprot,
