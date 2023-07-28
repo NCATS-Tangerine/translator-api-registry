@@ -8,16 +8,18 @@ info:
   description: >-
     Documentation of the BioThings API for [SEMMEDDB](https://pubmed.ncbi.nlm.nih.gov/23044550/) 
     data (download data 
-    [here](https://lhncbc.nlm.nih.gov/ii/tools/SemRep_SemMedDB_SKR/SemMedDB_download.html)).
+    [here](https://lhncbc.nlm.nih.gov/ii/tools/SemRep_SemMedDB_SKR/SemMedDB_download.html)). 
+    This is a newer version where each record is a unique combination of subjectID-predicate-
+    objectID and contains a count of the unique pmids and predications supporting it.
   termsOfService: https://biothings.io/about
   title: BioThings SEMMEDDB API
-  version: '2.0'
+  version: '43'
   x-translator:
     infores: "infores:biothings-semmeddb"
     component: KP
     team:
       - Service Provider
-    biolink-version: "3.1.1"
+    biolink-version: "3.5.0"
 servers:
 - description: Production server
   url: https://biothings.ncats.io/semmeddb
@@ -53,7 +55,7 @@ paths:
       - name: id
         in: path
         required: true
-        example: "85213740"
+        example: "C0015063-CAUSES-C0544884"
         schema:
           type: string
       - "$ref": "#/components/parameters/fields"
@@ -117,8 +119,8 @@ paths:
           application/json:
             example:
               ids:
-              - "85213740"
-              - "85203385"
+              - "C0015063-CAUSES-C0544884"
+              - "C0543800-CAUSES-C0392525"
             schema:
               type: object
               properties:
@@ -625,20 +627,28 @@ components:
   x-bte-response-mapping:
     umls-obj:
       UMLS: object.umls  ## no prefix
-      pubmed: pmid       ## no prefix
+      pubmed: predication.pmid       ## no prefix
+      "biolink:supporting_text": predication.sentence
       "biolink:original_subject": subject.umls
-      original_subject_name: subject.name
-      "biolink:original_predicate": predicate
       "biolink:original_object": object.umls
-      original_object_name: object.name
+      input_name: subject.name
+      output_name: object.name
+      ## commenting out because data-processing / biolink-modeling issues
+      # publication_count: pmid_count
+      # semmeddb_predication_count: predication_count
+      # "biolink:original_predicate": predicate
     umls-subj:
       UMLS: subject.umls  ## no prefix
-      pubmed: pmid       ## no prefix
+      pubmed: predication.pmid       ## no prefix
+      "biolink:supporting_text": predication.sentence
       "biolink:original_subject": subject.umls
-      original_subject_name: subject.name
-      "biolink:original_predicate": predicate
       "biolink:original_object": object.umls
-      original_object_name: object.name
+      output_name: subject.name
+      input_name: object.name
+      ## commenting out because data-processing / biolink-modeling issues
+      # publication_count: pmid_count
+      # semmeddb_predication_count: predication_count
+      # "biolink:original_predicate": predicate
 ## FUTURE: currently, BTE already strips prefix.... In the future, need to add rmPrefix before wrap
 ## currently we can't use OR (to map multiple SEMMED semantic types to 1 biolink semantic type)
 ## joinSafe is only needed if the delimiter isn't a comma
