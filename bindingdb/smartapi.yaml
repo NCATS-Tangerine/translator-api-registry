@@ -599,7 +599,7 @@ components:
         #     relation.curation_datasource,relation.pmid,relation.bindingdb_link,relation.article_doi,relation.patent_number
           fields: >-
             object.pubchem_cid,
-            subject.name,relation.pmid
+            subject.name,relation.pmid,relation.bindingdb_link,relation.article_doi
           size: 1000
         predicate: physically_interacts_with
         source: "infores:bindingdb"
@@ -629,7 +629,7 @@ components:
           #   relation.curation_datasource,relation.pmid,relation.bindingdb_link,relation.article_doi,relation.patent_number
           fields: >-
             subject.uniprot.accession,
-            subject.name,relation.pmid
+            subject.name,relation.pmid,relation.bindingdb_link,relation.article_doi
           size: 1000
         predicate: physically_interacts_with
         source: "infores:bindingdb"
@@ -639,23 +639,28 @@ components:
         #   - qInput: "PUBCHEM.COMPOUND:134553288"     ## US10736883, Example 387.0
         #     oneOutput: "UniProtKB:P35414"            ## Apelin receptor
   x-bte-response-mapping:
+  ## note on references:
+  ##   sometimes the doi + pmid will refer to the same publication (so..."duplicate" references)
+  ##   but there are plenty of cases where relationships have only 1 of these fields:
+  ##   only doi: https://biothings.transltr.io/bindingdb/query?q=_exists_:relation.article_doi%20AND%20(NOT%20_exists_:relation.pmid)
+  ##   only pmid: https://biothings.transltr.io/bindingdb/query?q=_exists_:relation.pmid%20AND%20(NOT%20_exists_:relation.article_doi)
     pubchem-object:
       "PUBCHEM.COMPOUND": object.pubchem_cid       ## no prefix
       "biolink:original_subject": subject.name     ## was called "Target Name Assigned by Curator or DataSource"
-      pubmed: relation.pmid
+      ref_pmid: relation.pmid                          ## no prefix
+      ref_doi: relation.article_doi
+      ref_url: relation.bindingdb_link
       ## commenting out because data-processing / biolink-modeling issues
       # in_taxon: subject.organism                 ## was called "Target Source Organism According to Curator or DataSource"
       # bindingdb_curation_datasource: relation.curation_datasource    ## Curation/DataSource
-      # "biolink:source_web_page": relation.bindingdb_link
-      # article_doi: relation.article_doi
       # patent_number: relation.patent_number
     uniprot-subject:
       UniProtKB: subject.uniprot.accession  ## no prefix
       "biolink:original_subject": subject.name
-      pubmed: relation.pmid
+      ref_pmid: relation.pmid                          ## no prefix
+      ref_doi: relation.article_doi
+      ref_url: relation.bindingdb_link
       ## commenting out because data-processing / biolink-modeling issues
       # in_taxon: subject.organism
       # bindingdb_curation_datasource: relation.curation_datasource
-      # "biolink:source_web_page": relation.bindingdb_link
-      # article_doi: relation.article_doi
       # patent_number: relation.patent_number
