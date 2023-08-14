@@ -311,8 +311,23 @@ paths:
       - query
       ## 2 operations
       x-bte-kgs-operations:
-      - $ref: '#/components/x-bte-kgs-operations/subject-to-object'
-      - $ref: '#/components/x-bte-kgs-operations/object-to-subject'
+      - $ref: '#/components/x-bte-kgs-operations/SmallMolecule-treats-Disease'
+      - $ref: '#/components/x-bte-kgs-operations/orch-phsu-treats-disease-rev'
+      - $ref: '#/components/x-bte-kgs-operations/phsu-plnt-dsp-treats-disease-rev'
+      - $ref: '#/components/x-bte-kgs-operations/phsu-treats-disease-rev'
+      - $ref: '#/components/x-bte-kgs-operations/orch-phsu-vita-dsp-treats-disease-rev'
+      - $ref: '#/components/x-bte-kgs-operations/phsu-plnt-dsp-treats-disease-rev'
+      - $ref: '#/components/x-bte-kgs-operations/food-phsu-dsp-treats-disease-rev'
+      - $ref: '#/components/x-bte-kgs-operations/bacs-orch-phsu-dsp-treats-disease-rev'
+      - $ref: '#/components/x-bte-kgs-operations/antb-orch-treats-disease-rev'
+      - $ref: '#/components/x-bte-kgs-operations/antb-treats-disease-rev'
+      - $ref: '#/components/x-bte-kgs-operations/bact-phsu-dsp-treats-disease-rev'
+      - $ref: '#/components/x-bte-kgs-operations/bact-phsu-treats-disease-rev'
+      - $ref: '#/components/x-bte-kgs-operations/aapp-gngm-bacs-phsu-dsp-treats-disease-rev'
+      - $ref: '#/components/x-bte-kgs-operations/aapp-gngm-phsu-treats-disease-rev'
+      - $ref: '#/components/x-bte-kgs-operations/bacs-orch-phsu-treats-disease-rev'
+      - $ref: '#/components/x-bte-kgs-operations/inch-phsu-treats-disease-rev'
+      - $ref: '#/components/x-bte-kgs-operations/phsu-dsp-treats-disease-rev'
 components:
   parameters:
     callback:
@@ -599,13 +614,13 @@ components:
           fields: object.umls,relation,subject.name,object.name
           size: 1000
         predicate: treats
-        source: "infores:suppkg"
+        source: "infores:suppkg" # no infores for suppkg yet
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/object"
         # testExamples:
         #   - qInput: "UMLS:C0062737"      ## histaglobin
         #     oneOutput: "UMLS:C0002103"   ## allergic rhinitis
-    SmallMolecule-treats-Disease-rev:
+    orch-phsu-treats-disease-rev:
       - supportBatch: true
         useTemplating: true
         inputs:
@@ -614,7 +629,31 @@ components:
         requestBodyType: object
         requestBody:
           body: >-
-            {"q": {{ queryInputs | replPrefix('predicate:TREATS AND subject.semtypes:((phsu) OR (orch))
+            {"q": {{ queryInputs | replPrefix('predicate:TREATS AND subject.semtypes:((orch) AND (phsu))
+            AND object.umls')| dump }}, "scopes": []}
+        outputs:
+          - id: UMLS
+            semantic: SmallMolecule
+        parameters:
+          fields: subject.umls,relation,subject.name,object.name
+          size: 1000
+        predicate: treated_by
+        source: "infores:suppkg" # no infores for suppkg yet
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/subject"
+        # testExamples:
+        #   - qInput: "UMLS:C0023283"      ## cutaneous leishmaniasis
+        #     oneOutput: "UMLS:C0016277"   ## fcz
+    phsu-treats-disease-rev:
+      - supportBatch: true
+        useTemplating: true
+        inputs:
+          - id: UMLS
+            semantic: Disease
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {"q": {{ queryInputs | replPrefix('predicate:TREATS AND subject.semtypes:(phsu)
             AND object.umls')| dump }}, "scopes": []}
         outputs:
           - id: UMLS
@@ -627,8 +666,392 @@ components:
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/subject"
         # testExamples:
-        #   - qInput: "UMLS:C0263338"      ## urticaria, chronic
-        #     oneOutput: "UMLS:C0062737"   ## histaglobin
+        #   - qInput: "UMLS:C0021311"      ## disease due to infection
+        #     oneOutput: "UMLS:C0003451"   ## antiviral
+    phsu-plnt-treats-disease-rev:
+      - supportBatch: true
+        useTemplating: true
+        inputs:
+          - id: UMLS
+            semantic: Disease
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {"q": {{ queryInputs | replPrefix('predicate:TREATS AND subject.semtypes:((phsu) AND (plnt))
+            AND object.umls')| dump }}, "scopes": []}
+        outputs:
+          - id: UMLS
+            semantic: SmallMolecule
+        parameters:
+          fields: subject.umls,relation,subject.name,object.name
+          size: 1000
+        predicate: treated_by
+        source: "infores:suppkg"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/subject"
+        # testExamples:
+        #   - qInput: "UMLS:C0021311"      ## disease due to infection
+        #     oneOutput: "UMLS:C0003451"   ## antiviral
+    orch-phsu-dsp-treats-disease-rev:
+      - supportBatch: true
+        useTemplating: true
+        inputs:
+          - id: UMLS
+            semantic: Disease
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {"q": {{ queryInputs | replPrefix('predicate:TREATS AND subject.semtypes:((orch) AND (phsu) AND (dsp))
+            AND object.umls')| dump }}, "scopes": []}
+        outputs:
+          - id: UMLS
+            semantic: SmallMolecule
+        parameters:
+          fields: subject.umls,relation,subject.name,object.name
+          size: 1000
+        predicate: treated_by
+        source: "infores:suppkg"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/subject"
+        # testExamples:
+        #   - qInput: "UMLS:C0020542"      ## hypertensive pulmonary vascular disease
+        #     oneOutput: "UMLS:DC0002711"   ## amyl nitrite
+    orch-phsu-vita-dsp-treats-disease-rev:
+      - supportBatch: true
+        useTemplating: true
+        inputs:
+          - id: UMLS
+            semantic: Disease
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {"q": {{ queryInputs | replPrefix('predicate:TREATS AND subject.semtypes:((orch) AND (phsu) AND (vita) AND (dsp))
+            AND object.umls')| dump }}, "scopes": []}
+        outputs:
+          - id: UMLS
+            semantic: SmallMolecule
+        parameters:
+          fields: subject.umls,relation,subject.name,object.name
+          size: 1000
+        predicate: treated_by
+        source: "infores:suppkg"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/subject"
+        # testExamples:
+        #   - qInput: "UMLS:C0007222"      ## disease, cardiovascular
+        #     oneOutput: "UMLS:DC0003968"   ## acide l-ascorbique, 6-palmitate
+    phsu-plnt-dsp-treats-disease-rev:
+      - supportBatch: true
+        useTemplating: true
+        inputs:
+          - id: UMLS
+            semantic: Disease
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {"q": {{ queryInputs | replPrefix('predicate:TREATS AND subject.semtypes:((phsu) AND (plnt) AND (dsp))
+            AND object.umls')| dump }}, "scopes": []}
+        outputs:
+          - id: UMLS
+            semantic: SmallMolecule
+        parameters:
+          fields: subject.umls,relation,subject.name,object.name
+          size: 1000
+        predicate: treated_by
+        source: "infores:suppkg"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/subject"
+        # testExamples:
+        #   - qInput: "UMLS:C0004096"      ## airway hyperreactivity
+        #     oneOutput: "UMLS:DC0000869"   ## acacia
+    food-phsu-dsp-treats-disease-rev:
+      - supportBatch: true
+        useTemplating: true
+        inputs:
+          - id: UMLS
+            semantic: Disease
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {"q": {{ queryInputs | replPrefix('predicate:TREATS AND subject.semtypes:((phsu) AND (food) AND (dsp))
+            AND object.umls')| dump }}, "scopes": []}
+        outputs:
+          - id: UMLS
+            semantic: SmallMolecule
+        parameters:
+          fields: subject.umls,relation,subject.name,object.name
+          size: 1000
+        predicate: treated_by
+        source: "infores:suppkg"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/subject"
+        # testExamples:
+        #   - qInput: "UMLS:C0009319"      ## colitides
+        #     oneOutput: "UMLS:DC0003638"   ## abricot
+    bacs-orch-phsu-dsp-treats-disease-rev:
+      - supportBatch: true
+        useTemplating: true
+        inputs:
+          - id: UMLS
+            semantic: Disease
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {"q": {{ queryInputs | replPrefix('predicate:TREATS AND subject.semtypes:((phsu) AND (orch) AND (bacs) AND (dsp))
+            AND object.umls')| dump }}, "scopes": []}
+        outputs:
+          - id: UMLS
+            semantic: SmallMolecule
+        parameters:
+          fields: subject.umls,relation,subject.name,object.name
+          size: 1000
+        predicate: treated_by
+        source: "infores:suppkg"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/subject"
+        # testExamples:
+        #   - qInput: "UMLS:C0008350"      ## calculus gallbladder
+        #     oneOutput: "UMLS:DC0005390"   ## ba - bile acid
+    antb-orch-treats-disease-rev:
+      - supportBatch: true
+        useTemplating: true
+        inputs:
+          - id: UMLS
+            semantic: Disease
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {"q": {{ queryInputs | replPrefix('predicate:TREATS AND subject.semtypes:((antb) AND (orch))
+            AND object.umls')| dump }}, "scopes": []}
+        outputs:
+          - id: UMLS
+            semantic: SmallMolecule
+        parameters:
+          fields: subject.umls,relation,subject.name,object.name
+          size: 1000
+        predicate: treated_by
+        source: "infores:suppkg"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/subject"
+        # testExamples:
+        #   - qInput: "UMLS:C0021311"      ## brucelloses
+        #     oneOutput: "UMLS:C0003451"   ## 14-hydroxydaunomycin
+    antb-treats-disease-rev:
+      - supportBatch: true
+        useTemplating: true
+        inputs:
+          - id: UMLS
+            semantic: Disease
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {"q": {{ queryInputs | replPrefix('predicate:TREATS AND subject.semtypes:(antb)
+            AND object.umls')| dump }}, "scopes": []}
+        outputs:
+          - id: UMLS
+            semantic: SmallMolecule
+        parameters:
+          fields: subject.umls,relation,subject.name,object.name
+          size: 1000
+        predicate: treated_by
+        source: "infores:suppkg"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/subject"
+        # testExamples:
+        #   - qInput: "UMLS:C0026918"      ## infection due to mycobacteria
+        #     oneOutput: "UMLS:C0002499"   ## amika
+    bact-phsu-dsp-treats-disease-rev:
+      - supportBatch: true
+        useTemplating: true
+        inputs:
+          - id: UMLS
+            semantic: Disease
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {"q": {{ queryInputs | replPrefix('predicate:TREATS AND subject.semtypes:((bact) AND (phsu) AND (dsp))
+            AND object.umls')| dump }}, "scopes": []}
+        outputs:
+          - id: UMLS
+            semantic: SmallMolecule
+        parameters:
+          fields: subject.umls,relation,subject.name,object.name
+          size: 1000
+        predicate: treated_by
+        source: "infores:suppkg"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/subject"
+        # testExamples:
+        #   - qInput: "UMLS:C0032460"      ## bilateral polycystic ovarian syndrome
+        #     oneOutput: "UMLS:DC0005380"   ## b. animalis
+    bact-phsu-treats-disease-rev:
+      - supportBatch: true
+        useTemplating: true
+        inputs:
+          - id: UMLS
+            semantic: Disease
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {"q": {{ queryInputs | replPrefix('predicate:TREATS AND subject.semtypes:((bact) AND (phsu))
+            AND object.umls')| dump }}, "scopes": []}
+        outputs:
+          - id: UMLS
+            semantic: SmallMolecule
+        parameters:
+          fields: subject.umls,relation,subject.name,object.name
+          size: 1000
+        predicate: treated_by
+        source: "infores:suppkg"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/subject"
+        # testExamples:
+        #   - qInput: "UMLS:C0032460"      ## bilateral polycystic ovarian syndrome
+        #     oneOutput: "UMLS:DC0005380"   ## b. animalis
+    bacs-phsu-treats-disease-rev:
+      - supportBatch: true
+        useTemplating: true
+        inputs:
+          - id: UMLS
+            semantic: Disease
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {"q": {{ queryInputs | replPrefix('predicate:TREATS AND subject.semtypes:((bacs) AND (phsu))
+            AND object.umls')| dump }}, "scopes": []}
+        outputs:
+          - id: UMLS
+            semantic: SmallMolecule
+        parameters:
+          fields: subject.umls,relation,subject.name,object.name
+          size: 1000
+        predicate: treated_by
+        source: "infores:suppkg"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/subject"
+        # testExamples:
+        #   - qInput: "UMLS:C0027765"      ## disease of nervous system
+        #     oneOutput: "UMLS:C0019134"   ## heparin
+    aapp-gngm-bacs-phsu-dsp-treats-disease-rev:
+      - supportBatch: true
+        useTemplating: true
+        inputs:
+          - id: UMLS
+            semantic: Disease
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {"q": {{ queryInputs | replPrefix('predicate:TREATS AND subject.semtypes:((aapp) AND (gngm) AND (bacs) AND (phsu) AND (dsp))
+            AND object.umls')| dump }}, "scopes": []}
+        outputs:
+          - id: UMLS
+            semantic: SmallMolecule
+        parameters:
+          fields: subject.umls,relation,subject.name,object.name
+          size: 1000
+        predicate: treated_by
+        source: "infores:suppkg"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/subject"
+        # testExamples:
+        #   - qInput: "UMLS:C0235280"      ## ototoxicity
+        #     oneOutput: "UMLS:DC0001898"   ## 2-aminopropanoic acid
+    aapp-gngm-phsu-treats-disease-rev:
+      - supportBatch: true
+        useTemplating: true
+        inputs:
+          - id: UMLS
+            semantic: Disease
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {"q": {{ queryInputs | replPrefix('predicate:TREATS AND subject.semtypes:((aapp) AND (gngm) AND (phsu))
+            AND object.umls')| dump }}, "scopes": []}
+        outputs:
+          - id: UMLS
+            semantic: SmallMolecule
+        parameters:
+          fields: subject.umls,relation,subject.name,object.name
+          size: 1000
+        predicate: treated_by
+        source: "infores:suppkg"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/subject"
+        # testExamples:
+        #   - qInput: "UMLS:C0033860"      ## psoriases
+        #     oneOutput: "UMLS:C0010592"   ## ciclosporin
+    bacs-orch-phsu-treats-disease-rev:
+      - supportBatch: true
+        useTemplating: true
+        inputs:
+          - id: UMLS
+            semantic: Disease
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {"q": {{ queryInputs | replPrefix('predicate:TREATS AND subject.semtypes:((bacs) AND (orch) AND (phsu))
+            AND object.umls')| dump }}, "scopes": []}
+        outputs:
+          - id: UMLS
+            semantic: SmallMolecule
+        parameters:
+          fields: subject.umls,relation,subject.name,object.name
+          size: 1000
+        predicate: treated_by
+        source: "infores:suppkg"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/subject"
+        # testExamples:
+        #   - qInput: "UMLS:C0028754"      ## adiposity
+        #     oneOutput: "UMLS:C0013982"   ## archin
+    inch-phsu-treats-disease-rev:
+      - supportBatch: true
+        useTemplating: true
+        inputs:
+          - id: UMLS
+            semantic: Disease
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {"q": {{ queryInputs | replPrefix('predicate:TREATS AND subject.semtypes:((inch) AND (phsu))
+            AND object.umls')| dump }}, "scopes": []}
+        outputs:
+          - id: UMLS
+            semantic: SmallMolecule
+        parameters:
+          fields: subject.umls,relation,subject.name,object.name
+          size: 1000
+        predicate: treated_by
+        source: "infores:suppkg"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/subject"
+        # testExamples:
+        #   - qInput: "UMLS:C0338437"      ## cysticercosis, brain
+        #     oneOutput: "UMLS:C0006712"   ## calcium phosphates
+    phsu-dsp-treats-disease-rev:
+      - supportBatch: true
+        useTemplating: true
+        inputs:
+          - id: UMLS
+            semantic: Disease
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {"q": {{ queryInputs | replPrefix('predicate:TREATS AND subject.semtypes:((dsp) AND (phsu))
+            AND object.umls')| dump }}, "scopes": []}
+        outputs:
+          - id: UMLS
+            semantic: SmallMolecule
+        parameters:
+          fields: subject.umls,relation,subject.name,object.name
+          size: 1000
+        predicate: treated_by
+        source: "infores:suppkg"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/subject"
+        # testExamples:
+        #   - qInput: "UMLS:C0012242"      ## digestive diseases
+        #     oneOutput: "UMLS:DC0012173"   ## fiber
   x-bte-response-mapping:
     object:
       UMLS: object.umls
