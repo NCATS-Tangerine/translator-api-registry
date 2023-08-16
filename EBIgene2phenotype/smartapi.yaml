@@ -10,13 +10,13 @@ info:
     [EBIgene2phenotype](https://www.ebi.ac.uk/gene2phenotype/) data.
   termsOfService: https://biothings.io/about
   title: BioThings EBIgene2phenotype API
-  version: '2020-02-19'
+  version: '2023-06-24'
   x-translator:
     infores: "infores:biothings-ebi-gene2phenotype"
     component: KP
     team:
       - Service Provider
-    biolink-version: "3.1.1"
+    biolink-version: "3.5.0"
 servers:
 - description: Encrypted Production server
   url: https://biothings.ncats.io/ebigene2phenotype
@@ -26,7 +26,7 @@ servers:
   x-maturity: production
 tags:
 - name: gene
-- name: phenotype
+- name: disease
 - name: annotation
 - name: query
 - name: translator
@@ -51,7 +51,7 @@ paths:
       - name: id
         in: path
         required: true
-        example: "341"
+        example: "9557"
         schema:
           type: string
       - "$ref": "#/components/parameters/fields"
@@ -115,8 +115,8 @@ paths:
           application/json:
             example:
               ids:
-              - "341"
-              - "4591"
+              - "9557"
+              - "1961"
             schema:
               type: object
               properties:
@@ -171,7 +171,7 @@ paths:
           API](https://docs.mychem.info/en/latest/doc/chem_query_service.html#query-syntax).
         in: query
         required: true
-        example: "_id:6636"
+        example: "gene2phenotype.disease.disease_mim:616314"
         schema:
           type: string
       - "$ref": "#/components/parameters/fields"
@@ -269,10 +269,10 @@ paths:
           application/json:
             example:
               q:
-              - "341"
-              - "6636"
+              - "616314"
+              - "616313"
               scopes:
-              - "_id"
+              - "gene2phenotype.disease.disease_mim"
             schema:
               type: object
               properties:
@@ -307,8 +307,7 @@ paths:
       tags:
       - query
       x-bte-kgs-operations:
-      - "$ref": "#/components/x-bte-kgs-operations/gene_to_phenotype"
-      - "$ref": "#/components/x-bte-kgs-operations/phenotype_to_gene"
+
       - "$ref": "#/components/x-bte-kgs-operations/gene_to_disease"
       - "$ref": "#/components/x-bte-kgs-operations/disease_to_gene"
 components:
@@ -573,70 +572,16 @@ components:
   x-bte-kgs-operations:
   ## not all records have phenotypes or disease IDs...
   ## the main relationship seems to be gene-disease, not gene-phenotype
-  ## vocab: our data is old so we are still using old terms https://www.ebi.ac.uk/gene2phenotype/updates_to_our_terms
-  ##   other vocab links: https://www.ebi.ac.uk/gene2phenotype/README, https://www.ebi.ac.uk/gene2phenotype/terminology
+  ## vocab info: https://www.ebi.ac.uk/gene2phenotype/updates_to_our_terms
+  ##             https://www.ebi.ac.uk/gene2phenotype/README
+  ##             https://www.ebi.ac.uk/gene2phenotype/terminology
   ## see response-mapping for notes on specific fields
-    gene_to_phenotype:
-    - supportBatch: true
-      useTemplating: true
-      inputs:
-      - id: HGNC
-        semantic: Gene
-      requestBody:
-        body:
-          ## API data has no prefix
-          ## joinSafe is only needed if the delimiter isn't a comma
-          q: "{{ queryInputs }}"
-          scopes: _id
-      outputs:
-      - id: HP
-        semantic: PhenotypicFeature
-      parameters:
-        ## phenotypes has HP prefix
-        fields: >-
-          gene2phenotype.DDD_category,
-          gene2phenotype.allelic_requirement,
-          gene2phenotype.disease.disease_mim,
-          gene2phenotype.disease.disease_name,
-          gene2phenotype.gene_disease_pair_entry_date,
-          gene2phenotype.mutation_consequence,
-          gene2phenotype.organ_specificity_list,
-          gene2phenotype.panel,
-          gene2phenotype.phenotypes,
-          gene2phenotype.pmids
-      predicate: related_to
-      source: "infores:ebi-gene2phenotype"
-      response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/pheno-object"
-      # testExamples:
-      #   - qInput: "HGNC:3806"        ## FOXE1
-      #     oneOutput: "HP:0010564"    ## Bifid epiglottis
-    phenotype_to_gene:
-    - supportBatch: true
-      useTemplating: true
-      inputs:
-      - id: HP
-        semantic: PhenotypicFeature
-      requestBody:
-        body:
-          ## API data has prefix (HP)
-          ## joinSafe is only needed if the delimiter isn't a comma
-          q: "{{ queryInputs }}"
-          scopes: gene2phenotype.phenotypes
-      outputs:
-      - id: HGNC
-        semantic: Gene
-      parameters:
-        fields: _id   ## no prefix
-        size: '1000'  ## note size limit
-      predicate: related_to
-      source: "infores:ebi-gene2phenotype"
-      response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/gene-object"
-      # testExamples:
-      #   - qInput: "HP:0002808"      ## Kyphosis
-      #     oneOutput: "HGNC:2213"    ## COL6A3
+  ## not using gene2phenotype.disease_ontology field because there are only 2 newly accessible records, 
+  ##    which both have misparsed values like 'MONDO_0015286'
     gene_to_disease:
+    ## 1559 / 2382 gene-records have the omim disease ID field
+    ## could split into more specific operations using list_filter 
+    ##   and fields like confidence_category, mutation_consequence, variant_consequence 
     - supportBatch: true
       useTemplating: true
       inputs:
@@ -653,24 +598,33 @@ components:
         semantic: Disease
       parameters:
         ## diseases don't have prefix
+        ## fields sometimes aren't in all records
+      ## commenting out because data-processing / biolink-modeling issues
+        # fields: >-
+        #   gene2phenotype.disease.disease_mim,
+        #   gene2phenotype.disease.disease_name,
+        #   gene2phenotype.allelic_requirement,
+        #   gene2phenotype.confidence_category,
+        #   gene2phenotype.confidence_value_flag,
+        #   gene2phenotype.cross_cutting_modifier,
+        #   gene2phenotype.gene_disease_pair_entry_date,
+        #   gene2phenotype.mutation_consequence,
+        #   gene2phenotype.mutation_consequence_flag,
+        #   gene2phenotype.organ_specificity_list,
+        #   gene2phenotype.panel,
+        #   gene2phenotype.pmids,
+        #   gene2phenotype.variant_consequence
         fields: >-
-          gene2phenotype.DDD_category,
-          gene2phenotype.allelic_requirement,
           gene2phenotype.disease.disease_mim,
           gene2phenotype.disease.disease_name,
-          gene2phenotype.gene_disease_pair_entry_date,
-          gene2phenotype.mutation_consequence,
-          gene2phenotype.organ_specificity_list,
-          gene2phenotype.panel,
-          gene2phenotype.phenotypes,
           gene2phenotype.pmids
       predicate: related_to
       source: "infores:ebi-gene2phenotype"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/disease-object"
       # testExamples:
-      #   - qInput: "HGNC:3806"         ## FOXE1
-      #     oneOutput: "OMIM:241850"    ## Bamforth-Lazarus syndrome
+      #   - qInput: "HGNC:1020"         ## BCS1L
+      #     oneOutput: "OMIM:603358"    ## GRACILE SYNDROME
     disease_to_gene:
     - supportBatch: true
       useTemplating: true
@@ -688,48 +642,38 @@ components:
         semantic: Gene
       parameters:
         fields: _id   ## no prefix
-        size: '1000'  ## note size limit
+        size: 1000  ## note size limit
       predicate: related_to
       source: "infores:ebi-gene2phenotype"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/gene-object"
       # testExamples:
-      #   - qInput: "OMIM:255200"      ## myopathy, centronuclear, 2
-      #     oneOutput: "HGNC:1052"    ## BIN1
+      #   - qInput: "OMIM:615355"      ## NOONAN SYNDROME 8
+      #     oneOutput: "HGNC:10023"    ## RIT1
   x-bte-response-mapping:
   ## data:
-  ## - DDD_category seems to be "gene-disease association confidence category": https://www.ebi.ac.uk/gene2phenotype/create_panel
   ## - allelic_requirement seems similar to "inheritance" but focused on the affected individual 
   ##   (rather than inheritance from a parent) and with a bit more genetic info
   ## - organ_specificity_list seems to be "organ specificity for gene-disease association": https://www.ebi.ac.uk/gene2phenotype/create_panel  
   ## - panels aka datasets in G2P: https://www.ebi.ac.uk/gene2phenotype/create_panel
-    pheno-object:
-      HP: gene2phenotype.phenotypes  ## has HP prefix
-      pubmed: gene2phenotype.pmids   ## no prefix
-      ## similar to "biolink:has_confidence_level" (association slot) but doesn't use the expected ontology terms
-      g2p_gene-disease_confidence: gene2phenotype.DDD_category
-      ## similar to "biolink:has_mode_of_inheritance" (predicate) but doesn't use the expected ontology terms and seems a bit different
-      g2p_allelic_requirement: gene2phenotype.allelic_requirement
-      ## disease context? although gene-disease is the main relationship...
-      g2p_associated_disease_omim: gene2phenotype.disease.disease_mim   ## no prefix
-      g2p_associated_disease_name: gene2phenotype.disease.disease_name
-      ## using creation_date (node property) because it seems to match well
-      "biolink:creation_date": gene2phenotype.gene_disease_pair_entry_date
-      ## similar to "biolink:has_molecular_consequence" (predicate)
-      g2p_mutation_consequence: gene2phenotype.mutation_consequence
-      ## seems a bit different from a biolink:anatomical_context_qualifier
-      g2p_organ_specificity_for_gene-disease_association: gene2phenotype.organ_specificity_list     ## array of keywords (not ids or curies)
-      g2p_panel: gene2phenotype.panel
-    gene-object:
-      HGNC: _id   ## no prefix
     disease-object:
       OMIM: gene2phenotype.disease.disease_mim   ## no prefix
-      pubmed: gene2phenotype.pmids   ## no prefix
-      g2p_gene-disease_confidence: gene2phenotype.DDD_category
-      g2p_allelic_requirement: gene2phenotype.allelic_requirement
-      ## using creation_date (node property) because it seems to match well
-      "biolink:creation_date": gene2phenotype.gene_disease_pair_entry_date
-      g2p_mutation_consequence: gene2phenotype.mutation_consequence
-      g2p_organ_specificity_for_gene-disease_association: gene2phenotype.organ_specificity_list     ## array of keywords (not ids or curies)
-      g2p_panel: gene2phenotype.panel
-      g2p_related_phenotypes: gene2phenotype.phenotypes  ## has HP prefix
+      output_name: gene2phenotype.disease.disease_name
+      ref_pmid: gene2phenotype.pmids   ## no prefix
+      ## commenting out because data-processing / biolink-modeling issues
+      # ## similar to "biolink:has_mode_of_inheritance" (predicate) but doesn't use the expected ontology terms and seems a bit different
+      # g2p_allelic_requirement: gene2phenotype.allelic_requirement
+      # ## similar to "biolink:has_confidence_level" (association slot) but doesn't use the expected ontology terms
+      # g2p_confidence_category: gene2phenotype.confidence_category
+      # g2p_confidence_value_flag: gene2phenotype.confidence_value_flag
+      # g2p_cross_cutting_modifier: gene2phenotype.cross_cutting_modifier
+      # g2p_gene_disease_pair_entry_date: gene2phenotype.gene_disease_pair_entry_date
+      # ## similar to "biolink:has_molecular_consequence" (predicate)
+      # g2p_mutation_consequence: gene2phenotype.mutation_consequence
+      # g2p_mutation_consequence_flag: gene2phenotype.mutation_consequence_flag
+      # ## seems a bit different from a biolink:anatomical_context_qualifier
+      # g2p_organ_specificity_for_gene-disease_association: gene2phenotype.organ_specificity_list     ## array of keywords (not ids or curies)
+      # g2p_panel: gene2phenotype.panel
+      # variant_consequence: gene2phenotype.variant_consequence
+    gene-object:
+      HGNC: _id   ## no prefix
