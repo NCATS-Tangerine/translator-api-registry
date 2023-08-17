@@ -630,44 +630,58 @@ components:
     chebiXrefs-rhea:
       RHEA: chebi.xrefs.rhea
     drugMechChembl_EnsemblOutput:
-      ENSEMBL: chembl.drug_mechanisms.target_components.ensembl_gene  ## no prefix
-      chembl_drug_action_type: chembl.drug_mechanisms.action_type
-      chembl_binding_site_name: chembl.drug_mechanisms.binding_site_name
-      reference_url: chembl.drug_mechanisms.mechanism_refs.url
-      reference_isbn_note: chembl.drug_mechanisms.mechanism_refs.ISBN
-      pubmed: chembl.drug_mechanisms.mechanism_refs.PubMed  ## no prefix
+      ENSEMBL: chembl.drug_mechanisms.target_components.ensembl_gene               ## no prefix
+      ref_pmid: chembl.drug_mechanisms.mechanism_refs.PubMed                       ## no prefix
+      ref_clinicaltrials: chembl.drug_mechanisms.mechanism_refs.ClinicalTrials     ## no prefix
+      ref_doi: chembl.drug_mechanisms.mechanism_refs.DOI                           ## no prefix
+      ref_pmcid: chembl.drug_mechanisms.mechanism_refs.PMC                         ## no prefix (but IDs start with "PMC")
+      ## this url field will include expanded PMID / clinicaltrials / doi / PMCID (aka duplicates!)
+      ##   but is required for other references: 
+      ##   DailyMed, Expert, FDA, ISBN,
+      ##   IUPHAR, InterPro, KEGG, Other,
+      ##   Patent, PubChem, UniProt, Wikipedia
+      ## notes on some specific fields:
+      ## - chembl.drug_mechanisms.mechanism_refs.ISBN: includes ID and page number
+      ## - chembl.drug_mechanisms.mechanism_refs.Other: seem to be urls
+      ## - chembl.drug_mechanisms.mechanism_refs.Patent: related urls seem to be from surechembl
+      ## - chembl.drug_mechanisms.mechanism_refs.PubMed: related urls seem to be from europepcm...
+      ref_url: chembl.drug_mechanisms.mechanism_refs.url
       output_name: chembl.drug_mechanisms.target_name
-      in_taxon: chembl.drug_mechanisms.target_organism
-      chembl_target_type: chembl.drug_mechanisms.target_type
+      ## commenting out because data-processing / biolink-modeling issues
+      # chembl_drug_action_type: chembl.drug_mechanisms.action_type
+      # chembl_binding_site_name: chembl.drug_mechanisms.binding_site_name
+      # in_taxon: chembl.drug_mechanisms.target_organism
+      # chembl_target_type: chembl.drug_mechanisms.target_type
     drugMechChembl-rev:
       "CHEMBL.COMPOUND": chembl.molecule_chembl_id  ## no prefix
       input_name: chembl.drug_mechanisms.target_name
     drugMechChembl_UniprotOutput:
-      UniProtKB: chembl.drug_mechanisms.target_components.uniprot  ## no prefix
-      chembl_drug_action_type: chembl.drug_mechanisms.action_type
-      chembl_binding_site_name: chembl.drug_mechanisms.binding_site_name
-      reference_url: chembl.drug_mechanisms.mechanism_refs.url
-      reference_isbn_note: chembl.drug_mechanisms.mechanism_refs.ISBN
-      pubmed: chembl.drug_mechanisms.mechanism_refs.PubMed  ## no prefix
+    ## basically the same response-mapping as drugMechChembl_EnsemblOutput
+      UniProtKB: chembl.drug_mechanisms.target_components.uniprot                  ## no prefix
+      ref_pmid: chembl.drug_mechanisms.mechanism_refs.PubMed                       ## no prefix
+      ref_clinicaltrials: chembl.drug_mechanisms.mechanism_refs.ClinicalTrials     ## no prefix
+      ref_doi: chembl.drug_mechanisms.mechanism_refs.DOI                           ## no prefix
+      ref_pmcid: chembl.drug_mechanisms.mechanism_refs.PMC                         ## no prefix (but IDs start with "PMC")
+      ref_url: chembl.drug_mechanisms.mechanism_refs.url
       output_name: chembl.drug_mechanisms.target_name
-      in_taxon: chembl.drug_mechanisms.target_organism
-      chembl_target_type: chembl.drug_mechanisms.target_type
     chembl-treats:
       MESH: chembl.drug_indications.mesh_id
-      ## edge attributes
-      max_clinical_phase_for_indication: chembl.drug_indications.max_phase_for_ind
-      year_first_approved: chembl.drug_indications.first_approval
-      ## provenance-related field. Sources are ATC, ClinicalTrial, DailyMed, FDA
-      "biolink:source_web_page": chembl.drug_indications.indication_refs.url
-      chembl_source: chembl.drug_indications.indication_refs.type
+      ref_clinicaltrials: chembl.drug_indications.indication_refs.ClinicalTrials     ## no prefix
+      ## this url field will include expanded clinicaltrials (aka duplicates!)
+      ##   but is required for other references: ATC, DailyMed, FDA
+      ref_url: chembl.drug_indications.indication_refs.url
+      ## commenting out because data-processing / biolink-modeling issues
+      # max_clinical_phase_for_indication: chembl.drug_indications.max_phase_for_ind
+      # year_first_approved: chembl.drug_indications.first_approval
     chembl:
       "CHEMBL.COMPOUND": chembl.molecule_chembl_id  ## no prefix
     drugcentral-bioactivity:
       UniProtKB: drugcentral.bioactivity.uniprot.uniprot_id  ## no prefix
-      ## edge attributes
-      drugcentral_bioactivity: drugcentral.bioactivity.action_type
-      drugcentral_bioactivity_source: drugcentral.bioactivity.act_source
-      in_taxon: drugcentral.bioactivity.organism
+      ## commenting out because data-processing / biolink-modeling issues
+      # ## edge attributes
+      # drugcentral_bioactivity: drugcentral.bioactivity.action_type
+      # drugcentral_bioactivity_source: drugcentral.bioactivity.act_source
+      # in_taxon: drugcentral.bioactivity.organism
     drugcentral-umls:
       UMLS: drugcentral.xrefs.umlscui  ## no prefix
     drugcentral-chembl:
@@ -682,19 +696,23 @@ components:
       UMLS: "drugcentral.drug_use.off_label_use.umls_cui"  ## no prefix
     drugcentral-adverseEvent:
       MEDDRA: drugcentral.fda_adverse_event.meddra_code
-      fda_count_had-drug_adverse-event: drugcentral.fda_adverse_event.drug_ae
-      fda_count_had-drug_no-adverse-event: drugcentral.fda_adverse_event.drug_no_ae
-      fda_count_no-drug_adverse-event: drugcentral.fda_adverse_event.no_drug_ae
-      fda_count_no-drug_no-adverse-event: drugcentral.fda_adverse_event.no_drug_no_ar
+      ## commenting out because data-processing / biolink-modeling issues
+      ## drugcentral.fda_adverse_event.drug_ae is similar to biolink-model 'concept pair count' but
+      ##   that 'association slot'/edge-attribute seems to be for 'concept count analysis' done on clinical records
+      # fda_count_had-drug_adverse-event: drugcentral.fda_adverse_event.drug_ae    
+      # fda_count_had-drug_no-adverse-event: drugcentral.fda_adverse_event.drug_no_ae
+      # fda_count_no-drug_adverse-event: drugcentral.fda_adverse_event.no_drug_ae
+      # fda_count_no-drug_no-adverse-event: drugcentral.fda_adverse_event.no_drug_no_ar
     fdaOrphanDrug:
       UMLS: fda_orphan_drug.orphan_designation.umls
-      fda_orphan_drug_approval_status: fda_orphan_drug.approval_status
-      fda_orphan_drug_approved_indication: fda_orphan_drug.approved_labeled_indication
-      fda_orphan_drug_designation_date: fda_orphan_drug.designated_date
-      fda_orphan_drug_designation_status: fda_orphan_drug.designated_status
-      fda_orphan_drug_exclusivity_end_date: fda_orphan_drug.exclusivity_end_date
-      fda_orphan_drug_marketing_approval_date: fda_orphan_drug.marketing_approval_date
-      fda_orphan_drug_designation_original_text: fda_orphan_drug.orphan_designation.original_text
+      ## commenting out because data-processing / biolink-modeling issues
+      # fda_orphan_drug_approval_status: fda_orphan_drug.approval_status
+      # fda_orphan_drug_approved_indication: fda_orphan_drug.approved_labeled_indication
+      # fda_orphan_drug_designation_date: fda_orphan_drug.designated_date
+      # fda_orphan_drug_designation_status: fda_orphan_drug.designated_status
+      # fda_orphan_drug_exclusivity_end_date: fda_orphan_drug.exclusivity_end_date
+      # fda_orphan_drug_marketing_approval_date: fda_orphan_drug.marketing_approval_date
+      # fda_orphan_drug_designation_original_text: fda_orphan_drug.orphan_designation.original_text
     fdaOrphanDrug-pubchemCompound:
       "PUBCHEM.COMPOUND": fda_orphan_drug.pubchem_cid  ## no prefix
   x-bte-kgs-operations:
@@ -877,21 +895,26 @@ components:
       - id: ENSEMBL
         semantic: Gene
       parameters:
-      ## chembl.drug_mechanisms.mechanism_refs.url will get info from:
-      ##   ClinicalTrials, DOI, DailyMed, Expert, FDA, ISBN, IUPHAR, InterPro, KEGG, Other, 
-      ##   PMC, Patent, PubChem, Pubmed, UniProt, Wikipedia
-      ## chembl.drug_mechanisms.mechanism_refs.ISBN will include page number. ex: "9780702034718 PP. 164"
-      ## chembl.drug_mechanisms.mechanism_refs.PubMed will include only the PMID (no prefix)
+      ## see response-mapping for more info on fields
+      ## commenting out because data-processing / biolink-modeling issues
+        # fields: >-
+        #   chembl.drug_mechanisms.target_components.ensembl_gene,
+        #   chembl.drug_mechanisms.action_type,
+        #   chembl.drug_mechanisms.binding_site_name,
+        #   chembl.drug_mechanisms.mechanism_refs.url,
+        #   chembl.drug_mechanisms.mechanism_refs.ISBN,
+        #   chembl.drug_mechanisms.mechanism_refs.PubMed,
+        #   chembl.drug_mechanisms.target_name,
+        #   chembl.drug_mechanisms.target_organism,
+        #   chembl.drug_mechanisms.target_type
         fields: >-
           chembl.drug_mechanisms.target_components.ensembl_gene,
-          chembl.drug_mechanisms.action_type,
-          chembl.drug_mechanisms.binding_site_name,
-          chembl.drug_mechanisms.mechanism_refs.url,
-          chembl.drug_mechanisms.mechanism_refs.ISBN,
           chembl.drug_mechanisms.mechanism_refs.PubMed,
-          chembl.drug_mechanisms.target_name,
-          chembl.drug_mechanisms.target_organism,
-          chembl.drug_mechanisms.target_type
+          chembl.drug_mechanisms.mechanism_refs.ClinicalTrials,
+          chembl.drug_mechanisms.mechanism_refs.DOI,
+          chembl.drug_mechanisms.mechanism_refs.PMC,
+          chembl.drug_mechanisms.mechanism_refs.url,
+          chembl.drug_mechanisms.target_name
         size: 1000  ## note size limit; added just in case
       ## using the same predicate as dgidb's no-relationship-specified. 
       ## not using psychically_interacts_with because it's not clear that all relationships involve a physical interaction between the chem and gene product
@@ -941,17 +964,26 @@ components:
       - id: UniProtKB
         semantic: Gene
       parameters:
-      ## see drugMechChemblEnsembl operation for more info on fields
+      ## see response-mapping drugMechChembl_EnsemblOutput for more info on fields
+      ## commenting out because data-processing / biolink-modeling issues
+        # fields: >-
+        #   chembl.drug_mechanisms.target_components.uniprot,
+        #   chembl.drug_mechanisms.action_type,
+        #   chembl.drug_mechanisms.binding_site_name,
+        #   chembl.drug_mechanisms.mechanism_refs.url,
+        #   chembl.drug_mechanisms.mechanism_refs.ISBN,
+        #   chembl.drug_mechanisms.mechanism_refs.PubMed,
+        #   chembl.drug_mechanisms.target_name,
+        #   chembl.drug_mechanisms.target_organism,
+        #   chembl.drug_mechanisms.target_type
         fields: >-
           chembl.drug_mechanisms.target_components.uniprot,
-          chembl.drug_mechanisms.action_type,
-          chembl.drug_mechanisms.binding_site_name,
-          chembl.drug_mechanisms.mechanism_refs.url,
-          chembl.drug_mechanisms.mechanism_refs.ISBN,
           chembl.drug_mechanisms.mechanism_refs.PubMed,
-          chembl.drug_mechanisms.target_name,
-          chembl.drug_mechanisms.target_organism,
-          chembl.drug_mechanisms.target_type
+          chembl.drug_mechanisms.mechanism_refs.ClinicalTrials,
+          chembl.drug_mechanisms.mechanism_refs.DOI,
+          chembl.drug_mechanisms.mechanism_refs.PMC,
+          chembl.drug_mechanisms.mechanism_refs.url,
+          chembl.drug_mechanisms.target_name
         size: 1000  ## note size limit; added just in case
       ## see drugMechChemblEnsembl operation for more info on predicate
       predicate: interacts_with   
@@ -1001,12 +1033,16 @@ components:
       parameters:
       ## not including: mesh_heading (name)
       ## including: first_approval is only in some records (not indexed right now)
+      ## commenting out because data-processing / biolink-modeling issues
+        # fields: >-
+        #   chembl.drug_indications.mesh_id,
+        #   chembl.drug_indications.max_phase_for_ind,
+        #   chembl.drug_indications.indication_refs.url,
+        #   chembl.drug_indications.first_approval
         fields: >-
           chembl.drug_indications.mesh_id,
-          chembl.drug_indications.max_phase_for_ind,
-          chembl.drug_indications.indication_refs.url,
-          chembl.drug_indications.indication_refs.type,
-          chembl.drug_indications.first_approval
+          chembl.drug_indications.indication_refs.ClinicalTrials,
+          chembl.drug_indications.indication_refs.url
         size: 1000  ## note size limit; added just in case
       predicate: treats
       source: "infores:chembl"
@@ -1101,11 +1137,15 @@ components:
         ## only show array elements where action_type is ACTIVATOR
         ## the field used in list_filter must be listed in "fields"
         list_filter: "drugcentral.bioactivity:action_type=ACTIVATOR"
+        ## commenting out because data-processing / biolink-modeling issues
+        # fields: >-
+        #   drugcentral.bioactivity.uniprot.uniprot_id,
+        #   drugcentral.bioactivity.action_type,
+        #   drugcentral.bioactivity.act_source,
+        #   drugcentral.bioactivity.organism
         fields: >-
           drugcentral.bioactivity.uniprot.uniprot_id,
-          drugcentral.bioactivity.action_type,
-          drugcentral.bioactivity.act_source,
-          drugcentral.bioactivity.organism
+          drugcentral.bioactivity.action_type
         size: 1000  ## note size limit; added just in case
       ## using same predicate/qualifiers as dgidb activator
       predicate: affects
@@ -1140,11 +1180,15 @@ components:
         semantic: Gene
       parameters:
         list_filter: "drugcentral.bioactivity:action_type=AGONIST"
+        ## commenting out because data-processing / biolink-modeling issues
+        # fields: >-
+        #   drugcentral.bioactivity.uniprot.uniprot_id,
+        #   drugcentral.bioactivity.action_type,
+        #   drugcentral.bioactivity.act_source,
+        #   drugcentral.bioactivity.organism
         fields: >-
           drugcentral.bioactivity.uniprot.uniprot_id,
-          drugcentral.bioactivity.action_type,
-          drugcentral.bioactivity.act_source,
-          drugcentral.bioactivity.organism
+          drugcentral.bioactivity.action_type
         size: 1000  ## note size limit; added just in case
       ## using same predicate/qualifiers as dgidb agonist
       predicate: affects
@@ -1179,11 +1223,15 @@ components:
         semantic: Gene
       parameters:
         list_filter: "drugcentral.bioactivity:action_type=ANTAGONIST"
+        ## commenting out because data-processing / biolink-modeling issues
+        # fields: >-
+        #   drugcentral.bioactivity.uniprot.uniprot_id,
+        #   drugcentral.bioactivity.action_type,
+        #   drugcentral.bioactivity.act_source,
+        #   drugcentral.bioactivity.organism
         fields: >-
           drugcentral.bioactivity.uniprot.uniprot_id,
-          drugcentral.bioactivity.action_type,
-          drugcentral.bioactivity.act_source,
-          drugcentral.bioactivity.organism
+          drugcentral.bioactivity.action_type
         size: 1000  ## note size limit; added just in case
       ## using same predicate/qualifiers as dgidb antagonist
       predicate: affects
@@ -1217,11 +1265,15 @@ components:
         semantic: Gene
       parameters:
         list_filter: "drugcentral.bioactivity:action_type=ANTIBODY BINDING"
+        ## commenting out because data-processing / biolink-modeling issues
+        # fields: >-
+        #   drugcentral.bioactivity.uniprot.uniprot_id,
+        #   drugcentral.bioactivity.action_type,
+        #   drugcentral.bioactivity.act_source,
+        #   drugcentral.bioactivity.organism
         fields: >-
           drugcentral.bioactivity.uniprot.uniprot_id,
-          drugcentral.bioactivity.action_type,
-          drugcentral.bioactivity.act_source,
-          drugcentral.bioactivity.organism
+          drugcentral.bioactivity.action_type
         size: 1000  ## note size limit; added just in case
       ## using same predicate/qualifiers as dgidb antibody, general terms
       ## while the "affects-causes-decreased-activity_or_abundance" matches antibodies that "block binding to receptors/signal transduction",
@@ -1255,11 +1307,15 @@ components:
         semantic: Gene
       parameters:
         list_filter: "drugcentral.bioactivity:action_type=ANTISENSE INHIBITOR"
+        ## commenting out because data-processing / biolink-modeling issues
+        # fields: >-
+        #   drugcentral.bioactivity.uniprot.uniprot_id,
+        #   drugcentral.bioactivity.action_type,
+        #   drugcentral.bioactivity.act_source,
+        #   drugcentral.bioactivity.organism
         fields: >-
           drugcentral.bioactivity.uniprot.uniprot_id,
-          drugcentral.bioactivity.action_type,
-          drugcentral.bioactivity.act_source,
-          drugcentral.bioactivity.organism
+          drugcentral.bioactivity.action_type
         size: 1000  ## note size limit; added just in case
       ## using same predicate/qualifiers as dgidb antisense oligonucleotide (commented-out operation)
       predicate: affects
@@ -1292,11 +1348,15 @@ components:
         semantic: Gene
       parameters:
         list_filter: "drugcentral.bioactivity:action_type=BINDING AGENT"
+        ## commenting out because data-processing / biolink-modeling issues
+        # fields: >-
+        #   drugcentral.bioactivity.uniprot.uniprot_id,
+        #   drugcentral.bioactivity.action_type,
+        #   drugcentral.bioactivity.act_source,
+        #   drugcentral.bioactivity.organism
         fields: >-
           drugcentral.bioactivity.uniprot.uniprot_id,
-          drugcentral.bioactivity.action_type,
-          drugcentral.bioactivity.act_source,
-          drugcentral.bioactivity.organism
+          drugcentral.bioactivity.action_type
         size: 1000  ## note size limit; added just in case
       predicate: physically_interacts_with
       source: "infores:drugcentral"
@@ -1323,11 +1383,15 @@ components:
         semantic: Gene
       parameters:
         list_filter: "drugcentral.bioactivity:action_type=BLOCKER,GATING INHIBITOR"
+        ## commenting out because data-processing / biolink-modeling issues
+        # fields: >-
+        #   drugcentral.bioactivity.uniprot.uniprot_id,
+        #   drugcentral.bioactivity.action_type,
+        #   drugcentral.bioactivity.act_source,
+        #   drugcentral.bioactivity.organism
         fields: >-
           drugcentral.bioactivity.uniprot.uniprot_id,
-          drugcentral.bioactivity.action_type,
-          drugcentral.bioactivity.act_source,
-          drugcentral.bioactivity.organism
+          drugcentral.bioactivity.action_type
         size: 1000  ## note size limit; added just in case
       ## using same predicate/qualifiers as dgidb blocker
       predicate: affects
@@ -1365,11 +1429,15 @@ components:
         semantic: Gene
       parameters:
         list_filter: "drugcentral.bioactivity:action_type=INHIBITOR"
+        ## commenting out because data-processing / biolink-modeling issues
+        # fields: >-
+        #   drugcentral.bioactivity.uniprot.uniprot_id,
+        #   drugcentral.bioactivity.action_type,
+        #   drugcentral.bioactivity.act_source,
+        #   drugcentral.bioactivity.organism
         fields: >-
           drugcentral.bioactivity.uniprot.uniprot_id,
-          drugcentral.bioactivity.action_type,
-          drugcentral.bioactivity.act_source,
-          drugcentral.bioactivity.organism
+          drugcentral.bioactivity.action_type
         size: 1000  ## note size limit; added just in case
       ## using same predicate/qualifiers as dgidb inhibitor
       predicate: affects
@@ -1404,11 +1472,15 @@ components:
         semantic: Gene
       parameters:
         list_filter: "drugcentral.bioactivity:action_type=ALLOSTERIC MODULATOR,MODULATOR"
+        ## commenting out because data-processing / biolink-modeling issues
+        # fields: >-
+        #   drugcentral.bioactivity.uniprot.uniprot_id,
+        #   drugcentral.bioactivity.action_type,
+        #   drugcentral.bioactivity.act_source,
+        #   drugcentral.bioactivity.organism
         fields: >-
           drugcentral.bioactivity.uniprot.uniprot_id,
-          drugcentral.bioactivity.action_type,
-          drugcentral.bioactivity.act_source,
-          drugcentral.bioactivity.organism
+          drugcentral.bioactivity.action_type
         size: 1000  ## note size limit; added just in case
       predicate: affects
       qualifiers:
@@ -1442,11 +1514,15 @@ components:
         semantic: Gene
       parameters:
         list_filter: "drugcentral.bioactivity:action_type=OPENER"
+        ## commenting out because data-processing / biolink-modeling issues
+        # fields: >-
+        #   drugcentral.bioactivity.uniprot.uniprot_id,
+        #   drugcentral.bioactivity.action_type,
+        #   drugcentral.bioactivity.act_source,
+        #   drugcentral.bioactivity.organism
         fields: >-
           drugcentral.bioactivity.uniprot.uniprot_id,
-          drugcentral.bioactivity.action_type,
-          drugcentral.bioactivity.act_source,
-          drugcentral.bioactivity.organism
+          drugcentral.bioactivity.action_type
         size: 1000  ## note size limit; added just in case
       predicate: affects
       qualifiers:
@@ -1479,11 +1555,15 @@ components:
         semantic: Gene
       parameters:
         list_filter: "drugcentral.bioactivity:action_type=POSITIVE ALLOSTERIC MODULATOR"
+        ## commenting out because data-processing / biolink-modeling issues
+        # fields: >-
+        #   drugcentral.bioactivity.uniprot.uniprot_id,
+        #   drugcentral.bioactivity.action_type,
+        #   drugcentral.bioactivity.act_source,
+        #   drugcentral.bioactivity.organism
         fields: >-
           drugcentral.bioactivity.uniprot.uniprot_id,
-          drugcentral.bioactivity.action_type,
-          drugcentral.bioactivity.act_source,
-          drugcentral.bioactivity.organism
+          drugcentral.bioactivity.action_type
         size: 1000  ## note size limit; added just in case
       ## differs from dgidb's "positive modulator": no definition here means we use activity_or_abundance. Also we can use the causal mechanism term 
       predicate: affects
@@ -1517,11 +1597,15 @@ components:
         semantic: Gene
       parameters:
         list_filter: "drugcentral.bioactivity:action_type=POSITIVE MODULATOR"
+        ## commenting out because data-processing / biolink-modeling issues
+        # fields: >-
+        #   drugcentral.bioactivity.uniprot.uniprot_id,
+        #   drugcentral.bioactivity.action_type,
+        #   drugcentral.bioactivity.act_source,
+        #   drugcentral.bioactivity.organism
         fields: >-
           drugcentral.bioactivity.uniprot.uniprot_id,
-          drugcentral.bioactivity.action_type,
-          drugcentral.bioactivity.act_source,
-          drugcentral.bioactivity.organism
+          drugcentral.bioactivity.action_type
         size: 1000  ## note size limit; added just in case
       ## differs from dgidb's "positive modulator": no definition here means we use activity_or_abundance 
       ## not using causal mech qualifier "positive_allosteric_modulation" since it's not clear that it's allosteric
@@ -1744,12 +1828,14 @@ components:
       ## - there are also edge attributes that are hard to explain/understand
       ##    - not sure what the llr, llr_threshold, level means. 
       ##      Likely related to log-likelihood ratio (LLR) and its test...
-        fields: >-
-          drugcentral.fda_adverse_event.meddra_code,
-          drugcentral.fda_adverse_event.drug_ae,
-          drugcentral.fda_adverse_event.drug_no_ae,
-          drugcentral.fda_adverse_event.no_drug_ae,
-          drugcentral.fda_adverse_event.no_drug_no_ar
+      ## commenting out because data-processing / biolink-modeling issues
+        # fields: >-
+        #   drugcentral.fda_adverse_event.meddra_code,
+        #   drugcentral.fda_adverse_event.drug_ae,
+        #   drugcentral.fda_adverse_event.drug_no_ae,
+        #   drugcentral.fda_adverse_event.no_drug_ae,
+        #   drugcentral.fda_adverse_event.no_drug_no_ar
+        fields: drugcentral.fda_adverse_event.meddra_code
         size: 1000  ## note size limit; added just in case
       ## biolink 2.4.8: used causes_adverse_event
       predicate: has_adverse_event
@@ -1808,15 +1894,17 @@ components:
       ##   - approved_labeled_indication
       ## not including:
       ##   - exclusivity_protected_indication: same as approved_labeled_indication?
-        fields: >-
-          fda_orphan_drug.orphan_designation.umls,
-          fda_orphan_drug.approval_status,
-          fda_orphan_drug.approved_labeled_indication,
-          fda_orphan_drug.designated_date,
-          fda_orphan_drug.designated_status,
-          fda_orphan_drug.exclusivity_end_date,
-          fda_orphan_drug.marketing_approval_date,
-          fda_orphan_drug.orphan_designation.original_text
+      ## commenting out because data-processing / biolink-modeling issues
+        # fields: >-
+        #   fda_orphan_drug.orphan_designation.umls,
+        #   fda_orphan_drug.approval_status,
+        #   fda_orphan_drug.approved_labeled_indication,
+        #   fda_orphan_drug.designated_date,
+        #   fda_orphan_drug.designated_status,
+        #   fda_orphan_drug.exclusivity_end_date,
+        #   fda_orphan_drug.marketing_approval_date,
+        #   fda_orphan_drug.orphan_designation.original_text
+        fields: fda_orphan_drug.orphan_designation.umls
       predicate: treats  ## current biolink predicate
       ## through drugcentral, FDA Orphan Drug Designations and Approvals database...
       source: "infores:drugcentral"
