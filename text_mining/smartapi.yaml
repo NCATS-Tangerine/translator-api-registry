@@ -10,14 +10,14 @@ info:
     query web services.
   termsOfService: https://biothings.io/about
   title: Text Mining Targeted Association API
-  version: '2023-04-28'
+  version: '2023-08-17'
   x-translator:
     infores: "infores:text-mining-provider-targeted"
     component: KP
     team:
       - Text Mining Provider
       - Service Provider
-    biolink-version: "3.1.1"
+    biolink-version: "3.5.0"
 servers:
 - description: Encrypted Production server
   url: https://biothings.ncats.io/text_mining_targeted_association
@@ -332,14 +332,17 @@ paths:
       - "$ref": "#/components/x-bte-kgs-operations/drugbank-contributes_to-hp-rev"
       - "$ref": "#/components/x-bte-kgs-operations/drugbank-contributes_to-mondo"
       - "$ref": "#/components/x-bte-kgs-operations/drugbank-contributes_to-mondo-rev"
-      - "$ref": "#/components/x-bte-kgs-operations/uniprotkb-gain_of_function_contributes_to-mondo"
-      - "$ref": "#/components/x-bte-kgs-operations/uniprotkb-gain_of_function_contributes_to-mondo-rev"
-      - "$ref": "#/components/x-bte-kgs-operations/uniprotkb-gain_of_function_contributes_to-hp"
-      - "$ref": "#/components/x-bte-kgs-operations/uniprotkb-gain_of_function_contributes_to-hp-rev"
-      - "$ref": "#/components/x-bte-kgs-operations/uniprotkb-loss_of_function_contributes_to-mondo"
-      - "$ref": "#/components/x-bte-kgs-operations/uniprotkb-loss_of_function_contributes_to-mondo-rev"
-      - "$ref": "#/components/x-bte-kgs-operations/uniprotkb-loss_of_function_contributes_to-hp"
-      - "$ref": "#/components/x-bte-kgs-operations/uniprotkb-loss_of_function_contributes_to-hp-rev"
+## Per discussion on slack, the biolink:GeneToDiseaseOrPhenotypicFeatureAssociation
+## does not have a subject|object_form_or_variant qualifier specified.
+## Therefore, these operations are being removed until that is added to the specifications
+#      - "$ref": "#/components/x-bte-kgs-operations/uniprotkb-gain_of_function_contributes_to-mondo"
+#      - "$ref": "#/components/x-bte-kgs-operations/uniprotkb-gain_of_function_contributes_to-mondo-rev"
+#      - "$ref": "#/components/x-bte-kgs-operations/uniprotkb-gain_of_function_contributes_to-hp"
+#      - "$ref": "#/components/x-bte-kgs-operations/uniprotkb-gain_of_function_contributes_to-hp-rev"
+#      - "$ref": "#/components/x-bte-kgs-operations/uniprotkb-loss_of_function_contributes_to-mondo"
+#      - "$ref": "#/components/x-bte-kgs-operations/uniprotkb-loss_of_function_contributes_to-mondo-rev"
+#      - "$ref": "#/components/x-bte-kgs-operations/uniprotkb-loss_of_function_contributes_to-hp"
+#      - "$ref": "#/components/x-bte-kgs-operations/uniprotkb-loss_of_function_contributes_to-hp-rev"
 components:
   parameters:
     callback:
@@ -1164,238 +1167,241 @@ components:
         predicate: contribution_from
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/drugbank-subject"
-    uniprotkb-gain_of_function_contributes_to-hp:
-    ##  https://biothings.ncats.io/text_mining_targeted_association/query?q=_exists_:subject.UniProtKB AND association.edge_label:gain_of_function_contributes_to AND _exists_:object.HP
-      - supportBatch: true
-        useTemplating: true ## flag to say templating is being used below
-        inputs:
-          - id: UniProtKB
-            semantic: Gene
-        requestBodyType: object
-        requestBody:
-          body: >-
-            {
-              "q": [ {{ queryInputs | wrap( '["' , '","gain_of_function_contributes_to"]') }} ],
-              "scopes": ["subject.UniProtKB", "association.edge_label"]
-            }
-        parameters:
-          fields: object.HP,association.edge_attributes,association.sources
-          size: 1000
-        outputs:
-          - id: HP
-            semantic: PhenotypicFeature
-        predicate: affects
-        qualifiers:
-          qualified_predicate: contributes_to
-          subject_form_or_variant_qualifier: gain_of_function_variant_form
-        response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/hp-object"
-        ## Examples:
-        ## - UniProtKB:P42574 (Caspace-3) -> HP:0001251 (ataxia)
-        ## - UniProtKB:Q13485 (SMAD4) -> HP:0004322 (short stature)
-    uniprotkb-gain_of_function_contributes_to-hp-rev:
-    ##  https://biothings.ncats.io/text_mining_targeted_association/query?q=_exists_:subject.UniProtKB AND association.edge_label:gain_of_function_contributes_to AND _exists_:object.HP
-      - supportBatch: true
-        useTemplating: true ## flag to say templating is being used below
-        inputs:
-          - id: HP
-            semantic: PhenotypicFeature
-        requestBodyType: object
-        requestBody:
-          body: >-
-            {
-              "q": [ {{ queryInputs | wrap( '["' , '","gain_of_function_contributes_to"]') }} ],
-              "scopes": ["object.HP", "association.edge_label"]
-            }
-        parameters:
-          fields: subject.UniProtKB,association.edge_attributes,association.sources
-          size: 1000
-        outputs:
-          - id: UniProtKB
-            semantic: Gene
-        predicate: affected_by
-        qualifiers:
-          qualified_predicate: contribution_from
-          object_form_or_variant_qualifier: gain_of_function_variant_form
-        response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/uniprotkb-subject"
-        ## Examples:
-        ## - UniProtKB:P42574 (Caspace-3) -> HP:0001251 (ataxia)
-        ## - UniProtKB:Q13485 (SMAD4) -> HP:0004322 (short stature)
-    uniprotkb-gain_of_function_contributes_to-mondo:
-    ##  https://biothings.ncats.io/text_mining_targeted_association/query?q=_exists_:subject.UniProtKB AND association.edge_label:gain_of_function_contributes_to AND _exists_:object.MONDO
-      - supportBatch: true
-        useTemplating: true ## flag to say templating is being used below
-        inputs:
-          - id: UniProtKB
-            semantic: Gene
-        requestBodyType: object
-        requestBody:
-          body: >-
-            {
-              "q": [ {{ queryInputs | wrap( '["' , '","gain_of_function_contributes_to"]') }} ],
-              "scopes": ["subject.UniProtKB", "association.edge_label"]
-            }
-        parameters:
-          fields: object.MONDO,association.edge_attributes,association.sources
-          size: 1000
-        outputs:
-          - id: MONDO
-            semantic: Disease
-        predicate: affects
-        qualifiers:
-          qualified_predicate: contributes_to
-          subject_form_or_variant_qualifier: gain_of_function_variant_form
-        response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/mondo-object"
-        ## Examples:
-        ## - UniProtKB:P42574 (Caspace-3) -> MONDO:0008119 (spinocerebellar ataxia type 1)
-        ## - UniProtKB:Q13485 (SMAD4) -> MONDO:0007688 (Myhre syndrome)
-    uniprotkb-gain_of_function_contributes_to-mondo-rev:
-    ##  https://biothings.ncats.io/text_mining_targeted_association/query?q=_exists_:subject.UniProtKB AND association.edge_label:gain_of_function_contributes_to AND _exists_:object.MONDO
-      - supportBatch: true
-        useTemplating: true ## flag to say templating is being used below
-        inputs:
-          - id: MONDO
-            semantic: Disease
-        requestBodyType: object
-        requestBody:
-          body: >-
-            {
-              "q": [ {{ queryInputs | wrap( '["' , '","gain_of_function_contributes_to"]') }} ],
-              "scopes": ["object.MONDO", "association.edge_label"]
-            }
-        parameters:
-          fields: subject.UniProtKB,association.edge_attributes,association.sources
-          size: 1000
-        outputs:
-          - id: UniProtKB
-            semantic: Gene
-        predicate: affected_by
-        qualifiers:
-          qualified_predicate: contribution_from
-          object_form_or_variant_qualifier: gain_of_function_variant_form
-        response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/uniprotkb-subject"
-        ## Examples:
-        ## - UniProtKB:P42574 (Caspace-3) -> MONDO:0008119 (spinocerebellar ataxia type 1)
-        ## - UniProtKB:Q13485 (SMAD4) -> MONDO:0007688 (Myhre syndrome)
-    uniprotkb-loss_of_function_contributes_to-hp:
-    ##  https://biothings.ncats.io/text_mining_targeted_association/query?q=_exists_:subject.UniProtKB AND association.edge_label:loss_of_function_contributes_to AND _exists_:object.HP
-      - supportBatch: true
-        useTemplating: true ## flag to say templating is being used below
-        inputs:
-          - id: UniProtKB
-            semantic: Gene
-        requestBodyType: object
-        requestBody:
-          body: >-
-            {
-              "q": [ {{ queryInputs | wrap( '["' , '","loss_of_function_contributes_to"]') }} ],
-              "scopes": ["subject.UniProtKB", "association.edge_label"]
-            }
-        parameters:
-          fields: object.HP,association.edge_attributes,association.sources
-          size: 1000
-        outputs:
-          - id: HP
-            semantic: PhenotypicFeature
-        predicate: affects
-        qualifiers:
-          qualified_predicate: contributes_to
-          subject_form_or_variant_qualifier: loss_of_function_variant_form
-        response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/hp-object"
-        ## Examples:
-        ## - UniProtKB:Q92993 (Histone acetyltransferase KAT5) -> HP:0002664 (tumors)
-        ## - UniProtKB:P20591 (Interferon-induced GTP-binding protein Mx1) -> HP:0000568 (microphthalmia)
-    uniprotkb-loss_of_function_contributes_to-hp-rev:
-    ##  https://biothings.ncats.io/text_mining_targeted_association/query?q=_exists_:subject.UniProtKB AND association.edge_label:loss_of_function_contributes_to AND _exists_:object.HP
-      - supportBatch: true
-        useTemplating: true ## flag to say templating is being used below
-        inputs:
-          - id: HP
-            semantic: PhenotypicFeature
-        requestBodyType: object
-        requestBody:
-          body: >-
-            {
-              "q": [ {{ queryInputs | wrap( '["' , '","loss_of_function_contributes_to"]') }} ],
-              "scopes": ["object.HP", "association.edge_label"]
-            }
-        parameters:
-          fields: subject.UniProtKB,association.edge_attributes,association.sources
-          size: 1000
-        outputs:
-          - id: UniProtKB
-            semantic: Gene
-        predicate: affected_by
-        qualifiers:
-          qualified_predicate: contribution_from
-          object_form_or_variant_qualifier: loss_of_function_variant_form
-        response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/uniprotkb-subject"
-        ## Examples:
-        ## - UniProtKB:Q92993 (Histone acetyltransferase KAT5) -> HP:0002664 (tumors)
-        ## - UniProtKB:P20591 (Interferon-induced GTP-binding protein Mx1) -> HP:0000568 (microphthalmia)
-    uniprotkb-loss_of_function_contributes_to-mondo:
-    ##  https://biothings.ncats.io/text_mining_targeted_association/query?q=_exists_:subject.UniProtKB AND association.edge_label:loss_of_function_contributes_to AND _exists_:object.MONDO
-      - supportBatch: true
-        useTemplating: true ## flag to say templating is being used below
-        inputs:
-          - id: UniProtKB
-            semantic: Gene
-        requestBodyType: object
-        requestBody:
-          body: >-
-            {
-              "q": [ {{ queryInputs | wrap( '["' , '","loss_of_function_contributes_to"]') }} ],
-              "scopes": ["subject.UniProtKB", "association.edge_label"]
-            }
-        parameters:
-          fields: object.MONDO,association.edge_attributes,association.sources
-          size: 1000
-        outputs:
-          - id: MONDO
-            semantic: Disease
-        predicate: affects
-        qualifiers:
-          qualified_predicate: contributes_to
-          subject_form_or_variant_qualifier: loss_of_function_variant_form
-        response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/mondo-object"
-        ## Examples:
-        ## - UniProtKB:Q8IUH4 (ZDHHC13) -> MONDO:0017816 (systemic amyloidosis)
-        ## - UniProtKB:P78504 (JAG1) -> MONDO:0007318 (Alagille syndrome)
-    uniprotkb-loss_of_function_contributes_to-mondo-rev:
-    ##  https://biothings.ncats.io/text_mining_targeted_association/query?q=_exists_:subject.UniProtKB AND association.edge_label:loss_of_function_contributes_to AND _exists_:object.MONDO
-      - supportBatch: true
-        useTemplating: true ## flag to say templating is being used below
-        inputs:
-          - id: MONDO
-            semantic: Disease
-        requestBodyType: object
-        requestBody:
-          body: >-
-            {
-              "q": [ {{ queryInputs | wrap( '["' , '","loss_of_function_contributes_to"]') }} ],
-              "scopes": ["object.MONDO", "association.edge_label"]
-            }
-        parameters:
-          fields: subject.UniProtKB,association.edge_attributes,association.sources
-          size: 1000
-        outputs:
-          - id: UniProtKB
-            semantic: Gene
-        predicate: affected_by
-        qualifiers:
-          qualified_predicate: contribution_from
-          object_form_or_variant_qualifier: loss_of_function_variant_form
-        response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/uniprotkb-subject"
-        ## Examples:
-        ## - UniProtKB:Q8IUH4 (ZDHHC13) -> MONDO:0017816 (systemic amyloidosis)
-        ## - UniProtKB:P78504 (JAG1) -> MONDO:0007318 (Alagille syndrome)
+## Per discussion on slack, the biolink:GeneToDiseaseOrPhenotypicFeatureAssociation
+## does not have a subject|object_form_or_variant qualifier specified.
+## Therefore, these operations are being removed until that is added to the specifications
+#    uniprotkb-gain_of_function_contributes_to-hp:
+#    ##  https://biothings.ncats.io/text_mining_targeted_association/query?q=_exists_:subject.UniProtKB AND association.edge_label:gain_of_function_contributes_to AND _exists_:object.HP
+#      - supportBatch: true
+#        useTemplating: true ## flag to say templating is being used below
+#        inputs:
+#          - id: UniProtKB
+#            semantic: Gene
+#        requestBodyType: object
+#        requestBody:
+#          body: >-
+#            {
+#              "q": [ {{ queryInputs | wrap( '["' , '","gain_of_function_contributes_to"]') }} ],
+#              "scopes": ["subject.UniProtKB", "association.edge_label"]
+#            }
+#        parameters:
+#          fields: object.HP,association.edge_attributes
+#          size: 1000
+#        outputs:
+#          - id: HP
+#            semantic: PhenotypicFeature
+#        predicate: affects
+#        qualifiers:
+#          qualified_predicate: contributes_to
+#          subject_form_or_variant_qualifier: gain_of_function_variant_form
+#        response_mapping:
+#          "$ref": "#/components/x-bte-response-mapping/hp-object"
+#        ## Examples:
+#        ## - UniProtKB:P42574 (Caspace-3) -> HP:0001251 (ataxia)
+#        ## - UniProtKB:Q13485 (SMAD4) -> HP:0004322 (short stature)
+#    uniprotkb-gain_of_function_contributes_to-hp-rev:
+#    ##  https://biothings.ncats.io/text_mining_targeted_association/query?q=_exists_:subject.UniProtKB AND association.edge_label:gain_of_function_contributes_to AND _exists_:object.HP
+#      - supportBatch: true
+#        useTemplating: true ## flag to say templating is being used below
+#        inputs:
+#          - id: HP
+#            semantic: PhenotypicFeature
+#        requestBodyType: object
+#        requestBody:
+#          body: >-
+#            {
+#              "q": [ {{ queryInputs | wrap( '["' , '","gain_of_function_contributes_to"]') }} ],
+#              "scopes": ["object.HP", "association.edge_label"]
+#            }
+#        parameters:
+#          fields: subject.UniProtKB,association.edge_attributes
+#          size: 1000
+#        outputs:
+#          - id: UniProtKB
+#            semantic: Gene
+#        predicate: affected_by
+#        qualifiers:
+#          qualified_predicate: contribution_from
+#          object_form_or_variant_qualifier: gain_of_function_variant_form
+#        response_mapping:
+#          "$ref": "#/components/x-bte-response-mapping/uniprotkb-subject"
+#        ## Examples:
+#        ## - UniProtKB:P42574 (Caspace-3) -> HP:0001251 (ataxia)
+#        ## - UniProtKB:Q13485 (SMAD4) -> HP:0004322 (short stature)
+#    uniprotkb-gain_of_function_contributes_to-mondo:
+#    ##  https://biothings.ncats.io/text_mining_targeted_association/query?q=_exists_:subject.UniProtKB AND association.edge_label:gain_of_function_contributes_to AND _exists_:object.MONDO
+#      - supportBatch: true
+#        useTemplating: true ## flag to say templating is being used below
+#        inputs:
+#          - id: UniProtKB
+#            semantic: Gene
+#        requestBodyType: object
+#        requestBody:
+#          body: >-
+#            {
+#              "q": [ {{ queryInputs | wrap( '["' , '","gain_of_function_contributes_to"]') }} ],
+#              "scopes": ["subject.UniProtKB", "association.edge_label"]
+#            }
+#        parameters:
+#          fields: object.MONDO,association.edge_attributes
+#          size: 1000
+#        outputs:
+#          - id: MONDO
+#            semantic: Disease
+#        predicate: affects
+#        qualifiers:
+#          qualified_predicate: contributes_to
+#          subject_form_or_variant_qualifier: gain_of_function_variant_form
+#        response_mapping:
+#          "$ref": "#/components/x-bte-response-mapping/mondo-object"
+#        ## Examples:
+#        ## - UniProtKB:P42574 (Caspace-3) -> MONDO:0008119 (spinocerebellar ataxia type 1)
+#        ## - UniProtKB:Q13485 (SMAD4) -> MONDO:0007688 (Myhre syndrome)
+#    uniprotkb-gain_of_function_contributes_to-mondo-rev:
+#    ##  https://biothings.ncats.io/text_mining_targeted_association/query?q=_exists_:subject.UniProtKB AND association.edge_label:gain_of_function_contributes_to AND _exists_:object.MONDO
+#      - supportBatch: true
+#        useTemplating: true ## flag to say templating is being used below
+#        inputs:
+#          - id: MONDO
+#            semantic: Disease
+#        requestBodyType: object
+#        requestBody:
+#          body: >-
+#            {
+#              "q": [ {{ queryInputs | wrap( '["' , '","gain_of_function_contributes_to"]') }} ],
+#              "scopes": ["object.MONDO", "association.edge_label"]
+#            }
+#        parameters:
+#          fields: subject.UniProtKB,association.edge_attributes
+#          size: 1000
+#        outputs:
+#          - id: UniProtKB
+#            semantic: Gene
+#        predicate: affected_by
+#        qualifiers:
+#          qualified_predicate: contribution_from
+#          object_form_or_variant_qualifier: gain_of_function_variant_form
+#        response_mapping:
+#          "$ref": "#/components/x-bte-response-mapping/uniprotkb-subject"
+#        ## Examples:
+#        ## - UniProtKB:P42574 (Caspace-3) -> MONDO:0008119 (spinocerebellar ataxia type 1)
+#        ## - UniProtKB:Q13485 (SMAD4) -> MONDO:0007688 (Myhre syndrome)
+#    uniprotkb-loss_of_function_contributes_to-hp:
+#    ##  https://biothings.ncats.io/text_mining_targeted_association/query?q=_exists_:subject.UniProtKB AND association.edge_label:loss_of_function_contributes_to AND _exists_:object.HP
+#      - supportBatch: true
+#        useTemplating: true ## flag to say templating is being used below
+#        inputs:
+#          - id: UniProtKB
+#            semantic: Gene
+#        requestBodyType: object
+#        requestBody:
+#          body: >-
+#            {
+#              "q": [ {{ queryInputs | wrap( '["' , '","loss_of_function_contributes_to"]') }} ],
+#              "scopes": ["subject.UniProtKB", "association.edge_label"]
+#            }
+#        parameters:
+#          fields: object.HP,association.edge_attributes
+#          size: 1000
+#        outputs:
+#          - id: HP
+#            semantic: PhenotypicFeature
+#        predicate: affects
+#        qualifiers:
+#          qualified_predicate: contributes_to
+#          subject_form_or_variant_qualifier: loss_of_function_variant_form
+#        response_mapping:
+#          "$ref": "#/components/x-bte-response-mapping/hp-object"
+#        ## Examples:
+#        ## - UniProtKB:Q92993 (Histone acetyltransferase KAT5) -> HP:0002664 (tumors)
+#        ## - UniProtKB:P20591 (Interferon-induced GTP-binding protein Mx1) -> HP:0000568 (microphthalmia)
+#    uniprotkb-loss_of_function_contributes_to-hp-rev:
+#    ##  https://biothings.ncats.io/text_mining_targeted_association/query?q=_exists_:subject.UniProtKB AND association.edge_label:loss_of_function_contributes_to AND _exists_:object.HP
+#      - supportBatch: true
+#        useTemplating: true ## flag to say templating is being used below
+#        inputs:
+#          - id: HP
+#            semantic: PhenotypicFeature
+#        requestBodyType: object
+#        requestBody:
+#          body: >-
+#            {
+#              "q": [ {{ queryInputs | wrap( '["' , '","loss_of_function_contributes_to"]') }} ],
+#              "scopes": ["object.HP", "association.edge_label"]
+#            }
+#        parameters:
+#          fields: subject.UniProtKB,association.edge_attributes
+#          size: 1000
+#        outputs:
+#          - id: UniProtKB
+#            semantic: Gene
+#        predicate: affected_by
+#        qualifiers:
+#          qualified_predicate: contribution_from
+#          object_form_or_variant_qualifier: loss_of_function_variant_form
+#        response_mapping:
+#          "$ref": "#/components/x-bte-response-mapping/uniprotkb-subject"
+#        ## Examples:
+#        ## - UniProtKB:Q92993 (Histone acetyltransferase KAT5) -> HP:0002664 (tumors)
+#        ## - UniProtKB:P20591 (Interferon-induced GTP-binding protein Mx1) -> HP:0000568 (microphthalmia)
+#    uniprotkb-loss_of_function_contributes_to-mondo:
+#    ##  https://biothings.ncats.io/text_mining_targeted_association/query?q=_exists_:subject.UniProtKB AND association.edge_label:loss_of_function_contributes_to AND _exists_:object.MONDO
+#      - supportBatch: true
+#        useTemplating: true ## flag to say templating is being used below
+#        inputs:
+#          - id: UniProtKB
+#            semantic: Gene
+#        requestBodyType: object
+#        requestBody:
+#          body: >-
+#            {
+#              "q": [ {{ queryInputs | wrap( '["' , '","loss_of_function_contributes_to"]') }} ],
+#              "scopes": ["subject.UniProtKB", "association.edge_label"]
+#            }
+#        parameters:
+#          fields: object.MONDO,association.edge_attributes
+#          size: 1000
+#        outputs:
+#          - id: MONDO
+#            semantic: Disease
+#        predicate: affects
+#        qualifiers:
+#          qualified_predicate: contributes_to
+#          subject_form_or_variant_qualifier: loss_of_function_variant_form
+#        response_mapping:
+#          "$ref": "#/components/x-bte-response-mapping/mondo-object"
+#        ## Examples:
+#        ## - UniProtKB:Q8IUH4 (ZDHHC13) -> MONDO:0017816 (systemic amyloidosis)
+#        ## - UniProtKB:P78504 (JAG1) -> MONDO:0007318 (Alagille syndrome)
+#    uniprotkb-loss_of_function_contributes_to-mondo-rev:
+#    ##  https://biothings.ncats.io/text_mining_targeted_association/query?q=_exists_:subject.UniProtKB AND association.edge_label:loss_of_function_contributes_to AND _exists_:object.MONDO
+#      - supportBatch: true
+#        useTemplating: true ## flag to say templating is being used below
+#        inputs:
+#          - id: MONDO
+#            semantic: Disease
+#        requestBodyType: object
+#        requestBody:
+#          body: >-
+#            {
+#              "q": [ {{ queryInputs | wrap( '["' , '","loss_of_function_contributes_to"]') }} ],
+#              "scopes": ["object.MONDO", "association.edge_label"]
+#            }
+#        parameters:
+#          fields: subject.UniProtKB,association.edge_attributes
+#          size: 1000
+#        outputs:
+#          - id: UniProtKB
+#            semantic: Gene
+#        predicate: affected_by
+#        qualifiers:
+#          qualified_predicate: contribution_from
+#          object_form_or_variant_qualifier: loss_of_function_variant_form
+#        response_mapping:
+#          "$ref": "#/components/x-bte-response-mapping/uniprotkb-subject"
+#        ## Examples:
+#        ## - UniProtKB:Q8IUH4 (ZDHHC13) -> MONDO:0017816 (systemic amyloidosis)
+#        ## - UniProtKB:P78504 (JAG1) -> MONDO:0007318 (Alagille syndrome)
   x-bte-response-mapping:
     mondo-object:
       MONDO: object.MONDO
