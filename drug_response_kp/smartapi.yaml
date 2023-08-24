@@ -9,14 +9,14 @@ info:
     BigGIM-DrugResponse KP. This KP contains associations from multiple sources.
   termsOfService: https://biothings.io/about
   title: Multiomics BigGIM-DrugResponse KP API
-  version: '2.0'
+  version: '3.0'
   x-translator:
     infores: "infores:biothings-multiomics-biggim-drugresponse"
     component: KP
     team:
       - Multiomics Provider
       - Service Provider
-    biolink-version: "3.1.1"
+    biolink-version: "3.5.3"
 servers:
 - description: Encrypted Production server
   url: https://biothings.ncats.io/biggim_drugresponse_kp
@@ -328,6 +328,9 @@ paths:
       - $ref: '#/components/x-bte-kgs-operations/gene-negativelyCorrelated-gene-rev'  
       - $ref: '#/components/x-bte-kgs-operations/gene-positivelyCorrelated-gene'
       - $ref: '#/components/x-bte-kgs-operations/gene-positivelyCorrelated-gene-rev'
+      - $ref: '#/components/x-bte-kgs-operations/gene-expressed-in-cell'
+      - $ref: '#/components/x-bte-kgs-operations/cell-expresses-gene'
+      
 components:
   parameters:
     callback:
@@ -597,6 +600,61 @@ components:
   ## - BTE automatically puts prefix on MONDO IDs, but prefix has to be added to other ID inputs 
   ## - currently, BTE will also accept response with Translator-prefix (api-response-transform module).
   ## - joinSafe is only needed if the delimiter isn't a comma
+
+    gene-expressed-in-cell:
+    ##  https://biothings.ncats.io/biggim_drugresponse_kp/query?q=predicate:"biolink:expressed_in"
+    ## 34719 records
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: NCBIGene
+            semantic: Gene
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {
+              "q": [ {{ queryInputs | replPrefix('NCBIGene') | wrap( '["' , '","biolink:expressed_in"]') }} ],
+              "scopes": ["subject.NCBIGene", "predicate"]
+            }
+        parameters:
+          fields: object.CL,attributes,sources
+          size: 1000
+        outputs:
+          - id: CL
+            semantic: Cell
+        predicate: expressed_in
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/cl-object"
+        # testExamples:
+        #   - qInput: "NCBIGene:930"                ## CD19
+        #     oneOutput: "CL_0000236"                ## Hodgkin Lymphoma B cell
+
+    cell-expresses-gene:
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: CL
+            semantic: Cell
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {
+              "q": [ {{ queryInputs | replPrefix('CL') | wrap( '["' , '","biolink:expresses"]') }} ],
+              "scopes": ["object.CL", "predicate"]
+            }
+        parameters:
+          fields: subject.NCBIGene,attributes,sources
+          size: 1000
+        outputs:
+          - id: NCBIGene
+            semantic: Gene
+        predicate: expresses
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/ncbigene-subject"
+        # testExamples:
+        #   - qInput: "CL_0000236"                ## Hodgkin Lymphoma B cell
+        #     oneOutput: "NCBIGene:930"           ## CD19
+
     gene-sensitivity-chem:
     ##  https://biothings.ncats.io/biggim_drugresponse_kp/query?q=predicate:"biolink:associated_with_sensitivity_to"
     ##  95994 records  
@@ -1089,5 +1147,9 @@ components:
       trapi_sources: sources
     mondo-object:
       MONDO: object.MONDO
+      edge-attributes: attributes
+      trapi_sources: sources
+    cl-object:
+      CL: object.CL
       edge-attributes: attributes
       trapi_sources: sources
