@@ -1,0 +1,1735 @@
+openapi: 3.0.3
+info:
+  contact:
+    email: help@biothings.io
+    name: BioThings Team
+    x-role: responsible developers
+  description: >-
+    Documentation of the BioThings API for [TherapeuticTargetDatabase](https://db.idrblab.net/ttd/).
+    This KP contains drug-disease, target-disease, drug-protein target, and biomarker-disease associations.
+  termsOfService: https://biothings.io/about
+  title: Biothings Therapeutic Target Database API
+  version: '1.0' ## API version, KP version is 8.1.01
+  x-translator:
+    infores: "infores:biothings-ttd"
+    component: KP
+    team:
+      - Service Provider
+    biolink-version: "3.5.0"
+servers:
+- description: Encrypted Production server
+  # TODO: replace to biothings.ncats url once deployed
+  url: https://biothings.transltr.io/ttd
+  x-maturity: production
+- description: Production server
+  # TODO: replace to biothings.ncats url once deployed
+  url: https://biothings.transltr.io/ttd
+  x-maturity: production
+tags:
+- name: gene
+- name: disease
+- name: chemical
+- name: association
+- name: annotation
+- name: query
+- name: translator
+- name: biothings
+- name: metadata
+paths:
+  "/association/{id}":
+    get:
+      description: >-
+        By default, this will return the complete association in JSON format. If the input is not valid,
+        404 (NOT FOUND) will be returned.
+        
+
+        Optionally, you can pass a "fields" parameter to return only the annotation you want 
+        (by filtering returned object fields). "fields" accepts any attributes (a.k.a fields) available 
+        from the association. Multiple attributes should be separated by commas. If an attribute is not 
+        available for a specific association, it will be ignored. Note that the attribute names are 
+        case-sensitive.
+
+      parameters:
+      - name: id
+        in: path
+        required: true
+        example: "101481444_interacts_with_O60885"
+        schema:
+          type: string
+      ## fields is the most useful parameter
+      - "$ref": "#/components/parameters/fields"
+      # - "$ref": "#/components/parameters/raw"
+      # - "$ref": "#/components/parameters/rawquery"
+      - "$ref": "#/components/parameters/dotfield"
+      - "$ref": "#/components/parameters/always_list"
+      - "$ref": "#/components/parameters/allow_null"
+      - "$ref": "#/components/parameters/format"
+      responses:
+        '200':
+          description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
+      ## commenting out schemas and other status codes for now
+      #     content:
+      #       application/json:
+      #         schema:
+      #           $ref: '#/components/schemas/Association'
+        '404':
+          description: A response indicating an unknown association ID
+      summary: >-
+        Retrieve association based on ID
+      tags:
+      - association
+  "/association":
+    post:
+      description: >-
+        Although making simple GET requests above to our service is sufficient in most use cases, 
+        there are some times you might find it easier to batch query (e.g., retrieving multiple associations). 
+        Fortunately, you can also make batch queries via POST requests when you need to.
+      parameters:
+      - name: ids
+        description: >-
+          Accepts multiple association ids separated by commas. Note that currently we only take ids up to 
+          1000 maximum, the rest will be omitted.
+
+          The request body can also be used to provide these ids.
+        in: query
+        ## setting to false since putting this info in the request body seems to work as well
+        required: false
+        schema:
+          type: string
+      - "$ref": "#/components/parameters/fields"
+      # - "$ref": "#/components/parameters/raw"
+      # - "$ref": "#/components/parameters/rawquery"
+      - "$ref": "#/components/parameters/dotfield"
+      - "$ref": "#/components/parameters/always_list"
+      - "$ref": "#/components/parameters/allow_null"
+      - "$ref": "#/components/parameters/format"
+      requestBody:
+        content:
+          application/json:
+            example:
+              ids:
+              - "136183441_interacts_with_Q16548"
+              - "P17301_target_for_0005301"
+            schema:
+              type: object
+              properties:
+                ids:
+                  description: >-
+                    Accepts multiple association ids. Note that currently we only take the input ids 
+                    up to 1000 maximum, the rest will be omitted.
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '200':
+          description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
+      ## No '404' is included in the post due to batch query
+      tags:
+      - association
+  "/metadata":
+    get:
+      description: Get metadata about the data available from the API
+      parameters:
+      - "$ref": "#/components/parameters/format"
+      # - "$ref": "#/components/parameters/raw"
+      responses:
+        '200':
+          description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
+      tags:
+      - metadata
+  "/metadata/fields":
+    get:
+      description: Get metadata about the data fields available from the API
+      parameters:
+      - "$ref": "#/components/parameters/format"
+      # - "$ref": "#/components/parameters/raw"
+      - "$ref": "#/components/parameters/search"
+      - "$ref": "#/components/parameters/prefix"
+      responses:
+        '200':
+          description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
+      tags:
+      - metadata
+  "/query":
+    get:
+      description: >-
+        Query service. In the output, "total" in the output gives the total number 
+        of matching hits, while the actual hits are returned under "hits" field.
+      parameters:
+      - name: q
+        description: >-
+          Required, passing user query. The detailed query syntax for parameter is explained 
+          [here for a core BioThings 
+          API](https://docs.mychem.info/en/latest/doc/chem_query_service.html#query-syntax).
+        in: query
+        required: true
+        example: "object.mondo:0005083"
+        schema:
+          type: string
+      - "$ref": "#/components/parameters/fields"
+      - "$ref": "#/components/parameters/size"
+      - "$ref": "#/components/parameters/from"
+      - "$ref": "#/components/parameters/fetch_all"
+      - "$ref": "#/components/parameters/scroll_id"
+      - "$ref": "#/components/parameters/sort"
+      - "$ref": "#/components/parameters/facets"
+      - "$ref": "#/components/parameters/facet_size"
+      - "$ref": "#/components/parameters/dotfield"
+      - "$ref": "#/components/parameters/aggs"
+      ## these are noted in the /spec endpoint; commenting out for now
+      # - "$ref": "#/components/parameters/userquery"
+      # - "$ref": "#/components/parameters/explain"
+      # - "$ref": "#/components/parameters/raw"
+      # - "$ref": "#/components/parameters/rawquery"
+      - "$ref": "#/components/parameters/always_list"
+      - "$ref": "#/components/parameters/allow_null"
+      - "$ref": "#/components/parameters/format"
+      responses:
+        '200':
+          description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
+      ## commenting out schemas and other status codes for now
+      #     content:
+      #       application/json:
+      #         schema:
+      #           "$ref": "#/components/schemas/QueryResult"
+        '400':
+      #     content:
+      #       application/json:
+      #         schema:
+      #           "$ref": "#/components/schemas/ErrorResult"
+          description: A response indicating an improperly formatted query
+      # summary: Make queries and return matching gene hits. Supports JSONP and CORS
+      #   as well.
+      tags:
+      - query
+    post:
+      description: >-
+        Although making simple GET requests above to our query service is sufficient for most use cases, 
+        there are times you might find it more efficient to make batch queries (e.g., retrieving data 
+        for multiple inputs). Fortunately, you can also make batch queries via POST requests when you need to.
+
+
+        The "query” field in the returned object indicates the matching query term. If a query term has no match, 
+        it will return with a “notfound” field with the value “true”.
+      parameters:
+      - name: q
+        description: >-
+          Accepts multiple values separated by commas. Note that currently we only take the input values up to 1000 
+          maximum, the rest will be omitted.
+
+
+          The request body can also be used to provide these ids.
+        in: query
+        ## setting to false since putting this info in the request body seems to work as well
+        required: false
+        schema:
+          type: array
+          items:
+            type: string
+      - name: scopes
+        description: >-
+          Optional, specify one or more fields (separated by commas) to search. Default: _id
+
+
+          The request body can also be used to provide this information.
+        in: query
+        ## setting to false since putting this info in the request body seems to work as well
+        required: false
+        schema:
+          type: string
+      - "$ref": "#/components/parameters/fields"
+      ## this is useful even when it's not noted in the docs
+      - "$ref": "#/components/parameters/size"
+      - "$ref": "#/components/parameters/from"
+      - "$ref": "#/components/parameters/fetch_all"
+      - "$ref": "#/components/parameters/scroll_id"
+      ## these are noted in the https://mychem.info/v1/spec endpoint; commenting out for now
+      - "$ref": "#/components/parameters/sort"
+      # - "$ref": "#/components/parameters/raw"
+      # - "$ref": "#/components/parameters/rawquery"
+      - "$ref": "#/components/parameters/dotfield"
+      # - "$ref": "#/components/parameters/_sorted"
+      - "$ref": "#/components/parameters/always_list"
+      - "$ref": "#/components/parameters/allow_null"
+      - "$ref": "#/components/parameters/format"
+      requestBody:
+        content:
+          application/json:
+            example:
+              q:
+              - "6323491"
+              - "136183441"
+              scopes:
+              - "subject.pubchem_compound"
+            schema:
+              type: object
+              properties:
+                q:
+                  description: >-
+                    Accepts multiple values separated by commas. Note that currently we only take the input values 
+                    up to 1000 maximum, the rest will be omitted.
+                  type: array
+                  items:
+                    type: string
+                scopes:
+                  description: >-
+                    Specify one or more fields (separated by commas) to search. Default: _id
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '200':
+          description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
+      ## commenting out schemas and other status codes for now
+      #     content:
+      #       application/json:
+      #         schema:
+      #           "$ref": "#/components/schemas/QueryPOSTResult"
+        '400':
+      #     content:
+      #       application/json:
+      #         schema:
+      #           "$ref": "#/components/schemas/ErrorResult"
+          description: A response indicating an improperly formatted query
+      # summary: Make batch gene queries and return matching gene hits
+      tags:
+      - query
+      x-bte-kgs-operations:
+      # - $ref: '#/components/x-bte-kgs-operations/chebi_treats_mondo'
+      # - $ref: '#/components/x-bte-kgs-operations/chebi_treats_mondo-rev'
+      # - $ref: '#/components/x-bte-kgs-operations/chebi_treats_icd11'
+      # - $ref: '#/components/x-bte-kgs-operations/chebi_treats_icd11-rev'
+      - $ref: '#/components/x-bte-kgs-operations/pubchem_treats_mondo'
+      - $ref: '#/components/x-bte-kgs-operations/pubchem_treats_mondo-rev'
+      - $ref: '#/components/x-bte-kgs-operations/pubchem_treats_icd11'
+      - $ref: '#/components/x-bte-kgs-operations/pubchem_treats_icd11-rev'
+      - $ref: '#/components/x-bte-kgs-operations/ttd_drug_id_treats_mondo'
+      - $ref: '#/components/x-bte-kgs-operations/ttd_drug_id_treats_mondo-rev'
+      - $ref: '#/components/x-bte-kgs-operations/ttd_drug_id_treats_icd11'
+      - $ref: '#/components/x-bte-kgs-operations/ttd_drug_id_treats_icd11-rev'
+      - $ref: '#/components/x-bte-kgs-operations/uniprotkb_target_for_mondo'
+      - $ref: '#/components/x-bte-kgs-operations/uniprotkb_target_for_mondo-rev'
+      - $ref: '#/components/x-bte-kgs-operations/uniprotkb_target_for_icd11'
+      - $ref: '#/components/x-bte-kgs-operations/uniprotkb_target_for_icd11-rev'
+      - $ref: '#/components/x-bte-kgs-operations/ttd_target_id_target_for_mondo'
+      - $ref: '#/components/x-bte-kgs-operations/ttd_target_id_target_for_mondo-rev'
+      - $ref: '#/components/x-bte-kgs-operations/ttd_target_id_target_for_icd11'
+      - $ref: '#/components/x-bte-kgs-operations/ttd_target_id_target_for_icd11-rev'
+      # - $ref: '#/components/x-bte-kgs-operations/chebi_interacts_with_uniprotkb'
+      # - $ref: '#/components/x-bte-kgs-operations/chebi_interacts_with_uniprotkb-rev'
+      # - $ref: '#/components/x-bte-kgs-operations/chebi_interacts_with_ttd_target_id'
+      # - $ref: '#/components/x-bte-kgs-operations/chebi_interacts_with_ttd_target_id-rev'
+      - $ref: '#/components/x-bte-kgs-operations/pubchem_interacts_with_uniprotkb'
+      - $ref: '#/components/x-bte-kgs-operations/pubchem_interacts_with_uniprotkb-rev'
+      - $ref: '#/components/x-bte-kgs-operations/pubchem_interacts_with_ttd_target_id'
+      - $ref: '#/components/x-bte-kgs-operations/pubchem_interacts_with_ttd_target_id-rev'
+      - $ref: '#/components/x-bte-kgs-operations/ttd_drug_id_interacts_with_uniprotkb'
+      - $ref: '#/components/x-bte-kgs-operations/ttd_drug_id_interacts_with_uniprotkb-rev'
+      - $ref: '#/components/x-bte-kgs-operations/ttd_drug_id_interacts_with_ttd_target_id'
+      - $ref: '#/components/x-bte-kgs-operations/ttd_drug_id_interacts_with_ttd_target_id-rev'
+      # TODO: Not doing operation right now. But can potentially map some of the biomarkers to gene/protein
+      # - $ref: '#/components/x-bte-kgs-operations/biomarker_id_biomarker_for_mondo'
+      # - $ref: '#/components/x-bte-kgs-operations/biomarker_id_biomarker_for_mondo-rev'
+      # - $ref: '#/components/x-bte-kgs-operations/biomarker_id_biomarker_for_icd11'
+      # - $ref: '#/components/x-bte-kgs-operations/biomarker_id_biomarker_for_icd11-rev'
+      # - $ref: '#/components/x-bte-kgs-operations/biomarker_id_biomarker_for_icd10'
+      # - $ref: '#/components/x-bte-kgs-operations/biomarker_id_biomarker_for_icd10-rev'
+      # - $ref: '#/components/x-bte-kgs-operations/biomarker_id_biomarker_for_icd9'
+      # - $ref: '#/components/x-bte-kgs-operations/biomarker_id_biomarker_for_icd9-rev'
+
+components:
+  parameters:
+    callback:
+      name: callback
+      description: >-
+        Optional, you can pass a "callback" parameter to make a JSONP call.
+      in: query
+      required: false
+      schema:
+        type: string
+    dotfield:
+      name: dotfield
+      description: >-
+        Optional, can be used to control the format of the returned object. 
+        If "dotfield" is true, the returned data object is returned flattened (no nested objects) 
+        using dotfield notation for key names. Default: false.
+      in: query
+      required: false
+      schema:
+        type: boolean
+        default: false
+    facet_size:
+      name: facet_size
+      description: >-
+        Optional, an integer (1 <= facet_size <= 1000) that specifies how many buckets to return in a 
+        [faceted query](https://docs.mychem.info/en/latest/doc/chem_query_service.html?highlight=from#faceted-queries).
+      in: query
+      required: false
+      schema:
+        type: integer
+        default: 10
+    facets:
+      name: facets
+      description: >-
+        Optional, a single field or comma-separated fields to return facets, can only be used on non-free text fields. 
+        E.g. “facets=chembl.molecule_properties.full_mwt”. See [examples of faceted queries for a core BioThings 
+        API](https://docs.mychem.info/en/latest/doc/chem_query_service.html?highlight=from#faceted-queries).
+      in: query
+      required: false
+      schema:
+        type: array
+        items:
+          type: string
+    fetch_all:
+      name: fetch_all
+      description: >-
+        Optional, a boolean, which when TRUE, allows fast retrieval of all unsorted query hits. 
+        The return object contains a _scroll_id field, which when passed as a parameter to the query endpoint 
+        (see the scroll_id parameter), returns the next 1000 query results. Setting fetch_all = TRUE causes 
+        the results to be inherently unsorted, therefore the sort parameter is ignored. For more information, 
+        see [examples using fetch_all for a core BioThings 
+        API](https://docs.mychem.info/en/latest/doc/chem_query_service.html?highlight=from#scrolling-queries). 
+        Default: FALSE.
+      in: query
+      required: false
+      schema:
+        type: boolean
+        default: false
+    fields:
+      name: fields
+      description: >-
+        Optional, can be a comma-separated list to limit the fields returned from the object. 
+        If "fields=all", all available fields will be returned.
+        
+
+        Note that it supports dot notation as well, e.g., you can pass "chebi.name". 
+        Default: "fields=all". 
+        The parameter "filter" is an alias for this parameter.
+      in: query
+      required: false
+      schema:
+        type: string
+        default: all
+    from:
+      name: from
+      description: >-
+        Optional, the number of matching hits to skip, starting from 0. Default: 0.
+      in: query
+      required: false
+      schema:
+        type: integer
+        default: 0
+    scroll_id:
+      name: scroll_id
+      description: >-
+        Optional, a string containing the _scroll_id returned from a query request with fetch_all = TRUE. 
+        Supplying a valid scroll_id will return the next 1000 unordered results. If the next results are 
+        not obtained within 1 minute of the previous set of results, the scroll_id becomes stale, and a 
+        new one must be obtained with another query request with fetch_all = TRUE. All other parameters are 
+        ignored when the scroll_id parameter is supplied. For more information see [examples using scroll_id 
+        for a core BioThings 
+        API](https://docs.mychem.info/en/latest/doc/chem_query_service.html?highlight=from#scrolling-queries).
+      in: query
+      required: false
+      schema:
+        type: string
+    size:
+      name: size
+      description: >-
+        Optional, the maximum number of matching hits to return (with a cap of 1000 at the moment). Default: 10.
+        The combination of "size" and "from" parameters can be used to get paging for a large query.
+      in: query
+      required: false
+      schema:
+        type: integer
+        default: 10
+    sort:
+      name: sort
+      description: >-
+        Optional, the comma-separated fields to sort on. Prefix with "-" for descending order, otherwise in ascending order. 
+        Default: sort by matching scores in descending order.
+      in: query
+      required: false
+      schema:
+        type: array
+        items:
+          type: string
+    ## these are noted in the https://mychem.info/v1/spec endpoint; commenting out for now
+    # _sorted:
+    #   name: _sorted
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: boolean
+    #     default: true
+    aggs:
+      name: aggs
+      in: query
+      required: false
+      schema:
+        type: array
+        items:
+            type: string
+    allow_null:
+      name: allow_null
+      in: query
+      required: false
+      schema:
+         type: array
+         items:
+           type: string
+    always_list:
+       name: always_list
+       in: query
+       required: false
+       schema:
+         type: array
+         items:
+           type: string
+    # explain:
+    #   name: explain
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: boolean
+    format:
+       name: format
+       description: 'controls output format of server response, currently supports:
+         "json", "jsonld", "html". Type: string. Default: json.'
+       in: query
+       required: false
+       schema:
+         type: string
+         default: json
+    prefix:
+       name: prefix
+       in: query
+       required: false
+       schema:
+         type: string
+    # raw:
+    #   name: raw
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: boolean
+    # rawquery:
+    #   name: rawquery
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: boolean
+    search:
+       name: search
+       in: query
+       required: false
+       schema:
+         type: string
+    # userquery:
+    #   name: userquery
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: string
+  ## commenting out schemas and other status codes for now
+  # schemas:
+  #   Association:
+  #     properties:
+  #       _id:
+  #         type: string
+  #     required:
+  #     - _id
+  #     type: object
+  #   ErrorResult:
+  #     properties:
+  #       message:
+  #         type: string
+  #       success:
+  #         type: boolean
+  #     type: object
+  #   QueryPOSTResult:
+  #     items:
+  #       allOf:
+  #       - $ref: '#/components/schemas/Association'
+  #       - properties:
+  #           _score:
+  #             format: float
+  #             type: number
+  #           query:
+  #             type: string
+  #         type: object
+  #     type: array
+  #   QueryResult:
+  #     properties:
+  #       hits:
+  #         items:
+  #           $ref: '#/components/schemas/Association'
+  #         type: array
+  #       max_score:
+  #         format: float
+  #         type: number
+  #       took:
+  #         type: integer
+  #       total:
+  #         type: integer
+  #     type: object
+  #   int64_or_array:
+  #     oneOf:
+  #     - items:
+  #         format: int64
+  #         type: integer
+  #       type: array
+  #     - format: int64
+  #       type: integer
+  #   string_or_array:
+  #     oneOf:
+  #     - items:
+  #         type: string
+  #       type: array
+  #     - type: string
+  x-bte-kgs-operations:
+  ## in the API's records:
+  ## - subjects and objects can be Gene/Protein (UniprotKB), SmallMolecule (PUBCHEM.COMPOUND, CHEBI),
+  ##   Disease (MONDO, ICD11, ICD10, ICD9)
+  ## - predicates can be treats, target_for, interacts_with
+  ##   SmallMolecule_treats_Disease, Gene_target_for_Disease, SmallMolecule_interacts_with_Gene
+  ## - BTE automatically puts prefix on MONDO IDs, but prefix has to be added to other ID inputs
+  ## - currently, BTE will also accept response with Translator-prefix (api-response-transform module).
+  ## - joinSafe is only needed if the delimiter isn't a comma
+  ## - fields not included due to data-processing / biolink-modeling issues:
+  ## TODO: make notes to link all clinical trial possible values
+  ##   association.clinical_trial.status: possible values include:
+  ##     'investigative', 'patented', 'phase 2', 'approved', 'phase 1', 'terminated', 'phase 3',
+  ##     'discontinued in phase 2', 'phase 1/2', 'discontinued in phase 1', 'preclinical', 'discontinued in phase 3',
+  ##     'phase 2/3', 'clinical trial', 'withdrawn from market', 'phase 4', 'phase 3 trial', 'discontinued in phase1/2',
+  ##     'phase 2 trial', 'discontinued in preregistration', 'phase 2/3 trial', 'preregistration', 'phase 2a',
+  ##     'phase 1 trial', 'phase 0', 'registered', 'approved (orphan drug)', 'phase 1b', 'phase 2b',
+  ##     'discontinued in phase2/3', 'NDA filed', 'phase 1/2 trial', 'phase 1/2a', 'discontinued in phase 1 trial',
+  ##     'discontinued in phase 4', 'phase 1b/2a', 'application submitted', 'approval submitted', 'BLA submitted',
+  ##     'discontinued in phase 2a', 'discontinued in phase 2b'
+  #    chebi_treats_mondo:
+  #    ## https://biothings.transltr.io/ttd/query?q=_exists_:subject.chebi%20AND%20association.predicate:%22biolink:treats%22%20AND%20_exists_:object.mondo
+  #    ## 543 records
+  #      - supportBatch: true
+  #        useTemplating: true ## flag to say templating is being used below
+  #        inputs:
+  #          - id: CHEBI
+  #            semantic: SmallMolecule
+  #        requestBodyType: object
+  #        requestBody:
+  #          body: >-
+  #            {
+  #              "q": [ {{ queryInputs | rmPrefix() | wrap( '["' , '","biolink:treats"]') }} ],
+  #              "scopes": ["subject.chebi", "association.predicate"]
+  #            }
+  #        outputs:
+  #          - id: MONDO
+  #            semantic: Disease
+  #        parameters:
+  #          ## not including these fields due to data-processing / biolink-modeling issues
+  #          ## - association.clinical_trial.status
+  #          fields: >-
+  #            object.mondo,
+  #            object.name,
+  #            subject.name
+  #          size: 1000
+  #        predicate: treats
+  #        source: "infores:ttd"
+  #        response_mapping:
+  #          "$ref": "#/components/x-bte-response-mapping/mondo-object"
+  #        # testExamples:
+  #        #   - qInput: "CHEBI:6960"                    ## Moexipril
+  #        #     oneOutput: "MONDO:0001134"              ## Hypertension
+  #    chebi_treats_mondo-rev:
+  #      - supportBatch: true
+  #        useTemplating: true
+  #        inputs:
+  #          - id: MONDO
+  #            semantic: Disease
+  #        requestBodyType: object
+  #        requestBody:
+  #          body: >- ## take out mondo prefix
+  #            {
+  #              "q": [ {{ queryInputs | rmPrefix() | wrap( '["' , '","biolink:treats"]') }} ],
+  #              "scopes": ["object.mondo", "association.predicate"]
+  #            }
+  #        outputs:
+  #          - id: CHEBI
+  #            semantic: SmallMolecule
+  #        parameters:
+  #          fields: >-
+  #            subject.chebi,
+  #            subject.name,
+  #            object.name
+  #          size: 1000
+  #        predicate: treated_by
+  #        source: "infores:ttd"
+  #        response_mapping:
+  #          "$ref": "#/components/x-bte-response-mapping/chebi-subject"
+  #        # testExamples:
+  #        #   - qInput: "MONDO:0005180"                 ## Parkinson disease
+  #        #     oneOutput: "CHEBI:134699"               ## Opicapone
+  #    chebi_treats_icd11:
+  #    ## url: https://biothings.transltr.io/ttd/query?q=\_exists_:subject.chebi%20AND%20association.predicate:%22biolink:treats%22%20AND%20_exists_:object.icd11
+  #    ## 3806 records
+  #      - supportBatch: true
+  #        useTemplating: true ## flag to say templating is being used below
+  #        inputs:
+  #          - id: CHEBI
+  #            semantic: SmallMolecule
+  #        requestBodyType: object
+  #        requestBody: ## no prefix
+  #          body: >-
+  #            {"q": {{ queryInputs | replPrefix('association.predicate:"biolink:treats"
+  #             AND (NOT _exists_:subject.pubchem) AND (NOT _exists:object.mondo) AND subject.chebi')| dump}},
+  #             "scopes": []
+  #            }
+  #        outputs:
+  #          - id: ICD11
+  #            semantic: Disease
+  #        parameters:
+  #          ## not including these fields due to data-processing / biolink-modeling issues
+  #          ## - association.clinical_trial.status
+  #          ## - object.mondo Not all object node has mondo
+  #          fields: >-
+  #            object.icd11,
+  #            object.name,
+  #            subject.name
+  #          size: 1000
+  #        predicate: treats
+  #        source: "infores:ttd"
+  #        response_mapping:
+  #          "$ref": "#/components/x-bte-response-mapping/icd11-object"
+  #        # testExamples:
+  #        #   - qInput: "CHEBI:107601"                ## Savirin
+  #        #     oneOutput: "ICD11:1B5Y"               ## Staphylococcus infection
+  #    chebi_treats_icd11-rev:
+  #      - supportBatch: true
+  #        useTemplating: true
+  #        inputs:
+  #          - id: ICD11
+  #            semantic: Disease
+  #        requestBodyType: object
+  #        requestBody: ## no prefix
+  #          body: >-
+  #            {"q": {{ queryInputs | replPrefix('association.predicate:"biolink:treats"
+  #             AND (NOT _exists_:subject.pubchem) AND (NOT _exists:object.mondo) AND object.icd11')| dump}},
+  #             "scopes": []
+  #            }
+  #        outputs:
+  #          - id: CHEBI
+  #            semantic: SmallMolecule
+  #        parameters:
+  #        ## not including these fields due to data-processing / biolink-modeling issues
+  #        ## - association.clinical_trial.status
+  #          fields: >-
+  #            subject.chebi,
+  #            subject.name,
+  #            object.name
+  #          size: 1000
+  #        predicate: treated_by
+  #        source: "infores:ttd"
+  #        response_mapping:
+  #          "$ref": "#/components/x-bte-response-mapping/chebi-subject"
+  #        # testExamples:
+  #        #   - qInput: "ICD11:CB03.4"                  ## Pulmonary fibrosis
+  #        #     oneOutput: "CHEBI:144367"               ## 3PO
+    pubchem_treats_mondo:
+    ##  https://biothings.transltr.io/ttd/query?q=_exists_:subject.pubchem_compound%20AND%20association.predicate:%22biolink:treats%22%20AND%20_exists_:object.mondo%20##%20%20TODO:%201604%20records
+    ##  1604 records
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: "PUBCHEM.COMPOUND"
+            semantic: SmallMolecule
+        requestBodyType: object
+        requestBody: ## no prefix
+          body: >-
+            {
+              "q": [ {{ queryInputs | rmPrefix() | wrap( '["' , '","biolink:treats"]') }} ],
+              "scopes": ["subject.pubchem_compound", "association.predicate"]
+            }
+        outputs:
+          - id: MONDO
+            semantic: Disease
+        parameters:
+        ## not including these fields due to data-processing / biolink-modeling issues
+        ## - association.clinical_trial.status
+          fields: >-
+            object.mondo,
+            object.name,
+            subject.name
+          size: 1000
+        predicate: treats
+        source: "infores:ttd"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/mondo-object"
+        # testExamples:
+        #   - qInput: "PUBCHEM.COMPOUND:118063735"       ## LMB763 (Nidufexor)
+        #     oneOutput: "MONDO:0004790"                 ## fatty liver disease
+    pubchem_treats_mondo-rev:
+      - supportBatch: true
+        useTemplating: true
+        inputs:
+          - id: MONDO
+            semantic: Disease
+        requestBodyType: object
+        requestBody: ## remove prefix
+          body: >-
+            {
+              "q": [ {{ queryInputs | rmPrefix() | wrap( '["' , '","biolink:treats"]') }} ],
+              "scopes": ["object.mondo", "association.predicate"]
+            }
+        outputs:
+          - id: "PUBCHEM.COMPOUND"
+            semantic: SmallMolecule
+        parameters:
+          fields: >-
+            subject.pubchem_compound,
+            subject.name,
+            object.name
+          size: 1000
+        predicate: treated_by
+        source: "infores:ttd"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/pubchem-subject"
+        # testExamples:
+        #   - qInput: "MONDO:0021094"                      ## Human immunodeficiency virus infection
+        #     oneOutput: "PUBCHEM.COMPOUND:103596027"      ## GS-1156 (8-(3-Chloro-5-(trifluoromethyl)pyridin-2-yl)-8-azabicyclo[3.2.1]octan-3-one)
+    pubchem_treats_icd11:
+    ##   url: https://biothings.transltr.io/ttd/query?q=_exists_:subject.pubchem_compound%20AND%20association.predicate:%22biolink:treats%22%20AND%20_exists_:object.icd11%20AND%20NOT%20_exists_:object.mondo
+    ##   9985 records
+    ## exists: subject.pubchem_compound, association.predicate.biolink:treats, object.icd11
+    ## not exists: object.mondo
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: "PUBCHEM.COMPOUND"
+            semantic: SmallMolecule
+        requestBodyType: object
+        requestBody: ## no prefix
+          body: >-
+            {"q": {{ queryInputs | replPrefix('association.predicate:"biolink:treats" 
+             AND (NOT _exists_:object.mondo) AND subject.pubchem_compound') | dump}}, 
+             "scopes": []
+            }
+        outputs:
+          - id: ICD11
+            semantic: Disease
+        parameters:
+        ## not including these fields due to data-processing / biolink-modeling issues
+        ## - association.clinical_trial.status
+          fields: >-
+            object.icd11,
+            object.name,
+            subject.name
+          size: 1000
+        predicate: treats
+        source: "infores:ttd"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/icd11-object"
+        # testExamples:
+        #   - qInput: "PUBCHEM.COMPOUND:126843189"       ## AVN-101 (AVN-101 HCl)
+        #     oneOutput: "ICD11:6D71"                    ## Cognitive impairment
+    pubchem_treats_icd11-rev:
+      - supportBatch: true
+        useTemplating: true
+        inputs:
+          - id: ICD11
+            semantic: Disease
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {"q": {{ queryInputs | replPrefix('association.predicate:"biolink:treats" 
+             AND (NOT _exists_:object.mondo) AND object.icd11') | dump}}, 
+             "scopes": []
+            }
+        outputs:
+          - id: "PUBCHEM.COMPOUND"
+            semantic: SmallMolecule
+        parameters:
+          fields: >-
+            subject.pubchem_compound,
+            subject.name,
+            object.name
+          size: 1000
+        predicate: treated_by
+        source: "infores:ttd"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/pubchem-subject"
+        # testExamples:
+        #   - qInput: "ICD11:MG51"                         ## Multidrug resistant infection
+        #     oneOutput: "PUBCHEM.COMPOUND:139600308"      ## SPR206
+    ttd_drug_id_treats_mondo:
+      ## url: https://biothings.transltr.io/ttd/query?q=_exists_:subject.ttd_drug_id%20AND%20association.predicate:%22biolink:treats%22%20AND%20_exists_:object.mondo%20AND%20NOT%20_exists_:subject.pubchem_compound
+      ## 2240 records
+      ## exists: subject.ttd_drug_id, association.predicate.biolink:treats, object.mondo
+      ## not exists: subject.pubchem_compound
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: "TTD.DRUG"
+            semantic: SmallMolecule
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {"q": {{ queryInputs | replPrefix('association.predicate:"biolink:treats" 
+             AND (NOT _exists_:subject.pubchem_compound) AND subject.ttd_drug_id') | dump}}, 
+             "scopes": []
+            }
+        outputs:
+          - id: MONDO
+            semantic: Disease
+        parameters:
+          ## not including these fields due to data-processing / biolink-modeling issues
+          ## - association.clinical_trial.status
+          fields: >-
+            object.mondo,
+            object.name,
+            subject.name
+          size: 1000
+        predicate: treats
+        source: "infores:ttd"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/mondo-object"
+        # testExamples:
+        #   - qInput: "TTD.DRUG:DZJ3D5"                       ## PF-07220060
+        #     oneOutput: "MONDO:0008315"                      ## Prostate cancer
+    ttd_drug_id_treats_mondo-rev:
+      - supportBatch: true
+        useTemplating: true
+        inputs:
+          - id: MONDO
+            semantic: Disease
+        requestBodyType: object
+        requestBody:
+          body: >- ## take out mondo prefix
+            {"q": {{ queryInputs | replPrefix('association.predicate:"biolink:treats" 
+             AND (NOT _exists_:subject.pubchem_compound) AND object.mondo') | dump}}, 
+             "scopes": []
+            }
+        outputs:
+          - id: "TTD.DRUG"
+            semantic: SmallMolecule
+        parameters:
+          fields: >-
+            subject.ttd_drug_id,
+            subject.name,
+            object.name
+          size: 1000
+        predicate: treated_by
+        source: "infores:ttd"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/ttd_drug_id-subject"
+        # testExamples:
+        #   - qInput: "MONDO:0019056"                       ## Myasthenia gravis
+        #     oneOutput: "TTD.DRUG:DZA98D"                  ## ARGX-113
+    ttd_drug_id_treats_icd11:
+      ## url: https://biothings.transltr.io/ttd/query?q=_exists_:subject.ttd_drug_id%20AND%20association.predicate:%22biolink:treats%22%20AND%20_exists_:object.icd11%20AND%20NOT%20_exists_:object.mondoAND%20NOT%20_exists_:subject.pubchem_compound
+      ## 16,956 records
+      ## exists: subject.ttd_drug_id, association.predicate.biolink:treats, object.icd11
+      ## not exists: subject.pubchem_compound, object.mondo
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: "TTD.DRUG"
+            semantic: SmallMolecule
+        requestBodyType: object
+        requestBody: ## no prefix
+          body: >-
+            {"q": {{ queryInputs | replPrefix('association.predicate:"biolink:treats"
+             AND (NOT _exists_:subject.pubchem) AND (NOT _exists_:object.mondo) AND subject.ttd_drug_id')| dump}}, 
+             "scopes": []
+            }
+        outputs:
+          - id: ICD11
+            semantic: Disease
+        parameters:
+          ## not including these fields due to data-processing / biolink-modeling issues
+          ## - association.clinical_trial.status
+          ## - object.mondo Not all object node has mondo
+          fields: >-
+            object.icd11,
+            object.name,
+            subject.name
+          size: 1000
+        predicate: treats
+        source: "infores:ttd"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/icd11-object"
+        # testExamples:
+        #   - qInput: "TTD.DRUG:DZW53X"                   ## GSK4069889
+        #     oneOutput: "ICD11:2C25"                     ## Non-small cell lung cancer
+    ttd_drug_id_treats_icd11-rev:
+      - supportBatch: true
+        useTemplating: true
+        inputs:
+          - id: ICD11
+            semantic: Disease
+        requestBodyType: object
+        requestBody: ## no prefix
+          body: >-
+            {"q": {{ queryInputs | replPrefix('association.predicate:"biolink:treats"
+             AND (NOT _exists_:subject.pubchem) AND (NOT _exists:object.mondo) AND object.icd11')| dump}}, 
+             "scopes": []
+            }
+        outputs:
+          - id: "TTD.DRUG"
+            semantic: SmallMolecule
+        parameters:
+          ## not including these fields due to data-processing / biolink-modeling issues
+          ## - association.clinical_trial.status
+          fields: >-
+            subject.ttd_drug_id,
+            subject.name,
+            object.name
+          size: 1000
+        predicate: treated_by
+        source: "infores:ttd"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/ttd_drug_id-subject"
+        # testExamples:
+        #   - qInput: "ICD11:1D48"                          ## Zika virus infection
+        #     oneOutput: "TTD.DRUG:DZTL59"                  ## INO-A002
+    uniprotkb_target_for_mondo:
+    ## url: https://biothings.transltr.io/ttd/query?q=_exists_:subject.uniprotkb%20AND%20association.predicate:%22biolink:target_for%22%20AND%20_exists_:object.mondo
+    ## 601 records
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: UniProtKB
+            semantic: Gene
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {
+              "q": [ {{ queryInputs | rmPrefix() | wrap( '["' , '","biolink:target_for"]') }} ],
+              "scopes": ["subject.uniprotkb", "association.predicate"]
+            }
+        outputs:
+          - id: MONDO
+            semantic: Disease
+        parameters:
+        ## not including these fields due to data-processing / biolink-modeling issues
+        ## - association.clinical_trial.status
+        ## - TODO: subject.bioclass,list the values (if too many, make a notes, need to make keys that are certain vocabularies)
+        ## - TODO: subject.target_type, list the values (if too many, makes notes)
+          fields: >-
+            object.mondo,
+            object.name,
+            subject.name
+          size: 1000
+        predicate: target_for
+        source: "infores:ttd"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/mondo-object"
+        # testExamples:
+        #   - qInput: "UniProtKB:Q08722"         ## Leukocyte surface antigen CD47
+        #     oneOutput: "MONDO:0001351"         ## Ovarian cancer (uterine adnexa cancer)
+    uniprotkb_target_for_mondo-rev:
+      - supportBatch: true
+        useTemplating: true
+        inputs:
+          - id: MONDO
+            semantic: Disease
+        requestBodyType: object
+        requestBody:
+          body: >-   ## remove prefix for mondo
+            {
+              "q": [ {{ queryInputs | rmPrefix() | wrap( '["' , '","biolink:target_for"]') }} ],
+              "scopes": ["object.mondo", "association.predicate"]
+            }
+        outputs:
+          - id: UniProtKB
+            semantic: Gene
+        parameters:
+        ## not including these fields due to data-processing / biolink-modeling issues
+        ## - association.clinical_trial.status
+        ## - subject.bioclass
+        ## - subject.target_type
+          fields: >-
+            subject.uniprotkb,
+            subject.name,
+            object.name
+          size: 1000
+        predicate: has_target
+        source: "infores:ttd"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/uniprotkb-subject"
+        # testExamples:
+        #   - qInput: "MONDO:0005083"                 ## Psoriasis
+        #     oneOutput: "UniProtKB:P01270"           ## Parathyroid hormone (PTH)
+    uniprotkb_target_for_icd11:
+      ## url: https://biothings.transltr.io/ttd/query?q=_exists_:subject.uniprotkb%20AND%20association.predicate:%22biolink:target_for%22%20AND%20_exists_:object.icd11%20AND%20NOT%20_exists_:object.mondo
+      ## 5,564 records
+      ## exists: subject.uniprotkb, association.predicate.biolink:target_for, object.icd11
+      ## not exists: object.mondo
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: UniProtKB
+            semantic: Gene
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {"q": {{ queryInputs | replPrefix('association.predicate:"biolink:target_for"
+             AND (NOT _exists_:object.mondo) AND subject.uniprotkb') | dump}}, 
+             "scopes": []
+            }
+        outputs:
+          - id: ICD11
+            semantic: Disease
+        parameters:
+          ## not including these fields due to data-processing / biolink-modeling issues
+          ## - association.clinical_trial.status
+          ## - TODO: subject.bioclass,list the values (if too many, make a notes, need to make keys that are certain vocabularies)
+          ## - TODO: subject.target_type, list the values (if too many, makes notes)
+          fields: >-
+            object.icd11,
+            object.name,
+            subject.name
+          size: 1000
+        predicate: target_for
+        source: "infores:ttd"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/icd11-object"
+        # testExamples:
+        #   - qInput: "UniProtKB:P49674"         ## Casein kinase I epsilon (CSNK1E)
+        #     oneOutput: "ICD11:2C10"            ## Pancreatic cancer
+    uniprotkb_target_for_icd11-rev:
+      - supportBatch: true
+        useTemplating: true
+        inputs:
+          - id: ICD11
+            semantic: Disease
+        requestBodyType: object
+        requestBody:
+          body: >-   ## no prefix
+            {"q": {{ queryInputs | replPrefix('association.predicate:"biolink:target_for"
+             AND (NOT _exists_:object.mondo) AND object.icd11') | dump}}, 
+             "scopes": []
+            }
+        outputs:
+          - id: UniProtKB
+            semantic: Gene
+        parameters:
+          ## not including these fields due to data-processing / biolink-modeling issues
+          ## - association.clinical_trial.status
+          ## - subject.bioclass
+          ## - subject.target_type
+          fields: >-
+            subject.uniprotkb,
+            subject.name,
+            object.name
+          size: 1000
+        predicate: has_target
+        source: "infores:ttd"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/uniprotkb-subject"
+        # testExamples:
+        #   - qInput: "ICD11:6D71"                    ## Mild neurocognitive disorder
+        #     oneOutput: "UniProtKB:Q92542"           ## Gamma-secretase (GS) NCSTN -> checked uniprotkb that NCSTN is an essential subunit of the gamma-secretase complex
+    ttd_target_id_target_for_mondo:
+      ## url: https://biothings.transltr.io/ttd/query?q=_exists_:subject.ttd_target_id%20AND%20association.predicate:%22biolink:target_for%22%20AND%20_exists_:object.mondo%20AND%20NOT%20_exists_:subject.uniprotkb
+      ## 417 records
+      ## exists: subject.ttd_target_id, association.predicate.biolink:target_for, object.mondo
+      ## not exists: subject.uniprotkb
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: "TTD.TARGET"
+            semantic: Gene
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {"q": {{ queryInputs | replPrefix('association.predicate:"biolink:target_for"
+              AND (NOT _exists_:subject.uniprotkb) AND subject.ttd_target_id') | dump}}, 
+             "scopes": []
+            }
+        outputs:
+          - id: MONDO
+            semantic: Disease
+        parameters:
+          ## not including these fields due to data-processing / biolink-modeling issues
+          ## - association.clinical_trial.status
+          ## - TODO: subject.bioclass,list the values (if too many, make a notes, need to make keys that are certain vocabularies)
+          ## - TODO: subject.target_type, list the values (if too many, makes notes)
+          fields: >-
+            object.mondo,
+            object.name,
+            subject.name
+          size: 1000
+        predicate: target_for
+        source: "infores:ttd"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/mondo-object"
+        # testExamples:
+        #   - qInput: "TTD.TARGET:T99948"            ## Programmed cell death 1 ligand 1 (PD-L1)
+        #     oneOutput: "MONDO:0005447"             ## Testicular cancer
+    ttd_target_id_target_for_mondo-rev:
+      - supportBatch: true
+        useTemplating: true
+        inputs:
+          - id: MONDO
+            semantic: Disease
+        requestBodyType: object
+        requestBody:
+          body: >-   ## remove prefix for mondo
+            {"q": {{ queryInputs | replPrefix('association.predicate:"biolink:target_for"
+             AND (NOT _exists_:subject.uniprotkb) AND object.mondo') | dump}}, 
+             "scopes": []
+            }
+        outputs:
+          - id: "TTD.TARGET"
+            semantic: Gene
+        parameters:
+          ## not including these fields due to data-processing / biolink-modeling issues
+          ## - association.clinical_trial.status
+          ## - subject.bioclass
+          ## - subject.target_type
+          fields: >-
+            subject.ttd_target_id,
+            subject.name,
+            object.name
+          size: 1000
+        predicate: has_target
+        source: "infores:ttd"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/ttd_target_id-subject"
+        # testExamples:
+        #   - qInput: "MONDO:0001351"                     ## Ovarian cancer (uterine adnexa cancer)
+        #     oneOutput: "TTD.TARGET:T99948"              ## Programmed cell death 1 ligand 1 (PD-L1)
+    ttd_target_id_target_for_icd11:
+      ## url: https://biothings.transltr.io/ttd/query?q=_exists_:subject.ttd_target_id%20AND%20association.predicate:%22biolink:target_for%22%20AND%20_exists_:object.icd11%20AND%20NOT%20_exists_:subject.uniprotkb%20AND%20NOT%20_exists_object.mondo
+      ## 4,209 records
+      ## exists: subject.ttd_target_id, association.predicate.biolink:target_for, object.icd11
+      ## not exists: subject.uniprotkb, object.mondo
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: "TTD.TARGET"
+            semantic: Gene
+        requestBodyType: object
+        requestBody:
+          body: >-
+            {"q": {{ queryInputs | replPrefix('association.predicate:"biolink:target_for"
+             AND (NOT _exists_:subject.uniprotkb) AND (NOT _exists_:object.mondo) AND subject.ttd_target_id') | dump}}, 
+             "scopes": []
+             }
+        outputs:
+          - id: ICD11
+            semantic: Disease
+        parameters:
+          ## not including these fields due to data-processing / biolink-modeling issues
+          ## - association.clinical_trial.status
+          ## - TODO: subject.bioclass,list the values (if too many, make a notes, need to make keys that are certain vocabularies)
+          ## - TODO: subject.target_type, list the values (if too many, makes notes)
+          fields: >-
+            object.icd11,
+            object.name,
+            subject.name
+          size: 1000
+        predicate: target_for
+        source: "infores:ttd"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/icd11-object"
+        # testExamples:
+        #   - qInput: "TTD.TARGET:T99948"            ## Programmed cell death 1 ligand 1 (PD-L1)
+        #     oneOutput: "ICD11:2B54"                ## Pleomorphic sarcoma
+    ttd_target_id_target_for_icd11-rev:
+      - supportBatch: true
+        useTemplating: true
+        inputs:
+          - id: ICD11
+            semantic: Disease
+        requestBodyType: object
+        requestBody:
+          body: >-   ## no prefix
+            {"q": {{ queryInputs | replPrefix('association.predicate:"biolink:target_for"
+             AND (NOT _exists_:subject.uniprotkb) AND (NOT _exists_:object.mondo) AND object.icd11') | dump}}, 
+             "scopes": []
+            }
+        outputs:
+          - id: "TTD.TARGET"
+            semantic: Gene
+        parameters:
+          ## not including these fields due to data-processing / biolink-modeling issues
+          ## - association.clinical_trial.status
+          ## - subject.bioclass
+          ## - subject.target_type
+          fields: >-
+            subject.ttd_target_id,
+            subject.name,
+            object.name
+          size: 1000
+        predicate: has_target
+        source: "infores:ttd"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/ttd_target_id-subject"
+        # testExamples:
+        #   - qInput: "ICD11:1D6Y"                        ## COVID-19
+        #     oneOutput: "TTD.TARGET:T99041"              ## HUMAN dipeptidyl peptidase 4 (DPP-4)
+  #    chebi_interacts_with_uniprotkb:
+  #    ## url: https://biothings.transltr.io/ttd/query?q=_exists_:subject.chebi%20AND%20association.predicate:%22biolink:interacts_with%22%20AND%20_exists_:object.uniprotkb%20AND%20_exists_:subject.name%20AND%20_exists_:object.name
+  #    ## 13,020 records
+  #      - supportBatch: true
+  #        useTemplating: true ## flag to say templating is being used below
+  #        inputs:
+  #          - id: CHEBI
+  #            semantic: SmallMolecule
+  #        requestBodyType: object
+  #        requestBody: ## no prefix
+  #          body: >-
+  #            {"q": {{ queryInputs | replPrefix('association.predicate:"biolink:interacts_with"
+  #             AND (_exists_:subject.name) AND (_exists_:object.name) AND (NOT _exists_:subject.pubchem_compound)
+  #             AND subject.chebi') | dump}},
+  #             "scopes": []
+  #             }
+  #        outputs:
+  #          - id: UniProtKB
+  #            semantic: Gene
+  #        parameters:
+  #        ## not including these fields due to data-processing / biolink-modeling issues
+  #        ## - association.moa
+  #        ## - association.trial_status
+  #        ## - object.bioclass
+  #        ## - object.target_type
+  #          fields: object.uniprotkb
+  #          size: 1000
+  #        predicate: interacts_with
+  #        source: "infores:ttd"
+  #        response_mapping:
+  #          "$ref": "#/components/x-bte-response-mapping/uniprotkb-object"
+  #        # testExamples:
+  #        #   - qInput: "CHEBI:2696"
+  #        #     oneOutput: "UniProtKB:Q8WYB5"
+  #    chebi_interacts_with_uniprotkb-rev:
+  #      - supportBatch: true
+  #        useTemplating: true
+  #        inputs:
+  #          - id: UniProtKB
+  #            semantic: Gene
+  #        requestBodyType: object
+  #        requestBody: ## no prefix
+  #          body: >-
+  #            {"q": {{ queryInputs | replPrefix('association.predicate:"biolink:interacts_with"
+  #             AND (NOT _exists_:subject.pubchem_compound) AND (_exists_:subject.name) AND (_exists_:object.name)
+  #             AND object.uniprotkb') | dump}},
+  #             "scopes": []
+  #            }
+  #        outputs:
+  #          - id: CHEBI
+  #            semantic: SmallMolecule
+  #        parameters:
+  #        ## not including these fields due to data-processing / biolink-modeling issues
+  #        ## - association.moa
+  #        ## - association.trial_status
+  #        ## - object.bioclass
+  #        ## - object.target_type
+  #          fields: subject.chebi
+  #          size: 1000
+  #        predicate: interacts_with
+  #        source: "infores:ttd"
+  #        response_mapping:
+  #          "$ref": "#/components/x-bte-response-mapping/chebi-subject"
+  #        # testExamples:
+  #        #   - qInput: "UniProtKB:P47870"
+  #        #     oneOutput: "CHEBI:2631"
+  #    chebi_interacts_with_ttd_target_id:
+  #      ## url: https://biothings.transltr.io/ttd/query?q=_exists_:subject.chebi%20AND%20association.predicate:%22biolink:interacts_with%22%20AND%20_exists_:object.ttd_target_id%20AND%20NOT%20_exists_:object.uniprotkb%20AND%20_exists_:subject.name%20AND%20_exists_:object.name
+  #      ## 5788 records
+  #      - supportBatch: true
+  #        useTemplating: true ## flag to say templating is being used below
+  #        inputs:
+  #          - id: CHEBI
+  #            semantic: SmallMolecule
+  #        requestBodyType: object
+  #        requestBody: ## no prefix
+  #          body: >-
+  #            {"q": {{ queryInputs | replPrefix('association.predicate:"biolink:interacts_with"
+  #             AND (NOT _exists_:object.uniprotkb) AND (_exists_:subject.name) AND (_exists_:object.name)
+  #             AND subject.chebi') | dump}},
+  #             "scopes": []
+  #             }
+  #        outputs:
+  #          - id: "TTD.TARGET"
+  #            semantic: Gene
+  #        parameters:
+  #          ## not including these fields due to data-processing / biolink-modeling issues
+  #          ## - association.moa
+  #          ## - association.trial_status
+  #          ## - object.bioclass
+  #          ## - object.target_type
+  #          fields: object.ttd_target_id
+  #          size: 1000
+  #        predicate: interacts_with
+  #        source: "infores:ttd"
+  #        response_mapping:
+  #          "$ref": "#/components/x-bte-response-mapping/ttd_target_id-object"
+  #        # testExamples:
+  #        #   - qInput: "CHEBI:9953"
+  #        #     oneOutput: "TTD.TARGET:T12808"
+  #    chebi_interacts_with_ttd_target_id-rev:
+  #      - supportBatch: true
+  #        useTemplating: true
+  #        inputs:
+  #          - id: "TTD.TARGET"
+  #            semantic: Gene
+  #        requestBodyType: object
+  #        requestBody: ## no prefix
+  #          body: >-
+  #            {"q": {{ queryInputs | replPrefix('association.predicate:"biolink:interacts_with"
+  #             AND (NOT _exists_:object.uniprotkb) AND (_exists_:subject.name) AND (_exists_:object.name)
+  #             AND object.ttd_target_id') | dump}},
+  #             "scopes": []
+  #            }
+  #        outputs:
+  #          - id: CHEBI
+  #            semantic: SmallMolecule
+  #        parameters:
+  #          ## not including these fields due to data-processing / biolink-modeling issues
+  #          ## - association.moa
+  #          ## - association.trial_status
+  #          ## - object.bioclass
+  #          ## - object.target_type
+  #          fields: subject.chebi
+  #          size: 1000
+  #        predicate: interacts_with
+  #        source: "infores:ttd"
+  #        response_mapping:
+  #          "$ref": "#/components/x-bte-response-mapping/chebi-subject"
+  #        # testExamples:
+  #        #   - qInput: "TTD.TARGET:T31204"
+  #        #     oneOutput: "CHEBI:9711"
+    pubchem_interacts_with_uniprotkb:
+    ## url: https://biothings.transltr.io/ttd/query?q=_exists_:subject.pubchem_compound%20AND%20association.predicate:%22biolink:interacts_with%22%20AND%20_exists_:object.uniprotkb%20AND%20_exists_:subject.name%20AND%20_exists_:object.name
+    ## 38,914 records
+    ## exists: subject.pubchem_compound, association.predicate.biolink:interacts_with, object.uniprotkb, subject.name, object.name
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: "PUBCHEM.COMPOUND"
+            semantic: SmallMolecule
+        requestBodyType: object
+        requestBody: ## no prefix
+          body: >-
+            {"q": {{ queryInputs | replPrefix('association.predicate:"biolink:interacts_with"
+             AND (_exists_:subject.name) AND (_exists_:object.name) AND subject.pubchem_compound') | dump}},
+             "scopes": []
+            }
+        outputs:
+          - id: UniProtKB
+            semantic: Gene
+        parameters:
+        ## not including these fields due to data-processing / biolink-modeling issues
+        ## - association.ic50, ec50, ki
+        ## - association.trial_status
+        ## - object.bioclass
+        ## - object.target_type
+          fields: >-
+            object.uniprotkb,
+            object.name,
+            subject.name
+          size: 1000
+        predicate: interacts_with
+        source: "infores:ttd"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/uniprotkb-object"
+        # testExamples:
+        #   - qInput: "PUBCHEM_COMPOUND:12795894"     ## Procyanidin B-2 3,3'-di-O-gallate
+        #     oneOutput: "UniProtKB:Q14534"           ## Squalene monooxygenase (SQLE)
+    pubchem_interacts_with_uniprotkb-rev:
+      - supportBatch: true
+        useTemplating: true
+        inputs:
+          - id: UniProtKB
+            semantic: Gene
+        requestBodyType: object
+        requestBody: ## no prefix
+          body: >-
+            {"q": {{ queryInputs | replPrefix('association.predicate:"biolink:interacts_with"
+             AND (_exists_:subject.name) AND (_exists_:object.name) AND object.uniprotkb') | dump}},
+             "scopes": []
+            }
+        outputs:
+          - id: "PUBCHEM.COMPOUND"
+            semantic: SmallMolecule
+        parameters:
+        ## not including these fields due to data-processing / biolink-modeling issues
+        ## - association.ic50, ec50, ki
+        ## - association.trial_status
+        ## - object.bioclass
+        ## - object.target_type
+          fields: >-
+            subject.pubchem_compound,
+            subject.name,
+            object.name
+          size: 1000
+        predicate: interacts_with
+        source: "infores:ttd"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/pubchem-subject"
+        # testExamples:
+        #   - qInput: "UniProtKB:P29371"                 ## Neuromedin-K receptor (TACR3)
+        #     oneOutput: "PUBCHEM.COMPOUND:132846"       ## L-733060
+    pubchem_interacts_with_ttd_target_id:
+      ## url: https://biothings.transltr.io/ttd/query?q=_exists_:subject.pubchem_compound%20AND%20association.predicate:%22association.predicate:%22%20AND%20_exists_:object.ttd_target_id%20AND%20NOT%20_exists_:object.uniprotkb%20AND%20_exists_:subject.name%20AND%20_exists_:object.name
+      ## 18,714 records
+      ## exists: subject.pubchem_compound, association.predicate.biolink:interacts_with, object.ttd_target_id, subject.name, object.name
+      ## not exists: object.uniprotkb
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: "PUBCHEM.COMPOUND"
+            semantic: SmallMolecule
+        requestBodyType: object
+        requestBody: ## no prefix
+          body: >-
+            {"q": {{ queryInputs | replPrefix('association.predicate:"biolink:interacts_with"
+             AND (_exists_:subject.name) AND (_exists_:object.name)
+             AND (NOT _exists_:object.uniprotkb) AND subject.pubchem_compound') | dump}}, 
+             "scopes": []
+            }
+        outputs:
+          - id: "TTD.TARGET"
+            semantic: Gene
+        parameters:
+          ## not including these fields due to data-processing / biolink-modeling issues
+          ## - association.ic50, ec50, ki
+          ## - association.trial_status
+          ## - object.bioclass
+          ## - object.target_type
+          fields: >-
+            object.ttd_target_id,
+            object.name,
+            subject.name
+          size: 1000
+        predicate: interacts_with
+        source: "infores:ttd"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/ttd_target_id-object"
+        # testExamples:
+        #   - qInput: "PUBCHEM_COMPOUND:128354"          ## FR-62765
+        #     oneOutput: "TTD.TARGET:T26623"             ## Aldose reductase (AKR1B1)
+    pubchem_interacts_with_ttd_target_id-rev:
+      - supportBatch: true
+        useTemplating: true
+        inputs:
+          - id: "TTD.TARGET"
+            semantic: Gene
+        requestBodyType: object
+        requestBody: ## no prefix
+          body: >-
+            {"q": {{ queryInputs | replPrefix('association.predicate:"biolink:interacts_with"
+             AND (_exists_:subject.name) AND (_exists_:object.name)
+             AND (NOT _exists_:object.uniprotkb) AND object.ttd_target_id') | dump}}, 
+             "scopes": []
+             }
+        outputs:
+          - id: "PUBCHEM.COMPOUND"
+            semantic: SmallMolecule
+        parameters:
+          ## not including these fields due to data-processing / biolink-modeling issues
+          ## - association.ic50, ec50, ki
+          ## - association.trial_status
+          ## - object.bioclass
+          ## - object.target_type
+          fields: >-
+            subject.pubchem_compound,
+            subject.name,
+            object.name
+          size: 1000
+        predicate: interacts_with
+        source: "infores:ttd"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/pubchem-subject"
+        # testExamples:
+        #   - qInput: "TTD.TARGET:T60529"               ## Prostaglandin G/H synthase 1 (COX-1)
+        #     oneOutput: "PUBCHEM.COMPOUND:128861"      ## CYANIDIN
+    ttd_drug_id_interacts_with_uniprotkb:
+      ## url: https://biothings.transltr.io/ttd/query?q=_exists_:subject.ttd_drug_id%20AND%20association.predicate:%22biolink:interacts_with%22%20AND%20_exists_:object.uniprotkb%20AND%20NOT%20_exists_:subject.pubchem_compound%20AND%20_exists_:subject.name%20AND%20_exists_:object.name
+      ## 130 records
+      ## exists: subject.ttd_drug_id, association.predicate.biolink:interacts_with,object.uniprotkb, subject.name, object.name
+      ## not exists: subject.pubchem_compound
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: "TTD.DRUG"
+            semantic: SmallMolecule
+        requestBodyType: object
+        requestBody: ## no prefix
+          body: >-
+            {"q": {{ queryInputs | replPrefix('association.predicate:"biolink:interacts_with"
+             AND (_exists_:subject.name) AND (_exists_:object.name)
+             AND (NOT _exists_:subject.pubchem_compound) AND subject.ttd_drug_id') | dump}}, 
+             "scopes": []
+             }
+        outputs:
+          - id: UniProtKB
+            semantic: Gene
+        parameters:
+        ## not including these fields due to data-processing / biolink-modeling issues
+        ## - association.moa
+        ## - association.trial_status
+        ## - object.bioclass
+        ## - object.target_type
+          fields: >-
+            object.uniprotkb,
+            object.name, 
+            subject.name
+          size: 1000
+        predicate: interacts_with
+        source: "infores:ttd"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/uniprotkb-object"
+        # testExamples:
+        #   - qInput: "TTD.DRUG:D01ZYG"             ## Alemtuzumab
+        #     oneOutput: "UniProtKB:P31358"         ## Cambridge pathology 1 antigen (CD52)
+    ttd_drug_id_interacts_with_uniprotkb-rev:
+      - supportBatch: true
+        useTemplating: true
+        inputs:
+          - id: UniProtKB
+            semantic: Gene
+        requestBodyType: object
+        requestBody: ## no prefix
+          body: >-
+            {"q": {{ queryInputs | replPrefix('association.predicate:"biolink:interacts_with"
+             AND (_exists_:subject.name) AND (_exists_:object.name)
+             AND (NOT _exists_:subject.pubchem_compound) AND object.uniprotkb') | dump}}, 
+             "scopes": []
+             }
+        outputs:
+          - id: "TTD.DRUG"
+            semantic: SmallMolecule
+        parameters:
+        ## not including these fields due to data-processing / biolink-modeling issues
+        ## - association.moa
+        ## - association.trial_status
+        ## - object.bioclass
+        ## - object.target_type
+          fields: >-
+            subject.ttd_drug_id,
+            subject.name,
+            object.name
+          size: 1000
+        predicate: interacts_with
+        source: "infores:ttd"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/ttd_drug_id-subject"
+        # testExamples:
+        #   - qInput: "UniProtKB:P48551"             ## Interferon alpha/beta receptor 2 (IFNAR2)
+        #     oneOutput: "TTD.DRUG:D0GA0A"           ## Interferon alfacon-1
+    ttd_drug_id_interacts_with_ttd_target_id:
+      ## url: https://biothings.transltr.io/ttd/query?q=_exists_:subject.ttd_drug_id%20AND%20association.predicate:%22biolink:interacts_with%22%20AND%20_exists_:object.ttd_target_id%20AND%20NOT%20_exists_:subject.pubchem_compound%20AND%20NOT%20_exists_:object.uniprotkb%20AND%20_exists_:subject.name%20AND%20_exists_:object.name
+      ## 57 records
+      ## exists: subject.ttd_drug_id, association.predicate.biolink:interacts_with, object.ttd_target_id, object.name, subject.name
+      ## not exists: subject.pubchem_compound, object.uniprotkb
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: "TTD.DRUG"
+            semantic: SmallMolecule
+        requestBodyType: object
+        requestBody: ## no prefix
+          body: >-
+            {"q": {{ queryInputs | replPrefix('association.predicate:"biolink:interacts_with"
+             AND (_exists_:subject.name) AND (_exists_:object.name)
+             AND (NOT _exists_:subject.pubchem_compound) AND (NOT _exists_:object.uniprotkb) 
+             AND subject.ttd_drug_id') | dump}}, 
+             "scopes": []
+             }
+        outputs:
+          - id: "TTD.TARGET"
+            semantic: Gene
+        parameters:
+          ## not including these fields due to data-processing / biolink-modeling issues
+          ## - association.moa
+          ## - association.trial_status
+          ## - object.bioclass
+          ## - object.target_type
+          fields: >-
+            object.ttd_target_id, 
+            object.name,
+            subject.name
+          size: 1000
+        predicate: interacts_with
+        source: "infores:ttd"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/ttd_target_id-object"
+        # testExamples:
+        #   - qInput: "TTD.DRUG:D02DES"                 ## Interleukin 1 receptor type 1 (IL1R1)
+        #     oneOutput: "TTD.TARGET:T72515"            ## Anakinra
+    ttd_drug_id_interacts_with_ttd_target_id-rev:
+      - supportBatch: true
+        useTemplating: true
+        inputs:
+          - id: "TTD.TARGET"
+            semantic: Gene
+        requestBodyType: object
+        requestBody: ## no prefix
+          body: >-
+            {"q": {{ queryInputs | replPrefix('association.predicate:"biolink:interacts_with" 
+             AND (_exists_:subject.name) AND (_exists_:object.name)
+             AND (NOT _exists_:subject.pubchem_compound) AND (NOT _exists_:object.uniprotkb)
+             AND object.ttd_target_id') | dump}}, 
+             "scopes": []
+             }
+        outputs:
+          - id: "TTD.DRUG"
+            semantic: SmallMolecule
+        parameters:
+          ## not including these fields due to data-processing / biolink-modeling issues
+          ## - association.moa
+          ## - association.trial_status
+          ## - object.bioclass
+          ## - object.target_type
+          fields: >-
+            subject.ttd_drug_id,
+            subject.name,
+            object.name
+          size: 1000
+        predicate: interacts_with
+        source: "infores:ttd"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/ttd_drug_id-subject"
+        # testExamples:
+        #   - qInput: "TTD.TARGET:T65414"            ## Human immunodeficiency virus Envelope messenger RNA (HIV env mRNA)
+        #     oneOutput: "TTD.DRUG:D0L3MP"           ## VRX496
+  x-bte-response-mapping:
+#    chebi-subject:
+#      CHEBI: subject.chebi                           # no prefix
+#      input_name: object.name
+#      output_name: subject.name
+    mondo-object:
+      MONDO: object.mondo                            # no prefix
+      input_name: subject.name
+      output_name: object.name
+    pubchem-subject:
+      "PUBCHEM.COMPOUND": subject.pubchem_compound   # no prefix
+      input_name: object.name
+      output_name: subject.name
+    ttd_drug_id-subject:
+      "TTD.DRUG": subject.ttd_drug_id
+      input_name: object.name
+      output_name: subject.name
+    icd11-object:
+      ICD11: object.icd11                            # no prefix
+      input_name: subject.name                       # BTE will use this for node name if node normalizer didn't provide
+      output_name: object.name                       # BTE will use this for node name if node normalizer didn't provide
+    uniprotkb-subject:
+      UniProtKB: subject.uniprotkb                   # no prefix
+      input_name: object.name
+      output_name: subject.name
+    uniprotkb-object:
+      UniProtKB: object.uniprotkb
+      input_name: subject.name
+      output_name: object.name
+    ttd_target_id-subject:
+      "TTD.TARGET": subject.ttd_target_id
+      input_name: object.name
+      output_name: subject.name
+    ttd_target_id-object:
+      "TTD.TARGET": object.ttd_target_id
+      input_name: subject.name
+      output_name: object.name
