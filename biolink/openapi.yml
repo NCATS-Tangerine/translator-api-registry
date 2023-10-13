@@ -929,6 +929,28 @@ components:
       # homologous_gene_model_name: associations.subject.label
       # monarch_source_database: associations.provided_by
       # "biolink:original_predicate": associations.relation.label
+  x-bte-transformers:
+    custom_processing:
+      jq:
+        wrap: |-
+          .associations = (
+            [
+              (
+                # take associations that aren't null
+                select(.associations != null) | .associations | .[] | 
+                # split association object ids & take last (only for CHEMBL, REACT, HGNC)
+                select(.object.id != null) | (.object.id | split(":") | first) as $pref | .object[$pref] = (if $pref == "HGNC" or $pref == "NCBIGene" or $pref == "REACT" then (.object.id | split(":") | last) else .object.id end) |
+                # take publications with PMID & for IDs take last element after splitting by :
+                .publications = [foreach (.publications | .[]? | .id) as $pub ([]; []; if ($pub == null or ($pub | startswith("PMID") | not)) then empty else {id: ($pub | split(":") | last)} end)]
+              )
+              # delete publications if empty array
+              | delifempty(.publications)
+            ] +
+            # include associations with null object ids
+            [select(.associations != null) | .associations | .[] | select(.object.id == null)]
+          )
+          # delete association if empty array
+          | delifempty(.associations)
   x-bte-kgs-operations:
   ## other useful endpoints for x-bte annotation are...
   ## /relation/usage/between/{subject_category}/{object_category}
@@ -954,6 +976,8 @@ components:
         semantic: Gene
       predicate: expresses
       source: "infores:monarchinitiative"
+      transformer:
+        "$ref": "#/components/x-bte-transformers/custom_processing"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/gene-hgnc"
       # testExamples:
@@ -991,6 +1015,8 @@ components:
         semantic: Gene
       predicate: caused_by
       source: "infores:monarchinitiative"
+      transformer:
+        "$ref": "#/components/x-bte-transformers/custom_processing"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/gene-hgnc"
       # testExamples:
@@ -1027,6 +1053,8 @@ components:
       ## more specific than contribution_from
       predicate: condition_associated_with_gene
       source: "infores:monarchinitiative"
+      transformer:
+        "$ref": "#/components/x-bte-transformers/custom_processing"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/gene-hgnc"
       # testExamples:
@@ -1054,6 +1082,8 @@ components:
       ## biolink 2.2.13 maps to RO:0002331 involved_in
       predicate: actively_involves
       source: "infores:monarchinitiative"
+      transformer:
+        "$ref": "#/components/x-bte-transformers/custom_processing"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/pathway-react"
       # testExamples:
@@ -1079,6 +1109,8 @@ components:
         semantic: PhenotypicFeature
       predicate: has_phenotype
       source: "infores:monarchinitiative"
+      transformer:
+        "$ref": "#/components/x-bte-transformers/custom_processing"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/phenotype-hp"
       # testExamples:
@@ -1108,6 +1140,8 @@ components:
         semantic: SequenceVariant
       predicate: contribution_from
       source: "infores:monarchinitiative"
+      transformer:
+        "$ref": "#/components/x-bte-transformers/custom_processing"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/variant-dbsnp"
       # testExamples:
@@ -1133,6 +1167,8 @@ components:
         semantic: GrossAnatomicalStructure
       predicate: expressed_in
       source: "infores:monarchinitiative"
+      transformer:
+        "$ref": "#/components/x-bte-transformers/custom_processing"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/anatomy-uberon"
       # testExamples:
@@ -1159,6 +1195,8 @@ components:
         semantic: Disease
       predicate: causes
       source: "infores:monarchinitiative"
+      transformer:
+        "$ref": "#/components/x-bte-transformers/custom_processing"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/disease-mondo"
       # testExamples:
@@ -1185,6 +1223,8 @@ components:
         semantic: Disease
       predicate: gene_associated_with_condition
       source: "infores:monarchinitiative"
+      transformer:
+        "$ref": "#/components/x-bte-transformers/custom_processing"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/disease-mondo"
       # testExamples:
@@ -1210,6 +1250,8 @@ components:
       ##   with all levels of certainty https://wiki.thebiogrid.org/doku.php/experimental_systems
       predicate: interacts_with
       source: "infores:monarchinitiative"
+      transformer:
+        "$ref": "#/components/x-bte-transformers/custom_processing"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/gene-hgnc"
       # testExamples:
@@ -1242,6 +1284,8 @@ components:
       ## gene -> gene ortholog -(is model of)-> disease...not sure what predicate to use
       predicate: related_to
       source: "infores:monarchinitiative"
+      transformer:
+        "$ref": "#/components/x-bte-transformers/custom_processing"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/orthologGene2diseaseMondo"
       # testExamples:
@@ -1272,6 +1316,8 @@ components:
       ## gene -> gene ortholog -(has phenotype)-> phenotype...not sure what predicate to use
       predicate: related_to
       source: "infores:monarchinitiative"
+      transformer:
+        "$ref": "#/components/x-bte-transformers/custom_processing"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/orthologGene2phenoHP"
       # testExamples:
@@ -1297,6 +1343,8 @@ components:
         semantic: PhenotypicFeature
       predicate: gene_associated_with_condition
       source: "infores:monarchinitiative"
+      transformer:
+        "$ref": "#/components/x-bte-transformers/custom_processing"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/phenotype-hp"
       # testExamples:
@@ -1321,6 +1369,8 @@ components:
         semantic: SequenceVariant
       predicate: has_sequence_variant
       source: "infores:monarchinitiative"
+      transformer:
+        "$ref": "#/components/x-bte-transformers/custom_processing"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/variant-dbsnp"
       # testExamples:
@@ -1346,6 +1396,8 @@ components:
         semantic: Disease
       predicate: actively_involved_in
       source: "infores:monarchinitiative"
+      transformer:
+        "$ref": "#/components/x-bte-transformers/custom_processing"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/disease-mondo"
       # testExamples:
@@ -1369,6 +1421,8 @@ components:
         semantic: Disease
       predicate: phenotype_of
       source: "infores:monarchinitiative"
+      transformer:
+        "$ref": "#/components/x-bte-transformers/custom_processing"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/disease-mondo"
       # testExamples:
@@ -1393,6 +1447,8 @@ components:
         semantic: Gene
       predicate: condition_associated_with_gene
       source: "infores:monarchinitiative"
+      transformer:
+        "$ref": "#/components/x-bte-transformers/custom_processing"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/gene-hgnc"
       # testExamples:
@@ -1420,6 +1476,8 @@ components:
       ## main relations: has phenotype, is marker for, contributes to condition...
       predicate: related_to
       source: "infores:monarchinitiative"
+      transformer:
+        "$ref": "#/components/x-bte-transformers/custom_processing"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/variant-dbsnp"
       # testExamples:
@@ -1446,6 +1504,8 @@ components:
         semantic: Disease
       predicate: contributes_to
       source: "infores:monarchinitiative"
+      transformer:
+        "$ref": "#/components/x-bte-transformers/custom_processing"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/disease-mondo-dbsnp-start"
       # testExamples:
@@ -1472,6 +1532,8 @@ components:
         semantic: Gene
       predicate: is_sequence_variant_of
       source: "infores:monarchinitiative"
+      transformer:
+        "$ref": "#/components/x-bte-transformers/custom_processing"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/gene-hgnc-dbsnp-start"
       # testExamples:
@@ -1498,6 +1560,8 @@ components:
       ## main relations: has phenotype, is marker for, contributes to condition...
       predicate: related_to
       source: "infores:monarchinitiative"
+      transformer:
+        "$ref": "#/components/x-bte-transformers/custom_processing"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/phenotype-hp-dbsnp-start"
       # testExamples:
