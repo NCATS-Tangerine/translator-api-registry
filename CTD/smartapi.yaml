@@ -138,6 +138,38 @@ paths:
       # - "$ref": "#/components/x-bte-kgs-operations/gene2pathway_2"
       - "$ref": "#/components/x-bte-kgs-operations/pathway2gene_2"
 components:
+  x-bte-transformers:
+    custom_processing:
+      jq:
+        pair: |-
+          reduce .response[] as $item (
+            {}; .[(
+                if ($edge.input | type) == "object" then
+                  ($edge.input.queryInputs | toArray)[]
+                else
+                  ($edge.input | toArray)[]
+                end
+              ) 
+              | select(($item.Input | ascii_upcase | split(":") | last) == (. | ascii_upcase))
+              | generateCurie($edge.association.input_id; .)
+            ] = [] 
+            + .[(
+                if ($edge.input | type) == "object" then
+                  ($edge.input.queryInputs | toArray)[]
+                else
+                  ($edge.input | toArray)[]
+                end
+              )
+              | select(($item.Input | ascii_upcase | split(":") | last) == (. | ascii_upcase))
+              | generateCurie($edge.association.input_id; .)
+            ] 
+            + [$item]
+          ) | map_values([.])
+        wrap: |-
+          ((.[] | select(.PubMedIDs != null) | .PubMedIDs) |= split("|")) | 
+          ((.[] | select(.PubMedIds != null) | .PubMedIds) |= split("|")) | 
+          ((.[] | select(.DirectEvidence != null) | .DirectEvidence) |= split("|")) | 
+          {data: .}
   x-bte-kgs-operations:
     ## - pubmed IDs are pipe-delimited (|) strings but BTE seems to parse these correctly
     ## - while the API supports multiple IDs as input (batch-query)...we aren't using it because
@@ -181,6 +213,8 @@ components:
         report: genes_curated
         format: json
       predicate: related_to
+      transformer:
+        "$ref": "#/components/x-bte-transformers/custom_processing"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/chemical2gene"
       # testExamples:
@@ -202,6 +236,8 @@ components:
         report: chems_curated
         format: json
       predicate: related_to
+      transformer:
+        "$ref": "#/components/x-bte-transformers/custom_processing"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/gene2chemical"
       # testExamples:
@@ -224,6 +260,8 @@ components:
     #     report: diseases_curated
     #     format: json
     #   predicate: related_to
+    #   transformer:
+    #     "$ref": "#/components/x-bte-transformers/custom_processing"
     #   response_mapping:
     #     "$ref": "#/components/x-bte-response-mapping/chemical2disease_1"
     #   # testExamples:
@@ -245,6 +283,8 @@ components:
         report: chems_curated
         format: json
       predicate: related_to
+      transformer:
+        "$ref": "#/components/x-bte-transformers/custom_processing"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/disease2chemical"
       # testExamples:
@@ -266,6 +306,8 @@ components:
     #     report: diseases_curated
     #     format: json
     #   predicate: related_to
+    #   transformer:
+    #     "$ref": "#/components/x-bte-transformers/custom_processing"
     #   response_mapping:
     #     "$ref": "#/components/x-bte-response-mapping/chemical2disease_2"
     #   # testExamples:
@@ -287,6 +329,8 @@ components:
         report: chems_curated
         format: json
       predicate: related_to
+      transformer:
+        "$ref": "#/components/x-bte-transformers/custom_processing"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/disease2chemical"
       # testExamples:
@@ -311,6 +355,8 @@ components:
         ontology: go_bp
         format: json
       predicate: related_to
+      transformer:
+        "$ref": "#/components/x-bte-transformers/custom_processing"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/chemical2go"
       # testExamples:
@@ -335,6 +381,8 @@ components:
         ontology: go_cc
         format: json
       predicate: related_to
+      transformer:
+        "$ref": "#/components/x-bte-transformers/custom_processing"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/chemical2go"
       # testExamples:
@@ -359,6 +407,8 @@ components:
         ontology: go_mf
         format: json
       predicate: related_to
+      transformer:
+        "$ref": "#/components/x-bte-transformers/custom_processing"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/chemical2go"
       # testExamples:
@@ -381,6 +431,8 @@ components:
         report: genes_curated
         format: json
       predicate: related_to
+      transformer:
+        "$ref": "#/components/x-bte-transformers/custom_processing"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/disease2gene"
       # testExamples:
@@ -402,6 +454,8 @@ components:
     #     report: diseases_curated
     #     format: json
     #   predicate: related_to
+    #   transformer:
+    #     "$ref": "#/components/x-bte-transformers/custom_processing"
     #   response_mapping:
     #     "$ref": "#/components/x-bte-response-mapping/gene2disease_1"
     #   # testExamples:
@@ -423,6 +477,8 @@ components:
         report: genes_curated
         format: json
       predicate: related_to
+      transformer:
+        "$ref": "#/components/x-bte-transformers/custom_processing"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/disease2gene"
       # testExamples:
@@ -444,6 +500,8 @@ components:
     #     report: diseases_curated
     #     format: json
     #   predicate: related_to
+    #   transformer:
+    #     "$ref": "#/components/x-bte-transformers/custom_processing"
     #   response_mapping:
     #     "$ref": "#/components/x-bte-response-mapping/gene2disease_2"
     #   # testExamples:
@@ -466,6 +524,8 @@ components:
     #     report: pathways_curated
     #     format: json
     #   predicate: participates_in
+    #   transformer:
+    #     "$ref": "#/components/x-bte-transformers/custom_processing"
     #   response_mapping:
     #     "$ref": "#/components/x-bte-response-mapping/gene2pathway_1"
     #   # testExamples:
@@ -487,6 +547,8 @@ components:
         report: genes_curated
         format: json
       predicate: has_participant
+      transformer:
+        "$ref": "#/components/x-bte-transformers/custom_processing"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/pathway2gene"
       # testExamples:
@@ -508,6 +570,8 @@ components:
     #     report: pathways_curated
     #     format: json
     #   predicate: participates_in
+    #   transformer:
+    #     "$ref": "#/components/x-bte-transformers/custom_processing"
     #   response_mapping:
     #     "$ref": "#/components/x-bte-response-mapping/gene2pathway_2"
     #   # testExamples:
@@ -529,6 +593,8 @@ components:
         report: genes_curated
         format: json
       predicate: has_participant
+      transformer:
+        "$ref": "#/components/x-bte-transformers/custom_processing"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/pathway2gene"
       # testExamples:
