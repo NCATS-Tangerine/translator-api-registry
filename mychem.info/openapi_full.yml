@@ -733,12 +733,13 @@ components:
         body:
           q: "{{ queryInputs }}"  ## no prefix
           scopes: aeolus.unii
-          ## all 3044 records have unii, only 1931 have inchikey
+          ## all 1551 records have unii and rxcui (another option), only 1016 have inchikey 
       outputs:
       - id: MEDDRA
         semantic: Disease
       parameters:
-        fields: aeolus.indications.meddra_code  ## no prefix
+        fields: aeolus.indications     ## need the whole thing for jmespath to work
+        jmespath: aeolus.indications|[?count>`20`]
         size: 1000  ## note size limit; added just in case
       predicate: treats
       source: "infores:aeolus"
