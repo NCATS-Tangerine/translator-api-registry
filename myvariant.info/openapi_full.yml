@@ -327,24 +327,32 @@ paths:
       # description: Make batch gene queries and return matching gene hits
       tags:
       - query
-      ## 16 operations (8 sets)
+      ## 22 operations (12 sets)
       x-bte-kgs-operations:
-      - "$ref": "#/components/x-bte-kgs-operations/civic-geneDisease"
-      - "$ref": "#/components/x-bte-kgs-operations/civic-geneDisease-rev"
-      - "$ref": "#/components/x-bte-kgs-operations/civic-variantDisease"
-      - "$ref": "#/components/x-bte-kgs-operations/civic-variantDisease-rev"
-      - "$ref": "#/components/x-bte-kgs-operations/dbsnp-variantGene"
-      - "$ref": "#/components/x-bte-kgs-operations/dbsnp-variantGene-rev"
-      - "$ref": "#/components/x-bte-kgs-operations/clinvar-variantGene"
-      - "$ref": "#/components/x-bte-kgs-operations/clinvar-variantGene-rev"
-      - "$ref": "#/components/x-bte-kgs-operations/clinvar-geneDisease"
-      - "$ref": "#/components/x-bte-kgs-operations/clinvar-geneDisease-rev"
-      - "$ref": "#/components/x-bte-kgs-operations/clinvar-variantDisease"
-      - "$ref": "#/components/x-bte-kgs-operations/clinvar-variantDisease-rev"
-      - "$ref": "#/components/x-bte-kgs-operations/docm-geneDisease"
-      - "$ref": "#/components/x-bte-kgs-operations/docm-geneDisease-rev"
-      - "$ref": "#/components/x-bte-kgs-operations/docm-variantDisease"
-      - "$ref": "#/components/x-bte-kgs-operations/docm-variantDisease-rev"
+      # - "$ref": "#/components/x-bte-kgs-operations/civic-geneDisease"
+      # - "$ref": "#/components/x-bte-kgs-operations/civic-geneDisease-rev"
+      # - "$ref": "#/components/x-bte-kgs-operations/civic-variantDisease"
+      # - "$ref": "#/components/x-bte-kgs-operations/civic-variantDisease-rev"
+      # - "$ref": "#/components/x-bte-kgs-operations/dbsnp-variantGene"
+      # - "$ref": "#/components/x-bte-kgs-operations/dbsnp-variantGene-rev"
+      # - "$ref": "#/components/x-bte-kgs-operations/clinvar-variantGene"
+      # - "$ref": "#/components/x-bte-kgs-operations/clinvar-variantGene-rev"
+      # - "$ref": "#/components/x-bte-kgs-operations/clinvar-gene-diseaseOMIM"
+      # - "$ref": "#/components/x-bte-kgs-operations/clinvar-gene-diseaseORPHANET"
+      # - "$ref": "#/components/x-bte-kgs-operations/clinvar-gene-phenoHP"
+      # - "$ref": "#/components/x-bte-kgs-operations/clinvar-gene-diseaseOMIM-rev"
+      # - "$ref": "#/components/x-bte-kgs-operations/clinvar-gene-diseaseORPHANET-rev"
+      - "$ref": "#/components/x-bte-kgs-operations/clinvar-gene-phenoHP-rev"
+      # - "$ref": "#/components/x-bte-kgs-operations/clinvar-variant-diseaseOMIM"
+      # - "$ref": "#/components/x-bte-kgs-operations/clinvar-variant-diseaseORPHANET"
+      # - "$ref": "#/components/x-bte-kgs-operations/clinvar-variant-phenoHP"
+      # - "$ref": "#/components/x-bte-kgs-operations/clinvar-variant-diseaseOMIM-rev"
+      # - "$ref": "#/components/x-bte-kgs-operations/clinvar-variant-diseaseORPHANET-rev"
+      - "$ref": "#/components/x-bte-kgs-operations/clinvar-variant-phenoHP-rev"
+      # - "$ref": "#/components/x-bte-kgs-operations/docm-geneDisease"
+      # - "$ref": "#/components/x-bte-kgs-operations/docm-geneDisease-rev"
+      # - "$ref": "#/components/x-bte-kgs-operations/docm-variantDisease"
+      # - "$ref": "#/components/x-bte-kgs-operations/docm-variantDisease-rev"
 components:
   parameters:
     ## assembly is specific to MyVariant
@@ -667,8 +675,9 @@ components:
     clinvar-rsid:
       DBSNP: clinvar.rsid  ## no prefix
       output_name: _id     ## variant name
-    clinvar-geneDisease:
+    clinvar-diseaseOMIM:
       OMIM: clinvar.rcv.conditions.identifiers.omim  ## no prefix
+      input_name: clinvar.gene.symbol    ## Node Norm doesn't recognize all NCBIGene IDs
       ## commenting out because data-processing / biolink-modeling issues
       # ## edge attributes
       # clinvar_clinical_significance: clinvar.rcv.clinical_significance  ## similar to relation
@@ -677,10 +686,16 @@ components:
       # clinvar_num_submitters: clinvar.rcv.number_submitters
       # clinvar_variant_origin: clinvar.rcv.origin
       # clinvar_review_status: clinvar.rcv.review_status
+    clinvar-diseaseORPHANET:
+      ORPHANET: clinvar.rcv.conditions.identifiers.orphanet  ## no prefix
+      input_name: clinvar.gene.symbol    ## Node Norm doesn't recognize all NCBIGene IDs
+    clinvar-phenoHP:
+      HP: clinvar.rcv.conditions.identifiers.human_phenotype_ontology     ## HAS PREFIX
+      input_name: clinvar.gene.symbol    ## Node Norm doesn't recognize all NCBIGene IDs
     clinvar-gene-variant-start:
       NCBIGene: clinvar.gene.id  ## no prefix
       input_name: _id            ## variant name
-    clinvar-variantDisease:
+    clinvar-variantDiseaseOMIM:
       OMIM: clinvar.rcv.conditions.identifiers.omim  ## no prefix
       input_name: _id                                ## variant name
       ## commenting out because data-processing / biolink-modeling issues
@@ -691,8 +706,15 @@ components:
       # clinvar_num_submitters: clinvar.rcv.number_submitters
       # clinvar_variant_origin: clinvar.rcv.origin
       # clinvar_review_status: clinvar.rcv.review_status
+    clinvar-variantDiseaseORPHANET:
+      ORPHANET: clinvar.rcv.conditions.identifiers.orphanet  ## no prefix
+      input_name: _id                                        ## variant name
+    clinvar-variantPhenoHP:
+      HP: clinvar.rcv.conditions.identifiers.human_phenotype_ontology    ## HAS PREFIX
+      input_name: _id                                                    ## variant name
     clinvar-gene:
       NCBIGene: clinvar.gene.id  ## no prefix
+      output_name: clinvar.gene.symbol    ## Node Norm doesn't recognize all NCBIGene IDs
     docm-disease-only:
       DOID: docm.doid
     docm-gene:
@@ -940,15 +962,17 @@ components:
       # testExamples:
       #   - qInput: "NCBIGene:284098"          ## PIGW
       #     oneOutput: "DBSNP:rs915498700"     ## chr17:g.34893784T>C
-    clinvar-geneDisease:
-    ## - conditions.identifiers can include multiple kinds
-    ##   some conditions have no IDs, some have multiple IDs (not all have OMIM). 
-    ##   - omim: 497648 (no prefix)
-    ##   - orphanet: 416644 (no prefix)
-    ##   - human_phenotype_ontology: 74175
-    ##   - efo: 3637, has EFO_000 format (not ID or CURIE)
-    ##   - many medgen IDs but I don't think SRI ID resolver supports this...
-    ##   - not indexed: mesh, mondo
+    ## clinvar disease ID info:
+    ## - some conditions have no IDs, some have multiple IDs (not all have OMIM). 
+    ## - omim: 987390 (no prefix)
+    ## - orphanet: 826717 (no prefix)
+    ## - human_phenotype_ontology: 141752
+    ## - efo: 5236, has EFO_000 format (not ID or CURIE)
+    ## - medgen: 2162595, but I don't think SRI ID resolver supports this...
+    ## - not indexed yet: mesh, mondo
+    clinvar-gene-diseaseOMIM:
+    ## 987275 records
+    ## (987390 - 987275 = 115 records have the omim field but lack the gene field) 
     - supportBatch: true
       useTemplating: true
       inputs:
@@ -958,7 +982,6 @@ components:
         body:
           q: "{{ queryInputs }}"  ## no prefix
           scopes: clinvar.gene.id
-          ## out of >497,000 records with clinvar.rcv.conditions.identifiers.omim field, all have gene field...
       outputs:
       - id: OMIM
         semantic: Disease
@@ -973,18 +996,70 @@ components:
         #   clinvar.rcv.number_submitters,
         #   clinvar.rcv.origin,
         #   clinvar.rcv.review_status
-        fields: clinvar.rcv.conditions.identifiers.omim
+        fields: clinvar.rcv.conditions.identifiers.omim,clinvar.gene.symbol
         size: 1000  ## note size limit; added just in case
       predicate: related_to
       ## clinical significance is like a relation: 
       ##   Uncertain significance, Pathogenic, Likely pathogenic, other
       source: "infores:clinvar"
       response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/clinvar-geneDisease"
+        "$ref": "#/components/x-bte-response-mapping/clinvar-diseaseOMIM"
       # testExamples:
       #   - qInput: "NCBIGene:55806"   ## HR
       #     oneOutput: "OMIM:209500"   ## Atrichia with papular lesions (APL)
-    clinvar-geneDisease-rev:
+    clinvar-gene-diseaseORPHANET:
+    ## see original operation clinvar-gene-diseaseOMIM notes
+    ## 826673 records
+    ## (826717 - 826673 = 44 records have the orphanet field but lack the gene field) 
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: NCBIGene
+        semantic: Gene
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"  ## no prefix
+          scopes: clinvar.gene.id
+      outputs:
+      - id: ORPHANET
+        semantic: Disease
+      parameters:
+        fields: clinvar.rcv.conditions.identifiers.orphanet,clinvar.gene.symbol
+        size: 1000  ## note size limit; added just in case
+      predicate: related_to
+      source: "infores:clinvar"
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/clinvar-diseaseORPHANET"
+      # testExamples:
+      #   - qInput: "NCBIGene:106099062"   ## LOC106099062
+      #     oneOutput: "ORPHANET:848"      ## beta Thalassemia (BTHAL)
+    clinvar-gene-phenoHP:
+    ## see original operation clinvar-gene-diseaseOMIM notes
+    ## 141562 records
+    ## (141752 - 141562 = 190 records have the hp field but lack the gene field) 
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: NCBIGene
+        semantic: Gene
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"  ## no prefix
+          scopes: clinvar.gene.id
+      outputs:
+      - id: HP
+        semantic: PhenotypicFeature
+      parameters:
+        fields: clinvar.rcv.conditions.identifiers.human_phenotype_ontology,clinvar.gene.symbol
+        size: 1000  ## note size limit; added just in case
+      predicate: related_to
+      source: "infores:clinvar"
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/clinvar-phenoHP"
+      # testExamples:
+      #   - qInput: "NCBIGene:4607"   ## MYBPC3
+      #     oneOutput: "HP:0001639"   ## Hypertrophic cardiomyopathy
+    clinvar-gene-diseaseOMIM-rev:
     - supportBatch: true
       useTemplating: true
       inputs:
@@ -998,7 +1073,7 @@ components:
       - id: NCBIGene
         semantic: Gene
       parameters:
-        fields: clinvar.gene.id
+        fields: clinvar.gene.id,clinvar.gene.symbol
         size: 1000  ## note size limit
       predicate: related_to
       source: "infores:clinvar"
@@ -1007,7 +1082,56 @@ components:
       # testExamples:
       #   - qInput: "OMIM:615592"        ## Immunodeficiency 15 (IMD15B)
       #     oneOutput: "NCBIGene:3551"   ## IKBKB
-    clinvar-variantDisease:
+    clinvar-gene-diseaseORPHANET-rev:
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: ORPHANET
+        semantic: Disease
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"  ## no prefix
+          scopes: clinvar.rcv.conditions.identifiers.orphanet
+      outputs:
+      - id: NCBIGene
+        semantic: Gene
+      parameters:
+        fields: clinvar.gene.id,clinvar.gene.symbol
+        size: 1000  ## note size limit
+      predicate: related_to
+      source: "infores:clinvar"
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/clinvar-gene"
+      # testExamples:
+      #   - qInput: "ORPHANET:827"        ## Stargardt disease (FFM)
+      #     oneOutput: "NCBIGene:5961"    ## PRPH2
+    clinvar-gene-phenoHP-rev:
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: HP
+        semantic: PhenotypicFeature
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"  ## HAS PREFIX
+          scopes: clinvar.rcv.conditions.identifiers.human_phenotype_ontology
+      outputs:
+      - id: NCBIGene
+        semantic: Gene
+      parameters:
+        fields: clinvar.gene.id,clinvar.gene.symbol
+        size: 1000  ## note size limit
+      predicate: related_to
+      source: "infores:clinvar"
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/clinvar-gene"
+      # testExamples:
+      #   - qInput: "HP:0001639"          ## Hypertrophic cardiomyopathy
+      #     oneOutput: "NCBIGene:4607"    ## MYBPC3
+    clinvar-variant-diseaseOMIM:
+    ## using dbsnp.rsid rather than clinvar.rsid field, because more records have dbsnp.rsid...
+    ## 857907 records
+    ## (987275 total, so >86% of records have dbsnp.rsid field) 
     - supportBatch: true
       useTemplating: true
       inputs:
@@ -1017,8 +1141,6 @@ components:
         body:
           q: "{{ queryInputs }}"  ## no prefix
           scopes: dbsnp.rsid
-          ## out of >497,000 records with clinvar.rcv.conditions.identifiers.omim field, 
-          ##        >405,000 records also have dbsnp.rsid field (which is more than the 347,000 records with clinvar.rsid)
       outputs:
       - id: OMIM
         semantic: Disease
@@ -1041,12 +1163,64 @@ components:
       ##   Uncertain significance, Pathogenic, Likely pathogenic, other
       source: "infores:clinvar"
       response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/clinvar-variantDisease"
+        "$ref": "#/components/x-bte-response-mapping/clinvar-variantDiseaseOMIM"
       ## https://myvariant.info/v1/query?q=_exists_:%22clinvar.rcv.conditions.identifiers.omim%22%20AND%20_exists_:%22dbsnp.rsid%22
       # testExamples:
       #   - qInput: "DBSNP:rs1193171808"    ## chr8:g.42171847A>G
       #     oneOutput: "OMIM:615592"        ## severe combined immunodeficiency due to IKK2 deficiency
-    clinvar-variantDisease-rev:
+    clinvar-variant-diseaseORPHANET:
+    ## see original operation clinvar-variant-diseaseOMIM notes
+    ## 719643 records
+    ## (826717 total, so >87% of records have dbsnp.rsid field) 
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: DBSNP
+        semantic: SequenceVariant
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"  ## no prefix
+          scopes: dbsnp.rsid
+      outputs:
+      - id: ORPHANET
+        semantic: Disease
+      parameters:
+        fields: clinvar.rcv.conditions.identifiers.orphanet,_id
+        size: 1000  ## note size limit; added just in case
+      predicate: related_to
+      source: "infores:clinvar"
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/clinvar-variantDiseaseORPHANET"
+      # testExamples:
+      #   - qInput: "DBSNP:rs1554270834"    ## chr6:g.42689807_42689814del
+      #     oneOutput: "ORPHANET:827"       ## Stargardt disease (FFM)
+    clinvar-variant-phenoHP:
+    ## see original operation clinvar-variant-diseaseOMIM notes
+    ## 124995 records
+    ## (141752 total, so >88% of records have dbsnp.rsid field) 
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: DBSNP
+        semantic: SequenceVariant
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"  ## no prefix
+          scopes: dbsnp.rsid
+      outputs:
+      - id: HP
+        semantic: PhenotypicFeature
+      parameters:
+        fields: clinvar.rcv.conditions.identifiers.human_phenotype_ontology,_id
+        size: 1000  ## note size limit; added just in case
+      predicate: related_to
+      source: "infores:clinvar"
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/clinvar-variantPhenoHP"
+      # testExamples:
+      #   - qInput: "DBSNP:rs367947846"    ## chr11:g.47367849G>C
+      #     oneOutput: "HP:0001638"        ## Cardiomyopathy (CMYO)
+    clinvar-variant-diseaseOMIM-rev:
     - supportBatch: true
       useTemplating: true
       inputs:
@@ -1069,6 +1243,52 @@ components:
       # testExamples:
       #   - qInput: "OMIM:602629"             ## Torsion dystonia 6 (DYT6)
       #     oneOutput: "DBSNP:rs1480200060"   ## chr8:g.42692270T>C
+    clinvar-variant-diseaseORPHANET-rev:
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: ORPHANET
+        semantic: Disease
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"  ## no prefix
+          scopes: clinvar.rcv.conditions.identifiers.orphanet
+      outputs:
+      - id: DBSNP
+        semantic: SequenceVariant
+      parameters:
+        fields: dbsnp.rsid,_id
+        size: 1000  ## note size limit
+      predicate: related_to
+      source: "infores:clinvar"
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/dbsnp-rsid"
+      # testExamples:
+      #   - qInput: "ORPHANET:848"            ## beta Thalassemia (BTHAL)
+      #     oneOutput: "DBSNP:rs33956879"     ## chr11:g.5248158A>T / chr11:g.5248158A>C / chr11:g.5248158A>G
+    clinvar-variant-phenoHP-rev:
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: HP
+        semantic: PhenotypicFeature
+      requestBody:
+        body:
+          q: "{{ queryInputs | replPrefix('HP') }}"  ## no prefix
+          scopes: clinvar.rcv.conditions.identifiers.human_phenotype_ontology
+      outputs:
+      - id: DBSNP
+        semantic: SequenceVariant
+      parameters:
+        fields: dbsnp.rsid,_id
+        size: 1000  ## note size limit
+      predicate: related_to
+      source: "infores:clinvar"
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/dbsnp-rsid"
+      # testExamples:
+      #   - qInput: "HP:0011040"               ## Abnormal intrahepatic bile duct morphology
+      #     oneOutput: "DBSNP:rs727504096"     ## chr6:g.51944718G>A
     docm-geneDisease:
     - supportBatch: true
       useTemplating: true
