@@ -585,17 +585,21 @@ components:
         inputs:
           - id: UMLS
             semantic: SmallMolecule
-        requestBodyType: object
         requestBody:
-          body: >-
-            {"q": {{ queryInputs | replPrefix('predicate:TREATS AND object.semtypes:(acab OR anab OR cgab OR comd OR dsyn OR mobd OR neop)
-            AND subject.umls')| dump }}, "scopes": []}
+          body: 
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: subject.umls
         outputs:
           - id: UMLS
             semantic: Disease
         parameters:
           fields: object.umls,relation.pmid,relation.sentence,subject.name,object.name
           size: 1000
+          filter: >-
+            subject.semtypes:(aapp OR antb OR bacs OR dsp OR food OR inch OR orch OR phsu OR vita) AND
+            (NOT subject.semtypes:(bact OR gngm OR plnt)) AND
+            predicate:TREATS AND
+            object.semtypes:(acab OR anab OR cgab OR comd OR dsyn OR mobd OR neop)
         predicate: treats
         source: "infores:suppkg" # no infores for suppkg yet
         response_mapping:
@@ -609,18 +613,21 @@ components:
         inputs:
           - id: UMLS
             semantic: Disease
-        requestBodyType: object
         requestBody:
-          body: >-
-            {"q": {{ queryInputs | replPrefix('predicate:TREATS AND (NOT subject.semtypes:(bact OR gngm OR plnt))
-            AND subject.semtypes:(aapp OR antb OR bacs OR dsp OR food OR inch OR orch OR phsu OR vita)
-            AND object.umls')| dump }}, "scopes": []}
+          body: 
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: object.umls
         outputs:
           - id: UMLS
             semantic: SmallMolecule
         parameters:
           fields: subject.umls,relation,subject.name,object.name
           size: 1000
+          filter: >-
+            subject.semtypes:(aapp OR antb OR bacs OR dsp OR food OR inch OR orch OR phsu OR vita) AND
+            (NOT subject.semtypes:(bact OR gngm OR plnt)) AND
+            predicate:TREATS AND
+            object.semtypes:(acab OR anab OR cgab OR comd OR dsyn OR mobd OR neop)
         predicate: treated_by
         source: "infores:suppkg" # no infores for suppkg yet
         response_mapping:
