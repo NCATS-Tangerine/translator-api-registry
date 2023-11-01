@@ -733,20 +733,17 @@ components:
   #        #   - qInput: "ICD11:CB03.4"                  ## Pulmonary fibrosis
   #        #     oneOutput: "CHEBI:144367"               ## 3PO
     pubchem_treats_mondo:
-    ##  https://biothings.transltr.io/ttd/query?q=_exists_:subject.pubchem_compound%20AND%20association.predicate:%22biolink:treats%22%20AND%20_exists_:object.mondo
+    ##  https://biothings.transltr.io/ttd/query?q=_exists_:subject.pubchem_compound%20AND%20_exists_:object.mondo%20AND%20association.predicate:%22biolink:treats%22
     ##  1604 records
       - supportBatch: true
         useTemplating: true ## flag to say templating is being used below
         inputs:
           - id: "PUBCHEM.COMPOUND"
             semantic: SmallMolecule
-        requestBodyType: object
         requestBody: ## no prefix
-          body: >-
-            {
-              "q": [ {{ queryInputs | rmPrefix() | wrap( '["' , '","biolink:treats"]') }} ],
-              "scopes": ["subject.pubchem_compound", "association.predicate"]
-            }
+          body: 
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: subject.pubchem_compound
         outputs:
           - id: MONDO
             semantic: Disease
@@ -758,6 +755,7 @@ components:
             object.name,
             subject.name
           size: 1000
+          filter: _exists_:subject.pubchem_compound AND _exists_:object.mondo AND association.predicate:"biolink:treats"
         predicate: treats
         source: "infores:ttd"
         response_mapping:
@@ -771,13 +769,10 @@ components:
         inputs:
           - id: MONDO
             semantic: Disease
-        requestBodyType: object
-        requestBody: ## remove prefix
-          body: >-
-            {
-              "q": [ {{ queryInputs | rmPrefix() | wrap( '["' , '","biolink:treats"]') }} ],
-              "scopes": ["object.mondo", "association.predicate"]
-            }
+        requestBody: ## no prefix
+          body: 
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: object.mondo
         outputs:
           - id: "PUBCHEM.COMPOUND"
             semantic: SmallMolecule
@@ -787,6 +782,7 @@ components:
             subject.name,
             object.name
           size: 1000
+          filter: _exists_:subject.pubchem_compound AND _exists_:object.mondo AND association.predicate:"biolink:treats"
         predicate: treated_by
         source: "infores:ttd"
         response_mapping:
@@ -795,7 +791,7 @@ components:
         #   - qInput: "MONDO:0021094"                      ## Human immunodeficiency virus infection
         #     oneOutput: "PUBCHEM.COMPOUND:103596027"      ## GS-1156 (8-(3-Chloro-5-(trifluoromethyl)pyridin-2-yl)-8-azabicyclo[3.2.1]octan-3-one)
     pubchem_treats_icd11:
-    ##   url: https://biothings.transltr.io/ttd/query?q=_exists_:subject.pubchem_compound%20AND%20association.predicate:%22biolink:treats%22%20AND%20_exists_:object.icd11%20AND%20NOT%20_exists_:object.mondo
+    ##   url: https://biothings.transltr.io/ttd/query?q=_exists_:subject.pubchem_compound%20AND%20_exists_:object.icd11%20AND%20(NOT%20_exists_:object.mondo)%20AND%20association.predicate:%22biolink:treats%22
     ##   9985 records
     ## exists: subject.pubchem_compound, association.predicate.biolink:treats, object.icd11
     ## not exists: object.mondo
@@ -804,13 +800,10 @@ components:
         inputs:
           - id: "PUBCHEM.COMPOUND"
             semantic: SmallMolecule
-        requestBodyType: object
         requestBody: ## no prefix
-          body: >-
-            {"q": {{ queryInputs | replPrefix('association.predicate:"biolink:treats" 
-             AND (NOT _exists_:object.mondo) AND subject.pubchem_compound') | dump}}, 
-             "scopes": []
-            }
+          body: 
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: subject.pubchem_compound
         outputs:
           - id: ICD11
             semantic: Disease
@@ -822,6 +815,7 @@ components:
             object.name,
             subject.name
           size: 1000
+          filter: _exists_:subject.pubchem_compound AND _exists_:object.icd11 AND (NOT _exists_:object.mondo) AND association.predicate:"biolink:treats"
         predicate: treats
         source: "infores:ttd"
         response_mapping:
@@ -835,13 +829,10 @@ components:
         inputs:
           - id: ICD11
             semantic: Disease
-        requestBodyType: object
-        requestBody:
-          body: >-
-            {"q": {{ queryInputs | replPrefix('association.predicate:"biolink:treats" 
-             AND (NOT _exists_:object.mondo) AND object.icd11') | dump}}, 
-             "scopes": []
-            }
+        requestBody: ## no prefix
+          body: 
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: object.icd11
         outputs:
           - id: "PUBCHEM.COMPOUND"
             semantic: SmallMolecule
@@ -851,6 +842,7 @@ components:
             subject.name,
             object.name
           size: 1000
+          filter: _exists_:subject.pubchem_compound AND _exists_:object.icd11 AND (NOT _exists_:object.mondo) AND association.predicate:"biolink:treats"
         predicate: treated_by
         source: "infores:ttd"
         response_mapping:
@@ -859,7 +851,7 @@ components:
         #   - qInput: "ICD11:MG51"                         ## Multidrug resistant infection
         #     oneOutput: "PUBCHEM.COMPOUND:139600308"      ## SPR206
     ttd_drug_id_treats_mondo:
-      ## url: https://biothings.transltr.io/ttd/query?q=_exists_:subject.ttd_drug_id%20AND%20association.predicate:%22biolink:treats%22%20AND%20_exists_:object.mondo%20AND%20NOT%20_exists_:subject.pubchem_compound
+      ## url: https://biothings.transltr.io/ttd/query?q=_exists_:subject.ttd_drug_id%20AND%20(NOT%20_exists_:subject.pubchem_compound)%20AND%20_exists_:object.mondo%20AND%20association.predicate:%22biolink:treats%22
       ## 2240 records
       ## exists: subject.ttd_drug_id, association.predicate.biolink:treats, object.mondo
       ## not exists: subject.pubchem_compound
@@ -868,13 +860,10 @@ components:
         inputs:
           - id: "TTD.DRUG"
             semantic: SmallMolecule
-        requestBodyType: object
-        requestBody:
-          body: >-
-            {"q": {{ queryInputs | replPrefix('association.predicate:"biolink:treats" 
-             AND (NOT _exists_:subject.pubchem_compound) AND subject.ttd_drug_id') | dump}}, 
-             "scopes": []
-            }
+        requestBody: ## no prefix
+          body: 
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: subject.ttd_drug_id
         outputs:
           - id: MONDO
             semantic: Disease
@@ -886,6 +875,7 @@ components:
             object.name,
             subject.name
           size: 1000
+          filter: _exists_:subject.ttd_drug_id AND (NOT _exists_:subject.pubchem_compound) AND _exists_:object.mondo AND association.predicate:"biolink:treats"
         predicate: treats
         source: "infores:ttd"
         response_mapping:
@@ -899,13 +889,10 @@ components:
         inputs:
           - id: MONDO
             semantic: Disease
-        requestBodyType: object
-        requestBody:
-          body: >- ## take out mondo prefix
-            {"q": {{ queryInputs | replPrefix('association.predicate:"biolink:treats" 
-             AND (NOT _exists_:subject.pubchem_compound) AND object.mondo') | dump}}, 
-             "scopes": []
-            }
+        requestBody: ## no prefix
+          body: 
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: object.mondo
         outputs:
           - id: "TTD.DRUG"
             semantic: SmallMolecule
@@ -915,6 +902,7 @@ components:
             subject.name,
             object.name
           size: 1000
+          filter: _exists_:subject.ttd_drug_id AND (NOT _exists_:subject.pubchem_compound) AND _exists_:object.mondo AND association.predicate:"biolink:treats"
         predicate: treated_by
         source: "infores:ttd"
         response_mapping:
@@ -932,13 +920,10 @@ components:
         inputs:
           - id: "TTD.DRUG"
             semantic: SmallMolecule
-        requestBodyType: object
         requestBody: ## no prefix
-          body: >-
-            {"q": {{ queryInputs | replPrefix('association.predicate:"biolink:treats"
-             AND (NOT _exists_:subject.pubchem_compound) AND (NOT _exists_:object.mondo) AND subject.ttd_drug_id')| dump}}, 
-             "scopes": []
-            }
+          body: 
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: subject.ttd_drug_id
         outputs:
           - id: ICD11
             semantic: Disease
@@ -951,6 +936,10 @@ components:
             object.name,
             subject.name
           size: 1000
+          filter: >-
+            _exists_:subject.ttd_drug_id AND (NOT _exists_:subject.pubchem_compound) AND
+            _exists_:object.icd11 AND (NOT _exists_:object.mondo) AND
+            association.predicate:"biolink:treats"
         predicate: treats
         source: "infores:ttd"
         response_mapping:
@@ -964,13 +953,10 @@ components:
         inputs:
           - id: ICD11
             semantic: Disease
-        requestBodyType: object
         requestBody: ## no prefix
-          body: >-
-            {"q": {{ queryInputs | replPrefix('association.predicate:"biolink:treats"
-             AND (NOT _exists_:subject.pubchem_compound) AND (NOT _exists:object.mondo) AND object.icd11')| dump}}, 
-             "scopes": []
-            }
+          body: 
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: object.icd11
         outputs:
           - id: "TTD.DRUG"
             semantic: SmallMolecule
@@ -982,6 +968,10 @@ components:
             subject.name,
             object.name
           size: 1000
+          filter: >-
+            _exists_:subject.ttd_drug_id AND (NOT _exists_:subject.pubchem_compound) AND
+            _exists_:object.icd11 AND (NOT _exists_:object.mondo) AND
+            association.predicate:"biolink:treats"
         predicate: treated_by
         source: "infores:ttd"
         response_mapping:
@@ -997,13 +987,10 @@ components:
         inputs:
           - id: UniProtKB
             semantic: Gene
-        requestBodyType: object
-        requestBody:
-          body: >-
-            {
-              "q": [ {{ queryInputs | rmPrefix() | wrap( '["' , '","biolink:target_for"]') }} ],
-              "scopes": ["subject.uniprotkb", "association.predicate"]
-            }
+        requestBody: ## no prefix
+          body: 
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: subject.uniprotkb
         outputs:
           - id: MONDO
             semantic: Disease
@@ -1017,6 +1004,7 @@ components:
             object.name,
             subject.name
           size: 1000
+          filter: _exists_:subject.uniprotkb AND _exists_:object.mondo AND association.predicate:"biolink:target_for"
         predicate: target_for
         source: "infores:ttd"
         response_mapping:
@@ -1030,13 +1018,10 @@ components:
         inputs:
           - id: MONDO
             semantic: Disease
-        requestBodyType: object
-        requestBody:
-          body: >-   ## remove prefix for mondo
-            {
-              "q": [ {{ queryInputs | rmPrefix() | wrap( '["' , '","biolink:target_for"]') }} ],
-              "scopes": ["object.mondo", "association.predicate"]
-            }
+        requestBody: ## no prefix
+          body: 
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: object.mondo
         outputs:
           - id: UniProtKB
             semantic: Gene
@@ -1050,6 +1035,7 @@ components:
             subject.name,
             object.name
           size: 1000
+          filter: _exists_:subject.uniprotkb AND _exists_:object.mondo AND association.predicate:"biolink:target_for"
         predicate: has_target
         source: "infores:ttd"
         response_mapping:
@@ -1067,13 +1053,10 @@ components:
         inputs:
           - id: UniProtKB
             semantic: Gene
-        requestBodyType: object
-        requestBody:
-          body: >-
-            {"q": {{ queryInputs | replPrefix('association.predicate:"biolink:target_for"
-             AND (NOT _exists_:object.mondo) AND subject.uniprotkb') | dump}}, 
-             "scopes": []
-            }
+        requestBody: ## no prefix
+          body: 
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: subject.uniprotkb
         outputs:
           - id: ICD11
             semantic: Disease
@@ -1087,6 +1070,7 @@ components:
             object.name,
             subject.name
           size: 1000
+          filter: _exists_:subject.uniprotkb AND _exists_:object.icd11 AND (NOT _exists_:object.mondo) AND association.predicate:"biolink:target_for"
         predicate: target_for
         source: "infores:ttd"
         response_mapping:
@@ -1100,13 +1084,10 @@ components:
         inputs:
           - id: ICD11
             semantic: Disease
-        requestBodyType: object
-        requestBody:
-          body: >-   ## no prefix
-            {"q": {{ queryInputs | replPrefix('association.predicate:"biolink:target_for"
-             AND (NOT _exists_:object.mondo) AND object.icd11') | dump}}, 
-             "scopes": []
-            }
+        requestBody: ## no prefix
+          body: 
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: object.icd11
         outputs:
           - id: UniProtKB
             semantic: Gene
@@ -1120,6 +1101,7 @@ components:
             subject.name,
             object.name
           size: 1000
+          filter: _exists_:subject.uniprotkb AND _exists_:object.icd11 AND (NOT _exists_:object.mondo) AND association.predicate:"biolink:target_for"
         predicate: has_target
         source: "infores:ttd"
         response_mapping:
@@ -1137,13 +1119,10 @@ components:
         inputs:
           - id: "TTD.TARGET"
             semantic: Gene
-        requestBodyType: object
-        requestBody:
-          body: >-
-            {"q": {{ queryInputs | replPrefix('association.predicate:"biolink:target_for"
-              AND (NOT _exists_:subject.uniprotkb) AND subject.ttd_target_id') | dump}}, 
-             "scopes": []
-            }
+        requestBody: ## no prefix
+          body: 
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: subject.ttd_target_id
         outputs:
           - id: MONDO
             semantic: Disease
@@ -1157,6 +1136,7 @@ components:
             object.name,
             subject.name
           size: 1000
+          filter: _exists_:subject.ttd_target_id AND (NOT _exists_:subject.uniprotkb) AND _exists_:object.mondo AND association.predicate:"biolink:target_for"
         predicate: target_for
         source: "infores:ttd"
         response_mapping:
@@ -1170,13 +1150,10 @@ components:
         inputs:
           - id: MONDO
             semantic: Disease
-        requestBodyType: object
-        requestBody:
-          body: >-   ## remove prefix for mondo
-            {"q": {{ queryInputs | replPrefix('association.predicate:"biolink:target_for"
-             AND (NOT _exists_:subject.uniprotkb) AND object.mondo') | dump}}, 
-             "scopes": []
-            }
+        requestBody: ## no prefix
+          body: 
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: object.mondo
         outputs:
           - id: "TTD.TARGET"
             semantic: Gene
@@ -1190,6 +1167,7 @@ components:
             subject.name,
             object.name
           size: 1000
+          filter: _exists_:subject.ttd_target_id AND (NOT _exists_:subject.uniprotkb) AND _exists_:object.mondo AND association.predicate:"biolink:target_for"
         predicate: has_target
         source: "infores:ttd"
         response_mapping:
@@ -1207,13 +1185,10 @@ components:
         inputs:
           - id: "TTD.TARGET"
             semantic: Gene
-        requestBodyType: object
-        requestBody:
-          body: >-
-            {"q": {{ queryInputs | replPrefix('association.predicate:"biolink:target_for"
-             AND (NOT _exists_:subject.uniprotkb) AND (NOT _exists_:object.mondo) AND subject.ttd_target_id') | dump}}, 
-             "scopes": []
-             }
+        requestBody: ## no prefix
+          body: 
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: subject.ttd_target_id
         outputs:
           - id: ICD11
             semantic: Disease
@@ -1227,6 +1202,10 @@ components:
             object.name,
             subject.name
           size: 1000
+          filter: >-
+            _exists_:subject.ttd_target_id AND (NOT _exists_:subject.uniprotkb) AND
+            _exists_:object.icd11 AND (NOT _exists_:object.mondo) AND
+            association.predicate:"biolink:target_for"
         predicate: target_for
         source: "infores:ttd"
         response_mapping:
@@ -1240,13 +1219,10 @@ components:
         inputs:
           - id: ICD11
             semantic: Disease
-        requestBodyType: object
-        requestBody:
-          body: >-   ## no prefix
-            {"q": {{ queryInputs | replPrefix('association.predicate:"biolink:target_for"
-             AND (NOT _exists_:subject.uniprotkb) AND (NOT _exists_:object.mondo) AND object.icd11') | dump}}, 
-             "scopes": []
-            }
+        requestBody: ## no prefix
+          body: 
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: object.icd11
         outputs:
           - id: "TTD.TARGET"
             semantic: Gene
@@ -1260,6 +1236,10 @@ components:
             subject.name,
             object.name
           size: 1000
+          filter: >-
+            _exists_:subject.ttd_target_id AND (NOT _exists_:subject.uniprotkb) AND
+            _exists_:object.icd11 AND (NOT _exists_:object.mondo) AND
+            association.predicate:"biolink:target_for"
         predicate: has_target
         source: "infores:ttd"
         response_mapping:
@@ -1408,13 +1388,10 @@ components:
         inputs:
           - id: "PUBCHEM.COMPOUND"
             semantic: SmallMolecule
-        requestBodyType: object
         requestBody: ## no prefix
-          body: >-
-            {"q": {{ queryInputs | replPrefix('association.predicate:"biolink:interacts_with"
-             AND subject.pubchem_compound') | dump}},
-             "scopes": []
-            }
+          body: 
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: subject.pubchem_compound
         outputs:
           - id: UniProtKB
             semantic: Gene
@@ -1429,6 +1406,7 @@ components:
             object.name,
             subject.name
           size: 1000
+          filter: _exists_:subject.pubchem_compound AND _exists_:object.uniprotkb AND association.predicate:"biolink:interacts_with"
         predicate: interacts_with
         source: "infores:ttd"
         response_mapping:
@@ -1442,13 +1420,10 @@ components:
         inputs:
           - id: UniProtKB
             semantic: Gene
-        requestBodyType: object
         requestBody: ## no prefix
-          body: >-
-            {"q": {{ queryInputs | replPrefix('association.predicate:"biolink:interacts_with"
-             AND object.uniprotkb') | dump}},
-             "scopes": []
-            }
+          body: 
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: object.uniprotkb
         outputs:
           - id: "PUBCHEM.COMPOUND"
             semantic: SmallMolecule
@@ -1463,6 +1438,7 @@ components:
             subject.name,
             object.name
           size: 1000
+          filter: _exists_:subject.pubchem_compound AND _exists_:object.uniprotkb AND association.predicate:"biolink:interacts_with"
         predicate: interacts_with
         source: "infores:ttd"
         response_mapping:
@@ -1481,13 +1457,10 @@ components:
         inputs:
           - id: "PUBCHEM.COMPOUND"
             semantic: SmallMolecule
-        requestBodyType: object
         requestBody: ## no prefix
-          body: >-
-            {"q": {{ queryInputs | replPrefix('association.predicate:"biolink:interacts_with"
-             AND (_exists_:object.name) AND (NOT _exists_:object.uniprotkb) AND subject.pubchem_compound') | dump}}, 
-             "scopes": []
-            }
+          body: 
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: subject.pubchem_compound
         outputs:
           - id: "TTD.TARGET"
             semantic: Gene
@@ -1502,6 +1475,10 @@ components:
             object.name,
             subject.name
           size: 1000
+          filter: >-
+            _exists_:subject.pubchem_compound AND
+            _exists_:object.ttd_target_id AND (NOT _exists_:object.uniprotkb) AND _exists_:object.name
+            AND association.predicate:"biolink:interacts_with"
         predicate: interacts_with
         source: "infores:ttd"
         response_mapping:
@@ -1515,13 +1492,10 @@ components:
         inputs:
           - id: "TTD.TARGET"
             semantic: Gene
-        requestBodyType: object
         requestBody: ## no prefix
-          body: >-
-            {"q": {{ queryInputs | replPrefix('association.predicate:"biolink:interacts_with"
-             AND (_exists_:object.name) AND (NOT _exists_:object.uniprotkb) AND object.ttd_target_id') | dump}}, 
-             "scopes": []
-            }
+          body: 
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: object.ttd_target_id
         outputs:
           - id: "PUBCHEM.COMPOUND"
             semantic: SmallMolecule
@@ -1536,6 +1510,10 @@ components:
             subject.name,
             object.name
           size: 1000
+          filter: >-
+            _exists_:subject.pubchem_compound AND
+            _exists_:object.ttd_target_id AND (NOT _exists_:object.uniprotkb) AND _exists_:object.name
+            AND association.predicate:"biolink:interacts_with"
         predicate: interacts_with
         source: "infores:ttd"
         response_mapping:
@@ -1554,13 +1532,10 @@ components:
         inputs:
           - id: "TTD.DRUG"
             semantic: SmallMolecule
-        requestBodyType: object
         requestBody: ## no prefix
-          body: >-
-            {"q": {{ queryInputs | replPrefix('association.predicate:"biolink:interacts_with"
-             AND (NOT _exists_:subject.pubchem_compound) AND subject.ttd_drug_id') | dump}}, 
-             "scopes": []
-             }
+          body: 
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: subject.ttd_drug_id
         outputs:
           - id: UniProtKB
             semantic: Gene
@@ -1575,6 +1550,10 @@ components:
             object.name, 
             subject.name
           size: 1000
+          filter: >-
+            _exists_:subject.ttd_drug_id AND (NOT _exists_:subject.pubchem_compound) AND 
+            _exists_:object.uniprotkb AND
+            association.predicate:"biolink:interacts_with"
         predicate: interacts_with
         source: "infores:ttd"
         response_mapping:
@@ -1588,13 +1567,10 @@ components:
         inputs:
           - id: UniProtKB
             semantic: Gene
-        requestBodyType: object
         requestBody: ## no prefix
-          body: >-
-            {"q": {{ queryInputs | replPrefix('association.predicate:"biolink:interacts_with"
-             AND (NOT _exists_:subject.pubchem_compound) AND object.uniprotkb') | dump}}, 
-             "scopes": []
-             }
+          body: 
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: object.uniprotkb
         outputs:
           - id: "TTD.DRUG"
             semantic: SmallMolecule
@@ -1609,6 +1585,10 @@ components:
             subject.name,
             object.name
           size: 1000
+          filter: >-
+            _exists_:subject.ttd_drug_id AND (NOT _exists_:subject.pubchem_compound) AND 
+            _exists_:object.uniprotkb AND
+            association.predicate:"biolink:interacts_with"
         predicate: interacts_with
         source: "infores:ttd"
         response_mapping:
@@ -1627,15 +1607,10 @@ components:
         inputs:
           - id: "TTD.DRUG"
             semantic: SmallMolecule
-        requestBodyType: object
         requestBody: ## no prefix
-          body: >-
-            {"q": {{ queryInputs | replPrefix('association.predicate:"biolink:interacts_with"
-             AND (_exists_:subject.name) AND (_exists_:object.name)
-             AND (NOT _exists_:subject.pubchem_compound) AND (NOT _exists_:object.uniprotkb) 
-             AND subject.ttd_drug_id') | dump}}, 
-             "scopes": []
-             }
+          body: 
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: subject.ttd_drug_id
         outputs:
           - id: "TTD.TARGET"
             semantic: Gene
@@ -1650,6 +1625,10 @@ components:
             object.name,
             subject.name
           size: 1000
+          filter: >-
+            _exists_:subject.ttd_drug_id AND (NOT _exists_:subject.pubchem_compound) AND _exists_:subject.name AND
+            _exists_:object.ttd_target_id AND (NOT _exists_:object.uniprotkb) AND _exists_:object.name AND
+            association.predicate:"biolink:interacts_with"
         predicate: interacts_with
         source: "infores:ttd"
         response_mapping:
@@ -1663,15 +1642,10 @@ components:
         inputs:
           - id: "TTD.TARGET"
             semantic: Gene
-        requestBodyType: object
         requestBody: ## no prefix
-          body: >-
-            {"q": {{ queryInputs | replPrefix('association.predicate:"biolink:interacts_with" 
-             AND (_exists_:subject.name) AND (_exists_:object.name)
-             AND (NOT _exists_:subject.pubchem_compound) AND (NOT _exists_:object.uniprotkb)
-             AND object.ttd_target_id') | dump}}, 
-             "scopes": []
-             }
+          body: 
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: object.ttd_target_id
         outputs:
           - id: "TTD.DRUG"
             semantic: SmallMolecule
@@ -1686,6 +1660,10 @@ components:
             subject.name,
             object.name
           size: 1000
+          filter: >-
+            _exists_:subject.ttd_drug_id AND (NOT _exists_:subject.pubchem_compound) AND _exists_:subject.name AND
+            _exists_:object.ttd_target_id AND (NOT _exists_:object.uniprotkb) AND _exists_:object.name AND
+            association.predicate:"biolink:interacts_with"
         predicate: interacts_with
         source: "infores:ttd"
         response_mapping:
