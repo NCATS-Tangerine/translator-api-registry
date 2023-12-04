@@ -1,0 +1,1044 @@
+openapi: 3.0.3
+info:
+  contact:
+    email: help@biothings.io
+    name: BioThings Team
+    x-id: https://github.com/biothings
+    x-role: responsible developers
+  description: >-
+    Documentation of the BioThings API for [InnateDB](https://www.innatedb.com/) data. 
+    InnateDB is a publicly available database of the genes, proteins, experimentally-verified interactions 
+    and signaling pathways involved in the innate immune response of humans, mice and bovines to microbial infection. 
+    The database captures an improved coverage of the innate immunity interactome by integrating known interactions 
+    and pathways from major public databases together with manually-curated data into a centralised resource.
+  termsOfService: https://biothings.io/about
+  title: BioThings InnateDB API
+  version: '2022-08-08'
+  x-translator:
+    infores: "infores:biothings-innatedb"
+    component: KP
+    team:
+      - Service Provider
+    biolink-version: "3.5.3"
+servers:
+- description: Encrypted Production server
+  url: https://biothings.ncats.io/innatedb
+  x-maturity: production
+tags:
+- name: gene
+- name: transcript
+- name: association
+- name: metadata
+- name: query
+- name: translator
+- name: biothings
+paths:
+  "/gene/{id}":
+    get:
+      description: >-
+        By default, this will return the complete association in JSON format. If the input is not valid,
+        404 (NOT FOUND) will be returned.
+        
+
+        Optionally, you can pass a "fields" parameter to return only the annotation you want 
+        (by filtering returned object fields). "fields" accepts any attributes (a.k.a fields) available 
+        from the association. Multiple attributes should be separated by commas. If an attribute is not 
+        available for a specific association, it will be ignored. Note that the attribute names are 
+        case-sensitive.
+
+
+        Just like the query service, you can also pass a "callback" parameter to make a JSONP call.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        example: "innatedb:IDBG-30497_innatedb:IDBG-46918_InnateDB Allergy:IDB-1632289"
+        schema:
+          type: string
+      - "$ref": "#/components/parameters/fields"
+      - "$ref": "#/components/parameters/callback"
+      - "$ref": "#/components/parameters/email"
+      ## this is useful even when it's not noted in the docs
+      - "$ref": "#/components/parameters/size"
+      ## these are noted in the /spec endpoint; commenting out for now
+      # - "$ref": "#/components/parameters/raw"
+      # - "$ref": "#/components/parameters/rawquery"
+      # - "$ref": "#/components/parameters/dotfield"
+      # - "$ref": "#/components/parameters/_sorted"
+      # - "$ref": "#/components/parameters/always_list"
+      # - "$ref": "#/components/parameters/allow_null"
+      # - "$ref": "#/components/parameters/format"
+      responses:
+        '200':
+          description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
+      ## commenting out schemas and other status codes for now
+      #     content:
+      #       application/json:
+      #         schema:
+      #           $ref: '#/components/schemas/Association'
+      #   '404':
+      #     description: A response indicating an unknown association ID
+      tags:
+      - association
+  "/gene":
+    post:
+      description: >-
+        Although making simple GET requests above to our service is sufficient in most use cases, 
+        there are some times you might find it easier to batch query (e.g., retrieving multiple associations). 
+        Fortunately, you can also make batch queries via POST requests when you need to.
+      parameters:
+      - name: ids
+        description: >-
+          Accepts multiple association ids separated by commas. Note that currently we only take ids up to 
+          1000 maximum, the rest will be omitted.
+
+
+          The request body can also be used to provide these ids.
+        in: query
+        ## setting to false since putting this info in the request body seems to work as well
+        required: false
+        schema:
+          type: string
+      - "$ref": "#/components/parameters/fields"
+      - "$ref": "#/components/parameters/email"
+      ## this is useful even when it's not noted in the docs
+      - "$ref": "#/components/parameters/size"
+      ## these are noted in the /spec endpoint; commenting out for now
+      # - "$ref": "#/components/parameters/raw"
+      # - "$ref": "#/components/parameters/rawquery"
+      # - "$ref": "#/components/parameters/dotfield"
+      # - "$ref": "#/components/parameters/_sorted"
+      # - "$ref": "#/components/parameters/always_list"
+      # - "$ref": "#/components/parameters/allow_null"
+      # - "$ref": "#/components/parameters/format"
+      requestBody:
+        content:
+          application/json:
+            example:
+              ids:
+              - "innatedb:IDBG-30497_innatedb:IDBG-46918_InnateDB Allergy:IDB-1632289"
+              - "innatedb:IDBG-49080_innatedb:IDBG-54829_innatedb:IDB-118362"
+            schema:
+              type: object
+              properties:
+                ids:
+                  description: >-
+                    Accepts multiple association ids. Note that currently we only take the input ids 
+                    up to 1000 maximum, the rest will be omitted.
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '200':
+          description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
+      tags:
+      - association
+  "/metadata":
+    get:
+      description: Get metadata about the data available from the API
+      ## these are noted in the https://mychem.info/v1/spec endpoint; commenting out for now
+      # parameters:
+      # - "$ref": "#/components/parameters/format"
+      # - "$ref": "#/components/parameters/raw"
+      responses:
+        '200':
+          description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
+      tags:
+      - metadata
+  "/metadata/fields":
+    get:
+      description: Get metadata about the data fields available from the API
+      ## these are noted in the https://mychem.info/v1/spec endpoint; commenting out for now
+      # parameters:
+      # - "$ref": "#/components/parameters/format"
+      # - "$ref": "#/components/parameters/raw"
+      # - "$ref": "#/components/parameters/search"
+      # - "$ref": "#/components/parameters/prefix"
+      responses:
+        '200':
+          description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
+      tags:
+      - metadata
+  "/query":
+    get:
+      description: >-
+        Query service. In the output, "total" in the output gives the total number 
+        of matching hits, while the actual hits are returned under "hits" field.
+      parameters:
+      - name: q
+        description: >-
+          Required, passing user query. The detailed query syntax for parameter is explained 
+          [here for a core BioThings 
+          API](https://docs.mychem.info/en/latest/doc/chem_query_service.html#query-syntax).
+        in: query
+        required: true
+        example: "object.alias.hgnc_name:MAP3K14"
+        schema:
+          type: string
+      - "$ref": "#/components/parameters/fields"
+      - "$ref": "#/components/parameters/size"
+      - "$ref": "#/components/parameters/from"
+      - "$ref": "#/components/parameters/fetch_all"
+      - "$ref": "#/components/parameters/scroll_id"
+      - "$ref": "#/components/parameters/sort"
+      - "$ref": "#/components/parameters/facets"
+      - "$ref": "#/components/parameters/facet_size"
+      - "$ref": "#/components/parameters/callback"
+      - "$ref": "#/components/parameters/dotfield"
+      - "$ref": "#/components/parameters/email"
+      ## these are noted in the /spec endpoint; commenting out for now
+      # - "$ref": "#/components/parameters/aggs"
+      # - "$ref": "#/components/parameters/userquery"
+      # - "$ref": "#/components/parameters/explain"
+      # - "$ref": "#/components/parameters/raw"
+      # - "$ref": "#/components/parameters/rawquery"
+      # - "$ref": "#/components/parameters/_sorted"
+      # - "$ref": "#/components/parameters/always_list"
+      # - "$ref": "#/components/parameters/allow_null"
+      # - "$ref": "#/components/parameters/format"
+      responses:
+        '200':
+          description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
+      ## commenting out schemas and other status codes for now
+      #     content:
+      #       application/json:
+      #         schema:
+      #           "$ref": "#/components/schemas/QueryResult"
+      #   '400':
+      #     content:
+      #       application/json:
+      #         schema:
+      #           "$ref": "#/components/schemas/ErrorResult"
+      #     description: A response indicating an improperly formatted query
+      # summary: Make queries and return matching gene hits. Supports JSONP and CORS
+      #   as well.
+      tags:
+      - query
+    post:
+      description: >-
+        Although making simple GET requests above to our query service is sufficient for most use cases, 
+        there are times you might find it more efficient to make batch queries (e.g., retrieving data 
+        for multiple inputs). Fortunately, you can also make batch queries via POST requests when you need to.
+
+
+        The "query” field in the returned object indicates the matching query term. If a query term has no match, 
+        it will return with a “notfound” field with the value “true”.
+      parameters:
+      - name: q
+        description: >-
+          Accepts multiple values separated by commas. Note that currently we only take the input values up to 1000 
+          maximum, the rest will be omitted.
+
+
+          The request body can also be used to provide these ids.
+        in: query
+        ## setting to false since putting this info in the request body seems to work as well
+        required: false
+        schema:
+          type: array
+          items:
+            type: string
+      - name: scopes
+        description: >-
+          Optional, specify one or more fields (separated by commas) to search. Default: _id
+
+
+          The request body can also be used to provide this information.
+        in: query
+        ## setting to false since putting this info in the request body seems to work as well
+        required: false
+        schema:
+          type: string
+      - "$ref": "#/components/parameters/fields"
+      - "$ref": "#/components/parameters/email"
+      ## this is useful even when it's not noted in the docs
+      - "$ref": "#/components/parameters/size"
+      - "$ref": "#/components/parameters/from"
+      - "$ref": "#/components/parameters/fetch_all"
+      - "$ref": "#/components/parameters/scroll_id"
+      ## these are noted in the https://mychem.info/v1/spec endpoint; commenting out for now
+      # - "$ref": "#/components/parameters/sort"
+      # - "$ref": "#/components/parameters/raw"
+      # - "$ref": "#/components/parameters/rawquery"
+      # - "$ref": "#/components/parameters/dotfield"
+      # - "$ref": "#/components/parameters/_sorted"
+      # - "$ref": "#/components/parameters/always_list"
+      # - "$ref": "#/components/parameters/allow_null"
+      # - "$ref": "#/components/parameters/format"
+      requestBody:
+        content:
+          application/json:
+            example:
+              q:
+              - "MAP3K14"
+              - "TMEM173"
+              scopes:
+              - "object.alias.hgnc_name"
+            schema:
+              type: object
+              properties:
+                q:
+                  description: >-
+                    Accepts multiple values separated by commas. Note that currently we only take the input values 
+                    up to 1000 maximum, the rest will be omitted.
+                  type: array
+                  items:
+                    type: string
+                scopes:
+                  description: >-
+                    Specify one or more fields (separated by commas) to search. Default: _id
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '200':
+          description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
+      ## commenting out schemas and other status codes for now
+      #     content:
+      #       application/json:
+      #         schema:
+      #           "$ref": "#/components/schemas/QueryPOSTResult"
+      #   '400':
+      #     content:
+      #       application/json:
+      #         schema:
+      #           "$ref": "#/components/schemas/ErrorResult"
+      #     description: A response indicating an improperly formatted query
+      # summary: Make batch gene queries and return matching gene hits
+      tags:
+      - query
+      ## 12 operations (6 pairs)
+      x-bte-kgs-operations:
+      - $ref: '#/components/x-bte-kgs-operations/physical_association'
+      - $ref: '#/components/x-bte-kgs-operations/physical_association-rev'
+      - $ref: '#/components/x-bte-kgs-operations/phosphorylation'
+      - $ref: '#/components/x-bte-kgs-operations/phosphorylation-rev'
+      - $ref: '#/components/x-bte-kgs-operations/ubiquitination'
+      - $ref: '#/components/x-bte-kgs-operations/ubiquitination-rev'
+      - $ref: '#/components/x-bte-kgs-operations/protein_cleavage'
+      - $ref: '#/components/x-bte-kgs-operations/protein_cleavage-rev'
+      - $ref: '#/components/x-bte-kgs-operations/cleavage_reaction'
+      - $ref: '#/components/x-bte-kgs-operations/cleavage_reaction-rev'
+      - $ref: '#/components/x-bte-kgs-operations/dephosphorylation'
+      - $ref: '#/components/x-bte-kgs-operations/dephosphorylation-rev'
+components:
+  parameters:
+    callback:
+      name: callback
+      description: >-
+        Optional, you can pass a "callback" parameter to make a JSONP call.
+      in: query
+      required: false
+      schema:
+        type: string
+    dotfield:
+      name: dotfield
+      description: >-
+        Optional, can be used to control the format of the returned object. 
+        If "dotfield" is true, the returned data object is returned flattened (no nested objects) 
+        using dotfield notation for key names. Default: false.
+      in: query
+      required: false
+      schema:
+        type: boolean
+        default: false
+    email:
+      name: email
+      description: >-
+        Optional, if you are regular users of our services, we encourage you to provide us an email, 
+        so that we can better track the usage or follow up with you.
+      in: query
+      required: false
+      schema:
+        type: string
+    facet_size:
+      name: facet_size
+      description: >-
+        Optional, an integer (1 <= facet_size <= 1000) that specifies how many buckets to return in a 
+        [faceted query](https://docs.mychem.info/en/latest/doc/chem_query_service.html?highlight=from#faceted-queries).
+      in: query
+      required: false
+      schema:
+        type: integer
+        default: 10
+    facets:
+      name: facets
+      description: >-
+        Optional, a single field or comma-separated fields to return facets, can only be used on non-free text fields. 
+        E.g. “facets=chembl.molecule_properties.full_mwt”. See [examples of faceted queries for a core BioThings 
+        API](https://docs.mychem.info/en/latest/doc/chem_query_service.html?highlight=from#faceted-queries).
+      in: query
+      required: false
+      schema:
+        type: array
+        items:
+          type: string
+    fetch_all:
+      name: fetch_all
+      description: >-
+        Optional, a boolean, which when TRUE, allows fast retrieval of all unsorted query hits. 
+        The return object contains a _scroll_id field, which when passed as a parameter to the query endpoint 
+        (see the scroll_id parameter), returns the next 1000 query results. Setting fetch_all = TRUE causes 
+        the results to be inherently unsorted, therefore the sort parameter is ignored. For more information, 
+        see [examples using fetch_all for a core BioThings 
+        API](https://docs.mychem.info/en/latest/doc/chem_query_service.html?highlight=from#scrolling-queries). 
+        Default: FALSE.
+      in: query
+      required: false
+      schema:
+        type: boolean
+        default: false
+    fields:
+      name: fields
+      description: >-
+        Optional, can be a comma-separated list to limit the fields returned from the object. 
+        If "fields=all", all available fields will be returned.
+        
+
+        Note that it supports dot notation as well, e.g., you can pass "chebi.name". 
+        Default: "fields=all". 
+        The parameter "filter" is an alias for this parameter.
+      in: query
+      required: false
+      schema:
+        type: string
+        default: all
+    from:
+      name: from
+      description: >-
+        Optional, the number of matching hits to skip, starting from 0. Default: 0. 
+      in: query
+      required: false
+      schema:
+        type: integer
+        default: 0
+    scroll_id:
+      name: scroll_id
+      description: >-
+        Optional, a string containing the _scroll_id returned from a query request with fetch_all = TRUE. 
+        Supplying a valid scroll_id will return the next 1000 unordered results. If the next results are 
+        not obtained within 1 minute of the previous set of results, the scroll_id becomes stale, and a 
+        new one must be obtained with another query request with fetch_all = TRUE. All other parameters are 
+        ignored when the scroll_id parameter is supplied. For more information see [examples using scroll_id 
+        for a core BioThings 
+        API](https://docs.mychem.info/en/latest/doc/chem_query_service.html?highlight=from#scrolling-queries).
+      in: query
+      required: false
+      schema:
+        type: string
+    size:
+      name: size
+      description: >-
+        Optional, the maximum number of matching hits to return (with a cap of 1000 at the moment). Default: 10.
+        The combination of "size" and "from" parameters can be used to get paging for a large query.
+      in: query
+      required: false
+      schema:
+        type: integer
+        default: 10
+    sort:
+      name: sort
+      description: >-
+        Optional, the comma-separated fields to sort on. Prefix with "-" for descending order, otherwise in ascending order. 
+        Default: sort by matching scores in descending order.
+      in: query
+      required: false
+      schema:
+        type: array
+        items:
+          type: string
+    ## these are noted in the https://mychem.info/v1/spec endpoint; commenting out for now
+    # _sorted:
+    #   name: _sorted
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: boolean
+    #     default: true
+    # aggs:
+    #   name: aggs
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: array
+    #     items:
+    #       type: string
+    # allow_null:
+    #   name: allow_null
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: array
+    #     items:
+    #       type: string
+    # always_list:
+    #   name: always_list
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: array
+    #     items:
+    #       type: string
+    # explain:
+    #   name: explain
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: boolean
+    # format:
+    #   name: format
+    #   description: 'controls output format of server response, currently supports:
+    #     "json", "jsonld", "html". Type: string. Default: json.'
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: string
+    #     default: json
+    # prefix:
+    #   name: prefix
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: string
+    # raw:
+    #   name: raw
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: boolean
+    # rawquery:
+    #   name: rawquery
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: boolean
+    # search:
+    #   name: search
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: string
+    # userquery:
+    #   name: userquery
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: string
+  ## commenting out schemas and other status codes for now
+  # schemas:
+  #   Association:
+  #     properties:
+  #       _id:
+  #         type: string
+  #     required:
+  #     - _id
+  #     type: object
+  #   ErrorResult:
+  #     properties:
+  #       message:
+  #         type: string
+  #       success:
+  #         type: boolean
+  #     type: object
+  #   QueryPOSTResult:
+  #     items:
+  #       allOf:
+  #       - $ref: '#/components/schemas/Association'
+  #       - properties:
+  #           _score:
+  #             format: float
+  #             type: number
+  #           query:
+  #             type: string
+  #         type: object
+  #     type: array
+  #   QueryResult:
+  #     properties:
+  #       hits:
+  #         items:
+  #           $ref: '#/components/schemas/Association'
+  #         type: array
+  #       max_score:
+  #         format: float
+  #         type: number
+  #       took:
+  #         type: integer
+  #       total:
+  #         type: integer
+  #     type: object
+  #   int64_or_array:
+  #     oneOf:
+  #     - items:
+  #         format: int64
+  #         type: integer
+  #       type: array
+  #     - format: int64
+  #       type: integer
+  #   string_or_array:
+  #     oneOf:
+  #     - items:
+  #         type: string
+  #       type: array
+  #     - type: string
+  x-bte-kgs-operations:
+  ## did operations for all relation.interaction_type.label values > 10,
+  ##   except the one that was "other modification"
+  ## SUBJECT/OBJECT: treating all as Genes for now
+  ## - all records had ENSEMBL fields (object and subject alt_identifier.ensembl)
+  ##     with ENSG-type fields (Gene-specific)
+  ## - VS NOT all records have UniProtKB fields (object and subject alias.uniprotkb)
+  ##     even when the interactor_type.label is "protein"!
+  ##     and we are using NodeNorm default, which will "conflate" this ID to Gene anyways...
+  ## - both subject/object have interactor_type.label fields.
+  ##   only varies for "physical interaction", out of the relationships reviewed so far
+  ##   for the others, all subject/objects have been "protein"
+  ##   - "protein": would make more sense as Protein with UniProtKB ids...
+  ##   - "deoxyribonucleic acid": could treat as Gene, use ENSG IDs
+  ##   - "ribonucleic acid": could treat as Transcript (but ENSG IDs?) or NucleicAcidEntity
+  ##     - only noticed for "physical association" out of interaction_types I looked at
+  ## - all records had names (object and subject alias.hgnc_name field, more helpful than uniprotkb_name)
+  ## RELATIONSHIP
+  ## - set by relation.interaction_type.label: see stats https://github.com/biothings/pending.api/issues/17#issuecomment-1201684667
+  ## - note: relation.negative was always "false" biothings.ncats.io/innatedb/query?q=NOT relation.negative:"false"
+  ##         relation.source_database: was always "MI:0974(innatedb)"
+  ## - hard: relation.ncbi_taxid_host_organism could be a qualifier species context?
+  ##   BUT it's a lot: 27 species and 2 weird values, and some are viruses which I don't get...
+  ##   and it's not in biolink-model format
+  ##   values I saw: 9606 (human), 10090 (mouse), 4932 (Saccharomyces c.), 
+  ##                 9534 and 101841 (grivet - primate and subspecies), 9986 (rabbit),
+  ##                 7108 (fall armyworm), 9913 (cow), 10026 (hamster),
+  ##                 10029 (Chinese hamster), 9527 (Old World monkeys), 9615 (dog),
+  ##                 10036 (golden hamster), 10116 (rat), 10469 (baculovirus),
+  ##                 9479 (New World monkeys), 111296 (Yeast two-hybrid vector pC-ACT.2), 452646 (American mink),
+  ##                 10760 (Escherichia phage T7), 10455 (SfNPV), 9666 (European mink),
+  ##                 562 (E coli), 7088 (butterflies/moths), 93934 (Japanese quail),
+  ##                 7227 (fruit fly), 9031 (chicken), 9580 (common gibbon),
+  ##                 0 and -1 (not sure what this means)
+  ## POSSIBLE EDGE-ATTRIBUTES, but not biolink-model friendly
+  ## - relation.creation_date,relation.update_date: issue is that BTE will merge records
+  ##       so the attributes can be arrays, rather than single values
+  ##       might trigger biolink-model/TRAPI validation issues
+  ## - relation.interaction_detection_method.label
+  ## - relation.annotations_interaction (free-text info, only in some records)
+  ## - relation.expansion_method: not sure what this is, keyword info? only in some records
+  ## - relation.confidence_score: not sure what this is, 3 numeric fields: hpr, lpr, np
+    physical_association:
+    ## 31086 records 
+    ## breakdown by interactor_type: 6 combos (3 have <5 matching records)
+    ## - 22044: both subject/object "protein"
+    ## - 4523: subject "protein", object "deoxyribonucleic acid"
+    ## - 485: subject "protein", object "ribonucleic acid"
+    ## - 3480: subject "deoxyribonucleic acid", object "protein"
+    ## - 454: subject "ribonucleic acid", object "protein"
+    ## - 90: both subject/object "ribonucleic acid"
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: ENSEMBL
+            semantic: Gene
+        requestBody:
+          body: 
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: subject.alt_identifier.ensembl
+        outputs:
+          - id: ENSEMBL
+            semantic: Gene
+        parameters:
+          fields: >-
+            object.alt_identifier.ensembl,
+            object.alias.hgnc_name,subject.alias.hgnc_name,
+            relation.pmid
+          size: 1000
+          filter: >-
+            relation.interaction_type.label:"physical association"
+        predicate: physically_interacts_with
+        source: "infores:innatedb"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/object"
+        # testExamples:
+        #   - qInput: "ENSEMBL:ENSG00000078142"       ## PIK3C3
+        #     oneOutput: "ENSEMBL:ENSG00000126775"    ## ATG14
+    physical_association-rev:
+      - supportBatch: true
+        useTemplating: true
+        inputs:
+          - id: ENSEMBL
+            semantic: Gene
+        requestBody:
+          body: 
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: object.alt_identifier.ensembl
+        outputs:
+          - id: ENSEMBL
+            semantic: Gene
+        parameters:
+          fields: >-
+            subject.alt_identifier.ensembl,
+            object.alias.hgnc_name,subject.alias.hgnc_name,
+            relation.pmid
+          size: 1000
+          filter: >-
+            relation.interaction_type.label:"physical association"
+        predicate: physically_interacts_with
+        source: "infores:innatedb"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/subject"
+        # testExamples:
+        #   - qInput: "ENSEMBL:ENSG00000113558"       ## SKP1
+        #     oneOutput: "ENSEMBL:ENSG00000100906"    ## NFKBIA
+    phosphorylation:
+    ## 1201 records
+    ## all have subject/object as "protein"
+    ## for now, this has a generic predicate.
+    ## biolink-model seems to lack good predicate-qualifiers for protein-protein phosphorylation
+    ## an almost-complete breakdown (covers 1124 records):
+    ## - 795 records were subject probably phosphorylates Object
+    ##   subject isn't enzyme target (NOT subject.biological_role.label:"enzyme target")
+    ##   object is enzyme target (object.biological_role.label:"enzyme target" or "self")
+    ##   https://biothings.ncats.io/innatedb/query?q=relation.interaction_type.label:%22phosphorylation%20reaction%22%20AND%20(object.biological_role.label:%22enzyme%20target%22%20OR%20object.biological_role.label:%22self%22)%20AND%20(NOT%20subject.biological_role.label:%22enzyme%20target%22)
+    ## - 332 records were Object probably phosphorylates subject
+    ##   note 3 overlapping records where roles are "self"
+    ##   subject is enzyme target (subject.biological_role.label:"enzyme target" or "self")
+    ##   object isn't enzyme target (NOT object.biological_role.label:"enzyme target")
+    ##   https://biothings.ncats.io/innatedb/query?q=relation.interaction_type.label:%22phosphorylation%20reaction%22%20AND%20(subject.biological_role.label:%22enzyme%20target%22%20OR%20subject.biological_role.label:%22self%22)%20AND%20(NOT%20object.biological_role.label:%22enzyme%20target%22)
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: ENSEMBL
+            semantic: Gene
+        requestBody:
+          body: 
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: subject.alt_identifier.ensembl
+        outputs:
+          - id: ENSEMBL
+            semantic: Gene
+        parameters:
+          fields: >-
+            object.alt_identifier.ensembl,
+            object.alias.hgnc_name,subject.alias.hgnc_name,
+            relation.pmid
+          size: 1000
+          filter: >-
+            relation.interaction_type.label:"phosphorylation reaction"
+        predicate: physically_interacts_with
+        source: "infores:innatedb"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/object"
+        # testExamples:
+        #   - qInput: "ENSEMBL:ENSG00000109339"       ## MAPK10 (enzyme)
+        #     oneOutput: "ENSEMBL:ENSG00000196793"    ## ZNF239 (enzyme target)
+    phosphorylation-rev:
+      - supportBatch: true
+        useTemplating: true
+        inputs:
+          - id: ENSEMBL
+            semantic: Gene
+        requestBody:
+          body: 
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: object.alt_identifier.ensembl
+        outputs:
+          - id: ENSEMBL
+            semantic: Gene
+        parameters:
+          fields: >-
+            subject.alt_identifier.ensembl,
+            object.alias.hgnc_name,subject.alias.hgnc_name,
+            relation.pmid
+          size: 1000
+          filter: >-
+            relation.interaction_type.label:"phosphorylation reaction"
+        predicate: physically_interacts_with
+        source: "infores:innatedb"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/subject"
+        # testExamples:
+        #   - qInput: "ENSEMBL:ENSG00000213341"       ## CHUK (enzyme target)
+        #     oneOutput: "ENSEMBL:ENSG00000105221"    ## AKT2 (enzyme)
+    ubiquitination:
+    ## 423 records 
+    ## all have subject/object as "protein"
+    ## for now, this has a generic predicate.
+    ## biolink-model seems to lack good predicate-qualifiers for protein-protein ubiquitination
+    ## 249 records have both subject/object biological role as "unspecified role"
+    ## https://biothings.ncats.io/innatedb/query?q=relation.interaction_type.label:%22ubiquitination%20reaction%22%20AND%20(object.biological_role.label:%22unspecified%20role%22)%20AND%20(subject.biological_role.label:%22unspecified%20role%22)
+    ## so breakdown into "enzyme target" and "not enzyme target" is less useful
+    ##   only seems to cover ~100 records
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: ENSEMBL
+            semantic: Gene
+        requestBody:
+          body: 
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: subject.alt_identifier.ensembl
+        outputs:
+          - id: ENSEMBL
+            semantic: Gene
+        parameters:
+          fields: >-
+            object.alt_identifier.ensembl,
+            object.alias.hgnc_name,subject.alias.hgnc_name,
+            relation.pmid
+          size: 1000
+          filter: >-
+            relation.interaction_type.label:"ubiquitination reaction"
+        predicate: physically_interacts_with
+        source: "infores:innatedb"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/object"
+        # testExamples:
+        #   - qInput: "ENSEMBL:ENSG00000100906"       ## NFKBIA (enzyme target)
+        #     oneOutput: "ENSEMBL:ENSG00000131508"    ## UBE2D2 (enzyme)
+    ubiquitination-rev:
+      - supportBatch: true
+        useTemplating: true
+        inputs:
+          - id: ENSEMBL
+            semantic: Gene
+        requestBody:
+          body: 
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: object.alt_identifier.ensembl
+        outputs:
+          - id: ENSEMBL
+            semantic: Gene
+        parameters:
+          fields: >-
+            subject.alt_identifier.ensembl,
+            object.alias.hgnc_name,subject.alias.hgnc_name,
+            relation.pmid
+          size: 1000
+          filter: >-
+            relation.interaction_type.label:"ubiquitination reaction"
+        predicate: physically_interacts_with
+        source: "infores:innatedb"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/subject"
+        # testExamples:
+        #   - qInput: "ENSEMBL:ENSG00000173039"       ## RELA (unspecified role)
+        #     oneOutput: "ENSEMBL:ENSG00000100906"    ## NFKBIA (enzyme target)
+    protein_cleavage:
+    ## 324 records
+    ## all have subject/object as "protein"
+    ## for now, this has a generic predicate.
+    ## biolink-model seems to lack good predicate-qualifiers for protein catalyzing cleavage of another protein
+    ## an almost-complete breakdown (covers 320 records):
+    ## - 199 records were subject probably cleaves Object
+    ##   subject isn't enzyme target (NOT subject.biological_role.label:"enzyme target")
+    ##   object is enzyme target (object.biological_role.label:"enzyme target")
+    ##   https://biothings.ncats.io/innatedb/query?q=relation.interaction_type.label:%22protein%20cleavage%22%20AND%20(object.biological_role.label:%22enzyme%20target%22)%20AND%20(NOT%20subject.biological_role.label:%22enzyme%20target%22)
+    ## - 121 records were Object probably cleaves subject
+    ##   subject is enzyme target (subject.biological_role.label:"enzyme target")
+    ##   object isn't enzyme target (NOT object.biological_role.label:"enzyme target")
+    ##   https://biothings.ncats.io/innatedb/query?q=relation.interaction_type.label:%22protein%20cleavage%22%20AND%20(subject.biological_role.label:%22enzyme%20target%22)%20AND%20(NOT%20object.biological_role.label:%22enzyme%20target%22)
+    ## - none have the role "self"
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: ENSEMBL
+            semantic: Gene
+        requestBody:
+          body: 
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: subject.alt_identifier.ensembl
+        outputs:
+          - id: ENSEMBL
+            semantic: Gene
+        parameters:
+          fields: >-
+            object.alt_identifier.ensembl,
+            object.alias.hgnc_name,subject.alias.hgnc_name,
+            relation.pmid
+          size: 1000
+          filter: >-
+            relation.interaction_type.label:"protein cleavage"
+        predicate: physically_interacts_with
+        source: "infores:innatedb"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/object"
+        # testExamples:
+        #   - qInput: "ENSEMBL:ENSG00000092009"          ## CMA1 (enzyme)
+        #     oneOutput: "ENSEMBL:ENSMUSG00000024810"    ## mgi:Il33 (enzyme target)
+    protein_cleavage-rev:
+      - supportBatch: true
+        useTemplating: true
+        inputs:
+          - id: ENSEMBL
+            semantic: Gene
+        requestBody:
+          body: 
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: object.alt_identifier.ensembl
+        outputs:
+          - id: ENSEMBL
+            semantic: Gene
+        parameters:
+          fields: >-
+            subject.alt_identifier.ensembl,
+            object.alias.hgnc_name,subject.alias.hgnc_name,
+            relation.pmid
+          size: 1000
+          filter: >-
+            relation.interaction_type.label:"protein cleavage"
+        predicate: physically_interacts_with
+        source: "infores:innatedb"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/subject"
+        # testExamples:
+        #   - qInput: "ENSEMBL:ENSG00000108700"       ## CCL8 (enzyme target)
+        #     oneOutput: "ENSEMBL:ENSG00000262406"    ## MMP12 (enzyme)
+    cleavage_reaction:
+    ## 147 records
+    ## not sure how this differs from the "protein cleavage" label
+    ## all have subject/object as "protein"
+    ## for now, this has a generic predicate.
+    ## biolink-model seems to lack good predicate-qualifiers for protein catalyzing cleavage of another protein
+    ## an almost-complete breakdown (covers 139 records):
+    ## - 65 records were subject probably cleaves Object
+    ##   subject isn't enzyme target (NOT subject.biological_role.label:"enzyme target")
+    ##   object is enzyme target (object.biological_role.label:"enzyme target" or "self")
+    ##   https://biothings.ncats.io/innatedb/query?q=relation.interaction_type.label:%22cleavage%20reaction%22%20AND%20(object.biological_role.label:%22enzyme%20target%22)%20AND%20(NOT%20subject.biological_role.label:%22enzyme%20target%22)
+    ## - 74 records were Object probably cleaves subject
+    ##   subject is enzyme target (subject.biological_role.label:"enzyme target" or "self")
+    ##   object isn't enzyme target (NOT object.biological_role.label:"enzyme target")
+    ##   https://biothings.ncats.io/innatedb/query?q=relation.interaction_type.label:%22cleavage%20reaction%22%20AND%20(subject.biological_role.label:%22enzyme%20target%22)%20AND%20(NOT%20object.biological_role.label:%22enzyme%20target%22)
+    ## - none have the role "self"
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: ENSEMBL
+            semantic: Gene
+        requestBody:
+          body: 
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: subject.alt_identifier.ensembl
+        outputs:
+          - id: ENSEMBL
+            semantic: Gene
+        parameters:
+          fields: >-
+            object.alt_identifier.ensembl,
+            object.alias.hgnc_name,subject.alias.hgnc_name,
+            relation.pmid
+          size: 1000
+          filter: >-
+            relation.interaction_type.label:"cleavage reaction"
+        predicate: physically_interacts_with
+        source: "infores:innatedb"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/object"
+        # testExamples:
+        #   - qInput: "ENSEMBL:ENSG00000014216"       ## CAPN1 (enzyme)
+        #     oneOutput: "ENSEMBL:ENSG00000196396"    ## PTPN1 (enzyme target)
+    cleavage_reaction-rev:
+      - supportBatch: true
+        useTemplating: true
+        inputs:
+          - id: ENSEMBL
+            semantic: Gene
+        requestBody:
+          body: 
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: object.alt_identifier.ensembl
+        outputs:
+          - id: ENSEMBL
+            semantic: Gene
+        parameters:
+          fields: >-
+            subject.alt_identifier.ensembl,
+            object.alias.hgnc_name,subject.alias.hgnc_name,
+            relation.pmid
+          size: 1000
+          filter: >-
+            relation.interaction_type.label:"cleavage reaction"
+        predicate: physically_interacts_with
+        source: "infores:innatedb"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/subject"
+        # testExamples:
+        #   - qInput: "ENSEMBL:ENSG00000150782"       ## IL18 (enzyme target)
+        #     oneOutput: "ENSEMBL:ENSG00000137752"    ## CASP1 (enzyme)
+    dephosphorylation:
+    ## 40 records
+    ## all have subject/object as "protein"
+    ## for now, this has a generic predicate.
+    ## biolink-model seems to lack good predicate-qualifiers for protein-protein dephosphorylation
+    ## a complete breakdown (covers all records):
+    ## - 26 records were subject probably dephosphorylates Object
+    ##   subject isn't enzyme target (NOT subject.biological_role.label:"enzyme target")
+    ##   object is enzyme target (object.biological_role.label:"enzyme target" or "self")
+    ##   https://biothings.ncats.io/innatedb/query?q=relation.interaction_type.label:%22dephosphorylation%20reaction%22%20AND%20(object.biological_role.label:%22enzyme%20target%22)%20AND%20(NOT%20subject.biological_role.label:%22enzyme%20target%22)
+    ## - 14 records were Object probably dephosphorylates subject
+    ##   subject is enzyme target (subject.biological_role.label:"enzyme target" or "self")
+    ##   object isn't enzyme target (NOT object.biological_role.label:"enzyme target")
+    ##   https://biothings.ncats.io/innatedb/query?q=relation.interaction_type.label:%22dephosphorylation%20reaction%22%20AND%20(subject.biological_role.label:%22enzyme%20target%22)%20AND%20(NOT%20object.biological_role.label:%22enzyme%20target%22)
+    ## - none have the role "self"
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: ENSEMBL
+            semantic: Gene
+        requestBody:
+          body: 
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: subject.alt_identifier.ensembl
+        outputs:
+          - id: ENSEMBL
+            semantic: Gene
+        parameters:
+          fields: >-
+            object.alt_identifier.ensembl,
+            object.alias.hgnc_name,subject.alias.hgnc_name,
+            relation.pmid
+          size: 1000
+          filter: >-
+            relation.interaction_type.label:"dephosphorylation reaction"
+        predicate: physically_interacts_with
+        source: "infores:innatedb"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/object"
+        # testExamples:
+        #   - qInput: "ENSEMBL:ENSG00000127329"       ## PTPRB (enzyme)
+        #     oneOutput: "ENSEMBL:ENSG00000120156"    ## TEK (enzyme target)
+    dephosphorylation-rev:
+      - supportBatch: true
+        useTemplating: true
+        inputs:
+          - id: ENSEMBL
+            semantic: Gene
+        requestBody:
+          body: 
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: object.alt_identifier.ensembl
+        outputs:
+          - id: ENSEMBL
+            semantic: Gene
+        parameters:
+          fields: >-
+            subject.alt_identifier.ensembl,
+            object.alias.hgnc_name,subject.alias.hgnc_name,
+            relation.pmid
+          size: 1000
+          filter: >-
+            relation.interaction_type.label:"dephosphorylation reaction"
+        predicate: physically_interacts_with
+        source: "infores:innatedb"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/subject"
+        # testExamples:
+        #   - qInput: "ENSEMBL:ENSG00000135341"       ## MAP3K7 (enzyme target)
+        #     oneOutput: "ENSEMBL:ENSG00000138032"    ## PPM1B (enzyme)
+  x-bte-response-mapping:
+    object:
+      ENSEMBL: object.alt_identifier.ensembl
+      input_name: subject.alias.hgnc_name
+      output_name: object.alias.hgnc_name
+      ref_pmid: relation.pmid
+    subject:
+      ENSEMBL: subject.alt_identifier.ensembl
+      input_name: object.alias.hgnc_name
+      output_name: subject.alias.hgnc_name
+      ref_pmid: relation.pmid
