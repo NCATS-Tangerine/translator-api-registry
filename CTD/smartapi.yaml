@@ -138,6 +138,38 @@ paths:
       # - "$ref": "#/components/x-bte-kgs-operations/gene2pathway_2"
       - "$ref": "#/components/x-bte-kgs-operations/pathway2gene_2"
 components:
+  x-bte-transformers:
+    custom_processing:
+      jq:
+        pair: |-
+          reduce .response[] as $item (
+            {}; .[(
+                if ($edge.input | type) == "object" then
+                  ($edge.input.queryInputs | toArray)[]
+                else
+                  ($edge.input | toArray)[]
+                end
+              ) 
+              | select(($item.Input | ascii_upcase | split(":") | last) == (. | ascii_upcase))
+              | generateCurie($edge.association.input_id; .)
+            ] = [] 
+            + .[(
+                if ($edge.input | type) == "object" then
+                  ($edge.input.queryInputs | toArray)[]
+                else
+                  ($edge.input | toArray)[]
+                end
+              )
+              | select(($item.Input | ascii_upcase | split(":") | last) == (. | ascii_upcase))
+              | generateCurie($edge.association.input_id; .)
+            ] 
+            + [$item]
+          ) | map_values([.])
+        wrap: |-
+          ((.[] | select(.PubMedIDs != null) | .PubMedIDs) |= split("|")) | 
+          ((.[] | select(.PubMedIds != null) | .PubMedIds) |= split("|")) | 
+          ((.[] | select(.DirectEvidence != null) | .DirectEvidence) |= split("|")) | 
+          {data: .}
   x-bte-kgs-operations:
     ## - pubmed IDs are pipe-delimited (|) strings but BTE seems to parse these correctly
     ## - while the API supports multiple IDs as input (batch-query)...we aren't using it because
@@ -166,7 +198,7 @@ components:
     ##   - gene <-> go: currently we get this info from MyGene. 
     ##                  We could also try getting this info from Biolink/Monarch
     chemical2gene:
-    - supportBatch: false
+    - supportBatch: true
       useTemplating: true
       inputs:
       - id: MESH
@@ -176,18 +208,20 @@ components:
         semantic: Gene
       parameters:
         inputType: chem
-        inputTerms: "{{ queryInputs }}"  ## no prefix
+        inputTerms: "{{ queryInputs | joinSafe('|') }}"
         inputTermSearchType: directAssociations
         report: genes_curated
         format: json
       predicate: related_to
+      transformer:
+        "$ref": "#/components/x-bte-transformers/custom_processing"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/chemical2gene"
       # testExamples:
       #   - qInput: "MESH:C006303"        ## acivicin
       #     oneOutput: "NCBIGene:1080"    ## CFTR
     gene2chemical:
-    - supportBatch: false
+    - supportBatch: true
       useTemplating: true
       inputs:
       - id: NCBIGene
@@ -197,11 +231,13 @@ components:
         semantic: SmallMolecule
       parameters:
         inputType: gene
-        inputTerms: "{{ queryInputs | rmPrefix() }}"  ## no prefix
+        inputTerms: "{{ queryInputs | rmPrefix() | joinSafe('|') }}"  ## no prefix
         inputTermSearchType: directAssociations
         report: chems_curated
         format: json
       predicate: related_to
+      transformer:
+        "$ref": "#/components/x-bte-transformers/custom_processing"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/gene2chemical"
       # testExamples:
@@ -209,7 +245,7 @@ components:
       #     oneOutput: "MESH:C010395"       ## acetylsalicylic acid lysinate / Aspirin DL-lysine
     ## commenting out chemical2disease operations because BTE isn't recognizing MESH vs OMIM Disease IDs
     # chemical2disease_1:
-    # - supportBatch: false
+    # - supportBatch: true
     #   useTemplating: true
     #   inputs:
     #   - id: MESH
@@ -219,18 +255,20 @@ components:
     #     semantic: Disease
     #   parameters:
     #     inputType: chem
-    #     inputTerms: "{{ queryInputs }}"  ## no prefix
+    #     inputTerms: "{{ queryInputs | joinSafe('|') }}"  ## no prefix
     #     inputTermSearchType: directAssociations
     #     report: diseases_curated
     #     format: json
     #   predicate: related_to
+    #   transformer:
+    #     "$ref": "#/components/x-bte-transformers/custom_processing"
     #   response_mapping:
     #     "$ref": "#/components/x-bte-response-mapping/chemical2disease_1"
     #   # testExamples:
     #   #   - qInput: "MESH:D005492"        ## Folic Acid
     #   #     oneOutput: "MESH:D000748"     ## Anemia, Macrocytic
     disease2chemical_1:
-    - supportBatch: false
+    - supportBatch: true
       useTemplating: true
       inputs:
       - id: MESH
@@ -240,18 +278,20 @@ components:
         semantic: SmallMolecule
       parameters:
         inputType: disease
-        inputTerms: "{{ queryInputs | replPrefix('MESH') }}"  ## HAS PREFIX
+        inputTerms: "{{ queryInputs | replPrefix('MESH') | joinSafe('|') }}"  ## HAS PREFIX
         inputTermSearchType: directAssociations
         report: chems_curated
         format: json
       predicate: related_to
+      transformer:
+        "$ref": "#/components/x-bte-transformers/custom_processing"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/disease2chemical"
       # testExamples:
       #   - qInput: "MESH:D020138"        ## Hyperhomocysteinemia
       #     oneOutput: "MESH:D016291"     ## Dizocilpine Maleate / Neurogard
     # chemical2disease_2:
-    # - supportBatch: false
+    # - supportBatch: true
     #   useTemplating: true
     #   inputs:
     #   - id: MESH
@@ -261,18 +301,20 @@ components:
     #     semantic: Disease
     #   parameters:
     #     inputType: chem
-    #     inputTerms: "{{ queryInputs }}"  ## no prefix
+    #     inputTerms: "{{ queryInputs | joinSafe('|') }}"  ## no prefix
     #     inputTermSearchType: directAssociations
     #     report: diseases_curated
     #     format: json
     #   predicate: related_to
+    #   transformer:
+    #     "$ref": "#/components/x-bte-transformers/custom_processing"
     #   response_mapping:
     #     "$ref": "#/components/x-bte-response-mapping/chemical2disease_2"
     #   # testExamples:
     #   #   - qInput: "MESH:D004317"        ## Doxorubicin
     #   #     oneOutput: "OMIM:610141"      ## QT INTERVAL, VARIATION IN
     disease2chemical_2:
-    - supportBatch: false
+    - supportBatch: true
       useTemplating: true
       inputs:
       - id: OMIM
@@ -282,11 +324,13 @@ components:
         semantic: SmallMolecule
       parameters:
         inputType: disease
-        inputTerms: "{{ queryInputs | replPrefix('OMIM') }}"  ## HAS PREFIX
+        inputTerms: "{{ queryInputs | replPrefix('OMIM') | joinSafe('|') }}"  ## HAS PREFIX
         inputTermSearchType: directAssociations
         report: chems_curated
         format: json
       predicate: related_to
+      transformer:
+        "$ref": "#/components/x-bte-transformers/custom_processing"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/disease2chemical"
       # testExamples:
@@ -295,7 +339,7 @@ components:
     chemical2bp:
     ## only one way (no GO terms -> chemicals)
     ## goes through gene intermediates, not the same as the "enriched" dataset
-    - supportBatch: false
+    - supportBatch: true
       useTemplating: true
       inputs:
       - id: MESH
@@ -305,12 +349,14 @@ components:
         semantic: BiologicalProcess
       parameters:
         inputType: chem
-        inputTerms: "{{ queryInputs }}"  ## no prefix
+        inputTerms: "{{ queryInputs | joinSafe('|') }}"  ## no prefix
         inputTermSearchType: directAssociations
         report: go
         ontology: go_bp
         format: json
       predicate: related_to
+      transformer:
+        "$ref": "#/components/x-bte-transformers/custom_processing"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/chemical2go"
       # testExamples:
@@ -319,7 +365,7 @@ components:
     chemical2cc:
     ## only one way (no GO terms -> chemicals)
     ## goes through gene intermediates, not the same as the "enriched" dataset
-    - supportBatch: false
+    - supportBatch: true
       useTemplating: true
       inputs:
       - id: MESH
@@ -329,12 +375,14 @@ components:
         semantic: CellularComponent
       parameters:
         inputType: chem
-        inputTerms: "{{ queryInputs }}"  ## no prefix
+        inputTerms: "{{ queryInputs | joinSafe('|') }}"  ## no prefix
         inputTermSearchType: directAssociations
         report: go
         ontology: go_cc
         format: json
       predicate: related_to
+      transformer:
+        "$ref": "#/components/x-bte-transformers/custom_processing"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/chemical2go"
       # testExamples:
@@ -343,7 +391,7 @@ components:
     chemical2mf:
     ## only one way (no GO terms -> chemicals)
     ## goes through gene intermediates, not the same as the "enriched" dataset
-    - supportBatch: false
+    - supportBatch: true
       useTemplating: true
       inputs:
       - id: MESH
@@ -353,12 +401,14 @@ components:
         semantic: MolecularActivity
       parameters:
         inputType: chem
-        inputTerms: "{{ queryInputs }}"  ## no prefix
+        inputTerms: "{{ queryInputs | joinSafe('|') }}"  ## no prefix
         inputTermSearchType: directAssociations
         report: go
         ontology: go_mf
         format: json
       predicate: related_to
+      transformer:
+        "$ref": "#/components/x-bte-transformers/custom_processing"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/chemical2go"
       # testExamples:
@@ -366,7 +416,7 @@ components:
       #     oneOutput: "GO:0070742"     ## C2H2 zinc finger domain binding
     ## commenting out gene2disease operations because BTE isn't recognizing MESH vs OMIM Disease IDs
     disease2gene_1:
-    - supportBatch: false
+    - supportBatch: true
       useTemplating: true
       inputs:
       - id: MESH
@@ -376,18 +426,20 @@ components:
         semantic: Gene
       parameters:
         inputType: disease
-        inputTerms: "{{ queryInputs | replPrefix('MESH') }}"  ## HAS PREFIX
+        inputTerms: "{{ queryInputs | replPrefix('MESH') | joinSafe('|') }}"  ## HAS PREFIX
         inputTermSearchType: directAssociations
         report: genes_curated
         format: json
       predicate: related_to
+      transformer:
+        "$ref": "#/components/x-bte-transformers/custom_processing"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/disease2gene"
       # testExamples:
       #   - qInput: "MESH:D020138"        ## Hyperhomocysteinemia
       #     oneOutput: "NCBIGene:4524"    ## MTHFR
     # gene2disease_1:
-    # - supportBatch: false
+    # - supportBatch: true
     #   useTemplating: true
     #   inputs:
     #   - id: NCBIGene
@@ -397,18 +449,20 @@ components:
     #     semantic: Disease
     #   parameters:
     #     inputType: gene
-    #     inputTerms: "{{ queryInputs | rmPrefix() }}"  ## no prefix
+    #     inputTerms: "{{ queryInputs | rmPrefix() | joinSafe('|') }}"  ## no prefix
     #     inputTermSearchType: directAssociations
     #     report: diseases_curated
     #     format: json
     #   predicate: related_to
+    #   transformer:
+    #     "$ref": "#/components/x-bte-transformers/custom_processing"
     #   response_mapping:
     #     "$ref": "#/components/x-bte-response-mapping/gene2disease_1"
     #   # testExamples:
     #   #   - qInput: "NCBIGene:4868"        ## NPHS1
     #   #     oneOutput: "MESH:C535761"      ## Nephrosis, congenital / familial nephrotic syndrome
     disease2gene_2:
-    - supportBatch: false
+    - supportBatch: true
       useTemplating: true
       inputs:
       - id: OMIM
@@ -418,18 +472,20 @@ components:
         semantic: Gene
       parameters:
         inputType: disease
-        inputTerms: "{{ queryInputs | replPrefix('OMIM') }}"  ## HAS PREFIX
+        inputTerms: "{{ queryInputs | replPrefix('OMIM') | joinSafe('|') }}"  ## HAS PREFIX
         inputTermSearchType: directAssociations
         report: genes_curated
         format: json
       predicate: related_to
+      transformer:
+        "$ref": "#/components/x-bte-transformers/custom_processing"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/disease2gene"
       # testExamples:
       #   - qInput: "OMIM:615075"         ## NEURODEVELOPMENTAL DISORDER WITH SPASTIC DIPLEGIA AND VISUAL DEFECTS
       #     oneOutput: "NCBIGene:1499"    ## CTNNB1
     # gene2disease_2:
-    # - supportBatch: false
+    # - supportBatch: true
     #   useTemplating: true
     #   inputs:
     #   - id: NCBIGene
@@ -439,11 +495,13 @@ components:
     #     semantic: Disease
     #   parameters:
     #     inputType: gene
-    #     inputTerms: "{{ queryInputs | rmPrefix() }}"  ## no prefix
+    #     inputTerms: "{{ queryInputs | rmPrefix() | joinSafe('|') }}"  ## no prefix
     #     inputTermSearchType: directAssociations
     #     report: diseases_curated
     #     format: json
     #   predicate: related_to
+    #   transformer:
+    #     "$ref": "#/components/x-bte-transformers/custom_processing"
     #   response_mapping:
     #     "$ref": "#/components/x-bte-response-mapping/gene2disease_2"
     #   # testExamples:
@@ -451,7 +509,7 @@ components:
     #   #     oneOutput: "OMIM:259710"      ## OSTEOPETROSIS, AUTOSOMAL RECESSIVE 2
     ## commenting out gene2pathway operations because BTE isn't recognizing REACT vs KEGG Pathway IDs
     # gene2pathway_1:
-    # - supportBatch: false
+    # - supportBatch: true
     #   useTemplating: true
     #   inputs:
     #   - id: NCBIGene
@@ -461,18 +519,20 @@ components:
     #     semantic: Pathway
     #   parameters:
     #     inputType: gene
-    #     inputTerms: "{{ queryInputs | rmPrefix() }}"  ## no prefix
+    #     inputTerms: "{{ queryInputs | rmPrefix() | joinSafe('|') }}"  ## no prefix
     #     inputTermSearchType: directAssociations
     #     report: pathways_curated
     #     format: json
     #   predicate: participates_in
+    #   transformer:
+    #     "$ref": "#/components/x-bte-transformers/custom_processing"
     #   response_mapping:
     #     "$ref": "#/components/x-bte-response-mapping/gene2pathway_1"
     #   # testExamples:
     #   #   - qInput: "NCBIGene:8600"              ## TNFSF11
     #   #     oneOutput: "REACT:R-HSA-5668541"     ## TNFR2 non-canonical NF-kB pathway
     pathway2gene_1:
-    - supportBatch: false
+    - supportBatch: true
       useTemplating: true
       inputs:
       - id: REACT
@@ -482,18 +542,20 @@ components:
         semantic: Gene
       parameters:
         inputType: pathway
-        inputTerms: "{{ queryInputs | replPrefix('REACT') }}"  ## HAS PREFIX
+        inputTerms: "{{ queryInputs | replPrefix('REACT') | joinSafe('|') }}"  ## HAS PREFIX
         inputTermSearchType: directAssociations
         report: genes_curated
         format: json
       predicate: has_participant
+      transformer:
+        "$ref": "#/components/x-bte-transformers/custom_processing"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/pathway2gene"
       # testExamples:
       #   - qInput: "REACT:R-HSA-5669034"    ## TNFs bind their physiological receptors
       #     oneOutput: "NCBIGene:939"        ## CD27
     # gene2pathway_2:
-    # - supportBatch: false
+    # - supportBatch: true
     #   useTemplating: true
     #   inputs:
     #   - id: NCBIGene
@@ -503,18 +565,20 @@ components:
     #     semantic: Pathway
     #   parameters:
     #     inputType: gene
-    #     inputTerms: "{{ queryInputs | rmPrefix() }}"  ## no prefix
+    #     inputTerms: "{{ queryInputs | rmPrefix() | joinSafe('|') }}"  ## no prefix
     #     inputTermSearchType: directAssociations
     #     report: pathways_curated
     #     format: json
     #   predicate: participates_in
+    #   transformer:
+    #     "$ref": "#/components/x-bte-transformers/custom_processing"
     #   response_mapping:
     #     "$ref": "#/components/x-bte-response-mapping/gene2pathway_2"
     #   # testExamples:
     #   #   - qInput: "NCBIGene:8600"              ## TNFSF11
     #   #     oneOutput: "KEGG.PATHWAY:hsa04917"   ## Prolactin signaling pathway
     pathway2gene_2:
-    - supportBatch: false
+    - supportBatch: true
       useTemplating: true
       inputs:
       - id: KEGG.PATHWAY
@@ -524,11 +588,13 @@ components:
         semantic: Gene
       parameters:
         inputType: pathway
-        inputTerms: "{{ queryInputs | replPrefix('KEGG') }}"  ## HAS PREFIX (not biolink-model spelling)
+        inputTerms: "{{ queryInputs | replPrefix('KEGG') | joinSafe('|') }}"  ## HAS PREFIX (not biolink-model spelling)
         inputTermSearchType: directAssociations
         report: genes_curated
         format: json
       predicate: has_participant
+      transformer:
+        "$ref": "#/components/x-bte-transformers/custom_processing"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/pathway2gene"
       # testExamples:

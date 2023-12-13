@@ -3240,6 +3240,7 @@ paths:
   #               $ref: '#/components/schemas/ErrorMessage'
 components:
   x-bte-kgs-operations:
+  ## because we only have 1 operation right now, I'm not using $ref for the post-processing "transformer" section
   ## uniprot annotates enzymes that catalyze reactions (RHEA IDs): https://www.rhea-db.org/help/enzyme%2Dcatalyzing%2Dreaction
     gene_to_rhea_reaction:
     - supportBatch: false
@@ -3256,6 +3257,13 @@ components:
       predicate: enables
       ## accessing UniProtKB through EBI Proteins API
       source: "infores:uniprot"
+      transformer:
+        jq:
+          # only take comments where dbReferences type is Rhea
+          wrap: >-
+            .comments = [
+              select(.comments != null) | .comments | .[] | select(.reaction != null) | .reaction.dbReferences = [.reaction.dbReferences | .[] | select(.type == "Rhea")]
+            ]
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/rheaReaction"
       # testExamples:
