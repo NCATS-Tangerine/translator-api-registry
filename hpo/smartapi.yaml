@@ -9,13 +9,13 @@ info:
     Documentation of the BioThings API for [Human Phenotype Ontology](https://hpo.jax.org/app/) data.
   termsOfService: https://biothings.io/about
   title: BioThings HPO API
-  version: '2020.6'
+  version: '2023-06-17'
   x-translator:
     infores: "infores:biothings-hpo"
     component: KP
     team:
       - Service Provider
-    biolink-version: "3.5.0"
+    biolink-version: "3.5.3"
 servers:
 - description: Encrypted Production server
   url: https://biothings.ncats.io/hpo
@@ -305,6 +305,8 @@ paths:
       tags:
       - query
       x-bte-kgs-operations:
+      - $ref: '#/components/x-bte-kgs-operations/pheno_gene'
+      - $ref: '#/components/x-bte-kgs-operations/pheno_gene-rev'
       - $ref: '#/components/x-bte-kgs-operations/has_subclass'
       - $ref: '#/components/x-bte-kgs-operations/subclass_of'
 components:
@@ -567,8 +569,59 @@ components:
   #       type: array
   #     - type: string
   x-bte-kgs-operations:
+    pheno_gene:
+    ## 10880 records: https://biothings.ncats.io/hpo/query?q=_exists_:annotations.gene.id
+    ## other fields include:
+    ## - annotations.gene.symbol (not needed since NodeNorm likely knows the NCBIGene namespace well)
+    ## - annotations.disease_id: has issues including as an edge-attribute
+    ##                           see notes in https://github.com/biothings/biothings_explorer/issues/710
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: HP
+        semantic: PhenotypicFeature
+      requestBody:
+      ## API data uses HP prefix
+        body:
+          q: "{{ queryInputs }}"
+          scopes: _id
+      outputs:
+      - id: NCBIGene
+        semantic: Gene
+      parameters:
+        fields: annotations.gene.id
+      predicate: condition_associated_with_gene
+      source: "infores:hpo-annotations"
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/annotated-genes'
+      # testExamples:
+      #   - qInput: "HP:0031445"            ## Oral mucosa nodule
+      #     oneOutput: "NCBIGene:11146"     ## GLMN
+    pheno_gene-rev:
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: NCBIGene
+        semantic: Gene
+      requestBody:
+      ## no prefix
+        body:
+          q: "{{ queryInputs }}"
+          scopes: annotations.gene.id
+      outputs:
+      - id: HP
+        semantic: PhenotypicFeature
+      parameters:
+        fields: _id
+      predicate: gene_associated_with_condition
+      source: "infores:hpo-annotations"
+      response_mapping:
+        $ref: '#/components/x-bte-response-mapping/hp-id'
+      # testExamples:
+      #   - qInput: "NCBIGene:3909"     ## LAMA3
+      #     oneOutput: "HP:0031446"     ## Erosion of oral mucosa
     has_subclass:
-    ## 5160 records: https://biothings.ncats.io/hpo/query?q=_exists_:children
+    ## 5607 records: https://biothings.ncats.io/hpo/query?q=_exists_:descendants
     - supportBatch: true
       useTemplating: true
       inputs:
@@ -582,7 +635,7 @@ components:
       - id: HP
         semantic: PhenotypicFeature
       parameters:
-        fields: children
+        fields: descendants
       predicate: superclass_of  ## this is current biolink, same meaning as "has_subclass"
       source: "infores:hpo"
       response_mapping:
@@ -604,7 +657,7 @@ components:
       - id: HP
         semantic: PhenotypicFeature
       parameters:
-        fields: parents
+        fields: ancestors
       predicate: subclass_of
       source: "infores:hpo"
       response_mapping:
@@ -613,7 +666,11 @@ components:
       #   - qInput: "HP:0025532"        ## Positive pathergy test
       #     oneOutput: "HP:0011122"     ## Abnormality of skin physiology
   x-bte-response-mapping:
+    annotated-genes:
+      NCBIGene: annotations.gene.id
+    hp-id:
+      HP: _id
     has_subclass:
-      HP: children
+      HP: descendants
     subclass_of:
-      HP: parents
+      HP: ancestors
