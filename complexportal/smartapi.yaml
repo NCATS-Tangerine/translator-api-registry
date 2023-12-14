@@ -46,6 +46,8 @@ paths:
       - "$ref": "#/components/x-bte-kgs-operations/protein2complex"
       - "$ref": "#/components/x-bte-kgs-operations/chemical2complex"
       - "$ref": "#/components/x-bte-kgs-operations/disease2complex"
+      - "$ref": "#/components/x-bte-kgs-operations/bp2complex"
+      - "$ref": "#/components/x-bte-kgs-operations/mf2complex"
   "/complex/{id}":
     get:
       description: retrieve full complex info using the ComplexPortal ID
@@ -64,6 +66,7 @@ paths:
             application/json:
               schema:
                 type: object
+      ## Commenting out for now
       ## Complex -> entity x-bte operations use JQ post-processing
       # x-bte-kgs-operations:
       # - "$ref": "#/components/x-bte-kgs-operations/complex2protein"
@@ -124,7 +127,47 @@ components:
       # testExamples:
       #   - qInput: "ORPHANET:848"                 ## Beta-thalassemia
       #     oneOutput: "ComplexPortal:CPX-2158"    ## Hemoglobin HbA complex
+    bp2complex:
+    - supportBatch: false
+      useTemplating: true
+      inputs:
+      - id: GO
+        semantic: BiologicalProcess
+      outputs:
+      - id: ComplexPortal
+        semantic: MacromolecularComplex
+      parameters:
+        search_term: "{{ queryInputs | replPrefix('GO') }}"    ## requires prefix
+      predicate: has_participant
+      ## using the same predicate that MyGene uses for BP -> Gene
+      ## not sure if a different predicate should be used...
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/complex-output"
+      # testExamples:
+      #   - qInput: "GO:0015670"                   ## carbon dioxide transport
+      #     oneOutput: "ComplexPortal:CPX-2936"    ## Hemoglobin HbH complex
+    mf2complex:
+    - supportBatch: false
+      useTemplating: true
+      inputs:
+      - id: GO
+        semantic: MolecularActivity
+      outputs:
+      - id: ComplexPortal
+        semantic: MacromolecularComplex
+      parameters:
+        search_term: "{{ queryInputs | replPrefix('GO') }}"    ## requires prefix
+      predicate: enabled_by
+      ## using the same predicate that MyGene uses for MF -> Gene
+      ## not sure if a different predicate should be used...
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/complex-output"
+      # testExamples:
+      #   - qInput: "GO:0070026"                  ## nitric oxide binding
+      #     oneOutput: "ComplexPortal:CPX-52"     ## iNOS-S100A8/A9 complex
+    ## Commenting out for now
     ## Complex -> entity x-bte operations use JQ post-processing
+    ## MISSING: Complex -> BP, Complex -> MF operations. Will need different custom JQ post-processing
     # complex2protein:
     # - supportBatch: false
     #   useTemplating: true
