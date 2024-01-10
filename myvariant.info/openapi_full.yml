@@ -324,7 +324,7 @@ paths:
       # description: Make batch gene queries and return matching gene hits
       tags:
       - query
-      ## 22 operations (12 sets)
+      ## 32 operations (16 sets)
       x-bte-kgs-operations:
       - "$ref": "#/components/x-bte-kgs-operations/civic-geneDisease"
       - "$ref": "#/components/x-bte-kgs-operations/civic-geneDisease-rev"
@@ -336,15 +336,23 @@ paths:
       - "$ref": "#/components/x-bte-kgs-operations/clinvar-variantGene-rev"
       - "$ref": "#/components/x-bte-kgs-operations/clinvar-gene-diseaseOMIM"
       - "$ref": "#/components/x-bte-kgs-operations/clinvar-gene-diseaseORPHANET"
+      - "$ref": "#/components/x-bte-kgs-operations/clinvar-gene-diseaseMONDO"
+      - "$ref": "#/components/x-bte-kgs-operations/clinvar-gene-diseaseMESH"
       - "$ref": "#/components/x-bte-kgs-operations/clinvar-gene-phenoHP"
       - "$ref": "#/components/x-bte-kgs-operations/clinvar-gene-diseaseOMIM-rev"
       - "$ref": "#/components/x-bte-kgs-operations/clinvar-gene-diseaseORPHANET-rev"
+      - "$ref": "#/components/x-bte-kgs-operations/clinvar-gene-diseaseMONDO-rev"
+      - "$ref": "#/components/x-bte-kgs-operations/clinvar-gene-diseaseMESH-rev"
       - "$ref": "#/components/x-bte-kgs-operations/clinvar-gene-phenoHP-rev"
       - "$ref": "#/components/x-bte-kgs-operations/clinvar-variant-diseaseOMIM"
       - "$ref": "#/components/x-bte-kgs-operations/clinvar-variant-diseaseORPHANET"
+      - "$ref": "#/components/x-bte-kgs-operations/clinvar-variant-diseaseMONDO"
+      - "$ref": "#/components/x-bte-kgs-operations/clinvar-variant-diseaseMESH"
       - "$ref": "#/components/x-bte-kgs-operations/clinvar-variant-phenoHP"
       - "$ref": "#/components/x-bte-kgs-operations/clinvar-variant-diseaseOMIM-rev"
       - "$ref": "#/components/x-bte-kgs-operations/clinvar-variant-diseaseORPHANET-rev"
+      - "$ref": "#/components/x-bte-kgs-operations/clinvar-variant-diseaseMONDO-rev"
+      - "$ref": "#/components/x-bte-kgs-operations/clinvar-variant-diseaseMESH-rev"
       - "$ref": "#/components/x-bte-kgs-operations/clinvar-variant-phenoHP-rev"
       - "$ref": "#/components/x-bte-kgs-operations/docm-geneDisease"
       - "$ref": "#/components/x-bte-kgs-operations/docm-geneDisease-rev"
@@ -685,10 +693,16 @@ components:
       # clinvar_review_status: clinvar.rcv.review_status
     clinvar-diseaseORPHANET:
       ORPHANET: clinvar.rcv.conditions.identifiers.orphanet  ## no prefix
-      input_name: clinvar.gene.symbol    ## Node Norm doesn't recognize all NCBIGene IDs
+      input_name: clinvar.gene.symbol
+    clinvar-diseaseMONDO:
+      MONDO: clinvar.rcv.conditions.identifiers.mondo    ## HAS PREFIX (MONDO)
+      input_name: clinvar.gene.symbol
+    clinvar-diseaseMESH:
+      MESH: clinvar.rcv.conditions.identifiers.mesh    ## no prefix
+      input_name: clinvar.gene.symbol
     clinvar-phenoHP:
       HP: clinvar.rcv.conditions.identifiers.human_phenotype_ontology     ## HAS PREFIX
-      input_name: clinvar.gene.symbol    ## Node Norm doesn't recognize all NCBIGene IDs
+      input_name: clinvar.gene.symbol
     clinvar-gene-variant-start:
       NCBIGene: clinvar.gene.id  ## no prefix
       input_name: _id            ## variant name
@@ -705,6 +719,12 @@ components:
       # clinvar_review_status: clinvar.rcv.review_status
     clinvar-variantDiseaseORPHANET:
       ORPHANET: clinvar.rcv.conditions.identifiers.orphanet  ## no prefix
+      input_name: _id                                        ## variant name
+    clinvar-variantDiseaseMONDO:
+      MONDO: clinvar.rcv.conditions.identifiers.mondo        ## HAS PREFIX
+      input_name: _id                                        ## variant name
+    clinvar-variantDiseaseMESH:
+      MESH: clinvar.rcv.conditions.identifiers.mesh          ## no prefix
       input_name: _id                                        ## variant name
     clinvar-variantPhenoHP:
       HP: clinvar.rcv.conditions.identifiers.human_phenotype_ontology    ## HAS PREFIX
@@ -1030,6 +1050,58 @@ components:
       # testExamples:
       #   - qInput: "NCBIGene:106099062"   ## LOC106099062
       #     oneOutput: "ORPHANET:848"      ## beta Thalassemia (BTHAL)
+    clinvar-gene-diseaseMONDO:
+    ## see original operation clinvar-gene-diseaseOMIM notes
+    ## 1133597 records
+    ## (1133825 - 1133597 = 228 records have the MONDO field but lack the gene field) 
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: NCBIGene
+        semantic: Gene
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"  ## no prefix
+          scopes: clinvar.gene.id
+      outputs:
+      - id: MONDO
+        semantic: Disease
+      parameters:
+        fields: clinvar.rcv.conditions.identifiers.mondo,clinvar.gene.symbol
+        size: 1000  ## note size limit; added just in case
+      predicate: related_to
+      source: "infores:clinvar"
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/clinvar-diseaseMONDO"
+      # testExamples:
+      #   - qInput: "NCBIGene:2956"         ## MSH6
+      #     oneOutput: "MONDO:0016268"      ## Papillary carcinoma of the corpus uteri
+    clinvar-gene-diseaseMESH:
+    ## see original operation clinvar-gene-diseaseOMIM notes
+    ## 558275 records
+    ## (558366 - 558275 = 91 records have the MESH field but lack the gene field) 
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: NCBIGene
+        semantic: Gene
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"  ## no prefix
+          scopes: clinvar.gene.id
+      outputs:
+      - id: MESH
+        semantic: Disease
+      parameters:
+        fields: clinvar.rcv.conditions.identifiers.mesh,clinvar.gene.symbol
+        size: 1000  ## note size limit; added just in case
+      predicate: related_to
+      source: "infores:clinvar"
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/clinvar-diseaseMESH"
+      # testExamples:
+      #   - qInput: "NCBIGene:4359"         ## MPZ
+      #     oneOutput: "MESH:D030342"       ## Inborn genetic diseases
     clinvar-gene-phenoHP:
     ## see original operation clinvar-gene-diseaseOMIM notes
     ## 141562 records
@@ -1102,6 +1174,52 @@ components:
       # testExamples:
       #   - qInput: "ORPHANET:827"        ## Stargardt disease (FFM)
       #     oneOutput: "NCBIGene:5961"    ## PRPH2
+    clinvar-gene-diseaseMONDO-rev:
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: MONDO
+        semantic: Disease
+      requestBody:
+        body:
+          q: "{{ queryInputs | replPrefix('MONDO') }}"  ## HAS PREFIX
+          scopes: clinvar.rcv.conditions.identifiers.mondo
+      outputs:
+      - id: NCBIGene
+        semantic: Gene
+      parameters:
+        fields: clinvar.gene.id,clinvar.gene.symbol
+        size: 1000  ## note size limit
+      predicate: related_to
+      source: "infores:clinvar"
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/clinvar-gene"
+      # testExamples:
+      #   - qInput: "MONDO:0001464"        ## Sigmoid colon cancer
+      #     oneOutput: "NCBIGene:4436"     ## MSH2
+    clinvar-gene-diseaseMESH-rev:
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: MESH
+        semantic: Disease
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"  ## no prefix
+          scopes: clinvar.rcv.conditions.identifiers.mesh
+      outputs:
+      - id: NCBIGene
+        semantic: Gene
+      parameters:
+        fields: clinvar.gene.id,clinvar.gene.symbol
+        size: 1000  ## note size limit
+      predicate: related_to
+      source: "infores:clinvar"
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/clinvar-gene"
+      # testExamples:
+      #   - qInput: "MESH:D003123"         ## Hereditary nonpolyposis colorectal neoplasms / Lynch syndrome
+      #     oneOutput: "NCBIGene:4292"     ## MLH1
     clinvar-gene-phenoHP-rev:
     - supportBatch: true
       useTemplating: true
@@ -1110,7 +1228,7 @@ components:
         semantic: PhenotypicFeature
       requestBody:
         body:
-          q: "{{ queryInputs }}"  ## HAS PREFIX
+          q: "{{ queryInputs | replPrefix('HP') }}"  ## HAS PREFIX
           scopes: clinvar.rcv.conditions.identifiers.human_phenotype_ontology
       outputs:
       - id: NCBIGene
@@ -1191,6 +1309,58 @@ components:
       # testExamples:
       #   - qInput: "DBSNP:rs1554270834"    ## chr6:g.42689807_42689814del
       #     oneOutput: "ORPHANET:827"       ## Stargardt disease (FFM)
+    clinvar-variant-diseaseMONDO:
+    ## see original operation clinvar-variant-diseaseOMIM notes
+    ## 973375 records
+    ## (1133825 total, so >85% of records have dbsnp.rsid field) 
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: DBSNP
+        semantic: SequenceVariant
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"  ## no prefix
+          scopes: dbsnp.rsid
+      outputs:
+      - id: MONDO
+        semantic: Disease
+      parameters:
+        fields: clinvar.rcv.conditions.identifiers.mondo,_id
+        size: 1000  ## note size limit; added just in case
+      predicate: related_to
+      source: "infores:clinvar"
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/clinvar-variantDiseaseMONDO"
+      # testExamples:
+      #   - qInput: "DBSNP:rs1860418734"     ## chr10:g.89711914T>G
+      #     oneOutput: "MONDO:0017623"       ## PTEN hamartoma tumor syndrome (PHTS)
+    clinvar-variant-diseaseMESH:
+    ## see original operation clinvar-variant-diseaseOMIM notes
+    ## 471452 records
+    ## (558366 total, so >84% of records have dbsnp.rsid field) 
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: DBSNP
+        semantic: SequenceVariant
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"  ## no prefix
+          scopes: dbsnp.rsid
+      outputs:
+      - id: MESH
+        semantic: Disease
+      parameters:
+        fields: clinvar.rcv.conditions.identifiers.mesh,_id
+        size: 1000  ## note size limit; added just in case
+      predicate: related_to
+      source: "infores:clinvar"
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/clinvar-variantDiseaseMESH"
+      # testExamples:
+      #   - qInput: "DBSNP:rs1554897280"    ## chr10:g.89685315G>T
+      #     oneOutput: "MESH:D009386"       ## Hereditary cancer-predisposing syndrome / hereditary neoplastic syndrome
     clinvar-variant-phenoHP:
     ## see original operation clinvar-variant-diseaseOMIM notes
     ## 124995 records
@@ -1263,6 +1433,52 @@ components:
       # testExamples:
       #   - qInput: "ORPHANET:848"            ## beta Thalassemia (BTHAL)
       #     oneOutput: "DBSNP:rs33956879"     ## chr11:g.5248158A>T / chr11:g.5248158A>C / chr11:g.5248158A>G
+    clinvar-variant-diseaseMONDO-rev:
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: MONDO
+        semantic: Disease
+      requestBody:
+        body:
+          q: "{{ queryInputs | replPrefix('MONDO') }}"  ## HAS PREFIX
+          scopes: clinvar.rcv.conditions.identifiers.mondo
+      outputs:
+      - id: DBSNP
+        semantic: SequenceVariant
+      parameters:
+        fields: dbsnp.rsid,_id
+        size: 1000  ## note size limit
+      predicate: related_to
+      source: "infores:clinvar"
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/dbsnp-rsid"
+      # testExamples:
+      #   - qInput: "MONDO:0016268"            ## Papillary carcinoma of the corpus uteri
+      #     oneOutput: "DBSNP:rs398123231"     ## chr2:g.48032087C>G
+    clinvar-variant-diseaseMESH-rev:
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: MESH
+        semantic: Disease
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"  ## no prefix
+          scopes: clinvar.rcv.conditions.identifiers.mesh
+      outputs:
+      - id: DBSNP
+        semantic: SequenceVariant
+      parameters:
+        fields: dbsnp.rsid,_id
+        size: 1000  ## note size limit
+      predicate: related_to
+      source: "infores:clinvar"
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/dbsnp-rsid"
+      # testExamples:
+      #   - qInput: "MESH:D003123"             ## Hereditary nonpolyposis colorectal neoplasms / Lynch syndrome
+      #     oneOutput: "DBSNP:rs398123231"     ## chr2:g.48032087C>G
     clinvar-variant-phenoHP-rev:
     - supportBatch: true
       useTemplating: true
@@ -1271,7 +1487,7 @@ components:
         semantic: PhenotypicFeature
       requestBody:
         body:
-          q: "{{ queryInputs | replPrefix('HP') }}"  ## no prefix
+          q: "{{ queryInputs | replPrefix('HP') }}"  ## HAS PREFIX
           scopes: clinvar.rcv.conditions.identifiers.human_phenotype_ontology
       outputs:
       - id: DBSNP
