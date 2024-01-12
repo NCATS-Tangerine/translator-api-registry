@@ -766,6 +766,9 @@ components:
     ##     - civic assertions (only 30 variant records https://myvariant.info/v1/query?q=_exists_:%22civic.assertions%22)
     ##     - civic evidence_items.phenotypes: 598 records, some seem to repeat the disease info
     ##     - civic variant_groups: 129 records, not clear how to structure / what the relationship is
+    ## civic data currently not in hg38: 
+    ##    https://myvariant.info/v1/metadata/fields?assembly=hg38
+    ##    https://docs.myvariant.info/en/latest/doc/data.html?highlight=hg19#data-sources
     civic-geneDisease:
       - supportBatch: true
         useTemplating: true
@@ -791,6 +794,7 @@ components:
             civic.evidence_items.source.pubmed,
             civic.evidence_items.source.clinical_trials.nct_id
           size: 1000        ## note size limit; added just in case
+          assembly: hg19     
         predicate: affects
         source: "infores:civic"
         response_mapping:
@@ -798,7 +802,7 @@ components:
       ## this record has drug interaction: https://myvariant.info/v1/query?q=_exists_:%22civic.evidence_items.drug_interaction_type%22
       # testExamples:
       #   - qInput: "NCBIGene:1956"   ## EGFR
-      #     oneOutput: "DOID:3910"    ##  Lung Adenocarcinoma
+      #     oneOutput: "DOID:3910"    ##  Lung Adenocarcinoma aka MONDO:0005061
     civic-geneDisease-rev:
       - supportBatch: true
         useTemplating: true
@@ -815,13 +819,14 @@ components:
         parameters:
           fields: civic.entrez_id  ## no prefix
           size: 1000
+          assembly: hg19
         predicate: affected_by
         source: "infores:civic"
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/civic-geneOnly"
       ## this record has drug interaction: https://myvariant.info/v1/query?q=_exists_:%22civic.evidence_items.drug_interaction_type%22
       # testExamples:
-      #   - qInput: "DOID:9256"            ## Colorectal Cancer
+      #   - qInput: "DOID:9256"            ## Colorectal Cancer aka MONDO:0005575
       #     oneOutput: "NCBIGene:5290"     ##  PIK3CA
     civic-variantDisease:
     ## out of 2648 civic records, only some (653) have the doid disease field...
@@ -853,6 +858,7 @@ components:
             civic.evidence_items.source.pubmed,
             civic.evidence_items.source.clinical_trials.nct_id
           size: 1000        ## note size limit; added just in case
+          assembly: hg19
         predicate: affects
         source: "infores:civic"
         response_mapping:
@@ -860,7 +866,7 @@ components:
       ## this record has drug interaction: https://myvariant.info/v1/query?q=_exists_:%22civic.evidence_items.drug_interaction_type%22%20AND%20_exists_:%22dbsnp.rsid%22
       # testExamples:
       #   - qInput: "DBSNP:rs121913521"   ## chr4:g.55593613T>G in KIT
-      #     oneOutput: "DOID:9253"        ##  Gastrointestinal Stromal Tumor
+      #     oneOutput: "DOID:9253"        ##  Gastrointestinal Stromal Tumor aka MONDO:0011719
     civic-variantDisease-rev:
       - supportBatch: true
         useTemplating: true
@@ -877,17 +883,18 @@ components:
         parameters:
           fields: dbsnp.rsid,_id
           size: 1000        ## note size limit; added just in case
+          assembly: hg19
         predicate: affected_by
         source: "infores:civic"
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/dbsnp-rsid"
       ## this record has drug interaction: https://myvariant.info/v1/query?q=_exists_:%22civic.evidence_items.drug_interaction_type%22%20AND%20_exists_:%22dbsnp.rsid%22
       # testExamples:
-      #   - qInput: "DOID:219"                 ## Colon Cancer
-      #     oneOutput: "DBSNP:rs121913470"     ## chr17:g.37880220T>C in ERBB2
+      #   - qInput: "DOID:2671"                ## Transitional Cell Carcinoma aka MONDO:0006474
+      #     oneOutput: "DBSNP:rs1057519803"     ## chr12:g.56481922G>A in ERBB3
     dbsnp-variantGene:
     ## note: there may be redundant results in the response
-    ## there are 446 million records
+    ## there are 741 million records for hg38
     - supportBatch: true
       useTemplating: true
       inputs:
@@ -902,13 +909,15 @@ components:
         semantic: Gene
       parameters:
         fields: dbsnp.gene.geneid,_id  ## no prefix
+        size: 1000
+        assembly: hg38
       predicate: is_sequence_variant_of
       source: "infores:dbsnp"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/dbsnp-gene"
-      ## https://myvariant.info/v1/query?q=_exists_:%22dbsnp.rsid%22%20AND%20_exists_:%22dbsnp.gene.geneid%22
+      ## https://myvariant.info/v1/query?q=_exists_:%22dbsnp.rsid%22%20AND%20_exists_:%22dbsnp.gene.geneid%22&fields=dbsnp&assembly=hg38
       # testExamples:
-      #   - qInput: "DBSNP:rs770112667"    ## chr10:g.14260675G>A
+      #   - qInput: "DBSNP:rs770112667"    ## chr10:g.14218676G>A (diff for hg19)
       #     oneOutput: "NCBIGene:55691"    ## FRMD4A
     dbsnp-variantGene-rev:
     - supportBatch: true
@@ -925,17 +934,19 @@ components:
         semantic: SequenceVariant
       parameters:
         fields: dbsnp.rsid,_id
+        size: 1000
+        assembly: hg38
       predicate: has_sequence_variant
       source: "infores:dbsnp"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/dbsnp-rsid"
       ## https://myvariant.info/v1/query?q=_exists_:%22dbsnp.rsid%22%20AND%20_exists_:%22dbsnp.gene.geneid%22
       # testExamples:
-      #   - qInput: "NCBIGene:55691"          ## FRMD4A
-      #     oneOutput: "DBSNP:rs767038114"    ## chr10:g.13693999G>A
+      #   - qInput: "NCBIGene:102724392"      ## LINC02197
+      #     oneOutput: "DBSNP:rs188861200"    ## chr5:g.71414410C>T (diff for hg19)
     clinvar-variantGene:
-    ## there are 43k records with clinvar.rsid but no dbsnp
-    ## https://myvariant.info/v1/query?q=_exists_:%22clinvar.rsid%22%20AND%20NOT%20_exists_:%22dbsnp.rsid%22
+    ## possibly redundant, with all hg38 clinvar data already covered by hg38 dbsnp.rsid <-> gene...
+    ## > 822k records for hg38
     - supportBatch: true
       useTemplating: true
       inputs:
@@ -950,12 +961,14 @@ components:
         semantic: Gene
       parameters:
         fields: clinvar.gene.id,_id  ## no prefix
+        size: 1000
+        assembly: hg38
       predicate: is_sequence_variant_of
       source: "infores:clinvar"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/clinvar-gene-variant-start"
       # testExamples:
-      #   - qInput: "DBSNP:rs794727661"   ## chrX:g.32361300dup
+      #   - qInput: "DBSNP:rs794727661"   ## chrX:g.32343175_32343176dup (diff for hg19)
       #     oneOutput: "NCBIGene:1756"    ## DMD
     clinvar-variantGene-rev:
     - supportBatch: true
@@ -972,13 +985,15 @@ components:
         semantic: SequenceVariant
       parameters:
         fields: clinvar.rsid,_id  ## no prefix
+        size: 1000
+        assembly: hg38
       predicate: has_sequence_variant
       source: "infores:clinvar"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/clinvar-rsid"
       # testExamples:
-      #   - qInput: "NCBIGene:284098"          ## PIGW
-      #     oneOutput: "DBSNP:rs915498700"     ## chr17:g.34893784T>C
+      #   - qInput: "NCBIGene:9231"            ## DLG5
+      #     oneOutput: "DBSNP:rs200237878"     ## chr10:g.77811216G>A
     ## clinvar disease ID info:
     ## - some conditions have no IDs, some have multiple IDs (not all have OMIM). 
     ## - omim: 987390 (no prefix)
@@ -988,8 +1003,8 @@ components:
     ## - medgen: 2162595, but I don't think SRI ID resolver supports this...
     ## - not indexed yet: mesh, mondo
     clinvar-gene-diseaseOMIM:
-    ## 987275 records
-    ## (987390 - 987275 = 115 records have the omim field but lack the gene field) 
+    ## 986988 records for hg38
+    ## (987068 - 986988 = 80 records have the omim field but lack the gene field) 
     - supportBatch: true
       useTemplating: true
       inputs:
@@ -1015,6 +1030,7 @@ components:
         #   clinvar.rcv.review_status
         fields: clinvar.rcv.conditions.identifiers.omim,clinvar.gene.symbol
         size: 1000  ## note size limit; added just in case
+        assembly: hg38
       predicate: related_to
       ## clinical significance is like a relation: 
       ##   Uncertain significance, Pathogenic, Likely pathogenic, other
@@ -1023,11 +1039,11 @@ components:
         "$ref": "#/components/x-bte-response-mapping/clinvar-diseaseOMIM"
       # testExamples:
       #   - qInput: "NCBIGene:55806"   ## HR
-      #     oneOutput: "OMIM:209500"   ## Atrichia with papular lesions (APL)
+      #     oneOutput: "OMIM:209500"   ## Atrichia with papular lesions (APL) aka MONDO:0008847
     clinvar-gene-diseaseORPHANET:
     ## see original operation clinvar-gene-diseaseOMIM notes
-    ## 826673 records
-    ## (826717 - 826673 = 44 records have the orphanet field but lack the gene field) 
+    ## 826439 records for hg38
+    ## (826456 - 826439 = 17 records have the orphanet field but lack the gene field) 
     - supportBatch: true
       useTemplating: true
       inputs:
@@ -1043,17 +1059,18 @@ components:
       parameters:
         fields: clinvar.rcv.conditions.identifiers.orphanet,clinvar.gene.symbol
         size: 1000  ## note size limit; added just in case
+        assembly: hg38
       predicate: related_to
       source: "infores:clinvar"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/clinvar-diseaseORPHANET"
       # testExamples:
       #   - qInput: "NCBIGene:106099062"   ## LOC106099062
-      #     oneOutput: "ORPHANET:848"      ## beta Thalassemia (BTHAL)
+      #     oneOutput: "ORPHANET:848"      ## beta Thalassemia (BTHAL) aka MONDO:0019402
     clinvar-gene-diseaseMONDO:
     ## see original operation clinvar-gene-diseaseOMIM notes
-    ## 1133597 records
-    ## (1133825 - 1133597 = 228 records have the MONDO field but lack the gene field) 
+    ## 1133095 records
+    ## (1133285 - 1133095 = 190 records have the MONDO field but lack the gene field) 
     - supportBatch: true
       useTemplating: true
       inputs:
@@ -1069,17 +1086,19 @@ components:
       parameters:
         fields: clinvar.rcv.conditions.identifiers.mondo,clinvar.gene.symbol
         size: 1000  ## note size limit; added just in case
+        assembly: hg38
       predicate: related_to
       source: "infores:clinvar"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/clinvar-diseaseMONDO"
+      ## https://myvariant.info/v1/query?q=_exists_:clinvar.rcv.conditions.identifiers.mondo%20AND%20NOT%20(_exists_:clinvar.rcv.conditions.identifiers.mesh%20OR%20_exists_:clinvar.rcv.conditions.identifiers.omim%20%20OR%20_exists_:clinvar.rcv.conditions.identifiers.orphanet)%20AND%20_exists_:clinvar.gene%20AND%20clinvar.rcv.clinical_significance:Pathogenic&fields=clinvar,dbsnp.rsid
       # testExamples:
-      #   - qInput: "NCBIGene:2956"         ## MSH6
-      #     oneOutput: "MONDO:0016268"      ## Papillary carcinoma of the corpus uteri
+      #   - qInput: "NCBIGene:3897"         ## L1CAM
+      #     oneOutput: "MONDO:0017140"      ## L1 syndrome
     clinvar-gene-diseaseMESH:
     ## see original operation clinvar-gene-diseaseOMIM notes
-    ## 558275 records
-    ## (558366 - 558275 = 91 records have the MESH field but lack the gene field) 
+    ## 558108 records for hg38
+    ## (558199 - 558108 = 91 records have the MESH field but lack the gene field) 
     - supportBatch: true
       useTemplating: true
       inputs:
@@ -1095,17 +1114,18 @@ components:
       parameters:
         fields: clinvar.rcv.conditions.identifiers.mesh,clinvar.gene.symbol
         size: 1000  ## note size limit; added just in case
+        assembly: hg38
       predicate: related_to
       source: "infores:clinvar"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/clinvar-diseaseMESH"
       # testExamples:
       #   - qInput: "NCBIGene:4359"         ## MPZ
-      #     oneOutput: "MESH:D030342"       ## Inborn genetic diseases
+      #     oneOutput: "MESH:D030342"       ## Inborn genetic diseases, aka MONDO:0003847 hereditary disease 
     clinvar-gene-phenoHP:
     ## see original operation clinvar-gene-diseaseOMIM notes
-    ## 141562 records
-    ## (141752 - 141562 = 190 records have the hp field but lack the gene field) 
+    ## 141412 records
+    ## (141595 - 141412 = 183 records have the hp field but lack the gene field) 
     - supportBatch: true
       useTemplating: true
       inputs:
@@ -1121,6 +1141,7 @@ components:
       parameters:
         fields: clinvar.rcv.conditions.identifiers.human_phenotype_ontology,clinvar.gene.symbol
         size: 1000  ## note size limit; added just in case
+        assembly: hg38
       predicate: related_to
       source: "infores:clinvar"
       response_mapping:
@@ -1144,6 +1165,7 @@ components:
       parameters:
         fields: clinvar.gene.id,clinvar.gene.symbol
         size: 1000  ## note size limit
+        assembly: hg38
       predicate: related_to
       source: "infores:clinvar"
       response_mapping:
@@ -1167,6 +1189,7 @@ components:
       parameters:
         fields: clinvar.gene.id,clinvar.gene.symbol
         size: 1000  ## note size limit
+        assembly: hg38
       predicate: related_to
       source: "infores:clinvar"
       response_mapping:
@@ -1190,6 +1213,7 @@ components:
       parameters:
         fields: clinvar.gene.id,clinvar.gene.symbol
         size: 1000  ## note size limit
+        assembly: hg38
       predicate: related_to
       source: "infores:clinvar"
       response_mapping:
@@ -1213,6 +1237,7 @@ components:
       parameters:
         fields: clinvar.gene.id,clinvar.gene.symbol
         size: 1000  ## note size limit
+        assembly: hg38
       predicate: related_to
       source: "infores:clinvar"
       response_mapping:
@@ -1236,6 +1261,7 @@ components:
       parameters:
         fields: clinvar.gene.id,clinvar.gene.symbol
         size: 1000  ## note size limit
+        assembly: hg38
       predicate: related_to
       source: "infores:clinvar"
       response_mapping:
@@ -1245,8 +1271,8 @@ components:
       #     oneOutput: "NCBIGene:5314"    ## PKHD1
     clinvar-variant-diseaseOMIM:
     ## using dbsnp.rsid rather than clinvar.rsid field, because more records have dbsnp.rsid...
-    ## 857907 records
-    ## (987275 total, so >86% of records have dbsnp.rsid field) 
+    ## 858244 records
+    ## (987068 total, so >86% of records have dbsnp.rsid field) 
     - supportBatch: true
       useTemplating: true
       inputs:
@@ -1258,7 +1284,7 @@ components:
           scopes: dbsnp.rsid
       outputs:
       - id: OMIM
-        semantic: Disease
+        semantic: Disease"
       parameters:
       ## using gene symbol rather than gene.id so it's human-readable
       ## commenting out because data-processing / biolink-modeling issues
@@ -1273,6 +1299,7 @@ components:
         #   clinvar.rcv.review_status
         fields: clinvar.rcv.conditions.identifiers.omim,_id
         size: 1000  ## note size limit; added just in case
+        assembly: hg38
       predicate: related_to
       ## clinical significance is like a relation: 
       ##   Uncertain significance, Pathogenic, Likely pathogenic, other
@@ -1281,12 +1308,12 @@ components:
         "$ref": "#/components/x-bte-response-mapping/clinvar-variantDiseaseOMIM"
       ## https://myvariant.info/v1/query?q=_exists_:%22clinvar.rcv.conditions.identifiers.omim%22%20AND%20_exists_:%22dbsnp.rsid%22
       # testExamples:
-      #   - qInput: "DBSNP:rs1193171808"    ## chr8:g.42171847A>G
-      #     oneOutput: "OMIM:615592"        ## severe combined immunodeficiency due to IKK2 deficiency
+      #   - qInput: "DBSNP:rs1193171808"    ## chr8:g.42314329A>G
+      #     oneOutput: "OMIM:615592"        ## MONDO:0014267 / severe combined immunodeficiency due to IKK2 deficiency
     clinvar-variant-diseaseORPHANET:
     ## see original operation clinvar-variant-diseaseOMIM notes
-    ## 719643 records
-    ## (826717 total, so >87% of records have dbsnp.rsid field) 
+    ## 719970 records
+    ## (826456 total, so >87% of records have dbsnp.rsid field) 
     - supportBatch: true
       useTemplating: true
       inputs:
@@ -1302,17 +1329,18 @@ components:
       parameters:
         fields: clinvar.rcv.conditions.identifiers.orphanet,_id
         size: 1000  ## note size limit; added just in case
+        assembly: hg38
       predicate: related_to
       source: "infores:clinvar"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/clinvar-variantDiseaseORPHANET"
       # testExamples:
-      #   - qInput: "DBSNP:rs1554270834"    ## chr6:g.42689807_42689814del
-      #     oneOutput: "ORPHANET:827"       ## Stargardt disease (FFM)
+      #   - qInput: "DBSNP:rs1554270834"    ## chr6:g.42722069_42722076del
+      #     oneOutput: "ORPHANET:827"       ## Stargardt disease (FFM) / MONDO:0019353
     clinvar-variant-diseaseMONDO:
     ## see original operation clinvar-variant-diseaseOMIM notes
-    ## 973375 records
-    ## (1133825 total, so >85% of records have dbsnp.rsid field) 
+    ## 973693 records
+    ## (1133285 total, so >85% of records have dbsnp.rsid field) 
     - supportBatch: true
       useTemplating: true
       inputs:
@@ -1328,17 +1356,18 @@ components:
       parameters:
         fields: clinvar.rcv.conditions.identifiers.mondo,_id
         size: 1000  ## note size limit; added just in case
+        assembly: hg38
       predicate: related_to
       source: "infores:clinvar"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/clinvar-variantDiseaseMONDO"
       # testExamples:
-      #   - qInput: "DBSNP:rs1860418734"     ## chr10:g.89711914T>G
+      #   - qInput: "DBSNP:rs1860418734"     ## chr10:g.87952157T>G
       #     oneOutput: "MONDO:0017623"       ## PTEN hamartoma tumor syndrome (PHTS)
     clinvar-variant-diseaseMESH:
     ## see original operation clinvar-variant-diseaseOMIM notes
-    ## 471452 records
-    ## (558366 total, so >84% of records have dbsnp.rsid field) 
+    ## 472287 records
+    ## (558199 total, so >84% of records have dbsnp.rsid field) 
     - supportBatch: true
       useTemplating: true
       inputs:
@@ -1354,17 +1383,18 @@ components:
       parameters:
         fields: clinvar.rcv.conditions.identifiers.mesh,_id
         size: 1000  ## note size limit; added just in case
+        assembly: hg38
       predicate: related_to
       source: "infores:clinvar"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/clinvar-variantDiseaseMESH"
       # testExamples:
-      #   - qInput: "DBSNP:rs1554897280"    ## chr10:g.89685315G>T
-      #     oneOutput: "MESH:D009386"       ## Hereditary cancer-predisposing syndrome / hereditary neoplastic syndrome
+      #   - qInput: "DBSNP:rs1554897280"    ## chr10:g.87925558G>A
+      #     oneOutput: "MESH:D009386"       ## MONDO:0015356 / Hereditary cancer-predisposing syndrome / hereditary neoplastic syndrome
     clinvar-variant-phenoHP:
     ## see original operation clinvar-variant-diseaseOMIM notes
-    ## 124995 records
-    ## (141752 total, so >88% of records have dbsnp.rsid field) 
+    ## 125085 records
+    ## (141595 total, so >88% of records have dbsnp.rsid field) 
     - supportBatch: true
       useTemplating: true
       inputs:
@@ -1380,13 +1410,14 @@ components:
       parameters:
         fields: clinvar.rcv.conditions.identifiers.human_phenotype_ontology,_id
         size: 1000  ## note size limit; added just in case
+        assembly: hg38
       predicate: related_to
       source: "infores:clinvar"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/clinvar-variantPhenoHP"
       # testExamples:
-      #   - qInput: "DBSNP:rs367947846"    ## chr11:g.47367849G>C
-      #     oneOutput: "HP:0001638"        ## Cardiomyopathy (CMYO)
+      #   - qInput: "DBSNP:rs367947846"    ## chr11:g.47346298G>T
+      #     oneOutput: "HP:0001638"        ## Cardiomyopathy (CMYO) / MONDO:0004994
     clinvar-variant-diseaseOMIM-rev:
     - supportBatch: true
       useTemplating: true
@@ -1403,13 +1434,14 @@ components:
       parameters:
         fields: dbsnp.rsid,_id
         size: 1000  ## note size limit
+        assembly: hg38
       predicate: related_to
       source: "infores:clinvar"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/dbsnp-rsid"
       # testExamples:
       #   - qInput: "OMIM:602629"             ## Torsion dystonia 6 (DYT6)
-      #     oneOutput: "DBSNP:rs1480200060"   ## chr8:g.42692270T>C
+      #     oneOutput: "DBSNP:rs1480200060"   ## chr8:g.42837127T>C
     clinvar-variant-diseaseORPHANET-rev:
     - supportBatch: true
       useTemplating: true
@@ -1426,13 +1458,14 @@ components:
       parameters:
         fields: dbsnp.rsid,_id
         size: 1000  ## note size limit
+        assembly: hg38
       predicate: related_to
       source: "infores:clinvar"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/dbsnp-rsid"
       # testExamples:
       #   - qInput: "ORPHANET:848"            ## beta Thalassemia (BTHAL)
-      #     oneOutput: "DBSNP:rs33956879"     ## chr11:g.5248158A>T / chr11:g.5248158A>C / chr11:g.5248158A>G
+      #     oneOutput: "DBSNP:rs33956879"     ## chr11:g.5226928A>C
     clinvar-variant-diseaseMONDO-rev:
     - supportBatch: true
       useTemplating: true
@@ -1449,13 +1482,14 @@ components:
       parameters:
         fields: dbsnp.rsid,_id
         size: 1000  ## note size limit
+        assembly: hg38
       predicate: related_to
       source: "infores:clinvar"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/dbsnp-rsid"
       # testExamples:
       #   - qInput: "MONDO:0016268"            ## Papillary carcinoma of the corpus uteri
-      #     oneOutput: "DBSNP:rs398123231"     ## chr2:g.48032087C>G
+      #     oneOutput: "DBSNP:rs398123231"     ## chr2:g.47804948C>G
     clinvar-variant-diseaseMESH-rev:
     - supportBatch: true
       useTemplating: true
@@ -1472,13 +1506,14 @@ components:
       parameters:
         fields: dbsnp.rsid,_id
         size: 1000  ## note size limit
+        assembly: hg38
       predicate: related_to
       source: "infores:clinvar"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/dbsnp-rsid"
       # testExamples:
       #   - qInput: "MESH:D003123"             ## Hereditary nonpolyposis colorectal neoplasms / Lynch syndrome
-      #     oneOutput: "DBSNP:rs398123231"     ## chr2:g.48032087C>G
+      #     oneOutput: "DBSNP:rs398123231"     ## chr2:g.47804948C>A
     clinvar-variant-phenoHP-rev:
     - supportBatch: true
       useTemplating: true
@@ -1495,13 +1530,17 @@ components:
       parameters:
         fields: dbsnp.rsid,_id
         size: 1000  ## note size limit
+        assembly: hg38
       predicate: related_to
       source: "infores:clinvar"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/dbsnp-rsid"
       # testExamples:
       #   - qInput: "HP:0011040"               ## Abnormal intrahepatic bile duct morphology
-      #     oneOutput: "DBSNP:rs727504096"     ## chr6:g.51944718G>A
+      #     oneOutput: "DBSNP:rs727504096"     ## chr6:g.52079920G>A
+    ## docm data currently not in hg38: 
+    ##    https://myvariant.info/v1/metadata/fields?assembly=hg38
+    ##    https://docs.myvariant.info/en/latest/doc/data.html?highlight=hg19#data-sources
     docm-geneDisease:
     - supportBatch: true
       useTemplating: true
@@ -1519,6 +1558,7 @@ components:
       parameters:
         fields: docm.doid  ## HAS PREFIX
         size: 1000  ## note size limit; added just in case
+        assembly: hg19
       predicate: related_to
       ## it's curated but there's no relationship info...
       ## looks like it's from http://www.docm.info/
@@ -1528,7 +1568,7 @@ components:
       ## https://myvariant.info/v1/query?q=_exists_:%22docm.ensembl_gene_id%22
       # testExamples:
       #   - qInput: "ENSEMBL:ENSG00000171094"   ## ALK
-      #     oneOutput: "DOID:769"               ## Neuroblastoma
+      #     oneOutput: "DOID:769"               ## Neuroblastoma / MONDO:0005072
     docm-geneDisease-rev:
     - supportBatch: true
       useTemplating: true
@@ -1545,6 +1585,7 @@ components:
       parameters:
         fields: docm.ensembl_gene_id  ## no prefix
         size: 1000  ## note size limit
+        assembly: hg19
       predicate: related_to
       source: "infores:docm"
       response_mapping:
@@ -1552,7 +1593,7 @@ components:
       ## https://myvariant.info/v1/query?q=_exists_:%22docm.ensembl_gene_id%22
       # testExamples:
       #   - qInput: "DOID:1909"                     ## Melanoma
-      #     oneOutput: "ENSEMBL:ENSG00000169032"    ## MAP2K1
+      #     oneOutput: "ENSEMBL:ENSG00000169032"    ## MAP2K1 / NCBIGene:5604
     docm-variantDisease:
     - supportBatch: true
       useTemplating: true
@@ -1578,6 +1619,7 @@ components:
         #   docm.genename
         fields: docm.doid,_id,docm.url
         size: 1000  ## note size limit; added just in case
+        assembly: hg19
       predicate: related_to
       ## it's curated but there's no relationship info...
       ## looks like it's from http://www.docm.info/
@@ -1587,7 +1629,7 @@ components:
       ## https://myvariant.info/v1/query?q=_exists_:%22docm.ensembl_gene_id%22%20AND%20_exists_:%22dbsnp.rsid%22
       # testExamples:
       #   - qInput: "DBSNP:rs759487569"    ## chr3:g.128200743C>T in GATA2
-      #     oneOutput: "DOID:9119"         ## acute myeloid leukemia (AML)
+      #     oneOutput: "DOID:9119"         ## acute myeloid leukemia (AML) / MONDO:0018874
     docm-variantDisease-rev:
     - supportBatch: true
       useTemplating: true
@@ -1604,6 +1646,7 @@ components:
       parameters:
         fields: dbsnp.rsid,_id
         size: 1000  ## note size limit
+        assembly: hg19
       predicate: related_to
       source: "infores:docm"
       response_mapping:
