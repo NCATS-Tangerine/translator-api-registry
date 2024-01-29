@@ -354,10 +354,6 @@ paths:
       - "$ref": "#/components/x-bte-kgs-operations/clinvar-variant-diseaseMONDO-rev"
       - "$ref": "#/components/x-bte-kgs-operations/clinvar-variant-diseaseMESH-rev"
       - "$ref": "#/components/x-bte-kgs-operations/clinvar-variant-phenoHP-rev"
-      - "$ref": "#/components/x-bte-kgs-operations/docm-geneDisease"
-      - "$ref": "#/components/x-bte-kgs-operations/docm-geneDisease-rev"
-      - "$ref": "#/components/x-bte-kgs-operations/docm-variantDisease"
-      - "$ref": "#/components/x-bte-kgs-operations/docm-variantDisease-rev"
 components:
   parameters:
     ## assembly is specific to MyVariant
@@ -732,21 +728,6 @@ components:
     clinvar-gene:
       NCBIGene: clinvar.gene.id  ## no prefix
       output_name: clinvar.gene.symbol    ## Node Norm doesn't recognize all NCBIGene IDs
-    docm-disease-only:
-      DOID: docm.doid
-    docm-gene:
-      ENSEMBL: docm.ensembl_gene_id
-    docm-disease-variant-start:
-      DOID: docm.doid
-      input_name: _id      ## variant name
-      ref_url: docm.url        ## only MyCancerGenome urls? Also, an issue: sometimes it's just `null`
-      ## commenting out because data-processing / biolink-modeling issues
-      ## not taking notes on a bunch of fields about the gene and variant
-      # ref_pmid: docm.pubmed_id   ## no prefix. issue: lists are ", "-delimited strings
-      # docm_source: docm.source   ## issue: sometimes it's just the value "-" or `null`
-      # variant_consequence_type: docm.trv_type
-      # variant_type: docm.type
-      # docm_variant_in_gene: docm.genename
   ## not included:
   ## - cgi: only 323 records, doesn't have IDs for disease, gene, or drug ID...
   ## - cosmic: only seems to connect variants to tissue they were found in, but no IDs for the tissue...
@@ -754,6 +735,7 @@ components:
   ##   missing indexing for omim, orphanet IDs have ORPHA000 format...
   ## - dbnsfp.ensembl.geneid: very repetitive for some reason...
   ## - dbnsfp.gtex.tissue: string, no IDs...
+  ## - docm: Chunlei said not to annotate this data. It's a very old tool doing variant impact prediction
   ## - grasp.publication.phenotype: looks like curation of publications for variants / phenotypes. string, no IDs...
   ## - gwassnps.trait: looks like curation of publications for variants / phenotypes. string, no IDs...
   x-bte-kgs-operations:
@@ -1538,120 +1520,3 @@ components:
       # testExamples:
       #   - qInput: "HP:0011040"               ## Abnormal intrahepatic bile duct morphology
       #     oneOutput: "DBSNP:rs727504096"     ## chr6:g.52079920G>A
-    ## docm data currently not in hg38: 
-    ##    https://myvariant.info/v1/metadata/fields?assembly=hg38
-    ##    https://docs.myvariant.info/en/latest/doc/data.html?highlight=hg19#data-sources
-    docm-geneDisease:
-    - supportBatch: true
-      useTemplating: true
-      inputs:
-      - id: ENSEMBL
-        semantic: Gene
-      requestBody:
-        body:
-          q: "{{ queryInputs }}"  ## no prefix
-          scopes: docm.ensembl_gene_id
-          ## all 1119 records with docm field have the gene id
-      outputs:
-      - id: DOID
-        semantic: Disease
-      parameters:
-        fields: docm.doid  ## HAS PREFIX
-        size: 1000  ## note size limit; added just in case
-        assembly: hg19
-      predicate: related_to
-      ## it's curated but there's no relationship info...
-      ## looks like it's from http://www.docm.info/
-      source: "infores:docm"
-      response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/docm-disease-only"
-      ## https://myvariant.info/v1/query?q=_exists_:%22docm.ensembl_gene_id%22
-      # testExamples:
-      #   - qInput: "ENSEMBL:ENSG00000171094"   ## ALK
-      #     oneOutput: "DOID:769"               ## Neuroblastoma / MONDO:0005072
-    docm-geneDisease-rev:
-    - supportBatch: true
-      useTemplating: true
-      inputs:
-      - id: DOID
-        semantic: Disease
-      requestBody:
-        body:
-          q: "{{ queryInputs }}"  ## HAS PREFIX
-          scopes: docm.doid
-      outputs:
-      - id: ENSEMBL
-        semantic: Gene
-      parameters:
-        fields: docm.ensembl_gene_id  ## no prefix
-        size: 1000  ## note size limit
-        assembly: hg19
-      predicate: related_to
-      source: "infores:docm"
-      response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/docm-gene"
-      ## https://myvariant.info/v1/query?q=_exists_:%22docm.ensembl_gene_id%22
-      # testExamples:
-      #   - qInput: "DOID:1909"                     ## Melanoma
-      #     oneOutput: "ENSEMBL:ENSG00000169032"    ## MAP2K1 / NCBIGene:5604
-    docm-variantDisease:
-    - supportBatch: true
-      useTemplating: true
-      inputs:
-      - id: DBSNP
-        semantic: SequenceVariant
-      requestBody:
-        body:
-          q: "{{ queryInputs }}"  ## no prefix
-          scopes: dbsnp.rsid
-          ## out of 1119 records with docm field, 
-          ##        465 records also have dbsnp.rsid field
-      outputs:
-      - id: DOID
-        semantic: Disease
-      parameters:
-      ## DOID has prefix, using gene name so it's human readable rather than gene id
-      ## there are more fields, see response-mapping for comments
-      ## commenting out because data-processing / biolink-modeling issues
-        # fields: >- 
-        #   docm.doid,
-        #   _id,
-        #   docm.genename
-        fields: docm.doid,_id,docm.url
-        size: 1000  ## note size limit; added just in case
-        assembly: hg19
-      predicate: related_to
-      ## it's curated but there's no relationship info...
-      ## looks like it's from http://www.docm.info/
-      source: "infores:docm"
-      response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/docm-disease-variant-start"
-      ## https://myvariant.info/v1/query?q=_exists_:%22docm.ensembl_gene_id%22%20AND%20_exists_:%22dbsnp.rsid%22
-      # testExamples:
-      #   - qInput: "DBSNP:rs759487569"    ## chr3:g.128200743C>T in GATA2
-      #     oneOutput: "DOID:9119"         ## acute myeloid leukemia (AML) / MONDO:0018874
-    docm-variantDisease-rev:
-    - supportBatch: true
-      useTemplating: true
-      inputs:
-      - id: DOID
-        semantic: Disease
-      requestBody:
-        body:
-          q: "{{ queryInputs }}"  ## HAS PREFIX
-          scopes: docm.doid
-      outputs:
-      - id: DBSNP
-        semantic: SequenceVariant
-      parameters:
-        fields: dbsnp.rsid,_id
-        size: 1000  ## note size limit
-        assembly: hg19
-      predicate: related_to
-      source: "infores:docm"
-      response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/dbsnp-rsid"
-      ## https://myvariant.info/v1/query?q=_exists_:%22docm.ensembl_gene_id%22%20AND%20_exists_:%22dbsnp.rsid%22
-      # testExamples:
-      #   - qInput: "DOID:1781"              ## Thyroid Cancer
-      #     oneOutput: "DBSNP:rs121913254"   ## chr1:g.115256530G>T in NRAS
