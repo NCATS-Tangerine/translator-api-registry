@@ -1,1545 +1,2765 @@
-openapi: 3.0.3
+openapi: 3.0.3  ## downgrade from 3.1.0 to 3.0.3, which SmartAPI currently supports
 info:
   contact:
-    email: cjm@berkeleybop.org
-    name: Chris Mungall
-    x-id: https://github.com/cmungall
+    email: info@monarchinitiative.org
+    name: Monarch help desk
     x-role: responsible developer
-  description: API integration layer for linked biological objects.
-  termsOfService: https://github.com/monarch-initiative/biolink-api/
-  title: BioLink API
-  version: 1.1.14
+    url: https://monarchinitiative.org/help
+  description: >-
+    The [Monarch Application Programming Interface (API)](https://api-v3.monarchinitiative.org/v3/docs#/) 
+    is a RESTful API that wraps functionality required by the 
+    [Monarch Initiative website](https://monarchinitiative.org/), including the retrieval of disease, 
+    gene, and phenotype associations, phenotypic profile comparisons, and other graph operations.
+  termsOfService: https://monarchinitiative.org/terms
+  title: Monarch API
+  version: 0.1.0
   x-translator:
-    infores: "infores:biolink-api"
+    infores: "infores:biolink-api"        ## not sure if this needs changing?
     component: KP
     team:
     - "Service Provider"
     - "Standards Reference Implementation Team"  
-    biolink-version: "3.5.0"
+    biolink-version: "3.5.3"
 servers:
 - description: Production server
-  url: http://api-v2.monarchinitiative.org/api
+  url: https://api-v3.monarchinitiative.org
   x-maturity: production
 tags:
-- name: anatomy
-- name: disease
-- name: gene
-- name: phenotype
-- name: pathway
-- name: variant
-- name: annotation
-- name: query
 - name: translator
-- name: biolink
+## NOTES:
+## - limit to return seems to be 500, could theoretically send scrolling queries based on limit/offset/total fields in response?
+## - download: not specifying it seems to work better than setting it to false
+## - commented out sections that caused errors in SmartAPI editor, including
+##   - type: 'null'
+##   - examples
+##   - the GET endpoint of /v3/api/annotate/entities: it wouldn't work in https://api-v3.monarchinitiative.org/v3/docs#/ either 
+##     because requestBody is specified - and GET requests can't support a request body
+##   - the / endpoints since they don't work
 paths:
-## - note that this API has a LOT of endpoints. Currently we only include endpoints we are annotating as x-bte operations
-##   browse here to find more endpoints: https://api.monarchinitiative.org/api/ 
-## - not interested in any endpoints using cases, genotypes, models, publications
-## - there are more parameters in the endpoints below. Only included parameters we're using
-## - potentially interesting operation to annotate:
-##   - disease -> treatment: doesn't have same output format as the other endpoints...
-##   - function <-> gene: looks like GO terms <-> Gene (tricky Gene -> GO because no separation between the sub-ontologies bp/cc/mf)
-##   - bioentity/gene/{id}/expression/anatomy: same as gene/anatomy endpoint (already annotated)?
-##   - bioentity/gene/{id}/homologs: gene -> gene homologs in other species (could annotate MyGene instead?)
-##   - gene <-> pathway 
-##   - ontology/shared/{subject}/{object}:
-##     the shared ancestry operation looks kinda interesting...but it's only for GO terms? 
-## - removed / decided not to:
-##   - pathway <-> phenotype: only seemed to include non-human REACT pathways (MMU, DRE) connected to MP / HP terms...
-##   - phenotype -> anatomy: has a different output format (only has object...)
-##   - /bioentity/substance/{id}/participant_in: gives association between chebi chem and...chebi roles/GO MF...
-##   - /bioentity/substance/{id}/treats: looks like it's not working
-  "/bioentity/anatomy/{id}/genes":
+  /v3/api/association:
     get:
+      tags:
+        - association
+      summary: ' Get Associations'
+      description: 'Retrieves all associations for a given entity, or between two entities.'
+      operationId: _get_associations_v3_api_association_get
       parameters:
-      - name: id
-        description: "CURIE identifier of anatomical entity, e.g. GO:0005634 (nucleus), UBERON:0002037 (cerebellum), CL:0000540 (neuron). Equivalent IDs can be used with same results"
-        in: path
-        required: true
-        example: "UBERON:0001817"  ## same as for anatomy-gene operation
-        schema:
-          type: string
-      - "$ref": "#/components/parameters/rows"
-      - "$ref": "#/components/parameters/start"
-      - "$ref": "#/components/parameters/facet"
-      - "$ref": "#/components/parameters/facet_fields"
-      - "$ref": "#/components/parameters/unselect_evidence"
-      - "$ref": "#/components/parameters/exclude_automatic_assertions"
-      - "$ref": "#/components/parameters/fetch_objects"
-      - "$ref": "#/components/parameters/use_compact_associations"
-      - "$ref": "#/components/parameters/slim"
-      - "$ref": "#/components/parameters/evidence"
-      - "$ref": "#/components/parameters/direct"
-      - "$ref": "#/components/parameters/taxon"
-      - "$ref": "#/components/parameters/direct_taxon"
-      - "$ref": "#/components/parameters/relation"
-      - "$ref": "#/components/parameters/sort"
-      - "$ref": "#/components/parameters/q"
+        - name: category
+          in: query
+          required: false
+          schema:
+            anyOf:
+              - type: array
+                items:
+                  $ref: '#/components/schemas/AssociationCategory'
+              # - type: 'null'
+            title: Category
+        - name: subject
+          in: query
+          required: false
+          schema:
+            anyOf:
+              - type: array
+                items:
+                  type: string
+              # - type: 'null'
+            title: Subject
+        - name: predicate
+          in: query
+          required: false
+          schema:
+            anyOf:
+              - type: array
+                items:
+                  $ref: '#/components/schemas/AssociationPredicate'
+              # - type: 'null'
+            title: Predicate
+        - name: object
+          in: query
+          required: false
+          schema:
+            anyOf:
+              - type: array
+                items:
+                  type: string
+              # - type: 'null'
+            title: Object
+        - name: entity
+          in: query
+          required: false
+          schema:
+            anyOf:
+              - type: array
+                items:
+                  type: string
+              # - type: 'null'
+            title: Entity
+        - name: direct
+          in: query
+          required: false
+          schema:
+            anyOf:
+              - type: boolean
+              # - type: 'null'
+            title: Direct
+        - name: format
+          in: query
+          required: false
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/OutputFormat'
+            title: Output format for the response
+            # examples:
+            #   - json
+            #   - tsv
+            default: json
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 20
+            title: Limit
+        - name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 0
+            title: Offset
       responses:
         '200':
-          description: Success
-      summary: Returns genes associated with a given anatomy
-      tags:
-      - anatomy
-      x-bte-kgs-operations:
-      - "$ref": "#/components/x-bte-kgs-operations/anatomy-gene"
-  "/bioentity/disease/{id}/genes":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - $ref: '#/components/schemas/AssociationResults'
+                  - type: string
+                title: Response  Get Associations V3 Api Association Get
+        '404':
+          description: Not Found
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  '/v3/api/entity/{id}':
     get:
+      tags:
+        - entity
+      summary: ' Get Entity'
+      description: |-
+        Retrieves the entity with the specified id
+
+        <b>Args:</b> <br>
+            id (str): ID for the entity to retrieve, ex: MONDO:0019391
+
+        <b>Raises:</b> <br>
+            HTTPException: 404 if the entity is not found
+
+        <b>Returns:</b> <br>
+            Node: Entity details for the specified id
+      operationId: _get_entity_v3_api_entity__id__get
       parameters:
-      - name: id
-        description: "CURIE identifier of disease, e.g. OMIM:605543, DOID:678. Equivalent IDs can be used with same results"
-        in: path
-        required: true
-        example: "MONDO:0011562"  ## same as for disease-gene-1 operation
-        schema:
-          type: string
-      - name: association_type
-        description: "Additional filters: causal, non_causal, both"
-        in: query
-        required: false
-        example: "causal"
-        schema:
-          type: string
-          enum:
-            - causal
-            - non_causal
-            - both
-          default: "both"
-      - "$ref": "#/components/parameters/rows"
-      - "$ref": "#/components/parameters/start"
-      - "$ref": "#/components/parameters/facet"
-      - "$ref": "#/components/parameters/facet_fields"
-      - "$ref": "#/components/parameters/unselect_evidence"
-      - "$ref": "#/components/parameters/exclude_automatic_assertions"
-      - "$ref": "#/components/parameters/fetch_objects"
-      - "$ref": "#/components/parameters/use_compact_associations"
-      - "$ref": "#/components/parameters/slim"
-      - "$ref": "#/components/parameters/evidence"
-      - "$ref": "#/components/parameters/direct"
-      - "$ref": "#/components/parameters/taxon"
-      - "$ref": "#/components/parameters/direct_taxon"
-      - "$ref": "#/components/parameters/relation"
-      - "$ref": "#/components/parameters/sort"
-      - "$ref": "#/components/parameters/q"
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            title: ID of the entity to retrieve
+            # examples:
+            #   - 'MONDO:0019391'
+        - name: format
+          in: query
+          required: false
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/OutputFormat'
+            title: Output format for the response
+            # examples:
+            #   - json
+            #   - tsv
+            default: json
       responses:
         '200':
-          description: Success
-      summary: Returns genes associated with a disease
-      tags:
-      - disease
-      x-bte-kgs-operations:
-      - "$ref": "#/components/x-bte-kgs-operations/disease-gene-1"
-      - "$ref": "#/components/x-bte-kgs-operations/disease-gene-2"
-  "/bioentity/disease/{id}/pathways":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - $ref: '#/components/schemas/Node'
+                  - type: string
+                title: Response  Get Entity V3 Api Entity  Id  Get
+        '404':
+          description: Not Found
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  '/v3/api/entity/{id}/{category}':
     get:
+      tags:
+        - entity
+      summary: ' Association Table'
+      description: |-
+        Retrieves association table data for a given entity and association type
+
+        <b>Args:</b> <br>
+            id (str): ID of the entity to retrieve association table data, ex: MONDO:0019391 <br>
+            category (str): Category of association to retrieve association table data for, ex: biolink:DiseaseToPhenotypicFeatureAssociation <br>
+            Path (str, optional): Path string to limit results to a subset. Defaults to None. <br>
+            pagination (PaginationParams, optional): Pagination parameters. Defaults to Depends(). <br>
+
+        <b>Returns:</b> <br>
+            AssociationResults: Association table data for the specified entity and association type
+      operationId: _association_table_v3_api_entity__id___category__get
       parameters:
-      - name: id
-        description: "CURIE identifier of disease, e.g. DOID:4450. Equivalent IDs can be used with same results"
-        in: path
-        required: true
-        example: "MONDO:0010524"  ## same as for disease-pathway operation
-        schema:
-          type: string
-      - "$ref": "#/components/parameters/rows"
-      - "$ref": "#/components/parameters/start"
-      - "$ref": "#/components/parameters/facet"
-      - "$ref": "#/components/parameters/facet_fields"
-      - "$ref": "#/components/parameters/unselect_evidence"
-      - "$ref": "#/components/parameters/exclude_automatic_assertions"
-      - "$ref": "#/components/parameters/fetch_objects"
-      - "$ref": "#/components/parameters/use_compact_associations"
-      - "$ref": "#/components/parameters/slim"
-      - "$ref": "#/components/parameters/evidence"
-      - "$ref": "#/components/parameters/direct"
-      - "$ref": "#/components/parameters/taxon"
-      - "$ref": "#/components/parameters/direct_taxon"
-      - "$ref": "#/components/parameters/relation"
-      - "$ref": "#/components/parameters/sort"
-      - "$ref": "#/components/parameters/q"
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            title: ID of the entity to retrieve association table data for
+            # examples:
+            #   - 'MONDO:0019391'
+        - name: category
+          in: path
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/AssociationCategory'
+            title: Type of association to retrieve association table data for
+            # examples:
+            #   - 'biolink:DiseaseToPhenotypicFeatureAssociation'
+        - name: query
+          in: query
+          required: false
+          schema:
+            type: string
+            title: query string to limit results to a subset
+            # examples:
+            #   - thumb
+        - name: sort
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+            title: Sort results by a list of field + direction statements
+            # examples:
+            #   - subject_label asc
+            #   - predicate asc
+            #   - object_label asc
+        - name: format
+          in: query
+          required: false
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/OutputFormat'
+            title: Output format for the response
+            # examples:
+            #   - json
+            #   - tsv
+            default: json
+        - name: download
+          in: query
+          required: false
+          schema:
+            title: Download the results as a file
+            # examples:
+            #   - true
+            #   - false
+            default: false
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 20
+            title: Limit
+        - name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 0
+            title: Offset
       responses:
         '200':
-          description: Success
-      summary: Returns pathways associated with a disease
-      tags:
-      - disease
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - $ref: '#/components/schemas/AssociationTableResults'
+                  - type: string
+                title: Response  Association Table V3 Api Entity  Id   Category  Get
+        '404':
+          description: Not Found
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
       x-bte-kgs-operations:
-      - "$ref": "#/components/x-bte-kgs-operations/disease-pathway"
-  "/bioentity/disease/{id}/phenotypes":
+        - "$ref": "#/components/x-bte-kgs-operations/disease-pheno"
+        - "$ref": "#/components/x-bte-kgs-operations/pheno-disease"
+        - "$ref": "#/components/x-bte-kgs-operations/disease-gene-causal"
+        - "$ref": "#/components/x-bte-kgs-operations/gene-disease-causal"
+  '/v3/api/histopheno/{id}':
     get:
+      tags:
+        - histopheno
+      summary: ' Get Histopheno'
+      description: Retrieves the entity with the specified id
+      operationId: _get_histopheno_v3_api_histopheno__id__get
       parameters:
-      - name: id
-        description: "CURIE identifier of disease, e.g. OMIM:605543, Orphanet:1934, DOID:678. Equivalent IDs can be used with same results"
-        in: path
-        required: true
-        example: "MONDO:0008974"  ## same as for disease-phenotypes operation
-        schema:
-          type: string
-      - "$ref": "#/components/parameters/rows"
-      - "$ref": "#/components/parameters/start"
-      - "$ref": "#/components/parameters/facet"
-      - "$ref": "#/components/parameters/facet_fields"
-      - "$ref": "#/components/parameters/unselect_evidence"
-      - "$ref": "#/components/parameters/exclude_automatic_assertions"
-      - "$ref": "#/components/parameters/fetch_objects"
-      - "$ref": "#/components/parameters/use_compact_associations"
-      - "$ref": "#/components/parameters/slim"
-      - "$ref": "#/components/parameters/evidence"
-      - "$ref": "#/components/parameters/direct"
-      - "$ref": "#/components/parameters/taxon"
-      - "$ref": "#/components/parameters/direct_taxon"
-      - "$ref": "#/components/parameters/relation"
-      - "$ref": "#/components/parameters/sort"
-      - "$ref": "#/components/parameters/q"
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            title: ID of the entity to get histopheno data for
+            # examples:
+            #   - 'MONDO:0019391'
+        - name: format
+          in: query
+          required: false
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/OutputFormat'
+            title: Output format for the response
+            # examples:
+            #   - json
+            #   - tsv
+            default: json
       responses:
         '200':
-          description: Success
-      summary: Returns phenotypes associated with a disease
-      tags:
-      - disease
-      x-bte-kgs-operations:
-      - "$ref": "#/components/x-bte-kgs-operations/disease-phenotype"
-  "/bioentity/disease/{id}/variants":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - $ref: '#/components/schemas/HistoPheno'
+                  - type: string
+                title: Response  Get Histopheno V3 Api Histopheno  Id  Get
+        '404':
+          description: Not Found
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /v3/api/search:
     get:
+      tags:
+        - search
+      summary: Search
+      description: |-
+        Search for entities by label, with optional filters
+
+        Args:
+            q (str, optional): Query string. Defaults to "*:*".
+            category (str, optional): Filter by biolink model category. Defaults to None.
+            in_taxon_label (str, optional): Filter by taxon label. Defaults to None.
+            offset (int, optional): Offset for pagination. Defaults to 0.
+            limit (int, optional): Limit results. Defaults to 20.
+
+        Returns:
+            EntityResults
+      operationId: search_v3_api_search_get
       parameters:
-      - name: id
-        description: "CURIE identifier of disease, e.g. OMIM:605543, DOID:678. Equivalent IDs can be used with same results"
-        in: path
-        required: true
-        example: "MONDO:0004747"  ## same as for disease-variant operation
-        schema:
-          type: string
-      - "$ref": "#/components/parameters/rows"
-      - "$ref": "#/components/parameters/start"
-      - "$ref": "#/components/parameters/facet"
-      - "$ref": "#/components/parameters/facet_fields"
-      - "$ref": "#/components/parameters/unselect_evidence"
-      - "$ref": "#/components/parameters/exclude_automatic_assertions"
-      - "$ref": "#/components/parameters/fetch_objects"
-      - "$ref": "#/components/parameters/use_compact_associations"
-      - "$ref": "#/components/parameters/slim"
-      - "$ref": "#/components/parameters/evidence"
-      - "$ref": "#/components/parameters/direct"
-      - "$ref": "#/components/parameters/taxon"
-      - "$ref": "#/components/parameters/direct_taxon"
-      - "$ref": "#/components/parameters/relation"
-      - "$ref": "#/components/parameters/sort"
-      - "$ref": "#/components/parameters/q"
+        - name: q
+          in: query
+          required: false
+          schema:
+            type: string
+            title: Q
+        - name: category
+          in: query
+          required: false
+          schema:
+            anyOf:
+              - type: array
+                items:
+                  $ref: '#/components/schemas/EntityCategory'
+              # - type: 'null'
+            title: Category
+        - name: in_taxon_label
+          in: query
+          required: false
+          schema:
+            anyOf:
+              - type: array
+                items:
+                  type: string
+              # - type: 'null'
+            title: In Taxon Label
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 20
+            title: Limit
+        - name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 0
+            title: Offset
       responses:
         '200':
-          description: Success
-      summary: Returns variants associated with a disease
-      tags:
-      - disease
-      x-bte-kgs-operations:
-      - "$ref": "#/components/x-bte-kgs-operations/disease-variant"
-  "/bioentity/gene/{id}/anatomy":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchResults'
+        '404':
+          description: Not Found
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /v3/api/autocomplete:
     get:
+      tags:
+        - search
+      summary: Autocomplete
+      description: |-
+        Autocomplete for entities by label
+
+        Args:
+            q (str): Query string to autocomplete against
+
+        Returns:
+            SearchResults
+      operationId: autocomplete_v3_api_autocomplete_get
       parameters:
-      - name: id
-        description: "CURIE identifier of gene, e.g. NCBIGene:13434"
-        in: path
-        required: true
-        example: "HGNC:8548"  ## same as for gene-anatomy operation
-        schema:
-          type: string
-      - "$ref": "#/components/parameters/rows"
-      - "$ref": "#/components/parameters/start"
-      - "$ref": "#/components/parameters/facet"
-      - "$ref": "#/components/parameters/facet_fields"
-      - "$ref": "#/components/parameters/unselect_evidence"
-      - "$ref": "#/components/parameters/exclude_automatic_assertions"
-      - "$ref": "#/components/parameters/fetch_objects"
-      - "$ref": "#/components/parameters/use_compact_associations"
-      - "$ref": "#/components/parameters/slim"
-      - "$ref": "#/components/parameters/evidence"
-      - "$ref": "#/components/parameters/direct"
-      - "$ref": "#/components/parameters/taxon"
-      - "$ref": "#/components/parameters/direct_taxon"
-      - "$ref": "#/components/parameters/relation"
-      - "$ref": "#/components/parameters/sort"
-      - "$ref": "#/components/parameters/q"
+        - name: q
+          in: query
+          required: false
+          schema:
+            type: string
+            title: Query string to autocomplete against
+            # examples:
+            #   - fanc
+            #   - ehler
+            default: '*:*'
       responses:
         '200':
-          description: Success
-      summary: Returns anatomies associated with a gene
-      tags:
-      - gene
-      x-bte-kgs-operations:
-      - "$ref": "#/components/x-bte-kgs-operations/gene-anatomy"
-  "/bioentity/gene/{id}/diseases":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchResults'
+        '404':
+          description: Not Found
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /v3/api/mappings:
     get:
+      tags:
+        - search
+      summary: Mappings
+      operationId: mappings_v3_api_mappings_get
       parameters:
-      - name: id
-        description: "CURIE identifier of gene, e.g. NCBIGene:4750. Equivalent IDs can be used with same results"
-        in: path
-        required: true
-        example: "HGNC:11138"  ## same as for gene-disease-1 operation
-        schema:
-          type: string
-      - name: association_type
-        description: "Additional filters: causal, non_causal, both"
-        in: query
-        required: false
-        example: "causal"
-        schema:
-          type: string
-          enum:
-            - causal
-            - non_causal
-            - both
-          default: "both"
-      - "$ref": "#/components/parameters/rows"
-      - "$ref": "#/components/parameters/start"
-      - "$ref": "#/components/parameters/facet"
-      - "$ref": "#/components/parameters/facet_fields"
-      - "$ref": "#/components/parameters/unselect_evidence"
-      - "$ref": "#/components/parameters/exclude_automatic_assertions"
-      - "$ref": "#/components/parameters/fetch_objects"
-      - "$ref": "#/components/parameters/use_compact_associations"
-      - "$ref": "#/components/parameters/slim"
-      - "$ref": "#/components/parameters/evidence"
-      - "$ref": "#/components/parameters/direct"
-      - "$ref": "#/components/parameters/taxon"
-      - "$ref": "#/components/parameters/direct_taxon"
-      - "$ref": "#/components/parameters/relation"
-      - "$ref": "#/components/parameters/sort"
-      - "$ref": "#/components/parameters/q"
+        - name: entity_id
+          in: query
+          required: false
+          schema:
+            anyOf:
+              - type: array
+                items:
+                  type: string
+              # - type: 'null'
+            title: Entity Id
+        - name: subject_id
+          in: query
+          required: false
+          schema:
+            anyOf:
+              - type: array
+                items:
+                  type: string
+              # - type: 'null'
+            title: Subject Id
+        - name: predicate_id
+          in: query
+          required: false
+          schema:
+            anyOf:
+              - type: array
+                items:
+                  type: string
+              # - type: 'null'
+            title: Predicate Id
+        - name: object_id
+          in: query
+          required: false
+          schema:
+            anyOf:
+              - type: array
+                items:
+                  type: string
+              # - type: 'null'
+            title: Object Id
+        - name: mapping_justification
+          in: query
+          required: false
+          schema:
+            anyOf:
+              - type: array
+                items:
+                  type: string
+              # - type: 'null'
+            title: Mapping Justification
+        - name: format
+          in: query
+          required: false
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/OutputFormat'
+            title: Output format for the response
+            # examples:
+            #   - json
+            #   - tsv
+            default: json
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 20
+            title: Limit
+        - name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 0
+            title: Offset
       responses:
         '200':
-          description: Success
-      summary: Returns diseases associated with a gene
-      tags:
-      - gene
-      x-bte-kgs-operations:
-      - "$ref": "#/components/x-bte-kgs-operations/gene-disease-1"
-      - "$ref": "#/components/x-bte-kgs-operations/gene-disease-2"
-  "/bioentity/gene/{id}/interactions":
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '404':
+          description: Not Found
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  '/v3/api/semsim/compare/{subjects}/{objects}':
     get:
+      tags:
+        - semsim
+      summary: ' Compare'
+      description: |-
+        Get pairwise similarity between two sets of terms
+
+        <b>Args:</b> <br>
+            subjects (str, optional): List of subjects for comparison. Defaults to "". <br>
+            objects (str, optional): List of objects for comparison. Defaults to "". <br>
+
+        <b>Returns:</b> <br>
+            TermSetPairwiseSimilarity: Pairwise similarity between subjects and objects
+      operationId: _compare_v3_api_semsim_compare__subjects___objects__get
       parameters:
-      - name: id
-        description: "id, e.g. NCBIGene:3630. Equivalent IDs can be used with same results"
-        in: path
-        required: true
-        example: "HGNC:2950"  ## same as for gene-disease-1 operation
-        schema:
-          type: string
-      - "$ref": "#/components/parameters/rows"
-      - "$ref": "#/components/parameters/start"
-      - "$ref": "#/components/parameters/facet"
-      - "$ref": "#/components/parameters/facet_fields"
-      - "$ref": "#/components/parameters/unselect_evidence"
-      - "$ref": "#/components/parameters/exclude_automatic_assertions"
-      - "$ref": "#/components/parameters/fetch_objects"
-      - "$ref": "#/components/parameters/use_compact_associations"
-      - "$ref": "#/components/parameters/slim"
-      - "$ref": "#/components/parameters/evidence"
-      - "$ref": "#/components/parameters/direct"
-      - "$ref": "#/components/parameters/taxon"
-      - "$ref": "#/components/parameters/direct_taxon"
-      - "$ref": "#/components/parameters/relation"
-      - "$ref": "#/components/parameters/sort"
-      - "$ref": "#/components/parameters/q"
+        - name: subjects
+          in: path
+          required: true
+          schema:
+            type: string
+            title: List of subjects for comparison
+        - name: objects
+          in: path
+          required: true
+          schema:
+            type: string
+            title: List of objects for comparison
       responses:
         '200':
-          description: Success
-      summary: Returns gene interaction
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '404':
+          description: Not Found
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /v3/api/semsim/compare:
+    post:
       tags:
-      - gene
-      x-bte-kgs-operations:
-      - "$ref": "#/components/x-bte-kgs-operations/gene-interaction"
-  "/bioentity/gene/{id}/ortholog/diseases":
-    get:
-      parameters:
-      - name: id
-        description: "CURIE identifier of gene, e.g. NCBIGene:4750"
-        in: path
+        - semsim
+      summary: ' Post Compare'
+      description: |-
+        Pairwise similarity between two sets of terms <br>
+            <br>
+            Example: <br>
+        <pre>
+        {
+          "subjects": ["MP:0010771","MP:0002169","MP:0005391","MP:0005389","MP:0005367"],
+          "objects": ["HP:0004325","HP:0000093","MP:0006144"]
+        }
+        </pre>
+      operationId: _post_compare_v3_api_semsim_compare_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SemsimCompareRequest'
         required: true
-        example: "HGNC:8548"
-        schema:
-          type: string
-      - "$ref": "#/components/parameters/rows"
-      - "$ref": "#/components/parameters/start"
-      - "$ref": "#/components/parameters/facet"
-      - "$ref": "#/components/parameters/facet_fields"
-      - "$ref": "#/components/parameters/unselect_evidence"
-      - "$ref": "#/components/parameters/exclude_automatic_assertions"
-      - "$ref": "#/components/parameters/fetch_objects"
-      - "$ref": "#/components/parameters/use_compact_associations"
-      - "$ref": "#/components/parameters/slim"
-      - "$ref": "#/components/parameters/evidence"
-      - "$ref": "#/components/parameters/direct"
-      - "$ref": "#/components/parameters/taxon"
-      - "$ref": "#/components/parameters/direct_taxon"
-      - "$ref": "#/components/parameters/relation"
-      - "$ref": "#/components/parameters/sort"
-      - "$ref": "#/components/parameters/q"
       responses:
         '200':
-          description: Success
-      summary: Returns diseases associated with orthologs of a gene
-      tags:
-      - gene
-      x-bte-kgs-operations:
-      - "$ref": "#/components/x-bte-kgs-operations/geneOrtholog-disease"
-  "/bioentity/gene/{id}/ortholog/phenotypes":
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '404':
+          description: Not Found
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  '/v3/api/semsim/search/{termset}/{group}':
     get:
+      tags:
+        - semsim
+      summary: ' Search'
+      description: |-
+        Search for terms in a termset
+
+        <b>Args:</b> <br>
+            termset (str, optional): Comma separated list of term IDs to find matches for. <br>
+            group (str, optional): Group of entities to search within (e.g. Human Genes) <br>
+            limit (int, optional): Limit the number of results. Defaults to 10.
+
+        <b>Returns:</b> <br>
+            List[str]: List of matching terms
+      operationId: _search_v3_api_semsim_search__termset___group__get
       parameters:
-      - name: id
-        description: "CURIE identifier of gene, e.g. NCBIGene:4750"
-        in: path
-        required: true
-        example: "HGNC:8548"
-        schema:
-          type: string
-      - "$ref": "#/components/parameters/rows"
-      - "$ref": "#/components/parameters/start"
-      - "$ref": "#/components/parameters/facet"
-      - "$ref": "#/components/parameters/facet_fields"
-      - "$ref": "#/components/parameters/unselect_evidence"
-      - "$ref": "#/components/parameters/exclude_automatic_assertions"
-      - "$ref": "#/components/parameters/fetch_objects"
-      - "$ref": "#/components/parameters/use_compact_associations"
-      - "$ref": "#/components/parameters/slim"
-      - "$ref": "#/components/parameters/evidence"
-      - "$ref": "#/components/parameters/direct"
-      - "$ref": "#/components/parameters/taxon"
-      - "$ref": "#/components/parameters/direct_taxon"
-      - "$ref": "#/components/parameters/relation"
-      - "$ref": "#/components/parameters/sort"
-      - "$ref": "#/components/parameters/q"
+        - name: termset
+          in: path
+          required: true
+          schema:
+            type: string
+            title: Termset to search
+        - name: group
+          in: path
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/SemsimSearchGroup'
+            title: Group of entities to search within (e.g. Human Genes)
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            maximum: 50
+            minimum: 1
+            default: 10
+            title: Limit
       responses:
         '200':
-          description: Success
-      summary: Returns phenotypes associated with orthologs for a gene
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '404':
+          description: Not Found
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /v3/api/semsim/search:
+    post:
       tags:
-      - gene
-      x-bte-kgs-operations:
-      - "$ref": "#/components/x-bte-kgs-operations/geneOrtholog-phenotype"
-  "/bioentity/gene/{id}/phenotypes":
-    get:
-      parameters:
-      - name: id
-        description: "CURIE identifier of gene, e.g. NCBIGene:4750. Equivalent IDs can be used with same results"
-        in: path
+        - semsim
+      summary: ' Post Search'
+      description: |-
+        Search for terms in a termset <br>
+            <br>
+            Example: <br>
+        <pre>
+        {
+          "termset": ["HP:0002104", "HP:0012378", "HP:0012378", "HP:0012378"],
+          "group": "Human Diseases",
+          "limit": 5
+        }
+        </pre>
+      operationId: _post_search_v3_api_semsim_search_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SemsimSearchRequest'
         required: true
-        example: "HGNC:2950"  ## same as for gene-phenotype operation
-        schema:
-          type: string
-      - "$ref": "#/components/parameters/rows"
-      - "$ref": "#/components/parameters/start"
-      - "$ref": "#/components/parameters/facet"
-      - "$ref": "#/components/parameters/facet_fields"
-      - "$ref": "#/components/parameters/unselect_evidence"
-      - "$ref": "#/components/parameters/exclude_automatic_assertions"
-      - "$ref": "#/components/parameters/fetch_objects"
-      - "$ref": "#/components/parameters/use_compact_associations"
-      - "$ref": "#/components/parameters/slim"
-      - "$ref": "#/components/parameters/evidence"
-      - "$ref": "#/components/parameters/direct"
-      - "$ref": "#/components/parameters/taxon"
-      - "$ref": "#/components/parameters/direct_taxon"
-      - "$ref": "#/components/parameters/relation"
-      - "$ref": "#/components/parameters/sort"
-      - "$ref": "#/components/parameters/q"
       responses:
         '200':
-          description: Success
-      summary: Returns phenotypes associated with a gene
-      tags:
-      - gene
-      x-bte-kgs-operations:
-      - "$ref": "#/components/x-bte-kgs-operations/gene-phenotype"
-  "/bioentity/gene/{id}/variants":
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '404':
+          description: Not Found
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  '/v3/api/annotate/{content}':
     get:
+      tags:
+        - text_annotation
+      summary: ' Annotate'
+      operationId: _annotate_v3_api_annotate__content__get
       parameters:
-      - name: id
-        description: "CURIE identifier of gene, e.g. HGNC:10896"
-        in: path
-        required: true
-        example: "HGNC:2950"  ## same as for gene-variant operation
-        schema:
-          type: string
-      - "$ref": "#/components/parameters/rows"
-      - "$ref": "#/components/parameters/start"
-      - "$ref": "#/components/parameters/facet"
-      - "$ref": "#/components/parameters/facet_fields"
-      - "$ref": "#/components/parameters/unselect_evidence"
-      - "$ref": "#/components/parameters/exclude_automatic_assertions"
-      - "$ref": "#/components/parameters/fetch_objects"
-      - "$ref": "#/components/parameters/use_compact_associations"
-      - "$ref": "#/components/parameters/slim"
-      - "$ref": "#/components/parameters/evidence"
-      - "$ref": "#/components/parameters/direct"
-      - "$ref": "#/components/parameters/taxon"
-      - "$ref": "#/components/parameters/direct_taxon"
-      - "$ref": "#/components/parameters/relation"
-      - "$ref": "#/components/parameters/sort"
-      - "$ref": "#/components/parameters/q"
+        - name: content
+          in: path
+          required: true
+          schema:
+            type: string
+            title: The text content to annotate
       responses:
         '200':
-          description: Success
-      summary: Returns variants associated with a gene
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: string
+                title: Response  Annotate V3 Api Annotate  Content  Get
+        '404':
+          description: Not Found
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /v3/api/annotate:
+    post:
       tags:
-      - gene
-      x-bte-kgs-operations:
-      - "$ref": "#/components/x-bte-kgs-operations/gene-variant"
-  "/bioentity/pathway/{id}/diseases":
-    get:
-      parameters:
-      - name: id
-        description: "CURIE any pathway element. E.g. REACT:R-HSA-5387390"
-        in: path
+        - text_annotation
+      summary: ' Post Annotate'
+      operationId: _post_annotate_v3_api_annotate_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TextAnnotationRequest'
         required: true
-        example: "REACT:R-HSA-2644606"   ## same as for pathway-disease operation
-        schema:
-          type: string
-      - "$ref": "#/components/parameters/rows"
-      - "$ref": "#/components/parameters/start"
-      - "$ref": "#/components/parameters/facet"
-      - "$ref": "#/components/parameters/facet_fields"
-      - "$ref": "#/components/parameters/unselect_evidence"
-      - "$ref": "#/components/parameters/exclude_automatic_assertions"
-      - "$ref": "#/components/parameters/fetch_objects"
-      - "$ref": "#/components/parameters/use_compact_associations"
-      - "$ref": "#/components/parameters/slim"
-      - "$ref": "#/components/parameters/evidence"
-      - "$ref": "#/components/parameters/direct"
-      - "$ref": "#/components/parameters/taxon"
-      - "$ref": "#/components/parameters/direct_taxon"
-      - "$ref": "#/components/parameters/relation"
-      - "$ref": "#/components/parameters/sort"
-      - "$ref": "#/components/parameters/q"
       responses:
         '200':
-          description: Success
-      summary: Returns diseases associated with a pathway
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: string
+                title: Response  Post Annotate V3 Api Annotate Post
+        '404':
+          description: Not Found
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /v3/api/annotate/entities:
+    # get:
+    #   tags:
+    #     - text_annotation
+    #   summary: ' Entities'
+    #   operationId: _entities_v3_api_annotate_entities_get
+    #   requestBody:
+    #     content:
+    #       application/json:
+    #         schema:
+    #           $ref: '#/components/schemas/TextAnnotationRequest'
+    #     required: true
+    #   responses:
+    #     '200':
+    #       description: Successful Response
+    #       content:
+    #         application/json:
+    #           schema:
+    #             items:
+    #               $ref: '#/components/schemas/TextAnnotationResult'
+    #             type: array
+    #             title: Response  Entities V3 Api Annotate Entities Get
+    #     '404':
+    #       description: Not Found
+    #     '422':
+    #       description: Validation Error
+    #       content:
+    #         application/json:
+    #           schema:
+    #             $ref: '#/components/schemas/HTTPValidationError'
+    post:
       tags:
-      - pathway
-      x-bte-kgs-operations:
-      - "$ref": "#/components/x-bte-kgs-operations/pathway-disease"
-  "/bioentity/phenotype/{id}/diseases":
-    get:
-      parameters:
-      - name: id
-        description: "CURIE identifier of phenotype, e.g. HP:0007359. Equivalent IDs can be used with same results"
-        in: path
+        - text_annotation
+      summary: ' Post Entities'
+      operationId: _post_entities_v3_api_annotate_entities_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TextAnnotationRequest'
         required: true
-        example: "HP:0000272"   ## same as for phenotype-disease operation
-        schema:
-          type: string
-      - "$ref": "#/components/parameters/rows"
-      - "$ref": "#/components/parameters/start"
-      - "$ref": "#/components/parameters/facet"
-      - "$ref": "#/components/parameters/facet_fields"
-      - "$ref": "#/components/parameters/unselect_evidence"
-      - "$ref": "#/components/parameters/exclude_automatic_assertions"
-      - "$ref": "#/components/parameters/fetch_objects"
-      - "$ref": "#/components/parameters/use_compact_associations"
-      - "$ref": "#/components/parameters/slim"
-      - "$ref": "#/components/parameters/evidence"
-      - "$ref": "#/components/parameters/direct"
-      - "$ref": "#/components/parameters/taxon"
-      - "$ref": "#/components/parameters/direct_taxon"
-      - "$ref": "#/components/parameters/relation"
-      - "$ref": "#/components/parameters/sort"
-      - "$ref": "#/components/parameters/q"
       responses:
         '200':
-          description: Success
-      summary: Returns diseases associated with a phenotype
-      tags:
-      - phenotype
-      x-bte-kgs-operations:
-      - "$ref": "#/components/x-bte-kgs-operations/phenotype-disease"
-  "/bioentity/phenotype/{id}/genes":
-    get:
-      parameters:
-      - name: id
-        description: "Pheno class CURIE identifier, e.g  WBPhenotype:0000180 (axon morphology variant), MP:0001569 (abnormal circulating bilirubin level)" 
-        in: path
-        required: true
-        example: "HP:0000183"   ## same as for phenotype-gene operation
-        schema:
-          type: string
-      - "$ref": "#/components/parameters/rows"
-      - "$ref": "#/components/parameters/start"
-      - "$ref": "#/components/parameters/facet"
-      - "$ref": "#/components/parameters/facet_fields"
-      - "$ref": "#/components/parameters/unselect_evidence"
-      - "$ref": "#/components/parameters/exclude_automatic_assertions"
-      - "$ref": "#/components/parameters/fetch_objects"
-      - "$ref": "#/components/parameters/use_compact_associations"
-      - "$ref": "#/components/parameters/slim"
-      - "$ref": "#/components/parameters/evidence"
-      - "$ref": "#/components/parameters/direct"
-      - "$ref": "#/components/parameters/taxon"
-      - "$ref": "#/components/parameters/direct_taxon"
-      - "$ref": "#/components/parameters/relation"
-      - "$ref": "#/components/parameters/sort"
-      - "$ref": "#/components/parameters/q"
-      responses:
-        '200':
-          description: Success
-      summary: Returns genes associated with a phenotype
-      tags:
-      - phenotype
-      x-bte-kgs-operations:
-      - "$ref": "#/components/x-bte-kgs-operations/phenotype-gene"
-  "/bioentity/phenotype/{id}/variants":
-    get:
-      parameters:
-      - name: id
-        description: "Pheno class CURIE identifier, e.g  WBPhenotype:0000180 (axon morphology variant), MP:0001569 (abnormal circulating bilirubin level)"
-        in: path
-        required: true
-        example: "HP:0002944"   ## same as for phenotype-variant operation
-        schema:
-          type: string
-      - "$ref": "#/components/parameters/rows"
-      - "$ref": "#/components/parameters/start"
-      - "$ref": "#/components/parameters/facet"
-      - "$ref": "#/components/parameters/facet_fields"
-      - "$ref": "#/components/parameters/unselect_evidence"
-      - "$ref": "#/components/parameters/exclude_automatic_assertions"
-      - "$ref": "#/components/parameters/fetch_objects"
-      - "$ref": "#/components/parameters/use_compact_associations"
-      - "$ref": "#/components/parameters/slim"
-      - "$ref": "#/components/parameters/evidence"
-      - "$ref": "#/components/parameters/direct"
-      - "$ref": "#/components/parameters/taxon"
-      - "$ref": "#/components/parameters/direct_taxon"
-      - "$ref": "#/components/parameters/relation"
-      - "$ref": "#/components/parameters/sort"
-      - "$ref": "#/components/parameters/q"
-      responses:
-        '200':
-          description: Success
-      summary: Returns variants associated with a phenotype
-      tags:
-      - phenotype
-      x-bte-kgs-operations:
-      - "$ref": "#/components/x-bte-kgs-operations/phenotype-variant"
-  "/bioentity/variant/{id}/diseases":
-    get:
-      parameters:
-      - name: id
-        description: "CURIE identifier of variant, e.g. ClinVarVariant:14925"
-        in: path
-        required: true
-        example: "dbSNP:rs227731"   ## same as for variant-disease operation; but they use these as prefix
-        schema:
-          type: string
-      - "$ref": "#/components/parameters/rows"
-      - "$ref": "#/components/parameters/start"
-      - "$ref": "#/components/parameters/facet"
-      - "$ref": "#/components/parameters/facet_fields"
-      - "$ref": "#/components/parameters/unselect_evidence"
-      - "$ref": "#/components/parameters/exclude_automatic_assertions"
-      - "$ref": "#/components/parameters/fetch_objects"
-      - "$ref": "#/components/parameters/use_compact_associations"
-      - "$ref": "#/components/parameters/slim"
-      - "$ref": "#/components/parameters/evidence"
-      - "$ref": "#/components/parameters/direct"
-      - "$ref": "#/components/parameters/taxon"
-      - "$ref": "#/components/parameters/direct_taxon"
-      - "$ref": "#/components/parameters/relation"
-      - "$ref": "#/components/parameters/sort"
-      - "$ref": "#/components/parameters/q"
-      responses:
-        '200':
-          description: Success
-      summary: Returns diseases associated with a variant
-      tags:
-      - variant
-      x-bte-kgs-operations:
-      - "$ref": "#/components/x-bte-kgs-operations/variant-disease"
-  "/bioentity/variant/{id}/genes":
-    get:
-      parameters:
-      - name: id
-        description: "CURIE identifier of variant, e.g. ZFIN:ZDB-ALT-010427-8, ClinVarVariant:39783"
-        in: path
-        required: true
-        example: "dbSNP:rs11879191"   ## same as for variant-gene operation; but they use these as prefix
-        schema:
-          type: string
-      - "$ref": "#/components/parameters/rows"
-      - "$ref": "#/components/parameters/start"
-      - "$ref": "#/components/parameters/facet"
-      - "$ref": "#/components/parameters/facet_fields"
-      - "$ref": "#/components/parameters/unselect_evidence"
-      - "$ref": "#/components/parameters/exclude_automatic_assertions"
-      - "$ref": "#/components/parameters/fetch_objects"
-      - "$ref": "#/components/parameters/use_compact_associations"
-      - "$ref": "#/components/parameters/slim"
-      - "$ref": "#/components/parameters/evidence"
-      - "$ref": "#/components/parameters/direct"
-      - "$ref": "#/components/parameters/taxon"
-      - "$ref": "#/components/parameters/direct_taxon"
-      - "$ref": "#/components/parameters/relation"
-      - "$ref": "#/components/parameters/sort"
-      - "$ref": "#/components/parameters/q"
-      responses:
-        '200':
-          description: Success
-      summary: Returns genes associated with a variant
-      tags:
-      - variant
-      x-bte-kgs-operations:
-      - "$ref": "#/components/x-bte-kgs-operations/variant-gene"
-  "/bioentity/variant/{id}/phenotypes":
-    get:
-      parameters:
-      - name: id
-        description: "CURIE identifier of variant, e.g. ZFIN:ZDB-ALT-010427-8, ClinVarVariant:39783"
-        in: path
-        required: true
-        example: "dbSNP:rs115165302"   ## same as for variant-phenotype operation; but they use these as prefix
-        schema:
-          type: string
-      - "$ref": "#/components/parameters/rows"
-      - "$ref": "#/components/parameters/start"
-      - "$ref": "#/components/parameters/facet"
-      - "$ref": "#/components/parameters/facet_fields"
-      - "$ref": "#/components/parameters/unselect_evidence"
-      - "$ref": "#/components/parameters/exclude_automatic_assertions"
-      - "$ref": "#/components/parameters/fetch_objects"
-      - "$ref": "#/components/parameters/use_compact_associations"
-      - "$ref": "#/components/parameters/slim"
-      - "$ref": "#/components/parameters/evidence"
-      - "$ref": "#/components/parameters/direct"
-      - "$ref": "#/components/parameters/taxon"
-      - "$ref": "#/components/parameters/direct_taxon"
-      - "$ref": "#/components/parameters/relation"
-      - "$ref": "#/components/parameters/sort"
-      - "$ref": "#/components/parameters/q"
-      responses:
-        '200':
-          description: Success
-      summary: Returns phenotypes associated with a variant
-      tags:
-      - variant
-      x-bte-kgs-operations:
-      - "$ref": "#/components/x-bte-kgs-operations/variant-phenotype"
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/TextAnnotationResult'
+                type: array
+                title: Response  Post Entities V3 Api Annotate Entities Post
+        '404':
+          description: Not Found
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  # /:
+  #   get:
+  #     summary: ' Root'
+  #     operationId: _root__get
+  #     responses:
+  #       '200':
+  #         description: Successful Response
+  #         content:
+  #           application/json:
+  #             schema: {}
+  # /api:
+  #   get:
+  #     summary: ' Api'
+  #     operationId: _api_api_get
+  #     responses:
+  #       '200':
+  #         description: Successful Response
+  #         content:
+  #           application/json:
+  #             schema: {}
 components:
-  parameters:
-    rows:
-      name: rows
-      description: number of rows
-      in: query
-      required: false
-      schema:
-      ## default is 100; -1 should get everything back (not sure though)
-        type: integer
-        default: 100
-    start:
-      name: start
-      description: beginning row
-      in: query
-      required: false
-      schema:
-        type: integer
-    facet:
-      name: facet
-      description: Enable faceting
-      in: query
-      required: false
-      schema:
-        type: boolean
-    facet_fields:
-      name: facet_fields
-      description: Fields to facet on
-      in: query
-      required: false
-      schema:
-        type: array
-        items:
+  schemas:
+    Association:
+      properties:
+        id:
           type: string
-    unselect_evidence:
-      name: unselect_evidence
-      description: If true, excludes evidence objects in response
-      in: query
-      required: false
-      schema:
-        type: boolean
-        default: false
-    exclude_automatic_assertions:
-      name: exclude_automatic_assertions
-      description: If true, excludes associations that involve IEAs (ECO:0000501)
-      in: query
-      required: false
-      schema:
-        type: boolean
-        default: false
-    fetch_objects:
-      name: fetch_objects
-      description: "If true, returns a distinct set of association.objects (typically ontology terms). This appears at the top level of the results payload"
-      in: query
-      required: false
-      schema:
-        type: boolean
-        default: false
-    use_compact_associations:
-      name: use_compact_associations
-      description: If true, returns results in compact associations format
-      in: query
-      required: false
-      schema:
-        type: boolean
-        default: false
-    slim:
-      name: slim
-      description: "Map objects up (slim) to a higher level category. Value can be ontology class ID or subset ID"
-      in: query
-      required: false
-      schema:
-        type: array
-        items:
+          title: Id
+        category:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Category
+        subject:
           type: string
-    evidence:
-      name: evidence
-      description: "Object id, e.g. ECO:0000501 (for IEA; Includes inferred by default) or a specific publication or other supporting object, e.g. ZFIN:ZDB-PUB-060503-2"
-      in: query
-      required: false
-      schema:
-        type: string
-    direct:
-      name: direct
-      description: "Set true to only include direct associations, and false to include inferred (via subclass or subclass|part of), default=False"
-      in: query
-      required: false
-      schema:
-        type: boolean
-        default: false
-    taxon:
-      name: taxon
-      description: "One or more taxon CURIE to filter associations by subject taxon; includes inferred associations by default"
-      in: query
-      required: false
-      schema:
-        type: array
-        items:
+          title: Subject
+        original_subject:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Original Subject
+        subject_namespace:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Subject Namespace
+          description: The namespace/prefix of the subject entity
+        subject_category:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Subject Category
+          description: The category of the subject entity
+        subject_closure:
+          anyOf:
+            - items:
+                type: string
+              type: array
+            # - type: 'null'
+          title: Subject Closure
+          description: Field containing subject id and the ids of all of it's ancestors
+        subject_label:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Subject Label
+          description: The name of the subject entity
+        subject_closure_label:
+          anyOf:
+            - items:
+                type: string
+              type: array
+            # - type: 'null'
+          title: Subject Closure Label
+          description: Field containing subject name and the names of all of it's ancestors
+        subject_taxon:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Subject Taxon
+        subject_taxon_label:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Subject Taxon Label
+        predicate:
           type: string
-    direct_taxon:
-      name: direct_taxon
-      description: Set true to exclude inferred taxa
-      in: query
-      required: false
-      schema:
-        type: boolean
-        default: false
-    relation:
-      name: relation
-      description: A relation CURIE to filter associations
-      in: query
-      required: false
-      schema:
-        type: string
-    sort:
-      name: sort
-      description: "Sorting responses <field> <desc,asc>"
-      in: query
-      required: false
-      schema:
-        type: string
-    q:
-      name: q
-      description: Query string to filter documents
-      in: query
-      required: false
-      schema:
-        type: string
-  ## there's a special api-response-transform. So object ID can be specified this way...
+          title: Predicate
+        object:
+          type: string
+          title: Object
+        original_object:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Original Object
+        object_namespace:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Object Namespace
+          description: The namespace/prefix of the object entity
+        object_category:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Object Category
+          description: The category of the object entity
+        object_closure:
+          anyOf:
+            - items:
+                type: string
+              type: array
+            # - type: 'null'
+          title: Object Closure
+          description: Field containing object id and the ids of all of it's ancestors
+        object_label:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Object Label
+          description: The name of the object entity
+        object_closure_label:
+          anyOf:
+            - items:
+                type: string
+              type: array
+            # - type: 'null'
+          title: Object Closure Label
+          description: Field containing object name and the names of all of it's ancestors
+        object_taxon:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Object Taxon
+        object_taxon_label:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Object Taxon Label
+        primary_knowledge_source:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Primary Knowledge Source
+        aggregator_knowledge_source:
+          anyOf:
+            - items:
+                type: string
+              type: array
+            # - type: 'null'
+          title: Aggregator Knowledge Source
+        negated:
+          anyOf:
+            - type: boolean
+            # - type: 'null'
+          title: Negated
+        pathway:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Pathway
+        evidence_count:
+          anyOf:
+            - type: integer
+            # - type: 'null'
+          title: Evidence Count
+          description: >-
+            count of supporting documents, evidence codes, and sources supplying
+            evidence
+        has_evidence:
+          anyOf:
+            - items:
+                type: string
+              type: array
+            # - type: 'null'
+          title: Has Evidence
+        has_evidence_links:
+          anyOf:
+            - items:
+                $ref: '#/components/schemas/ExpandedCurie'
+              type: array
+            # - type: 'null'
+          title: Has Evidence Links
+          description: List of ExpandedCuries with id and url for evidence
+        grouping_key:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Grouping Key
+          description: >-
+            A concatenation of fields used to group associations with the same
+            essential/defining properties
+        provided_by:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Provided By
+        provided_by_link:
+          anyOf:
+            - $ref: '#/components/schemas/ExpandedCurie'
+            # - type: 'null'
+          description: >-
+            A link to the docs for the knowledge source that provided the
+            node/edge.
+        publications:
+          anyOf:
+            - items:
+                type: string
+              type: array
+            # - type: 'null'
+          title: Publications
+        publications_links:
+          anyOf:
+            - items:
+                $ref: '#/components/schemas/ExpandedCurie'
+              type: array
+            # - type: 'null'
+          title: Publications Links
+          description: List of ExpandedCuries with id and url for publications
+        frequency_qualifier:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Frequency Qualifier
+        onset_qualifier:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Onset Qualifier
+        sex_qualifier:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Sex Qualifier
+        stage_qualifier:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Stage Qualifier
+        qualifiers:
+          anyOf:
+            - items:
+                type: string
+              type: array
+            # - type: 'null'
+          title: Qualifiers
+        qualifiers_label:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Qualifiers Label
+          description: The name of the frequency_qualifier entity
+        qualifiers_namespace:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Qualifiers Namespace
+          description: The namespace/prefix of the frequency_qualifier entity
+        qualifiers_category:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Qualifiers Category
+          description: The category of the frequency_qualifier entity
+        qualifiers_closure:
+          anyOf:
+            - items:
+                type: string
+              type: array
+            # - type: 'null'
+          title: Qualifiers Closure
+          description: >-
+            Field containing frequency_qualifier id and the ids of all of it's
+            ancestors
+        qualifiers_closure_label:
+          anyOf:
+            - items:
+                type: string
+              type: array
+            # - type: 'null'
+          title: Qualifiers Closure Label
+          description: >-
+            Field containing frequency_qualifier name and the names of all of
+            it's ancestors
+        qualifier:
+          anyOf:
+            - items:
+                type: string
+              type: array
+            # - type: 'null'
+          title: Qualifier
+        qualifier_label:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Qualifier Label
+          description: The name of the frequency_qualifier entity
+        qualifier_namespace:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Qualifier Namespace
+          description: The namespace/prefix of the frequency_qualifier entity
+        qualifier_category:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Qualifier Category
+          description: The category of the frequency_qualifier entity
+        qualifier_closure:
+          anyOf:
+            - items:
+                type: string
+              type: array
+            # - type: 'null'
+          title: Qualifier Closure
+          description: >-
+            Field containing frequency_qualifier id and the ids of all of it's
+            ancestors
+        qualifier_closure_label:
+          anyOf:
+            - items:
+                type: string
+              type: array
+            # - type: 'null'
+          title: Qualifier Closure Label
+          description: >-
+            Field containing frequency_qualifier name and the names of all of
+            it's ancestors
+        frequency_qualifier_label:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Frequency Qualifier Label
+          description: The name of the frequency_qualifier entity
+        frequency_qualifier_namespace:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Frequency Qualifier Namespace
+          description: The namespace/prefix of the frequency_qualifier entity
+        frequency_qualifier_category:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Frequency Qualifier Category
+          description: The category of the frequency_qualifier entity
+        frequency_qualifier_closure:
+          anyOf:
+            - items:
+                type: string
+              type: array
+            # - type: 'null'
+          title: Frequency Qualifier Closure
+          description: >-
+            Field containing frequency_qualifier id and the ids of all of it's
+            ancestors
+        frequency_qualifier_closure_label:
+          anyOf:
+            - items:
+                type: string
+              type: array
+            # - type: 'null'
+          title: Frequency Qualifier Closure Label
+          description: >-
+            Field containing frequency_qualifier name and the names of all of
+            it's ancestors
+        onset_qualifier_label:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Onset Qualifier Label
+          description: The name of the onset_qualifier entity
+        onset_qualifier_namespace:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Onset Qualifier Namespace
+          description: The namespace/prefix of the onset_qualifier entity
+        onset_qualifier_category:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Onset Qualifier Category
+          description: The category of the onset_qualifier entity
+        onset_qualifier_closure:
+          anyOf:
+            - items:
+                type: string
+              type: array
+            # - type: 'null'
+          title: Onset Qualifier Closure
+          description: >-
+            Field containing onset_qualifier id and the ids of all of it's
+            ancestors
+        onset_qualifier_closure_label:
+          anyOf:
+            - items:
+                type: string
+              type: array
+            # - type: 'null'
+          title: Onset Qualifier Closure Label
+          description: >-
+            Field containing onset_qualifier name and the names of all of it's
+            ancestors
+        sex_qualifier_label:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Sex Qualifier Label
+          description: The name of the sex_qualifier entity
+        sex_qualifier_namespace:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Sex Qualifier Namespace
+          description: The namespace/prefix of the sex_qualifier entity
+        sex_qualifier_category:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Sex Qualifier Category
+          description: The category of the sex_qualifier entity
+        sex_qualifier_closure:
+          anyOf:
+            - items:
+                type: string
+              type: array
+            # - type: 'null'
+          title: Sex Qualifier Closure
+          description: >-
+            Field containing sex_qualifier id and the ids of all of it's
+            ancestors
+        sex_qualifier_closure_label:
+          anyOf:
+            - items:
+                type: string
+              type: array
+            # - type: 'null'
+          title: Sex Qualifier Closure Label
+          description: >-
+            Field containing sex_qualifier name and the names of all of it's
+            ancestors
+        stage_qualifier_label:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Stage Qualifier Label
+          description: The name of the stage_qualifier entity
+        stage_qualifier_namespace:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Stage Qualifier Namespace
+          description: The namespace/prefix of the stage_qualifier entity
+        stage_qualifier_category:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Stage Qualifier Category
+          description: The category of the stage_qualifier entity
+        stage_qualifier_closure:
+          anyOf:
+            - items:
+                type: string
+              type: array
+            # - type: 'null'
+          title: Stage Qualifier Closure
+          description: >-
+            Field containing stage_qualifier id and the ids of all of it's
+            ancestors
+        stage_qualifier_closure_label:
+          anyOf:
+            - items:
+                type: string
+              type: array
+            # - type: 'null'
+          title: Stage Qualifier Closure Label
+          description: >-
+            Field containing stage_qualifier name and the names of all of it's
+            ancestors
+      additionalProperties: true
+      type: object
+      required:
+        - id
+        - subject
+        - predicate
+        - object
+      title: Association
+    AssociationCategory:
+      type: string
+      enum:
+        - 'biolink:PairwiseGeneToGeneInteraction'
+        - 'biolink:GeneToExpressionSiteAssociation'
+        - 'biolink:MacromolecularMachineToBiologicalProcessAssociation'
+        - 'biolink:GeneToPhenotypicFeatureAssociation'
+        - 'biolink:MacromolecularMachineToMolecularActivityAssociation'
+        - 'biolink:MacromolecularMachineToCellularComponentAssociation'
+        - 'biolink:Association'
+        - 'biolink:GeneToGeneHomologyAssociation'
+        - 'biolink:DiseaseToPhenotypicFeatureAssociation'
+        - 'biolink:GeneToPathwayAssociation'
+        - 'biolink:ChemicalToPathwayAssociation'
+        - 'biolink:CorrelatedGeneToDiseaseAssociation'
+        - 'biolink:DiseaseOrPhenotypicFeatureToGeneticInheritanceAssociation'
+        - 'biolink:CausalGeneToDiseaseAssociation'
+        - 'biolink:ChemicalToDiseaseOrPhenotypicFeatureAssociation'
+      title: AssociationCategory
+      description: Association categories
+    AssociationCount:
+      properties:
+        label:
+          type: string
+          title: Label
+        count:
+          anyOf:
+            - type: integer
+            # - type: 'null'
+          title: Count
+          description: count of documents
+        category:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Category
+      additionalProperties: true
+      type: object
+      required:
+        - label
+      title: AssociationCount
+    AssociationDirectionEnum:
+      type: string
+      enum:
+        - incoming
+        - outgoing
+      title: AssociationDirectionEnum
+      description: >-
+        The directionality of an association as it relates to a specified
+        entity, with edges being categorized as incoming or outgoing
+    AssociationPredicate:
+      type: string
+      enum:
+        - 'biolink:interacts_with'
+        - 'biolink:expressed_in'
+        - 'biolink:has_phenotype'
+        - 'biolink:enables'
+        - 'biolink:actively_involved_in'
+        - 'biolink:orthologous_to'
+        - 'biolink:located_in'
+        - 'biolink:subclass_of'
+        - 'biolink:participates_in'
+        - 'biolink:related_to'
+        - 'biolink:acts_upstream_of_or_within'
+        - 'biolink:active_in'
+        - 'biolink:part_of'
+        - 'biolink:acts_upstream_of'
+        - 'biolink:has_mode_of_inheritance'
+        - 'biolink:gene_associated_with_condition'
+        - 'biolink:contributes_to'
+        - 'biolink:causes'
+        - 'biolink:colocalizes_with'
+        - 'biolink:acts_upstream_of_or_within_positive_effect'
+        - 'biolink:acts_upstream_of_positive_effect'
+        - 'biolink:affects'
+        - 'biolink:acts_upstream_of_or_within_negative_effect'
+        - 'biolink:acts_upstream_of_negative_effect'
+      title: AssociationPredicate
+      description: Association predicates
+    AssociationResults:
+      properties:
+        limit:
+          type: integer
+          title: Limit
+          description: number of items to return in a response
+        offset:
+          type: integer
+          title: Offset
+          description: offset into the total number of items
+        total:
+          type: integer
+          title: Total
+          description: total number of items matching a query
+        items:
+          items:
+            $ref: '#/components/schemas/Association'
+          type: array
+          title: Items
+          description: 'A collection of items, with the type to be overriden by slot_usage'
+      additionalProperties: true
+      type: object
+      required:
+        - limit
+        - offset
+        - total
+      title: AssociationResults
+    AssociationTableResults:
+      properties:
+        limit:
+          type: integer
+          title: Limit
+          description: number of items to return in a response
+        offset:
+          type: integer
+          title: Offset
+          description: offset into the total number of items
+        total:
+          type: integer
+          title: Total
+          description: total number of items matching a query
+        items:
+          items:
+            $ref: '#/components/schemas/DirectionalAssociation'
+          type: array
+          title: Items
+          description: 'A collection of items, with the type to be overriden by slot_usage'
+      additionalProperties: true
+      type: object
+      required:
+        - limit
+        - offset
+        - total
+      title: AssociationTableResults
+    DirectionalAssociation:
+      properties:
+        id:
+          type: string
+          title: Id
+        category:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Category
+        subject:
+          type: string
+          title: Subject
+        original_subject:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Original Subject
+        subject_namespace:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Subject Namespace
+          description: The namespace/prefix of the subject entity
+        subject_category:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Subject Category
+          description: The category of the subject entity
+        subject_closure:
+          anyOf:
+            - items:
+                type: string
+              type: array
+            # - type: 'null'
+          title: Subject Closure
+          description: Field containing subject id and the ids of all of it's ancestors
+        subject_label:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Subject Label
+          description: The name of the subject entity
+        subject_closure_label:
+          anyOf:
+            - items:
+                type: string
+              type: array
+            # - type: 'null'
+          title: Subject Closure Label
+          description: Field containing subject name and the names of all of it's ancestors
+        subject_taxon:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Subject Taxon
+        subject_taxon_label:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Subject Taxon Label
+        predicate:
+          type: string
+          title: Predicate
+        object:
+          type: string
+          title: Object
+        original_object:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Original Object
+        object_namespace:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Object Namespace
+          description: The namespace/prefix of the object entity
+        object_category:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Object Category
+          description: The category of the object entity
+        object_closure:
+          anyOf:
+            - items:
+                type: string
+              type: array
+            # - type: 'null'
+          title: Object Closure
+          description: Field containing object id and the ids of all of it's ancestors
+        object_label:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Object Label
+          description: The name of the object entity
+        object_closure_label:
+          anyOf:
+            - items:
+                type: string
+              type: array
+            # - type: 'null'
+          title: Object Closure Label
+          description: Field containing object name and the names of all of it's ancestors
+        object_taxon:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Object Taxon
+        object_taxon_label:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Object Taxon Label
+        primary_knowledge_source:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Primary Knowledge Source
+        aggregator_knowledge_source:
+          anyOf:
+            - items:
+                type: string
+              type: array
+            # - type: 'null'
+          title: Aggregator Knowledge Source
+        negated:
+          anyOf:
+            - type: boolean
+            # - type: 'null'
+          title: Negated
+        pathway:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Pathway
+        evidence_count:
+          anyOf:
+            - type: integer
+            # - type: 'null'
+          title: Evidence Count
+          description: >-
+            count of supporting documents, evidence codes, and sources supplying
+            evidence
+        has_evidence:
+          anyOf:
+            - items:
+                type: string
+              type: array
+            # - type: 'null'
+          title: Has Evidence
+        has_evidence_links:
+          anyOf:
+            - items:
+                $ref: '#/components/schemas/ExpandedCurie'
+              type: array
+            # - type: 'null'
+          title: Has Evidence Links
+          description: List of ExpandedCuries with id and url for evidence
+        grouping_key:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Grouping Key
+          description: >-
+            A concatenation of fields used to group associations with the same
+            essential/defining properties
+        provided_by:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Provided By
+        provided_by_link:
+          anyOf:
+            - $ref: '#/components/schemas/ExpandedCurie'
+            # - type: 'null'
+          description: >-
+            A link to the docs for the knowledge source that provided the
+            node/edge.
+        publications:
+          anyOf:
+            - items:
+                type: string
+              type: array
+            # - type: 'null'
+          title: Publications
+        publications_links:
+          anyOf:
+            - items:
+                $ref: '#/components/schemas/ExpandedCurie'
+              type: array
+            # - type: 'null'
+          title: Publications Links
+          description: List of ExpandedCuries with id and url for publications
+        frequency_qualifier:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Frequency Qualifier
+        onset_qualifier:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Onset Qualifier
+        sex_qualifier:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Sex Qualifier
+        stage_qualifier:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Stage Qualifier
+        qualifiers:
+          anyOf:
+            - items:
+                type: string
+              type: array
+            # - type: 'null'
+          title: Qualifiers
+        qualifiers_label:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Qualifiers Label
+          description: The name of the frequency_qualifier entity
+        qualifiers_namespace:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Qualifiers Namespace
+          description: The namespace/prefix of the frequency_qualifier entity
+        qualifiers_category:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Qualifiers Category
+          description: The category of the frequency_qualifier entity
+        qualifiers_closure:
+          anyOf:
+            - items:
+                type: string
+              type: array
+            # - type: 'null'
+          title: Qualifiers Closure
+          description: >-
+            Field containing frequency_qualifier id and the ids of all of it's
+            ancestors
+        qualifiers_closure_label:
+          anyOf:
+            - items:
+                type: string
+              type: array
+            # - type: 'null'
+          title: Qualifiers Closure Label
+          description: >-
+            Field containing frequency_qualifier name and the names of all of
+            it's ancestors
+        qualifier:
+          anyOf:
+            - items:
+                type: string
+              type: array
+            # - type: 'null'
+          title: Qualifier
+        qualifier_label:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Qualifier Label
+          description: The name of the frequency_qualifier entity
+        qualifier_namespace:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Qualifier Namespace
+          description: The namespace/prefix of the frequency_qualifier entity
+        qualifier_category:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Qualifier Category
+          description: The category of the frequency_qualifier entity
+        qualifier_closure:
+          anyOf:
+            - items:
+                type: string
+              type: array
+            # - type: 'null'
+          title: Qualifier Closure
+          description: >-
+            Field containing frequency_qualifier id and the ids of all of it's
+            ancestors
+        qualifier_closure_label:
+          anyOf:
+            - items:
+                type: string
+              type: array
+            # - type: 'null'
+          title: Qualifier Closure Label
+          description: >-
+            Field containing frequency_qualifier name and the names of all of
+            it's ancestors
+        frequency_qualifier_label:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Frequency Qualifier Label
+          description: The name of the frequency_qualifier entity
+        frequency_qualifier_namespace:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Frequency Qualifier Namespace
+          description: The namespace/prefix of the frequency_qualifier entity
+        frequency_qualifier_category:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Frequency Qualifier Category
+          description: The category of the frequency_qualifier entity
+        frequency_qualifier_closure:
+          anyOf:
+            - items:
+                type: string
+              type: array
+            # - type: 'null'
+          title: Frequency Qualifier Closure
+          description: >-
+            Field containing frequency_qualifier id and the ids of all of it's
+            ancestors
+        frequency_qualifier_closure_label:
+          anyOf:
+            - items:
+                type: string
+              type: array
+            # - type: 'null'
+          title: Frequency Qualifier Closure Label
+          description: >-
+            Field containing frequency_qualifier name and the names of all of
+            it's ancestors
+        onset_qualifier_label:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Onset Qualifier Label
+          description: The name of the onset_qualifier entity
+        onset_qualifier_namespace:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Onset Qualifier Namespace
+          description: The namespace/prefix of the onset_qualifier entity
+        onset_qualifier_category:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Onset Qualifier Category
+          description: The category of the onset_qualifier entity
+        onset_qualifier_closure:
+          anyOf:
+            - items:
+                type: string
+              type: array
+            # - type: 'null'
+          title: Onset Qualifier Closure
+          description: >-
+            Field containing onset_qualifier id and the ids of all of it's
+            ancestors
+        onset_qualifier_closure_label:
+          anyOf:
+            - items:
+                type: string
+              type: array
+            # - type: 'null'
+          title: Onset Qualifier Closure Label
+          description: >-
+            Field containing onset_qualifier name and the names of all of it's
+            ancestors
+        sex_qualifier_label:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Sex Qualifier Label
+          description: The name of the sex_qualifier entity
+        sex_qualifier_namespace:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Sex Qualifier Namespace
+          description: The namespace/prefix of the sex_qualifier entity
+        sex_qualifier_category:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Sex Qualifier Category
+          description: The category of the sex_qualifier entity
+        sex_qualifier_closure:
+          anyOf:
+            - items:
+                type: string
+              type: array
+            # - type: 'null'
+          title: Sex Qualifier Closure
+          description: >-
+            Field containing sex_qualifier id and the ids of all of it's
+            ancestors
+        sex_qualifier_closure_label:
+          anyOf:
+            - items:
+                type: string
+              type: array
+            # - type: 'null'
+          title: Sex Qualifier Closure Label
+          description: >-
+            Field containing sex_qualifier name and the names of all of it's
+            ancestors
+        stage_qualifier_label:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Stage Qualifier Label
+          description: The name of the stage_qualifier entity
+        stage_qualifier_namespace:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Stage Qualifier Namespace
+          description: The namespace/prefix of the stage_qualifier entity
+        stage_qualifier_category:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Stage Qualifier Category
+          description: The category of the stage_qualifier entity
+        stage_qualifier_closure:
+          anyOf:
+            - items:
+                type: string
+              type: array
+            # - type: 'null'
+          title: Stage Qualifier Closure
+          description: >-
+            Field containing stage_qualifier id and the ids of all of it's
+            ancestors
+        stage_qualifier_closure_label:
+          anyOf:
+            - items:
+                type: string
+              type: array
+            # - type: 'null'
+          title: Stage Qualifier Closure Label
+          description: >-
+            Field containing stage_qualifier name and the names of all of it's
+            ancestors
+        direction:
+          allOf:
+            - $ref: '#/components/schemas/AssociationDirectionEnum'
+          description: >-
+            The directionality of the association relative to a given entity for
+            an association_count. If the entity is the subject or in the subject
+            closure, the direction is forwards, if it is the object or in the
+            object closure, the direction is backwards.
+      additionalProperties: true
+      type: object
+      required:
+        - id
+        - subject
+        - predicate
+        - object
+        - direction
+      title: DirectionalAssociation
+      description: An association that gives it's direction relative to a specified entity
+    Entity:
+      properties:
+        id:
+          type: string
+          title: Id
+        category:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Category
+        name:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Name
+        full_name:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Full Name
+          description: The long form name of an entity
+        deprecated:
+          anyOf:
+            - type: boolean
+            # - type: 'null'
+          title: Deprecated
+          description: >-
+            A boolean flag indicating that an entity is no longer considered
+            current or valid.
+        description:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Description
+        xref:
+          anyOf:
+            - items:
+                type: string
+              type: array
+            # - type: 'null'
+          title: Xref
+        provided_by:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Provided By
+        in_taxon:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: In Taxon
+          description: The biolink taxon that the entity is in the closure of.
+        in_taxon_label:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: In Taxon Label
+          description: The label of the biolink taxon that the entity is in the closure of.
+        symbol:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Symbol
+        synonym:
+          anyOf:
+            - items:
+                type: string
+              type: array
+            # - type: 'null'
+          title: Synonym
+        uri:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Uri
+          description: The URI of the entity
+      additionalProperties: true
+      type: object
+      required:
+        - id
+      title: Entity
+      description: Represents an Entity in the Monarch KG data model
+    EntityCategory:
+      type: string
+      enum:
+        - 'biolink:Gene'
+        - 'biolink:PhenotypicFeature'
+        - 'biolink:BiologicalProcessOrActivity'
+        - 'biolink:GrossAnatomicalStructure'
+        - 'biolink:Disease'
+        - 'biolink:Pathway'
+        - 'biolink:Cell'
+        - 'biolink:NamedThing'
+        - 'biolink:AnatomicalEntity'
+        - 'biolink:CellularComponent'
+        - 'biolink:MolecularEntity'
+        - 'biolink:BiologicalProcess'
+        - 'biolink:MacromolecularComplex'
+        - 'biolink:MolecularActivity'
+        - 'biolink:Protein'
+        - 'biolink:CellularOrganism'
+        - 'biolink:PhenotypicQuality'
+        - 'biolink:Vertebrate'
+        - 'biolink:Virus'
+        - 'biolink:BehavioralFeature'
+        - 'biolink:LifeStage'
+        - 'biolink:PathologicalProcess'
+        - 'biolink:ChemicalEntity'
+        - 'biolink:Drug'
+        - 'biolink:InformationContentEntity'
+        - 'biolink:SequenceVariant'
+        - 'biolink:SmallMolecule'
+        - 'biolink:OrganismTaxon'
+        - 'biolink:NucleicAcidEntity'
+        - 'biolink:EvidenceType'
+        - 'biolink:GeographicExposure'
+        - 'biolink:RNAProduct'
+        - 'biolink:Transcript'
+        - 'biolink:Fungus'
+        - 'biolink:Plant'
+        - 'biolink:PopulationOfIndividualOrganisms'
+        - 'biolink:Invertebrate'
+        - 'biolink:ProteinDomain'
+        - 'biolink:ProteinFamily'
+        - 'biolink:Activity'
+        - 'biolink:Agent'
+        - 'biolink:ChemicalExposure'
+        - 'biolink:ConfidenceLevel'
+        - 'biolink:Dataset'
+        - 'biolink:EnvironmentalFeature'
+        - 'biolink:Exon'
+        - 'biolink:GeneticInheritance'
+        - 'biolink:Genome'
+        - 'biolink:Genotype'
+        - 'biolink:Haplotype'
+        - 'biolink:Human'
+        - 'biolink:IndividualOrganism'
+        - 'biolink:Mammal'
+        - 'biolink:MaterialSample'
+        - 'biolink:MicroRNA'
+        - 'biolink:Patent'
+        - 'biolink:Publication'
+        - 'biolink:RegulatoryRegion'
+        - 'biolink:Study'
+        - 'biolink:Treatment'
+        - 'biolink:WebPage'
+        - 'biolink:AccessibleDnaRegion'
+        - 'biolink:Article'
+        - 'biolink:Attribute'
+        - 'biolink:Bacterium'
+        - 'biolink:BiologicalEntity'
+        - 'biolink:BiologicalSex'
+        - 'biolink:CellLine'
+        - 'biolink:ChemicalMixture'
+        - 'biolink:CodingSequence'
+        - 'biolink:DatasetDistribution'
+        - 'biolink:DiagnosticAid'
+        - 'biolink:DrugExposure'
+        - 'biolink:EnvironmentalProcess'
+        - 'biolink:Event'
+        - 'biolink:GenotypicSex'
+        - 'biolink:NoncodingRNAProduct'
+        - 'biolink:OrganismalEntity'
+        - 'biolink:PhenotypicSex'
+        - 'biolink:Polypeptide'
+        - 'biolink:Procedure'
+        - 'biolink:ProcessedMaterial'
+        - 'biolink:ReagentTargetedGene'
+        - 'biolink:SiRNA'
+        - 'biolink:Snv'
+        - 'biolink:StudyVariable'
+        - 'biolink:TranscriptionFactorBindingSite'
+        - 'biolink:Zygosity'
+      title: EntityCategory
+      description: Entity categories
+    ExpandedCurie:
+      properties:
+        id:
+          type: string
+          title: Id
+        url:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Url
+      additionalProperties: true
+      type: object
+      required:
+        - id
+      title: ExpandedCurie
+      description: A curie bundled along with its expanded url
+    FacetField:
+      properties:
+        label:
+          type: string
+          title: Label
+        facet_values:
+          anyOf:
+            - items:
+                $ref: '#/components/schemas/FacetValue'
+              type: array
+            # - type: 'null'
+          title: Facet Values
+          description: >-
+            Collection of FacetValue label/value instances belonging to a
+            FacetField
+      additionalProperties: true
+      type: object
+      required:
+        - label
+      title: FacetField
+    FacetValue:
+      properties:
+        label:
+          type: string
+          title: Label
+        count:
+          anyOf:
+            - type: integer
+            # - type: 'null'
+          title: Count
+          description: count of documents
+      additionalProperties: true
+      type: object
+      required:
+        - label
+      title: FacetValue
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          type: array
+          title: Detail
+      type: object
+      title: HTTPValidationError
+    HistoBin:
+      properties:
+        label:
+          type: string
+          title: Label
+        count:
+          anyOf:
+            - type: integer
+            # - type: 'null'
+          title: Count
+          description: count of documents
+        id:
+          type: string
+          title: Id
+      additionalProperties: true
+      type: object
+      required:
+        - label
+        - id
+      title: HistoBin
+    HistoPheno:
+      properties:
+        id:
+          type: string
+          title: Id
+        items:
+          items:
+            $ref: '#/components/schemas/HistoBin'
+          type: array
+          title: Items
+          description: 'A collection of items, with the type to be overriden by slot_usage'
+      additionalProperties: true
+      type: object
+      required:
+        - id
+      title: HistoPheno
+    Node:
+      properties:
+        id:
+          type: string
+          title: Id
+        category:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Category
+        name:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Name
+        full_name:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Full Name
+          description: The long form name of an entity
+        deprecated:
+          anyOf:
+            - type: boolean
+            # - type: 'null'
+          title: Deprecated
+          description: >-
+            A boolean flag indicating that an entity is no longer considered
+            current or valid.
+        description:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Description
+        xref:
+          anyOf:
+            - items:
+                type: string
+              type: array
+            # - type: 'null'
+          title: Xref
+        provided_by:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Provided By
+        in_taxon:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: In Taxon
+          description: The biolink taxon that the entity is in the closure of.
+        in_taxon_label:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: In Taxon Label
+          description: The label of the biolink taxon that the entity is in the closure of.
+        symbol:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Symbol
+        synonym:
+          anyOf:
+            - items:
+                type: string
+              type: array
+            # - type: 'null'
+          title: Synonym
+        uri:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Uri
+          description: The URI of the entity
+        inheritance:
+          anyOf:
+            - $ref: '#/components/schemas/Entity'
+            # - type: 'null'
+        causal_gene:
+          anyOf:
+            - items:
+                $ref: '#/components/schemas/Entity'
+              type: array
+            # - type: 'null'
+          title: Causal Gene
+          description: >-
+            A list of genes that are known to be causally associated with a
+            disease
+        causes_disease:
+          anyOf:
+            - items:
+                $ref: '#/components/schemas/Entity'
+              type: array
+            # - type: 'null'
+          title: Causes Disease
+          description: >-
+            A list of diseases that are known to be causally associated with a
+            gene
+        mappings:
+          anyOf:
+            - items:
+                $ref: '#/components/schemas/ExpandedCurie'
+              type: array
+            # - type: 'null'
+          title: Mappings
+          description: List of ExpandedCuries with id and url for mapped entities
+        external_links:
+          anyOf:
+            - items:
+                $ref: '#/components/schemas/ExpandedCurie'
+              type: array
+            # - type: 'null'
+          title: External Links
+          description: ExpandedCurie with id and url for xrefs
+        provided_by_link:
+          anyOf:
+            - $ref: '#/components/schemas/ExpandedCurie'
+            # - type: 'null'
+          description: >-
+            A link to the docs for the knowledge source that provided the
+            node/edge.
+        association_counts:
+          items:
+            $ref: '#/components/schemas/AssociationCount'
+          type: array
+          title: Association Counts
+        node_hierarchy:
+          anyOf:
+            - $ref: '#/components/schemas/NodeHierarchy'
+            # - type: 'null'
+      additionalProperties: true
+      type: object
+      required:
+        - id
+      title: Node
+      description: UI container class extending Entity with additional information
+    NodeHierarchy:
+      properties:
+        super_classes:
+          items:
+            $ref: '#/components/schemas/Entity'
+          type: array
+          title: Super Classes
+        sub_classes:
+          items:
+            $ref: '#/components/schemas/Entity'
+          type: array
+          title: Sub Classes
+      additionalProperties: true
+      type: object
+      title: NodeHierarchy
+    OutputFormat:
+      type: string
+      enum:
+        - json
+        - tsv
+      title: OutputFormat
+    SearchResult:
+      properties:
+        id:
+          type: string
+          title: Id
+        category:
+          type: string
+          title: Category
+        name:
+          type: string
+          title: Name
+        full_name:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Full Name
+          description: The long form name of an entity
+        deprecated:
+          anyOf:
+            - type: boolean
+            # - type: 'null'
+          title: Deprecated
+          description: >-
+            A boolean flag indicating that an entity is no longer considered
+            current or valid.
+        description:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Description
+        xref:
+          anyOf:
+            - items:
+                type: string
+              type: array
+            # - type: 'null'
+          title: Xref
+        provided_by:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Provided By
+        in_taxon:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: In Taxon
+          description: The biolink taxon that the entity is in the closure of.
+        in_taxon_label:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: In Taxon Label
+          description: The label of the biolink taxon that the entity is in the closure of.
+        symbol:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Symbol
+        synonym:
+          anyOf:
+            - items:
+                type: string
+              type: array
+            # - type: 'null'
+          title: Synonym
+        uri:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Uri
+          description: The URI of the entity
+        highlight:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Highlight
+          description: matching text snippet containing html tags
+        score:
+          anyOf:
+            - type: number
+            # - type: 'null'
+          title: Score
+      additionalProperties: true
+      type: object
+      required:
+        - id
+        - category
+        - name
+      title: SearchResult
+    SearchResults:
+      properties:
+        limit:
+          type: integer
+          title: Limit
+          description: number of items to return in a response
+        offset:
+          type: integer
+          title: Offset
+          description: offset into the total number of items
+        total:
+          type: integer
+          title: Total
+          description: total number of items matching a query
+        items:
+          items:
+            $ref: '#/components/schemas/SearchResult'
+          type: array
+          title: Items
+          description: 'A collection of items, with the type to be overriden by slot_usage'
+        facet_fields:
+          anyOf:
+            - items:
+                $ref: '#/components/schemas/FacetField'
+              type: array
+            # - type: 'null'
+          title: Facet Fields
+          description: Collection of facet field responses with the field values and counts
+        facet_queries:
+          anyOf:
+            - items:
+                $ref: '#/components/schemas/FacetValue'
+              type: array
+            # - type: 'null'
+          title: Facet Queries
+          description: >-
+            Collection of facet query responses with the query string values and
+            counts
+      additionalProperties: true
+      type: object
+      required:
+        - limit
+        - offset
+        - total
+      title: SearchResults
+    SemsimCompareRequest:
+      properties:
+        subjects:
+          items:
+            type: string
+          type: array
+          title: List of subjects for comparison
+        objects:
+          items:
+            type: string
+          type: array
+          title: List of objects for comparison
+      type: object
+      required:
+        - subjects
+        - objects
+      title: SemsimCompareRequest
+    SemsimSearchGroup:
+      type: string
+      enum:
+        - Human Genes
+        - Mouse Genes
+        - Rat Genes
+        - Zebrafish Genes
+        - C. Elegans Genes
+        - Human Diseases
+      title: SemsimSearchGroup
+    SemsimSearchRequest:
+      properties:
+        termset:
+          items:
+            type: string
+          type: array
+          title: Termset to search
+        group:
+          allOf:
+            - $ref: '#/components/schemas/SemsimSearchGroup'
+          title: Group of entities to search within (e.g. Human Genes)
+        limit:
+          anyOf:
+            - type: integer
+              maximum: 50
+              minimum: 1
+            # - type: 'null'
+          title: Limit the number of results
+          default: 10
+      type: object
+      required:
+        - termset
+        - group
+      title: SemsimSearchRequest
+    TextAnnotationRequest:
+      properties:
+        content:
+          type: string
+          title: The text content to annotate
+      type: object
+      required:
+        - content
+      title: TextAnnotationRequest
+    TextAnnotationResult:
+      properties:
+        text:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Text
+          description: text without tokens
+        tokens:
+          anyOf:
+            - items:
+                $ref: '#/components/schemas/Entity'
+              type: array
+            # - type: 'null'
+          title: Tokens
+          description: A collection of entities or concepts
+        start:
+          anyOf:
+            - type: integer
+            # - type: 'null'
+          title: Start
+          description: start position of the annotation
+        end:
+          anyOf:
+            - type: integer
+            # - type: 'null'
+          title: End
+          description: end position of the annotation
+      additionalProperties: true
+      type: object
+      title: TextAnnotationResult
+    ValidationError:
+      properties:
+        loc:
+          items:
+            anyOf:
+              - type: string
+              - type: integer
+          type: array
+          title: Location
+        msg:
+          type: string
+          title: Message
+        type:
+          type: string
+          title: Error Type
+      type: object
+      required:
+        - loc
+        - msg
+        - type
+      title: ValidationError
   x-bte-response-mapping:
-    gene-hgnc:
-      HGNC: associations.object.HGNC
-      ref_pmid: associations.publications.id
-      ## commenting out because data-processing / biolink-modeling issues
-      # monarch_source_database: associations.provided_by
-      # ## there's also a relation.id and relation.inverse.
-      # ## this often has "expressed in" with inverse: true. Meaning the actual relation should be "expresses"
-      # "biolink:original_predicate": associations.relation.label
-    gene-hgnc-dbsnp-start:
-      HGNC: associations.object.HGNC
-      input_name: associations.subject.label   ## for the dbsnp input
-      ref_pmid: associations.publications.id
-      ## commenting out because data-processing / biolink-modeling issues
-      # monarch_source_database: associations.provided_by
-      # ## there's also a relation.id and relation.inverse.
-      # ## this often has "expressed in" with inverse: true. Meaning the actual relation should be "expresses"
-      # "biolink:original_predicate": associations.relation.label
-    pathway-react:
-      REACT: associations.object.REACT
-      ref_pmid: associations.publications.id
-      ## commenting out because data-processing / biolink-modeling issues
-      # monarch_source_database: associations.provided_by
-      # "biolink:original_predicate": associations.relation.label
-    phenotype-hp:
-      HP: associations.object.HP
-      ref_pmid: associations.publications.id
-      ## commenting out because data-processing / biolink-modeling issues
-      # monarch_source_database: associations.provided_by
-      # "biolink:original_predicate": associations.relation.label
-    phenotype-hp-dbsnp-start:
-      HP: associations.object.HP
-      input_name: associations.subject.label   ## for the dbsnp input
-      ref_pmid: associations.publications.id
-      ## commenting out because data-processing / biolink-modeling issues
-      # monarch_source_database: associations.provided_by
-      # "biolink:original_predicate": associations.relation.label
-    variant-dbsnp:
-      DBSNP: associations.object.dbSNP
-      output_name: associations.object.label
-      ref_pmid: associations.publications.id
-      ## commenting out because data-processing / biolink-modeling issues
-      # monarch_source_database: associations.provided_by
-      # "biolink:original_predicate": associations.relation.label
-    anatomy-uberon:
-      UBERON: associations.object.UBERON
-      ref_pmid: associations.publications.id
-      ## commenting out because data-processing / biolink-modeling issues
-      # monarch_source_database: associations.provided_by
-      # "biolink:original_predicate": associations.relation.label
-    disease-mondo:
-      MONDO: associations.object.MONDO
-      ref_pmid: associations.publications.id
-      ## commenting out because data-processing / biolink-modeling issues
-      # monarch_source_database: associations.provided_by
-      # "biolink:original_predicate": associations.relation.label
-    disease-mondo-dbsnp-start:
-      MONDO: associations.object.MONDO
-      input_name: associations.subject.label   ## for the dbsnp input
-      ref_pmid: associations.publications.id
-      ## commenting out because data-processing / biolink-modeling issues
-      # monarch_source_database: associations.provided_by
-      # "biolink:original_predicate": associations.relation.label
-    orthologGene2diseaseMondo:
-      MONDO: associations.object.MONDO
-      ref_pmid: associations.publications.id    ## not all of these are pubmed though...saw some WormBase:WBPaper ones
-      ## commenting out because data-processing / biolink-modeling issues
-      # homologous_gene_model_id: associations.subject.id  ## what is directly annotated to the disease
-      # homologous_gene_model_name: associations.subject.label
-      # monarch_source_database: associations.provided_by
-      # "biolink:original_predicate": associations.relation.label
-    orthologGene2phenoHP:
-      HP: associations.object.HP
-      ref_pmid: associations.publications.id    ## not all of these are pubmed though...saw some WormBase:WBPaper ones
-      ## commenting out because data-processing / biolink-modeling issues
-      # homologous_gene_model_id: associations.subject.id  ## what is directly annotated to the disease
-      # homologous_gene_model_name: associations.subject.label
-      # monarch_source_database: associations.provided_by
-      # "biolink:original_predicate": associations.relation.label
+    ## not using because I'm unsure and there's data-processing / biolink-model mapping and TRAPI-structure issues
+    ## - subject_taxon, object_taxon: do we need this? Sometimes the value is null
+    ## - negated: is this ever true? I only ever see it as null
+    ## - primary_knowledge_source: an infores curie
+    ## - aggregator_knowledge_source: a list of infores curies (chain of upstream isn't clear?)
+    ## - provided_by: strangely, this can differ from the knowledge source fields
+    ## - qualifier fields
+    object-disease-mondo:
+      MONDO: items.object
+      output_name: items.object_label
+      input_name: items.subject_label
+      ref_pmid: items.publications
+    object-pheno-hp:
+      HP: items.object
+      output_name: items.object_label
+      input_name: items.subject_label
+      ref_pmid: items.publications
+    subject-disease-mondo:
+      MONDO: items.subject
+      output_name: items.subject_label
+      input_name: items.object_label
+      ref_pmid: items.publications 
+    subject-gene-hgnc:
+      HGNC: items.subject
+      output_name: items.subject_label
+      input_name: items.object_label
+      ref_pmid: items.publications 
   x-bte-kgs-operations:
-  ## other useful endpoints for x-bte annotation are...
-  ## /relation/usage/between/{subject_category}/{object_category}
-  ## /association/find/{subject_category}/{object_category}
-  ## note that anatomy is "anatomical entity" for this lookup
-    anatomy-gene:
-    ## supposedly I could use this endpoint with CellularComponent (GO) and Cell (CL) terms
-    ##   but I haven't been successful in getting results when trying this out
-    ## to find examples with /association/find, set subject_category as "gene" and object category as "anatomical entity"
-    - supportBatch: false
-      useTemplating: true
-      inputs:
-      - id: UBERON
-        semantic: GrossAnatomicalStructure
-      parameters:
-        id: "{{ queryInputs }}"          ## current BTE automatically adds UBERON prefix to IDs
-        rows: -1                   ## should allow all results to be returned (above default max of 200)
-        direct: true               ## don't traverse ontology for anatomy ID to find connection to its subclass terms
-        unselect_evidence: true    ## don't include nested / verbose evidence info
-        taxon: "NCBITaxon:9606"    ## currently setting it to human-only
-      outputs:
-      - id: HGNC  ## Monarch seems to prefer HGNC IDs for human genes
-        semantic: Gene
-      predicate: expresses
-      source: "infores:monarchinitiative"
-      response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/gene-hgnc"
-      # testExamples:
-      #   - qInput: "UBERON:0001817"    ## lacrimal gland
-      #     oneOutput: "HGNC:8548"      ## P4HB aka NCBIGene:5034
-      #   - qInput: "UBERON:0002110"    ## gall bladder
-      #     oneOutput: "HGNC:8548"      ## P4HB aka NCBIGene:5034
-    disease-gene-1:
-    ## put multiple causal relations here by using association_type parameter
-    ## to find examples with /association/find, set relation
+    disease-pheno:
+    ## example https://api-v3.monarchinitiative.org/v3/api/entity/MONDO:0007298/biolink:DiseaseToPhenotypicFeatureAssociation?format=json&limit=30&offset=0
+    ## POST-PROCESSING:
+    ## - items.direction will be "outgoing", so...
+    ##   - need to check, only keep items where object_namespace = HP. Then our output field (object) will be HP
+    ##   - need to check, only keep items in publications that have the prefix PMID? -> so it matches the response-mapping
+    ##   - maybe need to check that subject field's value is an exact match to the input ID? (could be a descendant from ontology-traversal?)
     - supportBatch: false
       useTemplating: true
       inputs:
       - id: MONDO
         semantic: Disease
       parameters:
-        id: "{{ queryInputs }}"         ## current BTE automatically adds MONDO prefix to IDs
-        rows: -1
-        direct: true
-        unselect_evidence: true
-        taxon: "NCBITaxon:9606"    ## currently setting it to human-only
-        association_type: "causal"
-        ## includes multiple relationships, see testExamples
-      outputs:
-      - id: HGNC
-        semantic: Gene
-      predicate: caused_by
-      source: "infores:monarchinitiative"
-      response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/gene-hgnc"
-      # testExamples:
-      ## for "causes condition" / RO:0003303
-      #   - qInput: "MONDO:0011562"      ## autosomal dominant Parkinson disease 4
-      #     oneOutput: "HGNC:11138"      ## SNCA aka NCBIGene:6622
-      ## for "causal germline mutation in" / RO:0004013
-      #   - qInput: "MONDO:0019600"      ## Xeroderma pigmentosum
-      #     oneOutput: "HGNC:3434"       ## ERCC2 aka NCBIGene:2068
-      ## for "causal loss of function germline mutation of in" / RO:0004012
-      #   - qInput: "MONDO:0009889"      ## autosomal recessive polycystic kidney disease
-      #     oneOutput: "HGNC:9016"       ## PKHD1 aka NCBIGene:5314
-      ## for "is marker for" / RO:0002607
-      #   - qInput: "MONDO:0009861"      ## phenylketonuria
-      #     oneOutput: "HGNC:8582"       ## PAH aka NCBIGene:5053
-      ## for "is causal somatic mutation in" / RO:0004014
-      #   - qInput: "MONDO:0004948"      ## B-cell chronic lymphocytic leukemia
-      #     oneOutput: "HGNC:17284"      ## POT1 aka NCBIGene:25913
-      ## for "causal gain of function germline mutation of in" / RO:0004011
-      #   - qInput: "MONDO:0013648"      ## familial progressive hyperpigmentation
-      #     oneOutput: "HGNC:6343"       ## KITLG aka NCBIGene:4254
-    disease-gene-2:
-    ## put non-causal relations together here
-    ## to find examples with /association/find, set relation
-    - supportBatch: false
-      useTemplating: true
-      inputs:
-      - id: MONDO
-        semantic: Disease
-      parameters:
-        id: "{{ queryInputs }}"         ## current BTE automatically adds MONDO prefix to IDs
-        rows: -1
-        direct: true
-        unselect_evidence: true
-        taxon: "NCBITaxon:9606"    ## currently setting it to human-only
-        association_type: "non_causal"
-        ## includes multiple relationships, see testExamples
-      outputs:
-      - id: HGNC
-        semantic: Gene
-      ## more specific than contribution_from
-      predicate: condition_associated_with_gene
-      source: "infores:monarchinitiative"
-      response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/gene-hgnc"
-      # testExamples:
-      ## for "contributes to condition" / RO:0003304
-      #   - qInput: "MONDO:0019171"          ## familial long QT syndrome
-      #     oneOutput: "HGNC:6294"           ## KCNQ1 aka NCBIGene:3784
-      ## for "contributes to" / RO:0002326
-      #   - qInput: "MONDO:0007915"          ## systemic lupus erythematosus (disease)
-      #     oneOutput: "HGNC:9652"           ## PTPN22 aka NCBIGene:26191
-      ## for "has phenotype" / RO:0002200
-      #   - qInput: "MONDO:0009131"          ## Riley-Day syndrome
-      #     oneOutput: "HGNC:4878"           ## HEXA aka NCBIGene:3073
-      ## for "is causal susceptibility factor for" / RO:0004015
-      #   - qInput: "MONDO:0018961"          ## familial melanoma
-      #     oneOutput: "HGNC:1787"           ## CDKN2A aka NCBIGene:1029
-      ## for "pathogenic_for_condition" / GENO:0000840
-      #   - qInput: "MONDO:0008647"          ## hypertrophic cardiomyopathy 1
-      #     oneOutput: "HGNC:7551"           ## MYBPC3 aka NCBIGene:4607
-      ## for "is causal germline mutation partially giving rise to" / RO:0004016
-      #   - qInput: "MONDO:0018875"          ## Li-Fraumeni syndrome
-      #     oneOutput: "HGNC:6973"           ## MDM2 aka NCBIGene:4193
-      ## for "likely_pathogenic_for_condition" / GENO:0000841
-      #   - qInput: "MONDO:0019497"          ## nonsyndromic genetic deafness
-      #     oneOutput: "HGNC:7605"           ## MYO6 aka NCBIGene:4646
-    disease-pathway:
-    ## will include non-human pathways because Monarch doesn't include the taxon for pathways
-    ##   but REACT prefixes show the species (MMU = mouse)
-    ## data has weird relation direction. says disease involved_in pathway...
-    ##   I'm flipping it so disease involves pathway...
-    ## to find examples with /association/find, set subject_category as "pathway" and object category as "disease"
-    - supportBatch: false
-      useTemplating: true
-      inputs:
-      - id: MONDO
-        semantic: Disease
-      parameters:
-        id: "{{ queryInputs }}"         ## current BTE automatically adds MONDO prefix to IDs
-        rows: -1
-        direct: true
-        unselect_evidence: true
-      outputs:
-      - id: REACT
-        semantic: Pathway
-      ## biolink 2.2.13 maps to RO:0002331 involved_in
-      predicate: actively_involves
-      source: "infores:monarchinitiative"
-      response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/pathway-react"
-      # testExamples:
-      #   - qInput: "MONDO:0010524"            ## X-linked sideroblastic anemia with ataxia
-      #     oneOutput: "REACT:R-HSA-1369007"   ## Mitochondrial ABC transporters
-      #   - qInput: "MONDO:0010665"            ## Wilson-Turner syndrome
-      #     oneOutput: "REACT:R-HSA-2467813"   ## Separation of Sister Chromatids
-    disease-phenotype:
-    ## will include non-human phenotypes because Monarch doesn't include the taxon for phenotypes
-    ##   but prefixes show the species (MP = mouse)
-    ## use monarch website to find examples
-    - supportBatch: false
-      useTemplating: true
-      inputs:
-      - id: MONDO
-        semantic: Disease
-      parameters:
-        id: "{{ queryInputs }}"         ## current BTE automatically adds MONDO prefix to IDs
-        rows: -1
-        direct: true
-        unselect_evidence: true
+        id: "{{ queryInputs | replPrefix('MONDO') }}"     ## has prefix
+        category: "biolink:DiseaseToPhenotypicFeatureAssociation"
+        format: json
+        limit: 500
       outputs:
       - id: HP
         semantic: PhenotypicFeature
       predicate: has_phenotype
-      source: "infores:monarchinitiative"
+      source: "infores:monarchinitiative"   ## but the response has more information
       response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/phenotype-hp"
+        "$ref": "#/components/x-bte-response-mapping/object-pheno-hp"
+      ## Example has publication pmids, may involve merging multiple hits
       # testExamples:
-      #   - qInput: "MONDO:0008974"      ## Greenberg dysplasia
-      #     oneOutput: "HP:0000272"      ## Malar flattening
-      #   - qInput: "MONDO:0010524"      ## X-linked sideroblastic anemia with ataxia
-      #     oneOutput: "HP:0002470"      ## Nonprogressive cerebellar ataxia
-    disease-variant:
-    ## not using: 
-    ## - GENO:0000840 (pathogenic_for_condition). seems to use ClinVarVariant (ClinVarVariant:13417)
-    ## - GENO:0000841 (likely_pathogenic_for_condition). seems to use ClinVarVariant (ClinVarVariant:370820)
-    ## to find examples with /association/find, set subject_category as "variant" and object category as "disease"
-    ##   also set relation
-    - supportBatch: false
-      useTemplating: true
-      inputs:
-      - id: MONDO
-        semantic: Disease
-      parameters:
-        id: "{{ queryInputs }}"         ## current BTE automatically adds MONDO prefix to IDs
-        rows: -1
-        direct: true
-        unselect_evidence: true
-        taxon: "NCBITaxon:9606"    ## currently setting it to human-only
-        relation: "RO:0003304"    ## contributes to condition
-      outputs:
-      - id: DBSNP
-        semantic: SequenceVariant
-      predicate: contribution_from
-      source: "infores:monarchinitiative"
-      response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/variant-dbsnp"
-      # testExamples:
-      #   - qInput: "MONDO:0004747"       ## cleft lip (disease)
-      #     oneOutput: "DBSNP:rs227731"
-      #   - qInput: "MONDO:0005150"       ## age-related macular degeneration
-      #     oneOutput: "DBSNP:rs2230199"
-    gene-anatomy:
-    ## see anatomy-gene operation for more details
-    - supportBatch: false
-      useTemplating: true
-      inputs:
-      - id: HGNC   ## Monarch seems to prefer HGNC IDs for human genes
-        semantic: Gene
-      parameters:
-        id: "{{ queryInputs | replPrefix('HGNC') }}"
-        ## add prefix since Monarch expects this, while BTE automatically removes
-        rows: -1
-        direct: true
-        unselect_evidence: true
-        ## don't need to set anatomy to human-only...
-      outputs:
-      - id: UBERON
-        semantic: GrossAnatomicalStructure
-      predicate: expressed_in
-      source: "infores:monarchinitiative"
-      response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/anatomy-uberon"
-      # testExamples:
-      #   - qInput: "HGNC:8548"               ## P4HB aka NCBIGene:5034
-      #     oneOutput: "UBERON:0000970"       ## eye
-      #   - qInput: "HGNC:11138"              ## SNCA aka NCBIGene:6622
-      #     oneOutput: "UBERON:0001017"       ## central nervous system
-    gene-disease-1:
-    ## see disease-gene-1 for details
-    - supportBatch: false
-      useTemplating: true
-      inputs:
-      - id: HGNC
-        semantic: Gene
-      parameters:
-        id: "{{ queryInputs | replPrefix('HGNC') }}"
-        ## add prefix since Monarch expects this, while BTE automatically removes
-        rows: -1
-        direct: true
-        unselect_evidence: true
-        association_type: "causal"
-        ## don't need to set disease to human-only...
-      outputs:
-      - id: MONDO
-        semantic: Disease
-      predicate: causes
-      source: "infores:monarchinitiative"
-      response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/disease-mondo"
-      # testExamples:
-      ## for "causes condition" / RO:0003303
-      #   - qInput: "HGNC:11138"             ## SNCA aka NCBIGene:6622 
-      #     oneOutput: "MONDO:0011562"       ## autosomal dominant Parkinson disease 4
-      ## for "causal gain of function germline mutation of in" / RO:0004011
-      #   - qInput: "HGNC:6343"              ## KITLG aka NCBIGene:4254
-      #     oneOutput: "MONDO:0013648"       ## familial progressive hyperpigmentation
-    gene-disease-2:
-    ## see disease-gene-2 for details
-    - supportBatch: false
-      useTemplating: true
-      inputs:
-      - id: HGNC
-        semantic: Gene
-      parameters:
-        id: "{{ queryInputs | replPrefix('HGNC') }}"
-        ## add prefix since Monarch expects this, while BTE automatically removes
-        rows: -1
-        direct: true
-        unselect_evidence: true
-        association_type: "non_causal"
-        ## don't need to set disease to human-only...
-      outputs:
-      - id: MONDO
-        semantic: Disease
-      predicate: gene_associated_with_condition
-      source: "infores:monarchinitiative"
-      response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/disease-mondo"
-      # testExamples:
-      ## for "contributes to condition" / RO:0003304
-      #   - qInput: "HGNC:6294"               ## KCNQ1 aka NCBIGene:3784
-      #     oneOutput: "MONDO:0019171"        ## familial long QT syndrome
-      ## for "pathogenic_for_condition" / GENO:0000840
-      #   - qInput: "HGNC:7551"               ## MYBPC3 aka NCBIGene:4607
-      #     oneOutput: "MONDO:0008647"        ## hypertrophic cardiomyopathy 1
-    gene-interaction:
-    - supportBatch: false
-      useTemplating: true
-      inputs:
-      - id: HGNC
-        semantic: Gene
-      parameters:
-        id: "{{ queryInputs | replPrefix('HGNC') }}"
-        rows: -1
-        direct: true
-        unselect_evidence: true
-        taxon: "NCBITaxon:9606"    ## currently setting it to human-only
-      outputs:
-      - id: HGNC
-        semantic: Gene
-      ## looks like they are using biogrid? And it looks like there's all kinds of interactions 
-      ##   with all levels of certainty https://wiki.thebiogrid.org/doku.php/experimental_systems
-      predicate: interacts_with
-      source: "infores:monarchinitiative"
-      response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/gene-hgnc"
-      # testExamples:
-      #   - qInput: "HGNC:2950"         ## DNAH5 aka NCBIGene:1767
-      #     oneOutput: "HGNC:9069"      ## PLEC aka NCBIGene:5339
-      #   - qInput: "HGNC:7551"         ## MYBPC3 aka NCBIGene:4607
-      #     oneOutput: "HGNC:16007"     ## TRIM63 aka NCBIGene:84676
-    geneOrtholog-disease:
-    ## - starting with HGNC = starting with human gene, getting non-human gene orthologs
-    ##   then finding directly-related diseases
-    ##   finds info that isn't found through gene-phenotype direct relationships
-    ## - don't have a way to get information in reverse direction (Disease -> human gene through ortholog)
-    ##   can get from Disease -> gene-ortholog
-    ## - noticed Wormbase-related data/homologs (C. elegans)
-    ## - can find more examples from /relation/usage/between/model/disease
-    - supportBatch: false
-      useTemplating: true
-      inputs:
-      - id: HGNC
-        semantic: Gene  ## aka start with human gene
-      parameters:
-        id: "{{ queryInputs | replPrefix('HGNC') }}"
-        ## add prefix since Monarch expects this, while BTE automatically removes
-        rows: -1
-        direct: true
-        unselect_evidence: true
-        ## don't need to set disease to human-only...
-      outputs:
-      - id: MONDO
-        semantic: Disease
-      ## gene -> gene ortholog -(is model of)-> disease...not sure what predicate to use
-      predicate: related_to
-      source: "infores:monarchinitiative"
-      response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/orthologGene2diseaseMondo"
-      # testExamples:
-      #   - qInput: "HGNC:9508"           ## PSEN1 aka NCBIGene:5663
-      #     oneOutput: "MONDO:0006559"    ## hidradenitis suppurativa, not found through gene-disease endpoints
-    geneOrtholog-phenotype:
-    ## - starting with HGNC = starting with human gene, getting non-human gene orthologs
-    ##   then finding directly-related phenotypes
-    ##   finds info that isn't found through gene-phenotype direct relationships
-    ## - don't have a way to get information in reverse direction (Phenotype -> human gene through ortholog)
-    ##   can get from Phenotype -> gene-ortholog
-    ## - noticed MGI-related data/homologs
-    - supportBatch: false
-      useTemplating: true
-      inputs:
-      - id: HGNC
-        semantic: Gene  ## aka start with human gene
-      parameters:
-        id: "{{ queryInputs | replPrefix('HGNC') }}"
-        ## add prefix since Monarch expects this, while BTE automatically removes
-        rows: -1
-        direct: true
-        unselect_evidence: true
-        ## don't need to set phenotype to human-only...
-      outputs:
-      - id: HP
-        semantic: PhenotypicFeature
-      ## gene -> gene ortholog -(has phenotype)-> phenotype...not sure what predicate to use
-      predicate: related_to
-      source: "infores:monarchinitiative"
-      response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/orthologGene2phenoHP"
-      # testExamples:
-      #   - qInput: "HGNC:8548"        ## P4HB aka NCBIGene:5034
-      #     oneOutput: "HP:0003540"    ## Impaired platelet aggregation, not found from gene-phenotype operation
-      #   - qInput: "HGNC:9508"        ## PSEN1 aka NCBIGene:5663
-      #     oneOutput: "HP:0009121"    ## Abnormal axial skeleton morphology
-    gene-phenotype:
-    ## will include non-human phenotypes because Monarch doesn't include the taxon for phenotypes
-    ##   but prefixes show the species (MP = mouse)
-    ## to find examples with /association/find, set subject_category as "gene" and object category as "phenotype"
-    - supportBatch: false
-      useTemplating: true
-      inputs:
-      - id: HGNC
-        semantic: Gene
-      parameters:
-        id: "{{ queryInputs | replPrefix('HGNC') }}"
-        rows: -1
-        direct: true
-        unselect_evidence: true
-      outputs:
-      - id: HP
-        semantic: PhenotypicFeature
-      predicate: gene_associated_with_condition
-      source: "infores:monarchinitiative"
-      response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/phenotype-hp"
-      # testExamples:
-      #   - qInput: "HGNC:8548"            ## P4HB aka NCBIGene:5034
-      #     oneOutput: "HP:0000944"        ## Abnormal metaphysis morphology
-      #   - qInput: "HGNC:9508"            ## PSEN1 aka NCBIGene:5663
-      #     oneOutput: HP:0000751"         ## Personality changes
-      ## other possible inputs: HGNC:7551 / MYBPC3, HGNC:9508 / DNAH5
-    gene-variant:
-    ## can take human or non-human genes as input...
-    ## to find examples with /association/find, set subject_category as "variant" and object category as "gene"
-    - supportBatch: false
-      useTemplating: true
-      inputs:
-      - id: HGNC
-        semantic: Gene
-      parameters:
-        id: "{{ queryInputs | replPrefix('HGNC') }}"
-        rows: -1
-        direct: true
-        unselect_evidence: true
-      outputs:
-      - id: DBSNP
-        semantic: SequenceVariant
-      predicate: has_sequence_variant
-      source: "infores:monarchinitiative"
-      response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/variant-dbsnp"
-      # testExamples:
-      #   - qInput: "HGNC:2950"                   ## DNAH5 aka NCBIGene:1767
-      #     oneOutput: "dbSNP:rs795544"  
-      #   - qInput: "HGNC:7551"                   ## MYBPC3 aka NCBIGene:4607
-      #     oneOutput: "dbSNP:rs2071305"  
-    pathway-disease:
-    ## see disease-pathway for details
-    - supportBatch: false
-      useTemplating: true
-      inputs:
-      - id: REACT
-        semantic: Pathway
-      parameters:
-        id: "{{ queryInputs | replPrefix('REACT') }}"
-        ## add prefix since Monarch expects this, while BTE automatically removes
-        rows: -1
-        direct: true
-        unselect_evidence: true
-        ## don't need to set disease to human-only...
-      outputs:
-      - id: MONDO
-        semantic: Disease
-      predicate: actively_involved_in
-      source: "infores:monarchinitiative"
-      response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/disease-mondo"
-      # testExamples:
-      #   - qInput: "REACT:R-HSA-2644606"      ## Constitutive Signaling by NOTCH1 PEST Domain Mutants
-      #     oneOutput: "MONDO:0010665"         ## Wilson-Turner syndrome
-      #   - qInput: "REACT:R-HSA-1369007"      ## Mitochondrial ABC transporters
-      #     oneOutput: "MONDO:0012204"         ## familial pseudohyperkalemia
-    phenotype-disease:
-    ## see disease-phenotype for details
+      #   - qInput: "MONDO:0007298"      ## spinocerebellar ataxia type 29
+      #     oneOutput: "HP:0006855"      ## Cerebellar vermis atrophy
+    pheno-disease:
+    ## example https://api-v3.monarchinitiative.org/v3/api/entity/HP:0031629/biolink:DiseaseToPhenotypicFeatureAssociation?format=json&limit=30&offset=0
+    ## POST-PROCESSING:
+    ## - items.direction will be "incoming", so...
+    ##   - need to check, only keep items where subject_namespace = MONDO. Then our output field (subject) will be MONDO
+    ##   - need to check, only keep items in publications that have the prefix PMID? -> so it matches the response-mapping
+    ##   - maybe need to check that object field's value is an exact match to the input ID? (could be a descendant from ontology-traversal?)
     - supportBatch: false
       useTemplating: true
       inputs:
       - id: HP
         semantic: PhenotypicFeature
       parameters:
-        id: "{{ queryInputs }}"   ## current BTE automatically adds prefix for HP terms
-        rows: -1
-        direct: true
-        unselect_evidence: true
+        id: "{{ queryInputs | replPrefix('HP') }}"     ## has prefix
+        category: "biolink:DiseaseToPhenotypicFeatureAssociation"
+        format: json
+        limit: 500
       outputs:
       - id: MONDO
         semantic: Disease
       predicate: phenotype_of
-      source: "infores:monarchinitiative"
+      source: "infores:monarchinitiative"   ## but the response has more information
       response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/disease-mondo"
+        "$ref": "#/components/x-bte-response-mapping/subject-disease-mondo"
+      ## Example has publication pmids
       # testExamples:
-      #   - qInput: "HP:0000272"            ## Malar flattening
-      #     oneOutput: "MONDO:0008974"      ## Greenberg dysplasia
-      #   - qInput: "HP:0032543"            ## Lithoptysis
-      #     oneOutput: "MONDO:0016575"      ## primary ciliary dyskinesia
-    phenotype-gene:
-    ## see gene-phenotype for details
+      #   - qInput: "HP:0031629"            ## Impaired tandem gait
+      #     oneOutput: "MONDO:0030458"      ## Charcot-Marie-Tooth disease, axonal, Type 2HH"
+    gene-disease-causal:
+    ## example https://api-v3.monarchinitiative.org/v3/api/entity/HGNC:11138/biolink:CausalGeneToDiseaseAssociation?format=json&limit=20&offset=0
+    ## POST-PROCESSING:
+    ## - items.direction will be "outgoing", so...
+    ##   - don't need to check that subject field's value is an exact match to the input ID (no ontology-traversal possible) 
     - supportBatch: false
       useTemplating: true
       inputs:
-      - id: HP
-        semantic: PhenotypicFeature
-      parameters:
-        id: "{{ queryInputs }}"   ## current BTE automatically adds prefix for HP terms
-        rows: -1
-        direct: true
-        unselect_evidence: true
-        taxon: "NCBITaxon:9606"    ## currently setting it to human-only
-      outputs:
       - id: HGNC
         semantic: Gene
-      predicate: condition_associated_with_gene
-      source: "infores:monarchinitiative"
-      response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/gene-hgnc"
-      # testExamples:
-      #   - qInput: "HP:0000183"        ## Difficulty in tongue movements
-      #     oneOutput: "HGNC:4065"      ## GAA
-      #   - qInput: "HP:0032543"        ## Lithoptysis
-      #     oneOutput: "HGNC:2950"      ## DNAH5 aka NCBIGene:1767
-    phenotype-variant:
-    ## could also use OMIM IDs...
-    ## note: relation RO:0003304 (contributes to condition) seems to use EFO terms, rather than HP...
-    ## to find examples with /association/find, set subject_category as "variant" and object category as "phenotype"
-    - supportBatch: false
-      useTemplating: true
-      inputs:
-      - id: HP
-        semantic: PhenotypicFeature
       parameters:
-        id: "{{ queryInputs }}"   ## current BTE automatically adds prefix for HP terms
-        rows: -1
-        direct: true
-        unselect_evidence: true
-        taxon: "NCBITaxon:9606"    ## currently setting it to human-only
-      outputs:
-      - id: DBSNP
-        semantic: SequenceVariant
-      ## main relations: has phenotype, is marker for, contributes to condition...
-      predicate: related_to
-      source: "infores:monarchinitiative"
-      response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/variant-dbsnp"
-      # testExamples:
-      #   - qInput: "HP:0002944"                ## Thoracolumbar scoliosis
-      #     oneOutput: "DBSNP:rs115165302" 
-      #   - qInput: "HP:0000183"                ## Difficulty in tongue movements
-      #     oneOutput: "DBSNP:rs771684665"
-    variant-disease:
-    ## see disease-variant for details
-    - supportBatch: false
-      useTemplating: true
-      inputs:
-      - id: DBSNP
-        semantic: SequenceVariant
-      parameters:
-        id: "{{ queryInputs | replPrefix('dbSNP') }}"
-        ## add prefix since Monarch expects this in this form, while BTE automatically removes
-        rows: -1
-        direct: true
-        unselect_evidence: true
-        taxon: "NCBITaxon:9606"    ## currently setting it to human-only
-        relation: "RO:0003304"    ## contributes to condition
+        id: "{{ queryInputs | replPrefix('HGNC') }}"     ## has prefix
+        category: "biolink:CausalGeneToDiseaseAssociation"
+        format: json
+        limit: 500
       outputs:
       - id: MONDO
         semantic: Disease
-      predicate: contributes_to
-      source: "infores:monarchinitiative"
+      predicate: causes
+      source: "infores:monarchinitiative"   ## but the response has more information
       response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/disease-mondo-dbsnp-start"
-      ## examples have publications!!!
+        "$ref": "#/components/x-bte-response-mapping/object-disease-mondo"
+      ## Example doesn't have publication info
       # testExamples:
-      #   - qInput: "DBSNP:rs227731" 
-      #     oneOutput: "MONDO:0004747"  ## cleft lip (disease)
-      #   - qInput: "DBSNP:rs2230199" 
-      #     oneOutput: "MONDO:0005150"  ## age-related macular degeneration
-    variant-gene:
-    ## see gene-variant for details
+      #   - qInput: "HGNC:11138"            ## SNCA aka NCBIGene:6622
+      #     oneOutput: "MONDO:0007488"      ## Lewy body dementia
+    disease-gene-causal:
+    ## example https://api-v3.monarchinitiative.org/v3/api/entity/MONDO:0011562/biolink:CausalGeneToDiseaseAssociation?format=json&limit=20&offset=0
+    ## - items.direction will be "incoming", so...
     - supportBatch: false
       useTemplating: true
       inputs:
-      - id: DBSNP
-        semantic: SequenceVariant
+      - id: MONDO
+        semantic: Disease
       parameters:
-        id: "{{ queryInputs | replPrefix('dbSNP') }}"
-        ## add prefix since Monarch expects this in this form, while BTE automatically removes
-        rows: -1
-        direct: true
-        unselect_evidence: true
+        id: "{{ queryInputs | replPrefix('MONDO') }}"     ## has prefix
+        category: "biolink:CausalGeneToDiseaseAssociation"
+        format: json
+        limit: 500
       outputs:
       - id: HGNC
         semantic: Gene
-      predicate: is_sequence_variant_of
-      source: "infores:monarchinitiative"
+      predicate: caused_by
+      source: "infores:monarchinitiative"   ## but the response has more information
       response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/gene-hgnc-dbsnp-start"
+        "$ref": "#/components/x-bte-response-mapping/subject-gene-hgnc"
+      ## Example doesn't have publication info
       # testExamples:
-      #   - qInput: "DBSNP:rs11879191" 
-      #     oneOutput: "HGNC:1735"        ## CDC37 aka NCBIGene:11140
-      #   - qInput: "DBSNP:rs2230199" 
-      #     oneOutput: "HGNC:1318"        ## C3 aka NCBIGene:718
-    variant-phenotype:
-    ## see phenotype-variant for details
-    - supportBatch: false
-      useTemplating: true
-      inputs:
-      - id: DBSNP
-        semantic: SequenceVariant
-      parameters:
-        id: "{{ queryInputs | replPrefix('dbSNP') }}"
-        ## add prefix since Monarch expects this in this form, while BTE automatically removes
-        rows: -1
-        direct: true
-        unselect_evidence: true
-        taxon: "NCBITaxon:9606"    ## currently setting it to human-only
-      outputs:
-      - id: HP
-        semantic: PhenotypicFeature
-      ## main relations: has phenotype, is marker for, contributes to condition...
-      predicate: related_to
-      source: "infores:monarchinitiative"
-      response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/phenotype-hp-dbsnp-start"
-      # testExamples:
-      #   - qInput: "DBSNP:rs115165302" 
-      #     oneOutput: "HP:0002944"        ## Thoracolumbar scoliosis
-      #   - qInput: "DBSNP:rs771684665" 
-      #     oneOutput: "HP:0200055"        ## Small hand
-      
+      #   - qInput: "MONDO:0011562"      ## autosomal dominant Parkinson disease 4
+      #     oneOutput: "HGNC:11138"      ## SNCA aka NCBIGene:6622
