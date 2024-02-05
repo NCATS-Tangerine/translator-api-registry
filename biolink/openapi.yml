@@ -26,15 +26,6 @@ servers:
   x-maturity: production
 tags:
 - name: translator
-## NOTES:
-## - limit to return seems to be 500, could theoretically send scrolling queries based on limit/offset/total fields in response?
-## - download: not specifying it seems to work better than setting it to false
-## - commented out sections that caused errors in SmartAPI editor, including
-##   - type: 'null'
-##   - examples
-##   - the GET endpoint of /v3/api/annotate/entities: it wouldn't work in https://api-v3.monarchinitiative.org/v3/docs#/ either 
-##     because requestBody is specified - and GET requests can't support a request body
-##   - the / endpoints since they don't work
 paths:
   /v3/api/association:
     get:
@@ -2634,6 +2625,7 @@ components:
     ## - negated: is this ever true? I only ever see it as null
     ## - primary_knowledge_source: an infores curie
     ## - aggregator_knowledge_source: a list of infores curies (chain of upstream isn't clear?)
+    ## - has_evidence: ECO codes for where this edge came from / how?, list of curies
     ## - provided_by: strangely, this can differ from the knowledge source fields
     ## - qualifier fields
     object-disease-mondo:
@@ -2657,13 +2649,11 @@ components:
       input_name: items.object_label
       ref_pmid: items.publications 
   x-bte-kgs-operations:
+  ## Parameters
+  ## - `liimt`: max seems to be 500 
+  ## - `download`: not specifying it seems to work best (setting to false sometimes doesn't seem to work)
     disease-pheno:
-    ## example https://api-v3.monarchinitiative.org/v3/api/entity/MONDO:0007298/biolink:DiseaseToPhenotypicFeatureAssociation?format=json&limit=30&offset=0
-    ## POST-PROCESSING:
-    ## - items.direction will be "outgoing", so...
-    ##   - need to check, only keep items where object_namespace = HP. Then our output field (object) will be HP
-    ##   - need to check, only keep items in publications that have the prefix PMID? -> so it matches the response-mapping
-    ##   - maybe need to check that subject field's value is an exact match to the input ID? (could be a descendant from ontology-traversal?)
+    ## items.direction will be "outgoing"
     - supportBatch: false
       useTemplating: true
       inputs:
@@ -2681,17 +2671,16 @@ components:
       source: "infores:monarchinitiative"   ## but the response has more information
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/object-pheno-hp"
-      ## Example has publication pmids, may involve merging multiple hits
+      ## Examples have publication pmids, involves merging multiple hits where some don't have pmids
       # testExamples:
+      ## link https://api-v3.monarchinitiative.org/v3/api/entity/MONDO:0007298/biolink:DiseaseToPhenotypicFeatureAssociation?format=json&limit=500&offset=0
       #   - qInput: "MONDO:0007298"      ## spinocerebellar ataxia type 29
       #     oneOutput: "HP:0006855"      ## Cerebellar vermis atrophy
+      ## link https://api-v3.monarchinitiative.org/v3/api/entity/MONDO:0008974/biolink:DiseaseToPhenotypicFeatureAssociation?format=json&limit=500&offset=0
+      #   - qInput: "MONDO:0008974"      ## Greenberg dysplasia
+      #     oneOutput: "HP:0000926"      ## Platyspondyly
     pheno-disease:
-    ## example https://api-v3.monarchinitiative.org/v3/api/entity/HP:0031629/biolink:DiseaseToPhenotypicFeatureAssociation?format=json&limit=30&offset=0
-    ## POST-PROCESSING:
-    ## - items.direction will be "incoming", so...
-    ##   - need to check, only keep items where subject_namespace = MONDO. Then our output field (subject) will be MONDO
-    ##   - need to check, only keep items in publications that have the prefix PMID? -> so it matches the response-mapping
-    ##   - maybe need to check that object field's value is an exact match to the input ID? (could be a descendant from ontology-traversal?)
+    ## items.direction will be "incoming"
     - supportBatch: false
       useTemplating: true
       inputs:
@@ -2711,13 +2700,14 @@ components:
         "$ref": "#/components/x-bte-response-mapping/subject-disease-mondo"
       ## Example has publication pmids
       # testExamples:
+      ## link https://api-v3.monarchinitiative.org/v3/api/entity/HP:0031629/biolink:DiseaseToPhenotypicFeatureAssociation?format=json&limit=500&offset=0
       #   - qInput: "HP:0031629"            ## Impaired tandem gait
       #     oneOutput: "MONDO:0030458"      ## Charcot-Marie-Tooth disease, axonal, Type 2HH"
+      ## link https://api-v3.monarchinitiative.org/v3/api/entity/HP:0006855/biolink:DiseaseToPhenotypicFeatureAssociation?format=json&limit=500&offset=0
+      #   - qInput: "HP:0006855"            ## Cerebellar vermis atrophy
+      #     oneOutput: "MONDO:0010041"      ## Charlevoix-Saguenay spastic ataxia
     gene-disease-causal:
-    ## example https://api-v3.monarchinitiative.org/v3/api/entity/HGNC:11138/biolink:CausalGeneToDiseaseAssociation?format=json&limit=20&offset=0
-    ## POST-PROCESSING:
-    ## - items.direction will be "outgoing", so...
-    ##   - don't need to check that subject field's value is an exact match to the input ID (no ontology-traversal possible) 
+    ## - items.direction will be "outgoing"
     - supportBatch: false
       useTemplating: true
       inputs:
@@ -2735,13 +2725,16 @@ components:
       source: "infores:monarchinitiative"   ## but the response has more information
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/object-disease-mondo"
-      ## Example doesn't have publication info
+      ## Examples don't have publication info
       # testExamples:
+      ## link https://api-v3.monarchinitiative.org/v3/api/entity/HGNC:11138/biolink:CausalGeneToDiseaseAssociation?format=json&limit=20&offset=0
       #   - qInput: "HGNC:11138"            ## SNCA aka NCBIGene:6622
       #     oneOutput: "MONDO:0007488"      ## Lewy body dementia
+      ## link https://api-v3.monarchinitiative.org/v3/api/entity/HGNC:3434/biolink:CausalGeneToDiseaseAssociation?format=json&limit=20&offset=0
+      #   - qInput: "HGNC:3434"             ## ERCC2 aka NCBIGene:2068
+      #     oneOutput: "MONDO:0012553"      ## cerebrooculofacioskeletal syndrome 2
     disease-gene-causal:
-    ## example https://api-v3.monarchinitiative.org/v3/api/entity/MONDO:0011562/biolink:CausalGeneToDiseaseAssociation?format=json&limit=20&offset=0
-    ## - items.direction will be "incoming", so...
+    ## - items.direction will be "incoming"
     - supportBatch: false
       useTemplating: true
       inputs:
@@ -2759,7 +2752,11 @@ components:
       source: "infores:monarchinitiative"   ## but the response has more information
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/subject-gene-hgnc"
-      ## Example doesn't have publication info
+      ## Examples don't have publication info
       # testExamples:
+      ## link https://api-v3.monarchinitiative.org/v3/api/entity/MONDO:0011562/biolink:CausalGeneToDiseaseAssociation?format=json&limit=20&offset=0
       #   - qInput: "MONDO:0011562"      ## autosomal dominant Parkinson disease 4
       #     oneOutput: "HGNC:11138"      ## SNCA aka NCBIGene:6622
+      ## link https://api-v3.monarchinitiative.org/v3/api/entity/MONDO:0009861/biolink:CausalGeneToDiseaseAssociation?format=json&limit=20&offset=0
+      #   - qInput: "MONDO:0009861"      ## phenylketonuria
+      #     oneOutput: "HGNC:8582"       ## PAH aka NCBIGene:5053
