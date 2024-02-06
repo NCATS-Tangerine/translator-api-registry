@@ -301,8 +301,12 @@ paths:
       x-bte-kgs-operations:
         - "$ref": "#/components/x-bte-kgs-operations/disease-pheno"
         - "$ref": "#/components/x-bte-kgs-operations/pheno-disease"
-        - "$ref": "#/components/x-bte-kgs-operations/disease-gene-causal"
         - "$ref": "#/components/x-bte-kgs-operations/gene-disease-causal"
+        - "$ref": "#/components/x-bte-kgs-operations/disease-gene-causal"
+        - "$ref": "#/components/x-bte-kgs-operations/gene-disease-correlated"
+        - "$ref": "#/components/x-bte-kgs-operations/disease-gene-correlated"
+        - "$ref": "#/components/x-bte-kgs-operations/gene-pheno"
+        - "$ref": "#/components/x-bte-kgs-operations/pheno-gene"
   '/v3/api/histopheno/{id}':
     get:
       tags:
@@ -2760,3 +2764,114 @@ components:
       ## link https://api-v3.monarchinitiative.org/v3/api/entity/MONDO:0009861/biolink:CausalGeneToDiseaseAssociation?format=json&limit=20&offset=0
       #   - qInput: "MONDO:0009861"      ## phenylketonuria
       #     oneOutput: "HGNC:8582"       ## PAH aka NCBIGene:5053
+    gene-disease-correlated:
+    ## - items.direction will be "outgoing"
+    - supportBatch: false
+      useTemplating: true
+      inputs:
+      - id: HGNC
+        semantic: Gene
+      parameters:
+        id: "{{ queryInputs | replPrefix('HGNC') }}"     ## has prefix
+        category: "biolink:CorrelatedGeneToDiseaseAssociation"
+        format: json
+        limit: 500
+      outputs:
+      - id: MONDO
+        semantic: Disease
+      ## sometimes the raw response's predicate is "biolink:contributes_to", other times it's the child term "biolink:gene_associated_with_condition"
+      ## we can put these terms in the "query" parameter to get only the matching records
+      predicate: contributes_to
+      source: "infores:monarchinitiative"   ## but the response has more information
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/object-disease-mondo"
+      ## Examples don't have publication info
+      # testExamples:
+      ## link https://api-v3.monarchinitiative.org/v3/api/entity/HGNC:6294/biolink:CorrelatedGeneToDiseaseAssociation?format=json&limit=20&offset=0
+      #   - qInput: "HGNC:6294"                 ## KCNQ1 aka NCBIGene:3784
+      #     oneOutput: "MONDO:0019171"          ## familial long QT syndrome
+      ## link https://api-v3.monarchinitiative.org/v3/api/entity/HGNC:9652/biolink:CorrelatedGeneToDiseaseAssociation?format=json&limit=20&offset=0
+      #   - qInput: "HGNC:9652"                 ## PTPN22 aka NCBIGene:26191
+      #     oneOutput: "MONDO:0007915"          ## systemic lupus erythematosus
+    disease-gene-correlated:
+    ## - items.direction will be "incoming"
+    - supportBatch: false
+      useTemplating: true
+      inputs:
+      - id: MONDO
+        semantic: Disease
+      parameters:
+        id: "{{ queryInputs | replPrefix('MONDO') }}"     ## has prefix
+        category: "biolink:CorrelatedGeneToDiseaseAssociation"
+        format: json
+        limit: 500
+      outputs:
+      - id: HGNC
+        semantic: Gene
+      predicate: contribution_from
+      source: "infores:monarchinitiative"   ## but the response has more information
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/subject-gene-hgnc"
+      ## Examples don't have publication info
+      # testExamples:
+      ## link https://api-v3.monarchinitiative.org/v3/api/entity/MONDO:0018961/biolink:CorrelatedGeneToDiseaseAssociation?format=json&limit=20&offset=0
+      #   - qInput: "MONDO:0018961"      ## familial melanoma
+      #     oneOutput: "HGNC:1787"       ## CDKN2A aka NCBIGene:1029
+      ## link https://api-v3.monarchinitiative.org/v3/api/entity/MONDO:0018875/biolink:CorrelatedGeneToDiseaseAssociation?format=json&limit=20&offset=0
+      #   - qInput: "MONDO:0018875"      ## Li-Fraumeni syndrome
+      #     oneOutput: "HGNC:6973"       ## MDM2 aka NCBIGene:4193
+    gene-pheno:
+    ## - items.direction will be "outgoing"
+    - supportBatch: false
+      useTemplating: true
+      inputs:
+      - id: HGNC
+        semantic: Gene
+      parameters:
+        id: "{{ queryInputs | replPrefix('HGNC') }}"     ## has prefix
+        category: "biolink:GeneToPhenotypicFeatureAssociation"
+        format: json
+        limit: 500
+      outputs:
+      - id: HP
+        semantic: PhenotypicFeature
+      ## a little odd: I used to use gene_associated_with_condition
+      predicate: has_phenotype
+      source: "infores:monarchinitiative"   ## but the response has more information
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/object-pheno-hp"
+      ## Examples don't have publication info
+      # testExamples:
+      ## link https://api-v3.monarchinitiative.org/v3/api/entity/HGNC:8548/biolink:GeneToPhenotypicFeatureAssociation?format=json&limit=20&offset=0
+      #   - qInput: "HGNC:8548"            ## P4HB aka NCBIGene:5034
+      #     oneOutput: "HP:0000944"        ## Abnormal metaphysis morphology
+      ## link https://api-v3.monarchinitiative.org/v3/api/entity/HGNC:7551/biolink:GeneToPhenotypicFeatureAssociation?format=json&limit=20&offset=0
+      #   - qInput: "HGNC:7551"            ## MYBPC3 aka NCBIGene:4607
+      #     oneOutput: "HP:0011675"        ## Arrhythmia
+    pheno-gene:
+    ## - items.direction will be "incoming"
+    - supportBatch: false
+      useTemplating: true
+      inputs:
+      - id: HP
+        semantic: PhenotypicFeature
+      parameters:
+        id: "{{ queryInputs | replPrefix('HP') }}"     ## has prefix
+        category: "biolink:GeneToPhenotypicFeatureAssociation"
+        format: json
+        limit: 500
+      outputs:
+      - id: HGNC
+        semantic: Gene
+      predicate: phenotype_of
+      source: "infores:monarchinitiative"   ## but the response has more information
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/subject-gene-hgnc"
+      ## Examples don't have publication info
+      # testExamples:
+      ## link https://api-v3.monarchinitiative.org/v3/api/entity/HP:0000183/biolink:GeneToPhenotypicFeatureAssociation?format=json&limit=20&offset=0
+      #   - qInput: "HP:0000183"        ## Difficulty in tongue movements
+      #     oneOutput: "HGNC:4065"      ## GAA
+      ## link https://api-v3.monarchinitiative.org/v3/api/entity/HP:0032543/biolink:GeneToPhenotypicFeatureAssociation?format=json&limit=20&offset=0
+      #   - qInput: "HP:0032543"        ## Lithoptysis
+      #     oneOutput: "HGNC:2950"      ## DNAH5 aka NCBIGene:1767
