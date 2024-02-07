@@ -2743,6 +2743,7 @@ components:
       - id: MONDO
         semantic: Disease
       predicate: causes
+      ## the primary_knowledge_source field values I've encountered: `infores:omim`
       source: "infores:monarchinitiative"   ## but the response has more information
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/object-disease-mondo"
@@ -2763,7 +2764,7 @@ components:
       parameters:
         category: "biolink:CausalGeneToDiseaseAssociation"
         object: "{{ queryInputs | replPrefix('MONDO') }}"     ## has prefix
-        predicate: "biolink:has_phenotype"
+        predicate: "biolink:causes"
         direct: true
         format: json
         limit: 500
@@ -2800,6 +2801,7 @@ components:
       - id: MONDO
         semantic: Disease
       predicate: contributes_to
+      ## the primary_knowledge_source field values I've encountered: `infores:omim`
       source: "infores:monarchinitiative"   ## but the response has more information
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/object-disease-mondo"
@@ -2836,7 +2838,7 @@ components:
       ## link https://api-v3.monarchinitiative.org/v3/api/association?category=biolink:CorrelatedGeneToDiseaseAssociation&predicate=biolink:contributes_to&object=MONDO:0014629&direct=true&format=json&limit=10&offset=0
       #   - qInput: "MONDO:0014629"      ## autoimmune interstitial lung disease-arthritis syndrome
       #     oneOutput: "HGNC:2230"       ## COPA aka NCBIGene:1314
-      ## link https://api-v3.monarchinitiative.org/v3/api/entity/MONDO:0018875/biolink:CorrelatedGeneToDiseaseAssociation?format=json&limit=20&offset=0
+      ## link https://api-v3.monarchinitiative.org/v3/api/association?category=biolink:CorrelatedGeneToDiseaseAssociation&predicate=biolink:contributes_to&object=MONDO:0013416&direct=true&format=json&limit=10&offset=0
       #   - qInput: "MONDO:0013416"      ## age related macular degeneration 8
       #     oneOutput: "HGNC:32685"      ## ARMS2 aka NCBIGene:387715
     gene-disease-associatedCondition:
@@ -2857,6 +2859,7 @@ components:
       - id: MONDO
         semantic: Disease
       predicate: gene_associated_with_condition
+      ## the primary_knowledge_source field values I've encountered: `infores:orphanet`
       source: "infores:monarchinitiative"   ## but the response has more information
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/object-disease-mondo"
@@ -2865,7 +2868,7 @@ components:
       ## link https://api-v3.monarchinitiative.org/v3/api/association?category=biolink:CorrelatedGeneToDiseaseAssociation&subject=HGNC:6493&predicate=biolink:gene_associated_with_condition&direct=true&format=json&limit=10&offset=0
       #   - qInput: "HGNC:6493"                 ## LAMC2 aka NCBIGene:3918
       #     oneOutput: "MONDO:0009182"          ## junctional epidermolysis bullosa Herlitz type
-      ## link https://api-v3.monarchinitiative.org/v3/api/association?category=biolink:CorrelatedGeneToDiseaseAssociation&subject=HGNC:9652&predicate=biolink:contributes_to&direct=true&format=json&limit=10&offset=0
+      ## link https://api-v3.monarchinitiative.org/v3/api/association?category=biolink:CorrelatedGeneToDiseaseAssociation&subject=HGNC:9462&predicate=biolink:gene_associated_with_condition&direct=true&format=json&limit=10&offset=0
       #   - qInput: "HGNC:9462"                 ## PRPS1 aka NCBIGene:5631
       #     oneOutput: "MONDO:0010699"          ## Charcot-Marie-Tooth disease X-linked recessive 5
     disease-gene-associatedCondition:
@@ -2916,6 +2919,7 @@ components:
         semantic: PhenotypicFeature
       ## I previously used gene_associated_with_condition
       predicate: has_phenotype
+      ## the primary_knowledge_source field values I've encountered: `infores:hpo-annotations`
       source: "infores:monarchinitiative"   ## but the response has more information
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/object-pheno-hp"
@@ -2926,7 +2930,7 @@ components:
       #     oneOutput: "HP:0000944"        ## Abnormal metaphysis morphology
       ## link https://api-v3.monarchinitiative.org/v3/api/association?category=biolink:GeneToPhenotypicFeatureAssociation&subject=HGNC:7551&predicate=biolink:has_phenotype&direct=true&format=json&limit=100&offset=0
       #   - qInput: "HGNC:7551"            ## MYBPC3 aka NCBIGene:4607
-      #     oneOutput: "HP:0011675"        ## Arrhythmia
+      #     oneOutput: "HP:0011675"        ## Arrhythmia aka MONDO:0007263
     pheno-gene:
     - supportBatch: false
       useTemplating: true
@@ -2936,7 +2940,7 @@ components:
       parameters:
         category: "biolink:GeneToPhenotypicFeatureAssociation"
         object: "{{ queryInputs | replPrefix('HP') }}"     ## has prefix
-        predicate: "biolink:gene_associated_with_condition"
+        predicate: "biolink:has_phenotype"
         direct: true
         format: json
         limit: 500
@@ -2951,7 +2955,7 @@ components:
       # testExamples:
       ## link https://api-v3.monarchinitiative.org/v3/api/association?category=biolink:GeneToPhenotypicFeatureAssociation&predicate=biolink:has_phenotype&object=HP:0000183&direct=true&format=json&limit=100&offset=0
       #   - qInput: "HP:0000183"        ## Difficulty in tongue movements
-      #     oneOutput: "HGNC:4065"      ## GAA
+      #     oneOutput: "HGNC:4065"      ## GAA aka NCBIGene:2548
       ## link https://api-v3.monarchinitiative.org/v3/api/association?category=biolink:GeneToPhenotypicFeatureAssociation&predicate=biolink:has_phenotype&object=HP:0032543&direct=true&format=json&limit=100&offset=0
       #   - qInput: "HP:0032543"        ## Lithoptysis
       #     oneOutput: "HGNC:2950"      ## DNAH5 aka NCBIGene:1767
@@ -2975,6 +2979,7 @@ components:
         semantic: Gene
       ## could this predicate be more specific? like genetically_interacts_with?
       predicate: interacts_with
+      ## the primary_knowledge_source field values I've encountered: `infores:string`, `infores:biogrid`
       source: "infores:monarchinitiative"   ## but the response has more information
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/object-gene-hgnc"
