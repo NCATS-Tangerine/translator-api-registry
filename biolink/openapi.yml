@@ -14,7 +14,7 @@ info:
   title: Monarch API
   version: 0.1.0
   x-translator:
-    infores: "infores:biolink-api"        ## not sure if this needs changing?
+    infores: "infores:monarchinitiative"        ## don't use biolink-api?
     component: KP
     team:
     - "Service Provider"
@@ -2628,11 +2628,12 @@ components:
         - type
       title: ValidationError
   x-bte-response-mapping:
+    ## items.sources: BTE does post-processing on the primary_knowledge_source and aggregator_knowledge_source fields
+    ##   and creates this custom field with the info formatted for TRAPI. 
+    ##   we can then ingest this the same way we do for multiomics/text-mining APIs
     ## not using because I'm unsure and there's data-processing / biolink-model mapping and TRAPI-structure issues
     ## - subject_taxon, object_taxon: do we need this? Sometimes the value is null
     ## - negated: is this ever true? I only ever see it as null
-    ## - primary_knowledge_source: an infores curie
-    ## - aggregator_knowledge_source: a list of infores curies (chain of upstream isn't clear?)
     ## - has_evidence: ECO codes for where this edge came from / how?, list of curies
     ## - provided_by: strangely, this can differ from the knowledge source fields
     ## - qualifier fields
@@ -2641,27 +2642,33 @@ components:
       output_name: items.object_label
       input_name: items.subject_label
       ref_pmid: items.publications
+      trapi_sources: items.sources
     object-gene-hgnc:
       HGNC: items.object
       output_name: items.object_label
       input_name: items.subject_label
       ref_pmid: items.publications
+      trapi_sources: items.sources
     object-pheno-hp:
       HP: items.object
       output_name: items.object_label
       input_name: items.subject_label
       ref_pmid: items.publications
+      trapi_sources: items.sources
     subject-disease-mondo:
       MONDO: items.subject
       output_name: items.subject_label
       input_name: items.object_label
       ref_pmid: items.publications 
+      trapi_sources: items.sources
     subject-gene-hgnc:
       HGNC: items.subject
       output_name: items.subject_label
       input_name: items.object_label
       ref_pmid: items.publications 
+      trapi_sources: items.sources
   x-bte-kgs-operations:
+  ## commenting out the x-bte source field: replaced with the post-processed trapi_sources info
   ## Parameters
   ## - `liimt`: max seems to be 500 
   ## - `download`: not specifying it seems to work best (setting to false sometimes doesn't seem to work)
@@ -2684,8 +2691,10 @@ components:
       - id: HP
         semantic: PhenotypicFeature
       predicate: has_phenotype
-      ## the primary_knowledge_source field values I've encountered: `infores:hpo-annotations`
-      source: "infores:monarchinitiative"
+      ## knowledge_source info encountered:
+      ## - primary: "infores:hpo-annotations"
+      ## - aggregator: ["infores:monarchinitiative"]
+      # source: "infores:monarchinitiative"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/object-pheno-hp"
       # Examples have publication pmids, involves merging multiple hits where some don't have pmids
@@ -2713,7 +2722,7 @@ components:
       - id: MONDO
         semantic: Disease
       predicate: phenotype_of
-      source: "infores:monarchinitiative"
+      # source: "infores:monarchinitiative"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/subject-disease-mondo"
       # Examples have publication pmids
@@ -2743,8 +2752,10 @@ components:
       - id: MONDO
         semantic: Disease
       predicate: causes
-      ## the primary_knowledge_source field values I've encountered: `infores:omim`
-      source: "infores:monarchinitiative"   ## but the response has more information
+      ## knowledge_source info encountered:
+      ## - primary: "infores:omim"
+      ## - aggregator: ["infores:monarchinitiative", "infores:medgen"]
+      # source: "infores:monarchinitiative"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/object-disease-mondo"
       # Examples don't have publication info
@@ -2772,7 +2783,7 @@ components:
       - id: HGNC
         semantic: Gene
       predicate: caused_by
-      source: "infores:monarchinitiative"
+      # source: "infores:monarchinitiative"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/subject-gene-hgnc"
       # Examples don't have publication info
@@ -2801,8 +2812,10 @@ components:
       - id: MONDO
         semantic: Disease
       predicate: contributes_to
-      ## the primary_knowledge_source field values I've encountered: `infores:omim`
-      source: "infores:monarchinitiative"   ## but the response has more information
+      ## knowledge_source info encountered:
+      ## - primary: "infores:omim"
+      ## - aggregator: ["infores:monarchinitiative", "infores:medgen"]
+      # source: "infores:monarchinitiative"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/object-disease-mondo"
       # Examples don't have publication info
@@ -2830,7 +2843,7 @@ components:
       - id: HGNC
         semantic: Gene
       predicate: contribution_from
-      source: "infores:monarchinitiative"
+      # source: "infores:monarchinitiative"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/subject-gene-hgnc"
       # Examples don't have publication info
@@ -2859,8 +2872,10 @@ components:
       - id: MONDO
         semantic: Disease
       predicate: gene_associated_with_condition
-      ## the primary_knowledge_source field values I've encountered: `infores:orphanet`
-      source: "infores:monarchinitiative"   ## but the response has more information
+      ## knowledge_source info encountered:
+      ## - primary: "infores:orphanet"
+      ## - aggregator: ["infores:monarchinitiative"]
+      # source: "infores:monarchinitiative"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/object-disease-mondo"
       # Examples don't have publication info
@@ -2888,7 +2903,7 @@ components:
       - id: HGNC
         semantic: Gene
       predicate: condition_associated_with_gene
-      source: "infores:monarchinitiative"
+      # source: "infores:monarchinitiative"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/subject-gene-hgnc"
       # Examples don't have publication info
@@ -2919,8 +2934,10 @@ components:
         semantic: PhenotypicFeature
       ## I previously used gene_associated_with_condition
       predicate: has_phenotype
-      ## the primary_knowledge_source field values I've encountered: `infores:hpo-annotations`
-      source: "infores:monarchinitiative"   ## but the response has more information
+      ## knowledge_source info encountered:
+      ## - primary: "infores:hpo-annotations"
+      ## - aggregator: ["infores:monarchinitiative"]
+      # source: "infores:monarchinitiative"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/object-pheno-hp"
       # Examples don't have publication info
@@ -2948,7 +2965,7 @@ components:
       - id: HGNC
         semantic: Gene
       predicate: phenotype_of
-      source: "infores:monarchinitiative"
+      # source: "infores:monarchinitiative"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/subject-gene-hgnc"
       # Examples don't have publication info
@@ -2979,8 +2996,10 @@ components:
         semantic: Gene
       ## could this predicate be more specific? like genetically_interacts_with?
       predicate: interacts_with
-      ## the primary_knowledge_source field values I've encountered: `infores:string`, `infores:biogrid`
-      source: "infores:monarchinitiative"   ## but the response has more information
+      ## knowledge_source info encountered:
+      ## - primary: "infores:string" OR "infores:biogrid"
+      ## - aggregator: ["infores:monarchinitiative"]
+      # source: "infores:monarchinitiative"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/object-gene-hgnc"
       # Examples have publication pmids
@@ -3008,7 +3027,7 @@ components:
       - id: HGNC
         semantic: Gene
       predicate: interacts_with
-      source: "infores:monarchinitiative"
+      # source: "infores:monarchinitiative"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/subject-gene-hgnc"
       testExamples:
