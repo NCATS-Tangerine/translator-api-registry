@@ -52,11 +52,9 @@ paths:
           in: query
           required: false
           schema:
-            anyOf:
-              - type: array
-                items:
-                  $ref: '#/components/schemas/AssociationCategory'
-              # - type: 'null'
+            type: array
+            items:
+              $ref: '#/components/schemas/AssociationCategory'
             title: Category
         - name: subject
           in: query
@@ -68,15 +66,41 @@ paths:
                   type: string
               # - type: 'null'
             title: Subject
-        - name: predicate
+        - name: subject_category
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/EntityCategory'
+            title: Subject Category
+        - name: subject_namespace
           in: query
           required: false
           schema:
             anyOf:
               - type: array
                 items:
-                  $ref: '#/components/schemas/AssociationPredicate'
+                  type: string
               # - type: 'null'
+            title: Subject Namespace
+        - name: subject_taxon
+          in: query
+          required: false
+          schema:
+            anyOf:
+              - type: array
+                items:
+                  type: string
+              # - type: 'null'
+            title: Subject Taxon
+        - name: predicate
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/AssociationPredicate'
             title: Predicate
         - name: object
           in: query
@@ -88,6 +112,34 @@ paths:
                   type: string
               # - type: 'null'
             title: Object
+        - name: object_category
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/EntityCategory'
+            title: Object Category
+        - name: object_namespace
+          in: query
+          required: false
+          schema:
+            anyOf:
+              - type: array
+                items:
+                  type: string
+              # - type: 'null'
+            title: Object Namespace
+        - name: object_taxon
+          in: query
+          required: false
+          schema:
+            anyOf:
+              - type: array
+                items:
+                  type: string
+              # - type: 'null'
+            title: Object Taxon
         - name: entity
           in: query
           required: false
@@ -102,9 +154,8 @@ paths:
           in: query
           required: false
           schema:
-            anyOf:
-              - type: boolean
-              # - type: 'null'
+            type: boolean
+            default: false
             title: Direct
         - name: format
           in: query
@@ -274,6 +325,7 @@ paths:
           in: query
           required: false
           schema:
+            type: boolean
             title: Download the results as a file
             # examples:
             #   - true
@@ -566,6 +618,51 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+  /v3/api/semsim/autocomplete:
+    get:
+      tags:
+        - semsim
+      summary: Autocomplete
+      description: >-
+        Autocomplete for semantic similarity lookups, prioritizes entities which
+        have direct phenotype associations.
+
+        Note: This API endpoint is experimental and may evolve or disappear over
+        time.
+
+
+        Args:
+            q (str): Query string to autocomplete against
+
+        Returns:
+            SearchResults
+      operationId: autocomplete_v3_api_semsim_autocomplete_get
+      parameters:
+        - name: q
+          in: query
+          required: false
+          schema:
+            type: string
+            title: Query string to autocomplete against
+            # examples:
+            #   - fanc
+            #   - ehler
+            default: '*:*'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchResults'
+        '404':
+          description: Not Found
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   '/v3/api/semsim/compare/{subjects}/{objects}':
     get:
       tags:
@@ -734,19 +831,20 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
-  '/v3/api/annotate/{content}':
+  /v3/api/annotate:
     get:
       tags:
         - text_annotation
       summary: ' Annotate'
-      operationId: _annotate_v3_api_annotate__content__get
+      operationId: _annotate_v3_api_annotate_get
       parameters:
-        - name: content
-          in: path
-          required: true
+        - name: text
+          in: query
+          required: false
           schema:
             type: string
             title: The text content to annotate
+            default: ''
       responses:
         '200':
           description: Successful Response
@@ -754,7 +852,7 @@ paths:
             application/json:
               schema:
                 type: string
-                title: Response  Annotate V3 Api Annotate  Content  Get
+                title: Response  Annotate V3 Api Annotate Get
         '404':
           description: Not Found
         '422':
@@ -763,18 +861,17 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
-  /v3/api/annotate:
     post:
       tags:
         - text_annotation
       summary: ' Post Annotate'
       operationId: _post_annotate_v3_api_annotate_post
       requestBody:
+        required: true
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/TextAnnotationRequest'
-        required: true
       responses:
         '200':
           description: Successful Response
@@ -792,55 +889,57 @@ paths:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
   /v3/api/annotate/entities:
-    # get:
-    #   tags:
-    #     - text_annotation
-    #   summary: ' Entities'
-    #   operationId: _entities_v3_api_annotate_entities_get
-    #   requestBody:
-    #     content:
-    #       application/json:
-    #         schema:
-    #           $ref: '#/components/schemas/TextAnnotationRequest'
-    #     required: true
-    #   responses:
-    #     '200':
-    #       description: Successful Response
-    #       content:
-    #         application/json:
-    #           schema:
-    #             items:
-    #               $ref: '#/components/schemas/TextAnnotationResult'
-    #             type: array
-    #             title: Response  Entities V3 Api Annotate Entities Get
-    #     '404':
-    #       description: Not Found
-    #     '422':
-    #       description: Validation Error
-    #       content:
-    #         application/json:
-    #           schema:
-    #             $ref: '#/components/schemas/HTTPValidationError'
-    post:
+    get:
       tags:
         - text_annotation
-      summary: ' Post Entities'
-      operationId: _post_entities_v3_api_annotate_entities_post
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/TextAnnotationRequest'
-        required: true
+      summary: ' Entities'
+      operationId: _entities_v3_api_annotate_entities_get
+      parameters:
+        - name: text
+          in: query
+          required: false
+          schema:
+            type: string
+            default: ''
+            title: Text
       responses:
         '200':
           description: Successful Response
           content:
             application/json:
               schema:
+                type: array
                 items:
                   $ref: '#/components/schemas/TextAnnotationResult'
+                title: Response  Entities V3 Api Annotate Entities Get
+        '404':
+          description: Not Found
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    post:
+      tags:
+        - text_annotation
+      summary: ' Post Entities'
+      operationId: _post_entities_v3_api_annotate_entities_post
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TextAnnotationRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
                 type: array
+                items:
+                  $ref: '#/components/schemas/TextAnnotationResult'
                 title: Response  Post Entities V3 Api Annotate Entities Post
         '404':
           description: Not Found
@@ -2025,6 +2124,60 @@ components:
             # - type: 'null'
           title: Uri
           description: The URI of the entity
+        namespace:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Namespace
+          description: The namespace/prefix portion of this entity's identifier
+        has_phenotype:
+          anyOf:
+            - items:
+                type: string
+              type: array
+            # - type: 'null'
+          title: Has Phenotype
+          description: >-
+            A list of phenotype identifiers that are known to be associated with
+            this entity
+        has_phenotype_label:
+          anyOf:
+            - items:
+                type: string
+              type: array
+            # - type: 'null'
+          title: Has Phenotype Label
+          description: >-
+            A list of phenotype labels that are known to be associated with this
+            entity
+        has_phenotype_closure:
+          anyOf:
+            - items:
+                type: string
+              type: array
+            # - type: 'null'
+          title: Has Phenotype Closure
+          description: >-
+            A list of phenotype identifiers that are known to be associated with
+            this entity expanded to include all ancestors
+        has_phenotype_closure_label:
+          anyOf:
+            - items:
+                type: string
+              type: array
+            # - type: 'null'
+          title: Has Phenotype Closure Label
+          description: >-
+            A list of phenotype labels that are known to be associated with this
+            entity expanded to include all ancestors
+        has_phenotype_count:
+          anyOf:
+            - type: integer
+            # - type: 'null'
+          title: Has Phenotype Count
+          description: >-
+            A count of the number of phenotypes that are known to be associated
+            with this entity
       additionalProperties: true
       type: object
       required:
@@ -2297,6 +2450,60 @@ components:
             # - type: 'null'
           title: Uri
           description: The URI of the entity
+        namespace:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Namespace
+          description: The namespace/prefix portion of this entity's identifier
+        has_phenotype:
+          anyOf:
+            - items:
+                type: string
+              type: array
+            # - type: 'null'
+          title: Has Phenotype
+          description: >-
+            A list of phenotype identifiers that are known to be associated with
+            this entity
+        has_phenotype_label:
+          anyOf:
+            - items:
+                type: string
+              type: array
+            # - type: 'null'
+          title: Has Phenotype Label
+          description: >-
+            A list of phenotype labels that are known to be associated with this
+            entity
+        has_phenotype_closure:
+          anyOf:
+            - items:
+                type: string
+              type: array
+            # - type: 'null'
+          title: Has Phenotype Closure
+          description: >-
+            A list of phenotype identifiers that are known to be associated with
+            this entity expanded to include all ancestors
+        has_phenotype_closure_label:
+          anyOf:
+            - items:
+                type: string
+              type: array
+            # - type: 'null'
+          title: Has Phenotype Closure Label
+          description: >-
+            A list of phenotype labels that are known to be associated with this
+            entity expanded to include all ancestors
+        has_phenotype_count:
+          anyOf:
+            - type: integer
+            # - type: 'null'
+          title: Has Phenotype Count
+          description: >-
+            A count of the number of phenotypes that are known to be associated
+            with this entity
         inheritance:
           anyOf:
             - $ref: '#/components/schemas/Entity'
@@ -2452,6 +2659,60 @@ components:
             # - type: 'null'
           title: Uri
           description: The URI of the entity
+        namespace:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Namespace
+          description: The namespace/prefix portion of this entity's identifier
+        has_phenotype:
+          anyOf:
+            - items:
+                type: string
+              type: array
+            # - type: 'null'
+          title: Has Phenotype
+          description: >-
+            A list of phenotype identifiers that are known to be associated with
+            this entity
+        has_phenotype_label:
+          anyOf:
+            - items:
+                type: string
+              type: array
+            # - type: 'null'
+          title: Has Phenotype Label
+          description: >-
+            A list of phenotype labels that are known to be associated with this
+            entity
+        has_phenotype_closure:
+          anyOf:
+            - items:
+                type: string
+              type: array
+            # - type: 'null'
+          title: Has Phenotype Closure
+          description: >-
+            A list of phenotype identifiers that are known to be associated with
+            this entity expanded to include all ancestors
+        has_phenotype_closure_label:
+          anyOf:
+            - items:
+                type: string
+              type: array
+            # - type: 'null'
+          title: Has Phenotype Closure Label
+          description: >-
+            A list of phenotype labels that are known to be associated with this
+            entity expanded to include all ancestors
+        has_phenotype_count:
+          anyOf:
+            - type: integer
+            # - type: 'null'
+          title: Has Phenotype Count
+          description: >-
+            A count of the number of phenotypes that are known to be associated
+            with this entity
         highlight:
           anyOf:
             - type: string
@@ -2671,19 +2932,19 @@ components:
   ## commenting out the x-bte source field: replaced with the post-processed trapi_sources info
   ## Parameters
   ## - `liimt`: max seems to be 500 
-  ## - `download`: not specifying it seems to work best (setting to false sometimes doesn't seem to work)
     disease-pheno:
-    ## 242154 items: https://api-v3.monarchinitiative.org/v3/api/association?category=biolink:DiseaseToPhenotypicFeatureAssociation&direct=true&format=json&limit=10&offset=0
-    ## all have predicate has_phenotype, since the record count is the same https://api-v3.monarchinitiative.org/v3/api/association?category=biolink:DiseaseToPhenotypicFeatureAssociation&predicate=biolink:has_phenotype&direct=true&format=json&limit=10&offset=0
+    ## 242009 items: https://api-v3.monarchinitiative.org/v3/api/association?category=biolink:DiseaseToPhenotypicFeatureAssociation&subject_namespace=MONDO&predicate=biolink:has_phenotype&object_namespace=HP&direct=true&format=json&limit=10
     - supportBatch: false
       useTemplating: true
       inputs:
       - id: MONDO
         semantic: Disease
       parameters:
-        category: "biolink:DiseaseToPhenotypicFeatureAssociation"
         subject: "{{ queryInputs | replPrefix('MONDO') }}"     ## has prefix
+        category: "biolink:DiseaseToPhenotypicFeatureAssociation"
+        subject_namespace: MONDO
         predicate: "biolink:has_phenotype"
+        object_namespace: HP
         direct: true
         format: json
         limit: 500
@@ -2699,10 +2960,10 @@ components:
         "$ref": "#/components/x-bte-response-mapping/object-pheno-hp"
       # Examples have publication pmids, involves merging multiple hits where some don't have pmids
       testExamples:
-      # link https://api-v3.monarchinitiative.org/v3/api/association?category=biolink:DiseaseToPhenotypicFeatureAssociation&subject=MONDO:0007298&predicate=biolink:has_phenotype&direct=true&format=json&limit=500&offset=0
+      # link https://api-v3.monarchinitiative.org/v3/api/association?subject=MONDO:0007298&category=biolink:DiseaseToPhenotypicFeatureAssociation&subject_namespace=MONDO&predicate=biolink:has_phenotype&object_namespace=HP&direct=true&format=json&limit=500
         - qInput: "MONDO:0007298"      ## spinocerebellar ataxia type 29
           oneOutput: "HP:0006855"      ## Cerebellar vermis atrophy
-      # link https://api-v3.monarchinitiative.org/v3/api/association?category=biolink:DiseaseToPhenotypicFeatureAssociation&subject=MONDO:0008974&predicate=biolink:has_phenotype&direct=true&format=json&limit=500&offset=0
+      # link https://api-v3.monarchinitiative.org/v3/api/association?subject=MONDO:0008974&category=biolink:DiseaseToPhenotypicFeatureAssociation&subject_namespace=MONDO&predicate=biolink:has_phenotype&object_namespace=HP&direct=true&format=json&limit=500
         - qInput: "MONDO:0008974"      ## Greenberg dysplasia
           oneOutput: "HP:0000926"      ## Platyspondyly
     pheno-disease:
@@ -2712,9 +2973,11 @@ components:
       - id: HP
         semantic: PhenotypicFeature
       parameters:
-        category: "biolink:DiseaseToPhenotypicFeatureAssociation"
         object: "{{ queryInputs | replPrefix('HP') }}"     ## has prefix
+        category: "biolink:DiseaseToPhenotypicFeatureAssociation"
+        subject_namespace: MONDO
         predicate: "biolink:has_phenotype"
+        object_namespace: HP
         direct: true
         format: json
         limit: 500
@@ -2727,24 +2990,25 @@ components:
         "$ref": "#/components/x-bte-response-mapping/subject-disease-mondo"
       # Examples have publication pmids
       testExamples:
-      # link https://api-v3.monarchinitiative.org/v3/api/association?category=biolink:DiseaseToPhenotypicFeatureAssociation&predicate=biolink:has_phenotype&object=HP:0031629&direct=true&format=json&limit=100&offset=0
+      # link https://api-v3.monarchinitiative.org/v3/api/association?object=HP:0031629&category=biolink:DiseaseToPhenotypicFeatureAssociation&subject_namespace=MONDO&predicate=biolink:has_phenotype&object_namespace=HP&direct=true&format=json&limit=500
         - qInput: "HP:0031629"            ## Impaired tandem gait
           oneOutput: "MONDO:0030458"      ## Charcot-Marie-Tooth disease, axonal, Type 2HH"
-      # link https://api-v3.monarchinitiative.org/v3/api/association?category=biolink:DiseaseToPhenotypicFeatureAssociation&predicate=biolink:has_phenotype&object=HP:0006855&direct=true&format=json&limit=100&offset=0
+      # link https://api-v3.monarchinitiative.org/v3/api/association?object=HP:0006855&category=biolink:DiseaseToPhenotypicFeatureAssociation&subject_namespace=MONDO&predicate=biolink:has_phenotype&object_namespace=HP&direct=true&format=json&limit=500
         - qInput: "HP:0006855"            ## Cerebellar vermis atrophy
           oneOutput: "MONDO:0010041"      ## Charlevoix-Saguenay spastic ataxia
     gene-disease-causal:
-    ## 6573 items: https://api-v3.monarchinitiative.org/v3/api/association?category=biolink:CausalGeneToDiseaseAssociation&direct=true&format=json&limit=10&offset=0
-    ## all have predicate causes, since the record count is the same https://api-v3.monarchinitiative.org/v3/api/association?category=biolink:CausalGeneToDiseaseAssociation&predicate=biolink:causes&direct=true&format=json&limit=10&offset=0
+    ## 6668 items: https://api-v3.monarchinitiative.org/v3/api/association?category=biolink:CausalGeneToDiseaseAssociation&subject_namespace=HGNC&predicate=biolink:causes&object_namespace=MONDO&direct=true&format=json&limit=10
     - supportBatch: false
       useTemplating: true
       inputs:
       - id: HGNC
         semantic: Gene
       parameters:
-        category: "biolink:CausalGeneToDiseaseAssociation"
         subject: "{{ queryInputs | replPrefix('HGNC') }}"     ## has prefix
+        category: "biolink:CausalGeneToDiseaseAssociation"
+        subject_namespace: HGNC
         predicate: "biolink:causes"
+        object_namespace: MONDO
         direct: true
         format: json
         limit: 500
@@ -2760,10 +3024,10 @@ components:
         "$ref": "#/components/x-bte-response-mapping/object-disease-mondo"
       # Examples don't have publication info
       testExamples:
-      # link https://api-v3.monarchinitiative.org/v3/api/association?category=biolink:CausalGeneToDiseaseAssociation&subject=HGNC:11138&predicate=biolink:causes&direct=true&format=json&limit=10&offset=0
+      # link https://api-v3.monarchinitiative.org/v3/api/association?subject=HGNC:11138&category=biolink:CausalGeneToDiseaseAssociation&subject_namespace=HGNC&predicate=biolink:causes&object_namespace=MONDO&direct=true&format=json&limit=500
         - qInput: "HGNC:11138"            ## SNCA aka NCBIGene:6622
           oneOutput: "MONDO:0007488"      ## Lewy body dementia
-      # link https://api-v3.monarchinitiative.org/v3/api/association?category=biolink:CausalGeneToDiseaseAssociation&subject=HGNC:3434&predicate=biolink:causes&direct=true&format=json&limit=10&offset=0
+      # link https://api-v3.monarchinitiative.org/v3/api/association?subject=HGNC:3434&category=biolink:CausalGeneToDiseaseAssociation&subject_namespace=HGNC&predicate=biolink:causes&object_namespace=MONDO&direct=true&format=json&limit=500
         - qInput: "HGNC:3434"             ## ERCC2 aka NCBIGene:2068
           oneOutput: "MONDO:0012553"      ## cerebrooculofacioskeletal syndrome 2
     disease-gene-causal:
@@ -2773,9 +3037,11 @@ components:
       - id: MONDO
         semantic: Disease
       parameters:
-        category: "biolink:CausalGeneToDiseaseAssociation"
         object: "{{ queryInputs | replPrefix('MONDO') }}"     ## has prefix
+        category: "biolink:CausalGeneToDiseaseAssociation"
+        subject_namespace: HGNC
         predicate: "biolink:causes"
+        object_namespace: MONDO
         direct: true
         format: json
         limit: 500
@@ -2788,23 +3054,25 @@ components:
         "$ref": "#/components/x-bte-response-mapping/subject-gene-hgnc"
       # Examples don't have publication info
       testExamples:
-      # link https://api-v3.monarchinitiative.org/v3/api/association?category=biolink:CausalGeneToDiseaseAssociation&predicate=biolink:causes&object=MONDO:0011562&direct=true&format=json&limit=10&offset=0
+      # link https://api-v3.monarchinitiative.org/v3/api/association?object=MONDO:0011562&category=biolink:CausalGeneToDiseaseAssociation&subject_namespace=HGNC&predicate=biolink:causes&object_namespace=MONDO&direct=true&format=json&limit=500
         - qInput: "MONDO:0011562"      ## autosomal dominant Parkinson disease 4
           oneOutput: "HGNC:11138"      ## SNCA aka NCBIGene:6622
-      # link https://api-v3.monarchinitiative.org/v3/api/association?category=biolink:CausalGeneToDiseaseAssociation&predicate=biolink:causes&object=MONDO:0009861&direct=true&format=json&limit=10&offset=0
+      # link https://api-v3.monarchinitiative.org/v3/api/association?object=MONDO:0009861&category=biolink:CausalGeneToDiseaseAssociation&subject_namespace=HGNC&predicate=biolink:causes&object_namespace=MONDO&direct=true&format=json&limit=500
         - qInput: "MONDO:0009861"      ## phenylketonuria
           oneOutput: "HGNC:8582"       ## PAH aka NCBIGene:5053
     gene-disease-contributesTo:
-    ## 589 items: https://api-v3.monarchinitiative.org/v3/api/association?category=biolink:CorrelatedGeneToDiseaseAssociation&predicate=biolink:contributes_to&direct=true&format=json&limit=10&offset=0
+    ## 590 items: https://api-v3.monarchinitiative.org/v3/api/association?category=biolink:CorrelatedGeneToDiseaseAssociation&subject_namespace=HGNC&predicate=biolink:contributes_to&object_namespace=MONDO&direct=true&format=json&limit=10
     - supportBatch: false
       useTemplating: true
       inputs:
       - id: HGNC
         semantic: Gene
       parameters:
-        category: "biolink:CorrelatedGeneToDiseaseAssociation"
         subject: "{{ queryInputs | replPrefix('HGNC') }}"     ## has prefix
+        category: "biolink:CorrelatedGeneToDiseaseAssociation"
+        subject_namespace: HGNC
         predicate: "biolink:contributes_to"
+        object_namespace: MONDO
         direct: true
         format: json
         limit: 500
@@ -2820,10 +3088,10 @@ components:
         "$ref": "#/components/x-bte-response-mapping/object-disease-mondo"
       # Examples don't have publication info
       testExamples:
-      # link https://api-v3.monarchinitiative.org/v3/api/association?category=biolink:CorrelatedGeneToDiseaseAssociation&subject=HGNC:6294&predicate=biolink:contributes_to&direct=true&format=json&limit=10&offset=0
+      # link https://api-v3.monarchinitiative.org/v3/api/association?subject=HGNC:6294&category=biolink:CorrelatedGeneToDiseaseAssociation&subject_namespace=HGNC&predicate=biolink:contributes_to&object_namespace=MONDO&direct=true&format=json&limit=500
         - qInput: "HGNC:6294"                 ## KCNQ1 aka NCBIGene:3784
           oneOutput: "MONDO:0100316"          ## long QT syndrome 1
-      # link https://api-v3.monarchinitiative.org/v3/api/association?category=biolink:CorrelatedGeneToDiseaseAssociation&subject=HGNC:9652&predicate=biolink:contributes_to&direct=true&format=json&limit=10&offset=0
+      # link https://api-v3.monarchinitiative.org/v3/api/association?subject=HGNC:9652&category=biolink:CorrelatedGeneToDiseaseAssociation&subject_namespace=HGNC&predicate=biolink:contributes_to&object_namespace=MONDO&direct=true&format=json&limit=500
         - qInput: "HGNC:9652"                 ## PTPN22 aka NCBIGene:26191
           oneOutput: "MONDO:0007915"          ## systemic lupus erythematosus
     disease-gene-contributesTo:
@@ -2833,9 +3101,11 @@ components:
       - id: MONDO
         semantic: Disease
       parameters:
-        category: "biolink:CorrelatedGeneToDiseaseAssociation"
         object: "{{ queryInputs | replPrefix('MONDO') }}"     ## has prefix
+        category: "biolink:CorrelatedGeneToDiseaseAssociation"
+        subject_namespace: HGNC
         predicate: "biolink:contributes_to"
+        object_namespace: MONDO
         direct: true
         format: json
         limit: 500
@@ -2848,23 +3118,25 @@ components:
         "$ref": "#/components/x-bte-response-mapping/subject-gene-hgnc"
       # Examples don't have publication info
       testExamples:
-      # link https://api-v3.monarchinitiative.org/v3/api/association?category=biolink:CorrelatedGeneToDiseaseAssociation&predicate=biolink:contributes_to&object=MONDO:0014629&direct=true&format=json&limit=10&offset=0
+      # link https://api-v3.monarchinitiative.org/v3/api/association?object=MONDO:0014629&category=biolink:CorrelatedGeneToDiseaseAssociation&subject_namespace=HGNC&predicate=biolink:contributes_to&object_namespace=MONDO&direct=true&format=json&limit=500
         - qInput: "MONDO:0014629"      ## autoimmune interstitial lung disease-arthritis syndrome
           oneOutput: "HGNC:2230"       ## COPA aka NCBIGene:1314
-      # link https://api-v3.monarchinitiative.org/v3/api/association?category=biolink:CorrelatedGeneToDiseaseAssociation&predicate=biolink:contributes_to&object=MONDO:0013416&direct=true&format=json&limit=10&offset=0
+      # link https://api-v3.monarchinitiative.org/v3/api/association?object=MONDO:0013416&category=biolink:CorrelatedGeneToDiseaseAssociation&subject_namespace=HGNC&predicate=biolink:contributes_to&object_namespace=MONDO&direct=true&format=json&limit=500
         - qInput: "MONDO:0013416"      ## age related macular degeneration 8
           oneOutput: "HGNC:32685"      ## ARMS2 aka NCBIGene:387715
     gene-disease-associatedCondition:
-    ## 7995 items: https://api-v3.monarchinitiative.org/v3/api/association?category=biolink:CorrelatedGeneToDiseaseAssociation&predicate=biolink:gene_associated_with_condition&direct=true&format=json&limit=10&offset=0
+    ## 7997 items: https://api-v3.monarchinitiative.org/v3/api/association?category=biolink:CorrelatedGeneToDiseaseAssociation&subject_namespace=HGNC&predicate=biolink:gene_associated_with_condition&object_namespace=MONDO&direct=true&format=json&limit=10
     - supportBatch: false
       useTemplating: true
       inputs:
       - id: HGNC
         semantic: Gene
       parameters:
-        category: "biolink:CorrelatedGeneToDiseaseAssociation"
         subject: "{{ queryInputs | replPrefix('HGNC') }}"     ## has prefix
+        category: "biolink:CorrelatedGeneToDiseaseAssociation"
+        subject_namespace: HGNC
         predicate: "biolink:gene_associated_with_condition"
+        object_namespace: MONDO
         direct: true
         format: json
         limit: 500
@@ -2880,10 +3152,10 @@ components:
         "$ref": "#/components/x-bte-response-mapping/object-disease-mondo"
       # Examples don't have publication info
       testExamples:
-      # link https://api-v3.monarchinitiative.org/v3/api/association?category=biolink:CorrelatedGeneToDiseaseAssociation&subject=HGNC:6493&predicate=biolink:gene_associated_with_condition&direct=true&format=json&limit=10&offset=0
+      # link https://api-v3.monarchinitiative.org/v3/api/association?subject=HGNC:6493&category=biolink:CorrelatedGeneToDiseaseAssociation&subject_namespace=HGNC&predicate=biolink:gene_associated_with_condition&object_namespace=MONDO&direct=true&format=json&limit=500
         - qInput: "HGNC:6493"                 ## LAMC2 aka NCBIGene:3918
           oneOutput: "MONDO:0009182"          ## junctional epidermolysis bullosa Herlitz type
-      # link https://api-v3.monarchinitiative.org/v3/api/association?category=biolink:CorrelatedGeneToDiseaseAssociation&subject=HGNC:9462&predicate=biolink:gene_associated_with_condition&direct=true&format=json&limit=10&offset=0
+      # link https://api-v3.monarchinitiative.org/v3/api/association?subject=HGNC:9462&category=biolink:CorrelatedGeneToDiseaseAssociation&subject_namespace=HGNC&predicate=biolink:gene_associated_with_condition&object_namespace=MONDO&direct=true&format=json&limit=500
         - qInput: "HGNC:9462"                 ## PRPS1 aka NCBIGene:5631
           oneOutput: "MONDO:0010699"          ## Charcot-Marie-Tooth disease X-linked recessive 5
     disease-gene-associatedCondition:
@@ -2893,9 +3165,11 @@ components:
       - id: MONDO
         semantic: Disease
       parameters:
-        category: "biolink:CorrelatedGeneToDiseaseAssociation"
         object: "{{ queryInputs | replPrefix('MONDO') }}"     ## has prefix
+        category: "biolink:CorrelatedGeneToDiseaseAssociation"
+        subject_namespace: HGNC
         predicate: "biolink:gene_associated_with_condition"
+        object_namespace: MONDO
         direct: true
         format: json
         limit: 500
@@ -2908,24 +3182,25 @@ components:
         "$ref": "#/components/x-bte-response-mapping/subject-gene-hgnc"
       # Examples don't have publication info
       testExamples:
-      # link https://api-v3.monarchinitiative.org/v3/api/association?category=biolink:CorrelatedGeneToDiseaseAssociation&predicate=biolink:gene_associated_with_condition&object=MONDO:0018961&direct=true&format=json&limit=20&offset=0
+      # link https://api-v3.monarchinitiative.org/v3/api/association?object=MONDO:0018961&category=biolink:CorrelatedGeneToDiseaseAssociation&subject_namespace=HGNC&predicate=biolink:gene_associated_with_condition&object_namespace=MONDO&direct=true&format=json&limit=500
         - qInput: "MONDO:0018961"      ## familial melanoma
           oneOutput: "HGNC:1787"       ## CDKN2A aka NCBIGene:1029
-      # link https://api-v3.monarchinitiative.org/v3/api/association?category=biolink:CorrelatedGeneToDiseaseAssociation&predicate=biolink:gene_associated_with_condition&object=MONDO:0018875&direct=true&format=json&limit=20&offset=0
+      # link https://api-v3.monarchinitiative.org/v3/api/association?object=MONDO:0018875&category=biolink:CorrelatedGeneToDiseaseAssociation&subject_namespace=HGNC&predicate=biolink:gene_associated_with_condition&object_namespace=MONDO&direct=true&format=json&limit=500
         - qInput: "MONDO:0018875"      ## Li-Fraumeni syndrome
           oneOutput: "HGNC:6973"       ## MDM2 aka NCBIGene:4193
     gene-pheno:
-    ## 922268 items: https://api-v3.monarchinitiative.org/v3/api/association?category=biolink:GeneToPhenotypicFeatureAssociation&direct=true&format=json&limit=10&offset=0
-    ## all have predicate causes, since the record count is the same https://api-v3.monarchinitiative.org/v3/api/association?category=biolink:GeneToPhenotypicFeatureAssociation&predicate=biolink:has_phenotype&direct=true&format=json&limit=10&offset=0
+    ## 303962 items: https://api-v3.monarchinitiative.org/v3/api/association?category=biolink:GeneToPhenotypicFeatureAssociation&subject_namespace=HGNC&predicate=biolink:has_phenotype&object_namespace=HP&direct=true&format=json&limit=10
     - supportBatch: false
       useTemplating: true
       inputs:
       - id: HGNC
         semantic: Gene
       parameters:
-        category: "biolink:GeneToPhenotypicFeatureAssociation"
         subject: "{{ queryInputs | replPrefix('HGNC') }}"     ## has prefix
+        category: "biolink:GeneToPhenotypicFeatureAssociation"
+        subject_namespace: HGNC
         predicate: "biolink:has_phenotype"
+        object_namespace: HP
         direct: true
         format: json
         limit: 500
@@ -2942,10 +3217,10 @@ components:
         "$ref": "#/components/x-bte-response-mapping/object-pheno-hp"
       # Examples don't have publication info
       testExamples:
-      # link https://api-v3.monarchinitiative.org/v3/api/association?category=biolink:GeneToPhenotypicFeatureAssociation&subject=HGNC:8548&predicate=biolink:has_phenotype&direct=true&format=json&limit=100&offset=0
+      # link https://api-v3.monarchinitiative.org/v3/api/association?subject=HGNC:8548&category=biolink:GeneToPhenotypicFeatureAssociation&subject_namespace=HGNC&predicate=biolink:has_phenotype&object_namespace=HP&direct=true&format=json&limit=500
         - qInput: "HGNC:8548"            ## P4HB aka NCBIGene:5034
           oneOutput: "HP:0000944"        ## Abnormal metaphysis morphology
-      # link https://api-v3.monarchinitiative.org/v3/api/association?category=biolink:GeneToPhenotypicFeatureAssociation&subject=HGNC:7551&predicate=biolink:has_phenotype&direct=true&format=json&limit=100&offset=0
+      # link https://api-v3.monarchinitiative.org/v3/api/association?subject=HGNC:7551&category=biolink:GeneToPhenotypicFeatureAssociation&subject_namespace=HGNC&predicate=biolink:has_phenotype&object_namespace=HP&direct=true&format=json&limit=500
         - qInput: "HGNC:7551"            ## MYBPC3 aka NCBIGene:4607
           oneOutput: "HP:0011675"        ## Arrhythmia aka MONDO:0007263
     pheno-gene:
@@ -2955,9 +3230,11 @@ components:
       - id: HP
         semantic: PhenotypicFeature
       parameters:
-        category: "biolink:GeneToPhenotypicFeatureAssociation"
         object: "{{ queryInputs | replPrefix('HP') }}"     ## has prefix
+        category: "biolink:GeneToPhenotypicFeatureAssociation"
+        subject_namespace: HGNC
         predicate: "biolink:has_phenotype"
+        object_namespace: HP
         direct: true
         format: json
         limit: 500
@@ -2970,24 +3247,25 @@ components:
         "$ref": "#/components/x-bte-response-mapping/subject-gene-hgnc"
       # Examples don't have publication info
       testExamples:
-      # link https://api-v3.monarchinitiative.org/v3/api/association?category=biolink:GeneToPhenotypicFeatureAssociation&predicate=biolink:has_phenotype&object=HP:0000183&direct=true&format=json&limit=100&offset=0
+      # link https://api-v3.monarchinitiative.org/v3/api/association?object=HP:0000183&category=biolink:GeneToPhenotypicFeatureAssociation&subject_namespace=HGNC&predicate=biolink:has_phenotype&object_namespace=HP&direct=true&format=json&limit=500
         - qInput: "HP:0000183"        ## Difficulty in tongue movements
           oneOutput: "HGNC:4065"      ## GAA aka NCBIGene:2548
-      # link https://api-v3.monarchinitiative.org/v3/api/association?category=biolink:GeneToPhenotypicFeatureAssociation&predicate=biolink:has_phenotype&object=HP:0032543&direct=true&format=json&limit=100&offset=0
+      # link https://api-v3.monarchinitiative.org/v3/api/association?object=HP:0032543&category=biolink:GeneToPhenotypicFeatureAssociation&subject_namespace=HGNC&predicate=biolink:has_phenotype&object_namespace=HP&direct=true&format=json&limit=500
         - qInput: "HP:0032543"        ## Lithoptysis
           oneOutput: "HGNC:2950"      ## DNAH5 aka NCBIGene:1767
     gene-gene-interaction-forward:
-    ## 4096781 items: https://api-v3.monarchinitiative.org/v3/api/association?category=biolink:PairwiseGeneToGeneInteraction&direct=true&format=json&limit=10&offset=0
-    ## all have predicate causes, since the record count is the same https://api-v3.monarchinitiative.org/v3/api/association?category=biolink:PairwiseGeneToGeneInteraction&predicate=biolink:interacts_with&direct=true&format=json&limit=10&offset=0
+    ## 1324672 items: https://api-v3.monarchinitiative.org/v3/api/association?category=biolink:PairwiseGeneToGeneInteraction&subject_namespace=HGNC&predicate=biolink:interacts_with&object_namespace=HGNC&direct=true&format=json&limit=10
     - supportBatch: false
       useTemplating: true
       inputs:
       - id: HGNC
         semantic: Gene
       parameters:
-        category: "biolink:PairwiseGeneToGeneInteraction"
         subject: "{{ queryInputs | replPrefix('HGNC') }}"     ## has prefix
+        category: "biolink:PairwiseGeneToGeneInteraction"
+        subject_namespace: HGNC
         predicate: "biolink:interacts_with"
+        object_namespace: HGNC
         direct: true
         format: json
         limit: 500
@@ -3004,10 +3282,10 @@ components:
         "$ref": "#/components/x-bte-response-mapping/object-gene-hgnc"
       # Examples have publication pmids
       testExamples:
-      # link https://api-v3.monarchinitiative.org/v3/api/association?category=biolink:PairwiseGeneToGeneInteraction&subject=HGNC:2950&predicate=biolink:interacts_with&direct=true&format=json&limit=100&offset=0
+      # link https://api-v3.monarchinitiative.org/v3/api/association?subject=HGNC:2950&category=biolink:PairwiseGeneToGeneInteraction&subject_namespace=HGNC&predicate=biolink:interacts_with&object_namespace=HGNC&direct=true&format=json&limit=500
         - qInput: "HGNC:2950"         ## DNAH5 aka NCBIGene:1767
           oneOutput: "HGNC:13671"     ## H2AC12 aka NCBIGene:85235
-      # link https://api-v3.monarchinitiative.org/v3/api/association?category=biolink:PairwiseGeneToGeneInteraction&subject=HGNC:7551&predicate=biolink:interacts_with&direct=true&format=json&limit=100&offset=0
+      # link https://api-v3.monarchinitiative.org/v3/api/association?subject=HGNC:7551&category=biolink:PairwiseGeneToGeneInteraction&subject_namespace=HGNC&predicate=biolink:interacts_with&object_namespace=HGNC&direct=true&format=json&limit=500
         - qInput: "HGNC:7551"         ## MYBPC3 aka NCBIGene:4607
           oneOutput: "HGNC:16007"     ## TRIM63 aka NCBIGene:84676
     gene-gene-interaction-backward:
@@ -3017,9 +3295,11 @@ components:
       - id: HGNC
         semantic: Gene
       parameters:
-        category: "biolink:PairwiseGeneToGeneInteraction"
         object: "{{ queryInputs | replPrefix('HGNC') }}"     ## has prefix
+        category: "biolink:PairwiseGeneToGeneInteraction"
+        subject_namespace: HGNC
         predicate: "biolink:interacts_with"
+        object_namespace: HGNC
         direct: true
         format: json
         limit: 500
@@ -3031,9 +3311,9 @@ components:
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/subject-gene-hgnc"
       testExamples:
-      # link https://api-v3.monarchinitiative.org/v3/api/association?category=biolink:PairwiseGeneToGeneInteraction&predicate=biolink:interacts_with&object=HGNC:2950&direct=true&format=json&limit=100&offset=0
+      # link https://api-v3.monarchinitiative.org/v3/api/association?object=HGNC:2950&category=biolink:PairwiseGeneToGeneInteraction&subject_namespace=HGNC&predicate=biolink:interacts_with&object_namespace=HGNC&direct=true&format=json&limit=500
         - qInput: "HGNC:2950"         ## DNAH5 aka NCBIGene:1767
           oneOutput: "HGNC:8607"      ## PRKN aka NCBIGene:5071
-      # link https://api-v3.monarchinitiative.org/v3/api/association?category=biolink:PairwiseGeneToGeneInteraction&predicate=biolink:interacts_with&object=HGNC:7551&direct=true&format=json&limit=100&offset=0
+      # link https://api-v3.monarchinitiative.org/v3/api/association?object=HGNC:7551&category=biolink:PairwiseGeneToGeneInteraction&subject_namespace=HGNC&predicate=biolink:interacts_with&object_namespace=HGNC&direct=true&format=json&limit=500
         - qInput: "HGNC:7551"         ## MYBPC3 aka NCBIGene:4607
           oneOutput: "HGNC:1476"      ## CAPN1 aka NCBIGene:823
