@@ -6,34 +6,33 @@ info:
     x-id: https://github.com/biothings
     x-role: responsible developers
   description: >-
-    Documentation of the BioThings API for
-    [SuppKG](https://github.com/zhang-informatics/SemRep_DS/tree/main/SuppKG) data. SuppKG contains relations
-    between dietary supplements and other entities, such as diseases. More information can be found in [this 
-    paper](https://doi.org/10.1016/j.jbi.2022.104120). 
+    Documentation of the BioThings API for the Drug Repositioning Database, 
+    [repoDB](https://unmtid-shinyapps.net/shiny/repodb/), data. 
+    repoDB contains a standard set of drug repositioning successes and failures that can be used to 
+    fairly and reproducibly benchmark computational repositioning methods. 
+    repoDB data was extracted from DrugCentral and ClinicalTrials.gov.
   termsOfService: https://biothings.io/about
-  title: BioThings SuppKG API
-  version: '1.0'
+  title: BioThings repoDB API
+  version: '2.0'
   x-translator:
-    infores: "infores:biothings-suppkg"
+    infores: "infores:biothings-repodb"
     component: KP
     team:
       - Service Provider
     biolink-version: "3.5.3"
 servers:
 - description: Encrypted Production server
-  url: https://biothings.ncats.io/suppkg
+  url: https://biothings.ncats.io/repodb
   x-maturity: production
 tags:
-- name: drug
-- name: disease
-- name: association
 - name: chemical
+- name: disease
 - name: metadata
 - name: query
 - name: translator
 - name: biothings
 paths:
-  "/association/{id}":
+  "/chemical/{id}":
     get:
       description: >-
         By default, this will return the complete association in JSON format. If the input is not valid,
@@ -52,7 +51,7 @@ paths:
       - name: id
         in: path
         required: true
-        example: "C0005847_DC0242726_PART_OF"
+        example: "DB14487"
         schema:
           type: string
       - "$ref": "#/components/parameters/fields"
@@ -79,8 +78,8 @@ paths:
       #   '404':
       #     description: A response indicating an unknown association ID
       tags:
-      - association
-  "/association":
+      - chemical
+  "/chemical":
     post:
       description: >-
         Although making simple GET requests above to our service is sufficient in most use cases, 
@@ -116,8 +115,8 @@ paths:
           application/json:
             example:
               ids:
-              - "C0013227_C0000737_TREATS"
-              - "C0013227_C0000768_TREATS"
+              - "DB14487"
+              - "DB00003"
             schema:
               type: object
               properties:
@@ -132,7 +131,7 @@ paths:
         '200':
           description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
       tags:
-      - association
+      - chemical
   "/metadata":
     get:
       description: Get metadata about the data available from the API
@@ -172,7 +171,7 @@ paths:
           API](https://docs.mychem.info/en/latest/doc/chem_query_service.html#query-syntax).
         in: query
         required: true
-        example: "subject.umls:C0013227"
+        example: "repodb.drugbank:DB00013"
         schema:
           type: string
       - "$ref": "#/components/parameters/fields"
@@ -270,10 +269,10 @@ paths:
           application/json:
             example:
               q:
-              - "C0040383"
-              - "C0013227"
+              - "DB00013"
+              - "DB00012"
               scopes:
-              - "subject.umls"
+              - "repodb.drugbank"
             schema:
               type: object
               properties:
@@ -307,10 +306,11 @@ paths:
       # summary: Make batch gene queries and return matching gene hits
       tags:
       - query
-      ## 2 operations
+      ## 3 operations (1 sort-of set)
       x-bte-kgs-operations:
-      - $ref: '#/components/x-bte-kgs-operations/supplement-treats-disease'
-      - $ref: '#/components/x-bte-kgs-operations/disease-treated_by-supplement'
+      - $ref: '#/components/x-bte-kgs-operations/drug-disease-approved'
+      - $ref: '#/components/x-bte-kgs-operations/drug-disease-not-approved'
+      - $ref: '#/components/x-bte-kgs-operations/rev-disease-drug'
 components:
   parameters:
     callback:
@@ -571,43 +571,87 @@ components:
   #       type: array
   #     - type: string
   x-bte-kgs-operations:
-  ## SuppKG mainly relates a dietary supplement (ex. chemical, drug) to an object (ex. body part, disease) with a predicate
-  ## SuppKG also contains records unrelated to dietary supplements (ex. abcess root is part of blood vessel)
-  ## - Subject: UMLS ID without prefixes in subject.umls
-  ## - Object: UMLS ID without prefixes in object.umls
-  ## - Predicate: Describes association between subject and object in predicate
-  ## The PubMed articles that contain the relationships between the subject and object are in relation
-  ## A subject or object's semantic type can be found in either subject.semtypes or object.semtypes 
-    supplement-treats-disease:
-    ## 595,222 records 
+  ## NOTES
+  ## - including repodb.indications.name in forward direction, in case SRI NodeNorm
+  ##   doesn't recognize UMLS ID. 
+  ##   BUT it doesn't work in the reverse direction because BTE doesn't necessarily pick the
+  ##   correct name from the response (nested field, reverses issue)
+  ## - breaking down by indication status in the forward direction
+  ##   - likely useful in the treats-refactor
+  ##   - but can't do this kind of query in the reverse direction right now
+  ## - right now, not breaking down by indication phase
+  ##   - also only possible in the forward direction
+  ## - possible edge-attributes, not using because we'd want a parser adjustment or 
+  ##   JQ post-processing to remove the field when the value is "NA"
+  ##   - 49 / 2211 records have clinical trial ID like NCT00073372: https://biothings.ncats.io/repodb/query?q=NOT%20repodb.indications.NCT:NA
+  ##   - 27 / 221 records have detailed status (free-text): https://biothings.ncats.io/repodb/query?q=NOT%20repodb.indications.detailed_status:NA
+    drug-disease-approved:
+    ## 2162 / 2211 records aka drugs
       - supportBatch: true
         useTemplating: true ## flag to say templating is being used below
         inputs:
-          - id: UMLS
+          - id: DRUGBANK
             semantic: SmallMolecule
         requestBody:
           body: 
             q: "{{ queryInputs | rmPrefix() }}"
-            scopes: subject.umls
+            scopes: repodb.drugbank
         outputs:
           - id: UMLS
             semantic: Disease
         parameters:
-          fields: object.umls,relation.pmid,relation.sentence,subject.name,object.name
+          ## need to include field that will have jmespath run on it
+          fields: >-
+            repodb.indications,
+            repodb.name
           size: 1000
-          filter: >-
-            subject.semtypes:(aapp OR antb OR bacs OR dsp OR food OR inch OR orch OR phsu OR vita) AND
-            (NOT subject.semtypes:(bact OR gngm OR plnt)) AND
-            predicate:TREATS AND
-            object.semtypes:(acab OR anab OR cgab OR comd OR dsyn OR mobd OR neop)
+          filter: repodb.indications.status:Approved
+          jmespath: "repodb.indications|[?status==`Approved`]"
         predicate: treats
-        source: "infores:suppkg" # no infores for suppkg yet
+        source: "infores:repodb"
         response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/object"
+          "$ref": "#/components/x-bte-response-mapping/disease"
         testExamples:
-          - qInput: "UMLS:C0016277"      ## Fluconazole
-            oneOutput: "UMLS:C0009324"   ## ulcerative colitis
-    disease-treated_by-supplement:
+          - qInput: "DRUGBANK:DB00002"    ## Cetuximab
+            oneOutput: "UMLS:C0007102"    ## Malignant tumor of colon
+    drug-disease-not-approved:
+    ## 518 records with Terminated
+    ## 336 with Withdrawn
+    ## 78 with Suspended
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: DRUGBANK
+            semantic: SmallMolecule
+        requestBody:
+          body: 
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: repodb.drugbank
+        outputs:
+          - id: UMLS
+            semantic: Disease
+        parameters:
+          fields: >-
+            repodb.indications,
+            repodb.name
+          size: 1000
+          ## jmespath probably can't use "NOT"
+          jmespath: "repodb.indications|[?(status==`Terminated`||status==`Withdrawn`||status==`Suspended`)]"
+        predicate: related_to
+        source: "infores:repodb"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/disease"
+        testExamples:
+        ## for Terminated
+          - qInput: "DRUGBANK:DB00043"    ## Omalizumab
+            oneOutput: "UMLS:C0004096"    ## Asthma
+        ## for Withdrawn
+          - qInput: "DRUGBANK:DB00007"    ## Leuprolide
+            oneOutput: "UMLS:C0042133"    ## Uterine Fibroids / uterine corpus leiomyoma
+        ## for Suspended
+          - qInput: "DRUGBANK:DB00104"    ## Octreotide
+            oneOutput: "UMLS:C0001206"    ## Acromegaly
+    rev-disease-drug:
       - supportBatch: true
         useTemplating: true
         inputs:
@@ -616,37 +660,27 @@ components:
         requestBody:
           body: 
             q: "{{ queryInputs | rmPrefix() }}"
-            scopes: object.umls
+            scopes: repodb.indications.umls
         outputs:
-          - id: UMLS
+          - id: DRUGBANK
             semantic: SmallMolecule
         parameters:
-          fields: subject.umls,relation,subject.name,object.name
+          fields: >-
+            repodb.drugbank,
+            repodb.name
           size: 1000
-          filter: >-
-            subject.semtypes:(aapp OR antb OR bacs OR dsp OR food OR inch OR orch OR phsu OR vita) AND
-            (NOT subject.semtypes:(bact OR gngm OR plnt)) AND
-            predicate:TREATS AND
-            object.semtypes:(acab OR anab OR cgab OR comd OR dsyn OR mobd OR neop)
-        predicate: treated_by
-        source: "infores:suppkg" # no infores for suppkg yet
+        predicate: related_to
+        source: "infores:repodb"
         response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/subject"
+          "$ref": "#/components/x-bte-response-mapping/drug"
         testExamples:
-          - qInput: "UMLS:C0009324"      ## ulcerative colitis
-            oneOutput: "UMLS:DC0023791"   ## (r)-dithiolane-3-pentanoic acid
+          - qInput: "UMLS:C0032797"          ## Postpartum Hemorrhage
+            oneOutput: "DRUGBANK:DB00107"    ## Oxytocin
   x-bte-response-mapping:
-    object:
-      UMLS: object.umls
-      # suppkg_confidence_score: relation.conf
-      ref_pmid: relation.pmid
-      "biolink:supporting_text": relation.sentence
-      input_name: subject.name 
-      output_name: object.name
-    subject:
-      UMLS: subject.umls
-      # suppkg_confidence_score: relation.conf
-      ref_pmid: relation.pmid
-      "biolink:supporting_text": relation.sentence
-      input_name: object.name
-      output_name: subject.name 
+    disease:
+      UMLS: repodb.indications.umls
+      input_name: repodb.name
+      output_name: repodb.indications.name
+    drug:
+      DRUGBANK: repodb.drugbank
+      output_name: repodb.name

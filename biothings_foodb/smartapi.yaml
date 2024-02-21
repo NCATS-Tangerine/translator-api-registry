@@ -6,34 +6,30 @@ info:
     x-id: https://github.com/biothings
     x-role: responsible developers
   description: >-
-    Documentation of the BioThings API for
-    [SuppKG](https://github.com/zhang-informatics/SemRep_DS/tree/main/SuppKG) data. SuppKG contains relations
-    between dietary supplements and other entities, such as diseases. More information can be found in [this 
-    paper](https://doi.org/10.1016/j.jbi.2022.104120). 
+    Documentation of the BioThings API for [FooDB](https://www.foodb.ca/) data. 
+    FooDB is the world’s largest and most comprehensive resource on food constituents, chemistry and biology.
   termsOfService: https://biothings.io/about
-  title: BioThings SuppKG API
+  title: BioThings FooDB API
   version: '1.0'
   x-translator:
-    infores: "infores:biothings-suppkg"
+    infores: "infores:biothings-foodb"
     component: KP
     team:
       - Service Provider
     biolink-version: "3.5.3"
 servers:
 - description: Encrypted Production server
-  url: https://biothings.ncats.io/suppkg
+  url: https://biothings.ncats.io/foodb
   x-maturity: production
 tags:
-- name: drug
-- name: disease
-- name: association
+- name: food
 - name: chemical
 - name: metadata
 - name: query
 - name: translator
 - name: biothings
 paths:
-  "/association/{id}":
+  "/food/{id}":
     get:
       description: >-
         By default, this will return the complete association in JSON format. If the input is not valid,
@@ -52,7 +48,7 @@ paths:
       - name: id
         in: path
         required: true
-        example: "C0005847_DC0242726_PART_OF"
+        example: "FOOD00914"
         schema:
           type: string
       - "$ref": "#/components/parameters/fields"
@@ -79,8 +75,8 @@ paths:
       #   '404':
       #     description: A response indicating an unknown association ID
       tags:
-      - association
-  "/association":
+      - food
+  "/food":
     post:
       description: >-
         Although making simple GET requests above to our service is sufficient in most use cases, 
@@ -116,8 +112,8 @@ paths:
           application/json:
             example:
               ids:
-              - "C0013227_C0000737_TREATS"
-              - "C0013227_C0000768_TREATS"
+              - "FOOD00914"
+              - "FOOD00001"
             schema:
               type: object
               properties:
@@ -132,7 +128,7 @@ paths:
         '200':
           description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
       tags:
-      - association
+      - food
   "/metadata":
     get:
       description: Get metadata about the data available from the API
@@ -172,7 +168,7 @@ paths:
           API](https://docs.mychem.info/en/latest/doc/chem_query_service.html#query-syntax).
         in: query
         required: true
-        example: "subject.umls:C0013227"
+        example: "_id:FOOD00951"
         schema:
           type: string
       - "$ref": "#/components/parameters/fields"
@@ -270,10 +266,10 @@ paths:
           application/json:
             example:
               q:
-              - "C0040383"
-              - "C0013227"
+              - "FOOD00319"
+              - "FOOD00906"
               scopes:
-              - "subject.umls"
+              - "_id"
             schema:
               type: object
               properties:
@@ -307,10 +303,10 @@ paths:
       # summary: Make batch gene queries and return matching gene hits
       tags:
       - query
-      ## 2 operations
+      ## 2 operations (1 set)
       x-bte-kgs-operations:
-      - $ref: '#/components/x-bte-kgs-operations/supplement-treats-disease'
-      - $ref: '#/components/x-bte-kgs-operations/disease-treated_by-supplement'
+      - $ref: '#/components/x-bte-kgs-operations/food-compound'
+      - $ref: '#/components/x-bte-kgs-operations/food-compound-rev'
 components:
   parameters:
     callback:
@@ -571,82 +567,69 @@ components:
   #       type: array
   #     - type: string
   x-bte-kgs-operations:
-  ## SuppKG mainly relates a dietary supplement (ex. chemical, drug) to an object (ex. body part, disease) with a predicate
-  ## SuppKG also contains records unrelated to dietary supplements (ex. abcess root is part of blood vessel)
-  ## - Subject: UMLS ID without prefixes in subject.umls
-  ## - Object: UMLS ID without prefixes in object.umls
-  ## - Predicate: Describes association between subject and object in predicate
-  ## The PubMed articles that contain the relationships between the subject and object are in relation
-  ## A subject or object's semantic type can be found in either subject.semtypes or object.semtypes 
-    supplement-treats-disease:
-    ## 595,222 records 
+  ## 890 / 992 records (aka foods) have compound info: https://biothings.ncats.io/foodb/query?q=_exists_:compounds
+  ## compounds have both cas numbers and inchikey, 
+  ##   but I chose inchikey because SRI NodeNorm seemed to support that namespace more
+  ## possible edge-attributes:
+  ## - compounds.orig_contents: the quantity of compound this food contains 
+  ##                            (min, max, average numbers as floats, and a string for the units). 
+  ##                            Not clear how to map these to biolink-model
+  ## - compounds.reference: string for underlying source. Values I've seen: PHENOL EXPLORER, DTU, USDA
+  ## - ncbi_taxonomy_id: exists for many records->related to what this food is / where it comes from?
+    food-compound:
       - supportBatch: true
         useTemplating: true ## flag to say templating is being used below
         inputs:
-          - id: UMLS
-            semantic: SmallMolecule
+          - id: "foodb.food"
+            semantic: Food
         requestBody:
           body: 
             q: "{{ queryInputs | rmPrefix() }}"
-            scopes: subject.umls
+            scopes: _id
         outputs:
-          - id: UMLS
-            semantic: Disease
+          - id: INCHIKEY
+            semantic: SmallMolecule
         parameters:
-          fields: object.umls,relation.pmid,relation.sentence,subject.name,object.name
+          fields: compounds.moldb_inchikey,name,compounds.name
           size: 1000
-          filter: >-
-            subject.semtypes:(aapp OR antb OR bacs OR dsp OR food OR inch OR orch OR phsu OR vita) AND
-            (NOT subject.semtypes:(bact OR gngm OR plnt)) AND
-            predicate:TREATS AND
-            object.semtypes:(acab OR anab OR cgab OR comd OR dsyn OR mobd OR neop)
-        predicate: treats
-        source: "infores:suppkg" # no infores for suppkg yet
+        ## more specific version of has_part
+        predicate: has_food_component    
+        source: "infores:fooddb"
         response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/object"
+          "$ref": "#/components/x-bte-response-mapping/compound"
         testExamples:
-          - qInput: "UMLS:C0016277"      ## Fluconazole
-            oneOutput: "UMLS:C0009324"   ## ulcerative colitis
-    disease-treated_by-supplement:
+          - qInput: "foodb.food:FOOD00914"                       ## Soybean oil
+            oneOutput: "INCHIKEY:KZJWDPNRJALLNS-VJSFXXLFSA-N"    ## beta-Sitosterol
+    food-compound-rev:
+    ## not including compound name because getting this nested info from reverse queries is tricky
       - supportBatch: true
         useTemplating: true
         inputs:
-          - id: UMLS
-            semantic: Disease
+          - id: INCHIKEY
+            semantic: SmallMolecule
         requestBody:
           body: 
             q: "{{ queryInputs | rmPrefix() }}"
-            scopes: object.umls
+            scopes: compounds.moldb_inchikey
         outputs:
-          - id: UMLS
-            semantic: SmallMolecule
+          - id: "foodb.food"
+            semantic: Food
         parameters:
-          fields: subject.umls,relation,subject.name,object.name
+          fields: _id,name
           size: 1000
-          filter: >-
-            subject.semtypes:(aapp OR antb OR bacs OR dsp OR food OR inch OR orch OR phsu OR vita) AND
-            (NOT subject.semtypes:(bact OR gngm OR plnt)) AND
-            predicate:TREATS AND
-            object.semtypes:(acab OR anab OR cgab OR comd OR dsyn OR mobd OR neop)
-        predicate: treated_by
-        source: "infores:suppkg" # no infores for suppkg yet
+        ## more specific version of part_of
+        predicate: food_component_of
+        source: "infores:fooddb"
         response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/subject"
+          "$ref": "#/components/x-bte-response-mapping/food"
         testExamples:
-          - qInput: "UMLS:C0009324"      ## ulcerative colitis
-            oneOutput: "UMLS:DC0023791"   ## (r)-dithiolane-3-pentanoic acid
+          - qInput: "INCHIKEY:QZAYGJVTTNCVMB-UHFFFAOYSA-N"      ## Serotonin
+            oneOutput: "foodb.food:FOOD00022"                   ## Oat
   x-bte-response-mapping:
-    object:
-      UMLS: object.umls
-      # suppkg_confidence_score: relation.conf
-      ref_pmid: relation.pmid
-      "biolink:supporting_text": relation.sentence
-      input_name: subject.name 
-      output_name: object.name
-    subject:
-      UMLS: subject.umls
-      # suppkg_confidence_score: relation.conf
-      ref_pmid: relation.pmid
-      "biolink:supporting_text": relation.sentence
-      input_name: object.name
-      output_name: subject.name 
+    compound:
+      INCHIKEY: compounds.moldb_inchikey
+      input_name: name
+      output_name: compounds.name
+    food:
+      "foodb.food": _id
+      output_name: name
