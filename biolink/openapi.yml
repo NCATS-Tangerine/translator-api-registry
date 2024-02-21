@@ -30,6 +30,8 @@ paths:
   /v3/api/association:
     get:
       x-bte-kgs-operations:
+        - "$ref": "#/components/x-bte-kgs-operations/gene-anatomy"
+        - "$ref": "#/components/x-bte-kgs-operations/anatomy-gene"
         - "$ref": "#/components/x-bte-kgs-operations/disease-pheno"
         - "$ref": "#/components/x-bte-kgs-operations/pheno-disease"
         - "$ref": "#/components/x-bte-kgs-operations/gene-disease-causal"
@@ -2898,6 +2900,12 @@ components:
     ## - has_evidence: ECO codes for where this edge came from / how?, list of curies
     ## - provided_by: strangely, this can differ from the knowledge source fields
     ## - qualifier fields
+    object-anatomy-uberon:
+      UBERON: items.object
+      output_name: items.object_label
+      input_name: items.subject_label
+      ref_pmid: items.publications
+      trapi_sources: items.sources
     object-disease-mondo:
       MONDO: items.object
       output_name: items.object_label
@@ -2931,7 +2939,73 @@ components:
   x-bte-kgs-operations:
   ## commenting out the x-bte source field: replaced with the post-processed trapi_sources info
   ## Parameters
-  ## - `liimt`: max seems to be 500 
+  ## - `limit`: max seems to be 500 
+    gene-anatomy:
+    ## 161069 items: https://api-v3.monarchinitiative.org/v3/api/association?category=biolink:GeneToExpressionSiteAssociation&subject_namespace=HGNC&subject_taxon=NCBITaxon:9606&predicate=biolink:expressed_in&object_namespace=UBERON&direct=true&format=json&limit=10
+    - supportBatch: false
+      useTemplating: true
+      inputs:
+      - id: HGNC
+        semantic: Gene
+      parameters:
+        subject: "{{ queryInputs | replPrefix('HGNC') }}"     ## has prefix
+        category: "biolink:GeneToExpressionSiteAssociation"
+        subject_namespace: HGNC
+        subject_taxon: "NCBITaxon:9606"
+        predicate: "biolink:expressed_in"
+        object_namespace: UBERON
+        direct: true
+        format: json
+        limit: 500
+      outputs:
+      - id: UBERON
+        semantic: GrossAnatomicalStructure
+      predicate: expressed_in
+      ## knowledge_source info encountered:
+      ## - primary: "infores:bgee"
+      ## - aggregator: ["infores:monarchinitiative"]
+      # source: "infores:monarchinitiative"
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/object-anatomy-uberon"
+      # Examples don't have publication info
+      testExamples:
+      # link https://api-v3.monarchinitiative.org/v3/api/association?subject=HGNC:28264&category=biolink:GeneToExpressionSiteAssociation&subject_namespace=HGNC&subject_taxon=NCBITaxon:9606&predicate=biolink:expressed_in&object_namespace=UBERON&direct=true&format=json&limit=500
+        - qInput: "HGNC:28264"             ## PCGF5 aka NCBIGene:84333
+          oneOutput: "UBERON:0006566"      ## left ventricle myocardium
+      # link https://api-v3.monarchinitiative.org/v3/api/association?subject=HGNC:9360&category=biolink:GeneToExpressionSiteAssociation&subject_namespace=HGNC&subject_taxon=NCBITaxon:9606&predicate=biolink:expressed_in&object_namespace=UBERON&direct=true&format=json&limit=500
+        - qInput: "HGNC:9360"              ## PRF1 aka NCBIGene:5551
+          oneOutput: "UBERON:0002450"      ## decidua
+    anatomy-gene:
+    - supportBatch: false
+      useTemplating: true
+      inputs:
+      - id: UBERON
+        semantic: GrossAnatomicalStructure
+      parameters:
+        object: "{{ queryInputs | replPrefix('UBERON') }}"     ## has prefix
+        category: "biolink:GeneToExpressionSiteAssociation"
+        subject_namespace: HGNC
+        subject_taxon: "NCBITaxon:9606"
+        predicate: "biolink:expressed_in"
+        object_namespace: UBERON
+        direct: true
+        format: json
+        limit: 500
+      outputs:
+      - id: HGNC
+        semantic: Gene
+      predicate: expresses
+      # source: "infores:monarchinitiative"
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/subject-gene-hgnc"
+      # Examples have publication pmids
+      testExamples:
+      # link https://api-v3.monarchinitiative.org/v3/api/association?object=UBERON:0001817&category=biolink:GeneToExpressionSiteAssociation&subject_taxon=NCBITaxon:9606&predicate=biolink:expressed_in&object_namespace=UBERON&direct=true&format=json&limit=500
+        - qInput: "UBERON:0001817"     ## lacrimal gland
+          oneOutput: "HGNC:16430"      ## LACRT aka NCBIGene:90070
+      # link https://api-v3.monarchinitiative.org/v3/api/association?object=UBERON:0002073&category=biolink:GeneToExpressionSiteAssociation&subject_taxon=NCBITaxon:9606&predicate=biolink:expressed_in&object_namespace=UBERON&direct=true&format=json&limit=500
+        - qInput: "UBERON:0002073"     ## hair follicle
+          oneOutput: "HGNC:25851"      ## GINS3 aka NCBIGene:64785
     disease-pheno:
     ## 242009 items: https://api-v3.monarchinitiative.org/v3/api/association?category=biolink:DiseaseToPhenotypicFeatureAssociation&subject_namespace=MONDO&predicate=biolink:has_phenotype&object_namespace=HP&direct=true&format=json&limit=10
     - supportBatch: false
