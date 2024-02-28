@@ -88,9 +88,9 @@ components:
       predicate: part_of
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/complex-output"
-      # testExamples:
-      #   - qInput: "UniProtKB:P69905"             ## Hemoglobin subunit alpha
-      #     oneOutput: "ComplexPortal:CPX-2158"    ## Hemoglobin HbA complex
+      testExamples:
+        - qInput: "UniProtKB:P69905"             ## Hemoglobin subunit alpha
+          oneOutput: "ComplexPortal:CPX-2158"    ## Hemoglobin HbA complex
     chemical2complex:
     - supportBatch: false 
       useTemplating: true
@@ -105,14 +105,14 @@ components:
       predicate: part_of
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/complex-output"
-      # testExamples:
-      #   - qInput: "CHEBI:30413"                  ## heme
-      #     oneOutput: "ComplexPortal:CPX-2158"    ## Hemoglobin HbA complex
+      testExamples:
+        - qInput: "CHEBI:30413"                  ## heme
+          oneOutput: "ComplexPortal:CPX-2158"    ## Hemoglobin HbA complex
     disease2complex:
     - supportBatch: false
       useTemplating: true
       inputs:
-      - id: ORPHANET
+      - id: orphanet
         semantic: Disease
       outputs:
       - id: ComplexPortal
@@ -124,9 +124,9 @@ components:
       ##   https://www.ebi.ac.uk/complexportal/documentation
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/complex-output"
-      # testExamples:
-      #   - qInput: "ORPHANET:848"                 ## Beta-thalassemia
-      #     oneOutput: "ComplexPortal:CPX-2158"    ## Hemoglobin HbA complex
+      testExamples:
+        - qInput: "orphanet:848"                 ## Beta-thalassemia
+          oneOutput: "ComplexPortal:CPX-2158"    ## Hemoglobin HbA complex
     bp2complex:
     - supportBatch: false
       useTemplating: true
@@ -143,9 +143,9 @@ components:
       ## not sure if a different predicate should be used...
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/complex-output"
-      # testExamples:
-      #   - qInput: "GO:0015670"                   ## carbon dioxide transport
-      #     oneOutput: "ComplexPortal:CPX-2936"    ## Hemoglobin HbH complex
+      testExamples:
+        - qInput: "GO:0015670"                   ## carbon dioxide transport
+          oneOutput: "ComplexPortal:CPX-2936"    ## Hemoglobin HbH complex
     mf2complex:
     - supportBatch: false
       useTemplating: true
@@ -162,9 +162,9 @@ components:
       ## not sure if a different predicate should be used...
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/complex-output"
-      # testExamples:
-      #   - qInput: "GO:0070026"                  ## nitric oxide binding
-      #     oneOutput: "ComplexPortal:CPX-52"     ## iNOS-S100A8/A9 complex
+      testExamples:
+        - qInput: "GO:0070026"                  ## nitric oxide binding
+          oneOutput: "ComplexPortal:CPX-52"     ## iNOS-S100A8/A9 complex
     ## Commenting out for now
     ## Complex -> entity x-bte operations use JQ post-processing
     ## MISSING: Complex -> BP, Complex -> MF operations. Will need different custom JQ post-processing
@@ -185,9 +185,9 @@ components:
     #       .participants |= map(if (.identifier | contains(":") | not) then . else empty end)
     #   response_mapping:
     #     "$ref": "#/components/x-bte-response-mapping/complex2protein"
-    #   # testExamples:
-    #   #   - qInput: "ComplexPortal:CPX-2158"    ## Hemoglobin HbA complex
-    #   #     oneOutput: "UniProtKB:P69905"       ## Hemoglobin subunit alpha
+    #   testExamples:
+    #     - qInput: "ComplexPortal:CPX-2158"    ## Hemoglobin HbA complex
+    #       oneOutput: "UniProtKB:P69905"       ## Hemoglobin subunit alpha
     # complex2chemical:
     # - supportBatch: false
     #   useTemplating: true
@@ -205,9 +205,9 @@ components:
     #       .participants |= map(if (.identifier | contains(":")) then .identifier = (.identifier | split(":") | last) else empty end)
     #   response_mapping:
     #     "$ref": "#/components/x-bte-response-mapping/complex2chemical"
-    #   # testExamples:
-    #   #   - qInput: "ComplexPortal:CPX-2158"        ## Hemoglobin HbA complex
-    #   #     oneOutput: "CHEBI:30413"                ## heme
+    #   testExamples:
+    #     - qInput: "ComplexPortal:CPX-2158"        ## Hemoglobin HbA complex
+    #       oneOutput: "CHEBI:30413"                ## heme
     # complex2disease:
     # - supportBatch: false
     #   useTemplating: true
@@ -215,7 +215,7 @@ components:
     #   - id: ComplexPortal
     #     semantic: MacromolecularComplex
     #   outputs:
-    #   - id: ORPHANET
+    #   - id: orphanet
     #     semantic: Disease
     #   parameters:
     #     id: "{{ queryInputs }}" ## no prefix
@@ -230,7 +230,7 @@ components:
     #     "$ref": "#/components/x-bte-response-mapping/complex2disease"
     #   # testExamples:
     #   #   - qInput: "ComplexPortal:CPX-2158"      ## Hemoglobin HbA complex
-    #   #     oneOutput: "ORPHANET:848"             ## Beta-thalassemia
+    #   #     oneOutput: "orphanet:848"             ## Beta-thalassemia
   x-bte-response-mapping:
     complex-output:
       ComplexPortal: elements.complexAC
@@ -246,5 +246,5 @@ components:
       CHEBI: participants.identifier
     complex2disease:
       ## this is a field made with JQ-post-processing
-      ORPHANET: disease_ids
+      orphanet: disease_ids
    
