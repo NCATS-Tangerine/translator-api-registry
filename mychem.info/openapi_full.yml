@@ -738,7 +738,8 @@ components:
         fields: aeolus.indications     ## need the whole thing for jmespath to work
         jmespath: aeolus.indications|[?count>`20`]
         size: 1000  ## note size limit; added just in case
-      predicate: treats
+      ## seem to come from the drug adverse event self-reporting
+      predicate: applied_to_treat
       source: "infores:aeolus"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/aeolusIndication-meddra"
@@ -761,7 +762,7 @@ components:
       parameters:
         fields: aeolus.unii  ## no prefix
         size: 1000  ## note size limit
-      predicate: treated_by
+      predicate: treatment_applications_from
       source: "infores:aeolus"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/aeolus-unii"
@@ -1042,7 +1043,7 @@ components:
           chembl.drug_indications.indication_refs.ClinicalTrials,
           chembl.drug_indications.indication_refs.url
         size: 1000  ## note size limit; added just in case
-      predicate: treats
+      predicate: studied_to_treat
       source: "infores:chembl"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/chembl-treats"
@@ -1065,7 +1066,7 @@ components:
       parameters:
         fields: chembl.molecule_chembl_id  ## no prefix
         size: 1000  ## note size limit
-      predicate: treated_by
+      predicate: treated_in_studies_by
       source: "infores:chembl"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/chembl"
@@ -1718,8 +1719,9 @@ components:
       ## FYI: output could also be SNOMED (specifically SNOMED-CT US Edition). 
       ##     Looks like the native ID for DrugCentral, see https://drugcentral.org/drugcard/1768#druguse. 
       ##     The original data source also may have some DOID mappings (see the linked example), but the API doesn't have this right now.
-      ## child of treats, seems to better fit the "indication" idea
-      predicate: treats
+      ## using the most-general "treats" predicate, because drugcentral seems to include text-mined assertions - with errors/imprecise 
+      ##   see https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7881657/ for details
+      predicate: treats_or_applied_or_studied_to_treat
       source: "infores:drugcentral"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/drugcentral-indication"
@@ -1744,7 +1746,7 @@ components:
       parameters:
         fields: drugcentral.xrefs.unii
         size: 1000  ## note size limit
-      predicate: treated_by
+      predicate: subject_of_treatment,_application,_or_study_for_treatment_by
       source: "infores:drugcentral"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/drugcentral-unii"
@@ -1773,7 +1775,8 @@ components:
       ## FYI: output could also be SNOMED (specifically SNOMED-CT US Edition). 
       ##     Looks like the native ID for DrugCentral, see https://drugcentral.org/drugcard/1768#druguse. 
       ##     The original data source also may have some DOID mappings (see the linked example), but the API doesn't have this right now.
-      predicate: treats
+      ## using predicate for off-label use. Also, on drugcentral website, users can submit off-label suggestions (so self-report)
+      predicate: applied_to_treat
       source: "infores:drugcentral"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/drugcentral-offlabel"
@@ -1796,7 +1799,7 @@ components:
       parameters:
         fields: drugcentral.xrefs.chembl_id
         size: 1000  ## note size limit
-      predicate: treated_by
+      predicate: treatment_applications_from
       source: "infores:drugcentral"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/drugcentral-chembl"
@@ -1902,7 +1905,9 @@ components:
         #   fda_orphan_drug.marketing_approval_date,
         #   fda_orphan_drug.orphan_designation.original_text
         fields: fda_orphan_drug.orphan_designation.umls
-      predicate: treats  ## current biolink predicate
+      ## includes applications that were accepted, denied, revoked/withdrawn. I'm assuming that studies were done
+      ##   for the application in the first place. However, our data doesn't include this info
+      predicate: studied_to_treat
       ## FDA Orphan Drug Designations and Approvals database
       source: "infores:fda-orphan-drug-db"
       response_mapping:
@@ -1926,7 +1931,7 @@ components:
       parameters:
         fields: fda_orphan_drug.pubchem_cid
         size: 1000  ## note size limit
-      predicate: treated_by  ## current biolink predicate
+      predicate: treated_in_studies_by
       ## FDA Orphan Drug Designations and Approvals database
       source: "infores:fda-orphan-drug-db"
       response_mapping:
