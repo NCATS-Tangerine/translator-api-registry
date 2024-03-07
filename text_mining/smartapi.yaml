@@ -10,18 +10,21 @@ info:
     query web services.
   termsOfService: https://biothings.io/about
   title: Text Mining Targeted Association API
-  version: '2023-08-17'
+  version: '2024-03-07'
   x-translator:
     infores: "infores:text-mining-provider-targeted"
     component: KP
     team:
       - Text Mining Provider
       - Service Provider
-    biolink-version: "3.5.0"
+    biolink-version: "4.1.6"
 servers:
-- description: Encrypted Production server
-  url: https://biothings.ncats.io/text_mining_targeted_association
-  x-maturity: production
+- url: https://biothings.test.transltr.io/text_mining_targeted_association
+  description: ITRB Test server
+  x-maturity: testing
+- url: https://biothings.ci.transltr.io/text_mining_targeted_association
+  description: ITRB CI server
+  x-maturity: staging
 tags:
 - name: gene
 - name: chemical
@@ -309,10 +312,10 @@ paths:
       tags:
       - query
       x-bte-kgs-operations:
-      - "$ref": "#/components/x-bte-kgs-operations/drugbank-treats-mondo"
-      - "$ref": "#/components/x-bte-kgs-operations/drugbank-treats-mondo-rev"
-      - "$ref": "#/components/x-bte-kgs-operations/drugbank-treats-hp"
-      - "$ref": "#/components/x-bte-kgs-operations/drugbank-treats-hp-rev"
+      - "$ref": "#/components/x-bte-kgs-operations/drugbank-treats_or_applied_or_studied_to_treat-mondo"
+      - "$ref": "#/components/x-bte-kgs-operations/drugbank-treats_or_applied_or_studied_to_treat-mondo-rev"
+      - "$ref": "#/components/x-bte-kgs-operations/drugbank-treats_or_applied_or_studied_to_treat-hp"
+      - "$ref": "#/components/x-bte-kgs-operations/drugbank-treats_or_applied_or_studied_to_treat-hp-rev"
       - "$ref": "#/components/x-bte-kgs-operations/drugbank-positively_regulates-uniprotkb"
       - "$ref": "#/components/x-bte-kgs-operations/drugbank-positively_regulates-uniprotkb-rev"
       - "$ref": "#/components/x-bte-kgs-operations/drugbank-negatively_regulates-uniprotkb"
@@ -612,8 +615,8 @@ components:
   ## - currently, BTE handles prefix (MONDO / HP keep their prefixes, DRUGBANK / UniProtKB does not).
   ##   in the future, could edit parser + queries to handle prefixes
   ## - joinSafe is only needed if the delimiter isn't a comma
-    drugbank-treats-mondo:
-    ## https://biothings.ncats.io/text_mining_targeted_association/query?q=_exists_:subject.DRUGBANK AND association.edge_label:treats AND _exists_:object.MONDO
+    drugbank-treats_or_applied_or_studied_to_treat-mondo:
+    ## https://biothings.ncats.io/text_mining_targeted_association/query?q=_exists_:subject.DRUGBANK AND association.edge_label:treats_or_applied_or_studied_to_treat AND _exists_:object.MONDO
     ## I find all records (249143) use object.type:Disease
       - supportBatch: true
         useTemplating: true ## flag to say templating is being used below
@@ -627,18 +630,18 @@ components:
         parameters:
           fields: object.MONDO,association.edge_attributes,association.sources
           size: 1000
-          filter: _exists_:subject.DRUGBANK AND association.edge_label:treats AND _exists_:object.MONDO
+          filter: _exists_:subject.DRUGBANK AND association.edge_label:treats_or_applied_or_studied_to_treat AND _exists_:object.MONDO
         outputs:
           - id: MONDO
             semantic: Disease
-        predicate: treats
+        predicate: treats_or_applied_or_studied_to_treat
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/mondo-object"
         ## Examples:
         ## - DRUGBANK:DB00537 (Ciprofloxacin) -> MONDO:0024314 (parasitemia)
         ## - DRUGBANK:DB00390 (Digoxin) -> MONDO:0000468 (third-degree atrioventricular block)
-    drugbank-treats-mondo-rev:
-    ## https://biothings.ncats.io/text_mining_targeted_association/query?q=_exists_:subject.DRUGBANK AND association.edge_label:treats AND _exists_:object.MONDO
+    drugbank-treats_or_applied_or_studied_to_treat-mondo-rev:
+    ## https://biothings.ncats.io/text_mining_targeted_association/query?q=_exists_:subject.DRUGBANK AND association.edge_label:treats_or_applied_or_studied_to_treat AND _exists_:object.MONDO
     ## Not going to specify subject.type since DRUGBANK IDs were mapped to SmallMolecule, NamedThing mostly (a little ChemicalEntity, MolecularMixture) 
       - supportBatch: true
         useTemplating: true ## flag to say templating is being used below
@@ -652,18 +655,18 @@ components:
         parameters:
           fields: subject.DRUGBANK,association.edge_attributes,association.sources
           size: 1000
-          filter: _exists_:subject.DRUGBANK AND association.edge_label:treats AND _exists_:object.MONDO
+          filter: _exists_:subject.DRUGBANK AND association.edge_label:treats_or_applied_or_studied_to_treat AND _exists_:object.MONDO
         outputs:
           - id: DRUGBANK
             semantic: SmallMolecule
-        predicate: treated_by
+        predicate: subject_of_treatment_application_or_study_for_treatment_by
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/drugbank-subject"
         ## Examples:
         ## - MONDO:0024314 (parasitemia) -> DRUGBANK:DB00537 (Ciprofloxacin) 
         ## - MONDO:0000468 (third-degree atrioventricular block) -> DRUGBANK:DB00390 (Digoxin) 
-    drugbank-treats-hp:
-    ## https://biothings.ncats.io/text_mining_targeted_association/query?q=_exists_:subject.DRUGBANK AND association.edge_label:treats AND _exists_:object.HP
+    drugbank-treats_or_applied_or_studied_to_treat-hp:
+    ## https://biothings.ncats.io/text_mining_targeted_association/query?q=_exists_:subject.DRUGBANK AND association.edge_label:treats_or_applied_or_studied_to_treat AND _exists_:object.HP
     ## I find only 5987 records (out of 18037) have object.type:PhenotypicFeature...most are Disease (12050)
       - supportBatch: true
         useTemplating: true ## flag to say templating is being used below
@@ -677,18 +680,18 @@ components:
         parameters:
           fields: object.HP,association.edge_attributes,association.sources
           size: 1000
-          filter: _exists_:subject.DRUGBANK AND association.edge_label:treats AND _exists_:object.HP
+          filter: _exists_:subject.DRUGBANK AND association.edge_label:treats_or_applied_or_studied_to_treat AND _exists_:object.HP
         outputs:
           - id: HP
             semantic: PhenotypicFeature
-        predicate: treats
+        predicate: treats_or_applied_or_studied_to_treat
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/hp-object"
         ## Examples:
         ## - DRUGBANK:DB00202 (Succinylcholine) -> HP:0002153 (Hyperkalemia)
         ## - DRUGBANK:DB00829 (Diazepam) -> HP:0020219 (Motor seizure)
-    drugbank-treats-hp-rev:
-    ## https://biothings.ncats.io/text_mining_targeted_association/query?q=_exists_:subject.DRUGBANK AND association.edge_label:treats AND _exists_:object.HP
+    drugbank-treats_or_applied_or_studied_to_treat-hp-rev:
+    ## https://biothings.ncats.io/text_mining_targeted_association/query?q=_exists_:subject.DRUGBANK AND association.edge_label:treats_or_applied_or_studied_to_treat AND _exists_:object.HP
     ## Not going to specify subject.type since DRUGBANK IDs were mapped to SmallMolecule, NamedThing mostly (a little ChemicalEntity, MolecularMixture) 
       - supportBatch: true
         useTemplating: true ## flag to say templating is being used below
@@ -702,11 +705,11 @@ components:
         parameters:
           fields: subject.DRUGBANK,association.edge_attributes,association.sources
           size: 1000
-          filter: _exists_:subject.DRUGBANK AND association.edge_label:treats AND _exists_:object.HP
+          filter: _exists_:subject.DRUGBANK AND association.edge_label:treats_or_applied_or_studied_to_treat AND _exists_:object.HP
         outputs:
           - id: DRUGBANK
             semantic: SmallMolecule
-        predicate: treated_by
+        predicate: subject_of_treatment_application_or_study_for_treatment_by
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/drugbank-subject"
         ## Examples:
