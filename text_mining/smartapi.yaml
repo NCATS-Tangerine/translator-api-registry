@@ -19,9 +19,12 @@ info:
       - Service Provider
     biolink-version: "4.1.6"
 servers:
-- description: Encrypted Production server
-  url: https://biothings.ncats.io/text_mining_targeted_association
-  x-maturity: production
+- url: https://biothings.test.transltr.io/text_mining_targeted_association
+  description: ITRB Test server
+  x-maturity: testing
+- url: https://biothings.ci.transltr.io/text_mining_targeted_association
+  description: ITRB CI server
+  x-maturity: staging
 tags:
 - name: gene
 - name: chemical
@@ -605,6 +608,7 @@ components:
   ## - for reverse operations, some edge attributes may seem odd (reversed subj/obj)
   ## - don't use subject.type/object.type in q, that came from SRI ID resolver and differs a lot between IDs of same namespace
   ## - use heuristics to specify input / output type. BTE will handle any discrepancies w/ SRI ID resolver...
+  ##   - DRUGBANK :SmallMolecule
   ##   - MONDO: Disease
   ##   - HP: PhenotypicFeaure
   ##   - UniProtKB: Gene
@@ -620,15 +624,13 @@ components:
           - id: DRUGBANK
             semantic: SmallMolecule
         requestBody:
-          body: >-
-            {
-              "q": [ {{ queryInputs | wrap( '["' , '","treats_or_applied_or_studied_to_treat"]') }} ],
-              "scopes": ["subject.DRUGBANK", "association.edge_label"]
-            }
+          body: 
+            q: "{{ queryInputs }}"
+            scopes: subject.DRUGBANK
         parameters:
           fields: object.MONDO,association.edge_attributes,association.sources
           size: 1000
-          filter: _exists_:subject.DRUGBANK AND association.edge_label:treats AND _exists_:object.MONDO
+          filter: _exists_:subject.DRUGBANK AND association.edge_label:treats_or_applied_or_studied_to_treat AND _exists_:object.MONDO
         outputs:
           - id: MONDO
             semantic: Disease
@@ -647,15 +649,13 @@ components:
           - id: MONDO
             semantic: Disease
         requestBody:
-          body: >-
-            {
-              "q": [ {{ queryInputs | wrap( '["' , '","treats_or_applied_or_studied_to_treat"]') }} ],
-              "scopes": ["object.MONDO", "association.edge_label"]
-            }
+          body: 
+            q: "{{ queryInputs }}"
+            scopes: object.MONDO
         parameters:
           fields: subject.DRUGBANK,association.edge_attributes,association.sources
           size: 1000
-          filter: _exists_:subject.DRUGBANK AND association.edge_label:treats AND _exists_:object.MONDO
+          filter: _exists_:subject.DRUGBANK AND association.edge_label:treats_or_applied_or_studied_to_treat AND _exists_:object.MONDO
         outputs:
           - id: DRUGBANK
             semantic: SmallMolecule
@@ -674,15 +674,13 @@ components:
           - id: DRUGBANK
             semantic: SmallMolecule
         requestBody:
-          body: >-
-            {
-              "q": [ {{ queryInputs | wrap( '["' , '","treats_or_applied_or_studied_to_treat"]') }} ],
-              "scopes": ["subject.DRUGBANK", "association.edge_label"]
-            }
+          body: 
+            q: "{{ queryInputs }}"
+            scopes: subject.DRUGBANK
         parameters:
           fields: object.HP,association.edge_attributes,association.sources
           size: 1000
-          filter: _exists_:subject.DRUGBANK AND association.edge_label:treats AND _exists_:object.HP
+          filter: _exists_:subject.DRUGBANK AND association.edge_label:treats_or_applied_or_studied_to_treat AND _exists_:object.HP
         outputs:
           - id: HP
             semantic: PhenotypicFeature
@@ -701,15 +699,13 @@ components:
           - id: HP
             semantic: PhenotypicFeature
         requestBody:
-          body: >-
-            {
-              "q": [ {{ queryInputs | wrap( '["' , '","treats_or_applied_or_studied_to_treat"]') }} ],
-              "scopes": ["object.HP", "association.edge_label"]
-            }
+          body: 
+            q: "{{ queryInputs }}"
+            scopes: object.HP
         parameters:
           fields: subject.DRUGBANK,association.edge_attributes,association.sources
           size: 1000
-          filter: _exists_:subject.DRUGBANK AND association.edge_label:treats AND _exists_:object.HP
+          filter: _exists_:subject.DRUGBANK AND association.edge_label:treats_or_applied_or_studied_to_treat AND _exists_:object.HP
         outputs:
           - id: DRUGBANK
             semantic: SmallMolecule
