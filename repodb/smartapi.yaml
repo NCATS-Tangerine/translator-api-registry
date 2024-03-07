@@ -25,6 +25,7 @@ servers:
   url: https://biothings.ncats.io/repodb
   x-maturity: production
 tags:
+- name: indication
 - name: chemical
 - name: disease
 - name: metadata
@@ -32,7 +33,7 @@ tags:
 - name: translator
 - name: biothings
 paths:
-  "/chemical/{id}":
+  "/indication/{id}":
     get:
       description: >-
         By default, this will return the complete association in JSON format. If the input is not valid,
@@ -51,7 +52,7 @@ paths:
       - name: id
         in: path
         required: true
-        example: "DB14487"
+        example: "DB14539_C0151467"
         schema:
           type: string
       - "$ref": "#/components/parameters/fields"
@@ -78,8 +79,8 @@ paths:
       #   '404':
       #     description: A response indicating an unknown association ID
       tags:
-      - chemical
-  "/chemical":
+      - indication
+  "/indication":
     post:
       description: >-
         Although making simple GET requests above to our service is sufficient in most use cases, 
@@ -115,8 +116,8 @@ paths:
           application/json:
             example:
               ids:
-              - "DB14487"
-              - "DB00003"
+              - "DB14539_C0151467"
+              - "DB14509_C0003873"
             schema:
               type: object
               properties:
@@ -131,7 +132,7 @@ paths:
         '200':
           description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
       tags:
-      - chemical
+      - indication
   "/metadata":
     get:
       description: Get metadata about the data available from the API
@@ -171,7 +172,7 @@ paths:
           API](https://docs.mychem.info/en/latest/doc/chem_query_service.html#query-syntax).
         in: query
         required: true
-        example: "repodb.drugbank:DB00013"
+        example: "drug.drugbank:DB14006"
         schema:
           type: string
       - "$ref": "#/components/parameters/fields"
@@ -269,10 +270,10 @@ paths:
           application/json:
             example:
               q:
-              - "DB00013"
+              - "DB14006"
               - "DB00012"
               scopes:
-              - "repodb.drugbank"
+              - "drug.drugbank"
             schema:
               type: object
               properties:
@@ -306,11 +307,13 @@ paths:
       # summary: Make batch gene queries and return matching gene hits
       tags:
       - query
-      ## 3 operations (1 sort-of set)
+      ## 4 operations (2 sets)
       x-bte-kgs-operations:
       - $ref: '#/components/x-bte-kgs-operations/drug-disease-approved'
-      - $ref: '#/components/x-bte-kgs-operations/drug-disease-not-approved'
-      - $ref: '#/components/x-bte-kgs-operations/rev-disease-drug'
+      - $ref: '#/components/x-bte-kgs-operations/disease-drug-approved'
+      ## uncomment for "treats-refactor"/biolink-model 4 update
+      # - $ref: '#/components/x-bte-kgs-operations/drug-disease-not-approved'
+      # - $ref: '#/components/x-bte-kgs-operations/disease-drug-not-approved'
 components:
   parameters:
     callback:
@@ -572,21 +575,11 @@ components:
   #     - type: string
   x-bte-kgs-operations:
   ## NOTES
-  ## - including repodb.indications.name in forward direction, in case SRI NodeNorm
-  ##   doesn't recognize UMLS ID. 
-  ##   BUT it doesn't work in the reverse direction because BTE doesn't necessarily pick the
-  ##   correct name from the response (nested field, reverses issue)
-  ## - breaking down by indication status in the forward direction
-  ##   - likely useful in the treats-refactor
-  ##   - but can't do this kind of query in the reverse direction right now
-  ## - right now, not breaking down by indication phase
-  ##   - also only possible in the forward direction
-  ## - possible edge-attributes, not using because we'd want a parser adjustment or 
-  ##   JQ post-processing to remove the field when the value is "NA"
-  ##   - 49 / 2211 records have clinical trial ID like NCT00073372: https://biothings.ncats.io/repodb/query?q=NOT%20repodb.indications.NCT:NA
-  ##   - 27 / 221 records have detailed status (free-text): https://biothings.ncats.io/repodb/query?q=NOT%20repodb.indications.detailed_status:NA
+  ## - possible edge-attributes:
+  ##   - 2185 / 10602 records have detailed status (free-text): https://biothings.ncats.io/repodb/query?q=_exists_:trials.detailed_status
+  ##   - status: all records have this, but the values need to be mapped to biolink-model ClinicalApprovalStatusEnum
     drug-disease-approved:
-    ## 2162 / 2211 records aka drugs
+    ## 8390 records: https://biothings.ncats.io/repodb/query?q=trials.status:approved
       - supportBatch: true
         useTemplating: true ## flag to say templating is being used below
         inputs:
@@ -595,63 +588,27 @@ components:
         requestBody:
           body: 
             q: "{{ queryInputs | rmPrefix() }}"
-            scopes: repodb.drugbank
+            scopes: drug.drugbank
         outputs:
           - id: UMLS
             semantic: Disease
         parameters:
-          ## need to include field that will have jmespath run on it
+        ## not including clinical trial field since none of the approved entries seem to have it
           fields: >-
-            repodb.indications,
-            repodb.name
+            indication.umls,
+            drug.name,
+            indication.name,
+            trials.status
           size: 1000
-          filter: repodb.indications.status:Approved
-          jmespath: "repodb.indications|[?status==`Approved`]"
+          filter: trials.status:approved
         predicate: treats
         source: "infores:repodb"
         response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/disease"
+          "$ref": "#/components/x-bte-response-mapping/disease-only"
         testExamples:
-          - qInput: "DRUGBANK:DB00002"    ## Cetuximab
-            oneOutput: "UMLS:C0007102"    ## Malignant tumor of colon
-    drug-disease-not-approved:
-    ## 518 records with Terminated
-    ## 336 with Withdrawn
-    ## 78 with Suspended
-      - supportBatch: true
-        useTemplating: true ## flag to say templating is being used below
-        inputs:
-          - id: DRUGBANK
-            semantic: SmallMolecule
-        requestBody:
-          body: 
-            q: "{{ queryInputs | rmPrefix() }}"
-            scopes: repodb.drugbank
-        outputs:
-          - id: UMLS
-            semantic: Disease
-        parameters:
-          fields: >-
-            repodb.indications,
-            repodb.name
-          size: 1000
-          ## jmespath probably can't use "NOT"
-          jmespath: "repodb.indications|[?(status==`Terminated`||status==`Withdrawn`||status==`Suspended`)]"
-        predicate: related_to
-        source: "infores:repodb"
-        response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/disease"
-        testExamples:
-        ## for Terminated
-          - qInput: "DRUGBANK:DB00043"    ## Omalizumab
-            oneOutput: "UMLS:C0004096"    ## Asthma
-        ## for Withdrawn
-          - qInput: "DRUGBANK:DB00007"    ## Leuprolide
-            oneOutput: "UMLS:C0042133"    ## Uterine Fibroids / uterine corpus leiomyoma
-        ## for Suspended
-          - qInput: "DRUGBANK:DB00104"    ## Octreotide
-            oneOutput: "UMLS:C0001206"    ## Acromegaly
-    rev-disease-drug:
+          - qInput: "DRUGBANK:DB00002"    ## Cetuximab / Methyl 4,7,10,13,16-docosapentaenoate
+            oneOutput: "UMLS:C0007102"    ## Malignant tumor of colon / MONDO:0021063 malignant colon neoplasm
+    disease-drug-approved:
       - supportBatch: true
         useTemplating: true
         inputs:
@@ -660,27 +617,118 @@ components:
         requestBody:
           body: 
             q: "{{ queryInputs | rmPrefix() }}"
-            scopes: repodb.indications.umls
+            scopes: indication.umls
         outputs:
           - id: DRUGBANK
             semantic: SmallMolecule
         parameters:
           fields: >-
-            repodb.drugbank,
-            repodb.name
+            drug.drugbank,
+            drug.name,
+            indication.name,
+            trials.status
           size: 1000
-        predicate: related_to
+          filter: trials.status:approved
+        predicate: treated_by
         source: "infores:repodb"
         response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/drug"
+          "$ref": "#/components/x-bte-response-mapping/drug-only"
         testExamples:
-          - qInput: "UMLS:C0032797"          ## Postpartum Hemorrhage
-            oneOutput: "DRUGBANK:DB00107"    ## Oxytocin
+          - qInput: "UMLS:C0032797"          ## Postpartum Hemorrhage / HP:0011891 Post-partum hemorrhage
+            oneOutput: "DRUGBANK:DB00107"    ## Oxytocin / PUBCHEM.COMPOUND:439302
+    drug-disease-not-approved:
+    ## 2583 records (going off of existence of trials.phase which doesn't seem to exist in approved entries)
+    ## biothings.ncats.io/repodb/query?q=_exists_:trials.phase
+    ## phase values are either Phase 1, Phase 2, Phase 3 (so all went through clinical trials)
+    ## status values are either terminated, withdrawn, suspended
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: DRUGBANK
+            semantic: SmallMolecule
+        requestBody:
+          body: 
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: drug.drugbank
+        outputs:
+          - id: UMLS
+            semantic: Disease
+        parameters:
+        ## include clinical trial field since some will have it
+          fields: >-
+            indication.umls,
+            drug.name,
+            indication.name,
+            trials.id,
+            trials.status
+          size: 1000
+          filter: _exists_:trials.phase
+        predicate: in_clinical_trials_for
+        source: "infores:repodb"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/disease-clinicaltrial"
+        testExamples:
+        ## for Terminated
+          - qInput: "DRUGBANK:DB00043"    ## Omalizumab / UNII:2P471X1Z11
+            oneOutput: "UMLS:C0004096"    ## Asthma / MONDO:0004979
+        ## for Withdrawn
+          - qInput: "DRUGBANK:DB14482"    ## Sodium ascorbate / PUBCHEM.COMPOUND:23667548
+            oneOutput: "UMLS:C0004238"    ## Atrial Fibrillation / MONDO:0004981
+        ## for Suspended
+          - qInput: "DRUGBANK:DB00104"    ## Octreotide / PUBCHEM.COMPOUND:448601
+            oneOutput: "UMLS:C0001206"    ## Acromegaly / MONDO:0019933
+    disease-drug-not-approved:
+      - supportBatch: true
+        useTemplating: true
+        inputs:
+          - id: UMLS
+            semantic: Disease
+        requestBody:
+          body: 
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: indication.umls
+        outputs:
+          - id: DRUGBANK
+            semantic: SmallMolecule
+        parameters:
+          fields: >-
+            drug.drugbank,
+            drug.name,
+            indication.name,
+            trials.id,
+            trials.status
+          size: 1000
+          filter: _exists_:trials.phase
+        predicate: tested_by_clinical_trials_of
+        source: "infores:repodb"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/drug-clinicaltrial"
+        testExamples:
+        ## for Terminated
+          - qInput: "UMLS:C0184567"          ## Acute onset pain / NCIT:C27003
+            oneOutput: "DRUGBANK:DB14123"    ## Menthol / PUBCHEM.COMPOUND:1254
+        ## for Withdrawn
+          - qInput: "UMLS:C0022104"          ## Irritable Bowel Syndrome / MONDO:0005052
+            oneOutput: "DRUGBANK:DB14005"    ## Dimethicone 410 / PUBCHEM.COMPOUND:131740050 Bis(tert-butylsilyloxy)-dimethylsilane
+        ## for Suspended
+          - qInput: "UMLS:C0406317"          ## Chronic small plaque psoriasis
+            oneOutput: "DRUGBANK:DB14006"    ## Choline salicylate / PUBCHEM.COMPOUND:54686350
   x-bte-response-mapping:
-    disease:
-      UMLS: repodb.indications.umls
-      input_name: repodb.name
-      output_name: repodb.indications.name
-    drug:
-      DRUGBANK: repodb.drugbank
-      output_name: repodb.name
+    disease-only:
+      UMLS: indication.umls
+      input_name: drug.name
+      output_name: indication.name
+    disease-clinicaltrial:
+      UMLS: indication.umls
+      input_name: drug.name
+      output_name: indication.name
+      ref_clinicaltrials: trials.id  ## no prefix
+    drug-only:
+      DRUGBANK: drug.drugbank
+      input_name: indication.name
+      output_name: drug.name
+    drug-clinicaltrial:
+      DRUGBANK: drug.drugbank
+      input_name: indication.name
+      output_name: drug.name
+      ref_clinicaltrials: trials.id  ## no prefix
