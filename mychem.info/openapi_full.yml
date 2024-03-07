@@ -20,9 +20,6 @@ servers:
 - description: Encrypted Production server
   url: https://mychem.info/v1
   x-maturity: production
-- description: Production server
-  url: http://mychem.info/v1
-  x-maturity: production
 tags:
 - name: chemical
 - name: drug
@@ -733,20 +730,21 @@ components:
         body:
           q: "{{ queryInputs }}"  ## no prefix
           scopes: aeolus.unii
-          ## all 3044 records have unii, only 1931 have inchikey
+          ## all 1551 records have unii and rxcui (another option), only 1016 have inchikey 
       outputs:
       - id: MEDDRA
         semantic: Disease
       parameters:
-        fields: aeolus.indications.meddra_code  ## no prefix
+        fields: aeolus.indications     ## need the whole thing for jmespath to work
+        jmespath: aeolus.indications|[?count>`20`]
         size: 1000  ## note size limit; added just in case
       predicate: treats
       source: "infores:aeolus"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/aeolusIndication-meddra"
-      # testExamples:
-      #   - qInput: "UNII:90347YTW5F"     ## alfuzosin
-      #     oneOutput: "MEDDRA:10004446"  ## Benign prostatic hyperplasia
+      testExamples:
+        - qInput: "UNII:90347YTW5F"     ## alfuzosin aka PUBCHEM.COMPOUND:2092
+          oneOutput: "MEDDRA:10004446"  ## Benign prostatic hyperplasia aka MONDO:0010811
     aeolusTreats-rev:
     - supportBatch: true
       useTemplating: true
@@ -767,9 +765,9 @@ components:
       source: "infores:aeolus"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/aeolus-unii"
-      # testExamples:
-      #   - qInput: "MEDDRA:10012378"        ## Depression 
-      #     oneOutput: "UNII:OGG85SX4E4"     ## Imipramine
+      testExamples:
+        - qInput: "MEDDRA:10012378"        ## Depression aka MONDO:0002050
+          oneOutput: "UNII:OGG85SX4E4"     ## Imipramine aka PUBCHEM.COMPOUND:3696
   ## chebi xrefs actually include relationships to other bioentities...
   ## - note that truncation was done by MyChem for rhea...
   ##   see https://docs.mychem.info/en/latest/doc/data_source.html
@@ -802,9 +800,9 @@ components:
       source: "infores:chebi"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/chebiXrefs-reactome"
-      # testExamples:
-      #   - qInput: "CHEBI:15724"            ## trimethylamine N-oxide
-      #     oneOutput: "REACT:R-HSA-139970"  ##  FMO3:FAD N-oxidises TMA to TMAO 
+      testExamples:
+        - qInput: "CHEBI:15724"            ## trimethylamine N-oxide
+          oneOutput: "REACT:R-HSA-139970"  ##  FMO3:FAD N-oxidises TMA to TMAO 
     chebiToReactome-rev:
     - supportBatch: true
       useTemplating: true
@@ -825,9 +823,9 @@ components:
       source: "infores:chebi"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/chebi"
-      # testExamples:
-      #   - qInput: "REACT:R-HSA-1855166"   ## PP-IP4 is dephosphorylated to I(1,3,4,5,6)P5 by NUDT4 in the cytosol 
-      #     oneOutput: "CHEBI:62926"        ##  1-Diphospho-1D-myo-inositol 3,4,5,6-tetrakisphosphate
+      testExamples:
+        - qInput: "REACT:R-HSA-1855166"   ## PP-IP4 is dephosphorylated to I(1,3,4,5,6)P5 by NUDT4 in the cytosol 
+          oneOutput: "CHEBI:62926"        ##  1-Diphospho-1D-myo-inositol 3,4,5,6-tetrakisphosphate
     chebiToRhea:
     ## there are 11079 records with chebi.xrefs.rhea
     - supportBatch: true
@@ -849,9 +847,9 @@ components:
       source: "infores:chebi"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/chebiXrefs-rhea"
-      # testExamples:
-      #   - qInput: "CHEBI:4885"      ## ethionamide
-      #     oneOutput: "RHEA:47616"   ## ethionamide + H(+) + NADPH + O2 = ethionamide S-oxide + H2O + NADP(+)
+      testExamples:
+        - qInput: "CHEBI:4885"      ## ethionamide
+          oneOutput: "RHEA:47616"   ## ethionamide + H(+) + NADPH + O2 = ethionamide S-oxide + H2O + NADP(+)
     chebiToRhea-rev:
     - supportBatch: true
       useTemplating: true
@@ -872,9 +870,9 @@ components:
       source: "infores:chebi"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/chebi"
-      # testExamples:
-      #   - qInput: "RHEA:23312"      ## 2 sucrose = 1(F)-beta-D-fructosylsucrose + D-glucose
-      #     oneOutput: "CHEBI:16885"  ## 1-kestose / 1(F)-beta-D-fructosylsucrose
+      testExamples:
+        - qInput: "RHEA:23312"      ## 2 sucrose = 1(F)-beta-D-fructosylsucrose + D-glucose
+          oneOutput: "CHEBI:16885"  ## 1-kestose / 1(F)-beta-D-fructosylsucrose
     ## chembl
     ## - drug_mechanisms: 
     ##   - can filter for human vs non-human targets and by target-type
@@ -923,9 +921,9 @@ components:
       source: "infores:chembl"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/drugMechChembl_EnsemblOutput"
-      # testExamples:
-      #   - qInput: "CHEMBL.COMPOUND:CHEMBL4298198"     ## VUPANORSEN SODIUM
-      #     oneOutput: "ENSEMBL:ENSG00000132855"        ## ANGPTL3 / Angiopoietin like 3 (ANGPTL3) mRNA
+      testExamples:
+        - qInput: "CHEMBL.COMPOUND:CHEMBL4298198"     ## VUPANORSEN SODIUM
+          oneOutput: "ENSEMBL:ENSG00000132855"        ## ANGPTL3 / Angiopoietin like 3 (ANGPTL3) mRNA
     drugMechChemblEnsembl-rev:
     - supportBatch: true
       useTemplating: true
@@ -946,9 +944,9 @@ components:
       source: "infores:chembl"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/drugMechChembl-rev"
-      # testExamples:
-      #   - qInput: "ENSEMBL:ENSG00000276536"            ## H-Ras mRNA 5'UTR
-      #     oneOutput: "CHEMBL.COMPOUND:CHEMBL4594562"   ## ISIS-2503
+      testExamples:
+        - qInput: "ENSEMBL:ENSG00000276536"            ## H-Ras mRNA 5'UTR
+          oneOutput: "CHEMBL.COMPOUND:CHEMBL4594562"   ## ISIS-2503
     drugMechChemblUniprot:
     ## 4553 chem/records have chembl.drug_mechanisms.target_components.uniprot
     - supportBatch: true
@@ -990,9 +988,9 @@ components:
       source: "infores:chembl"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/drugMechChembl_UniprotOutput"
-      # testExamples:
-      #   - qInput: "CHEMBL.COMPOUND:CHEMBL3989919"   ## FOSNETUPITANT CHLORIDE HYDROCHLORIDE
-      #     oneOutput: "UniProtKB:P25103"             ## TACR1 / Neurokinin 1 receptor
+      testExamples:
+        - qInput: "CHEMBL.COMPOUND:CHEMBL3989919"   ## FOSNETUPITANT CHLORIDE HYDROCHLORIDE
+          oneOutput: "UniProtKB:P25103"             ## TACR1 / Neurokinin 1 receptor
     drugMechChemblUniprot-rev:
     - supportBatch: true
       useTemplating: true
@@ -1013,9 +1011,9 @@ components:
       source: "infores:chembl"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/drugMechChembl-rev"
-      # testExamples:
-      #   - qInput: "UniProtKB:Q16539"                   ## MAP kinase p38 alpha
-      #     oneOutput: "CHEMBL.COMPOUND:CHEMBL585902"    ## AMG-548 / 4(3H)-Pyrimidinone, 2-(((2S)-2-amino-3-phenylpropyl)amino)-3-methyl-5-(2-naphthalenyl)-6-(4-pyridinyl)-
+      testExamples:
+        - qInput: "UniProtKB:Q16539"                   ## MAP kinase p38 alpha
+          oneOutput: "CHEMBL.COMPOUND:CHEMBL585902"    ## AMG-548 / 4(3H)-Pyrimidinone, 2-(((2S)-2-amino-3-phenylpropyl)amino)-3-methyl-5-(2-naphthalenyl)-6-(4-pyridinyl)-
     treatsChembl:
     ## all drug_indication records have a mesh ID for the indication...
     - supportBatch: true
@@ -1048,9 +1046,9 @@ components:
       source: "infores:chembl"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/chembl-treats"
-      # testExamples:
-      #   - qInput: "CHEMBL.COMPOUND:CHEMBL471737"   ## IVABRADINE
-      #     oneOutput: "MESH:D000072658"             ## Non-ST Elevated Myocardial Infarction
+      testExamples:
+        - qInput: "CHEMBL.COMPOUND:CHEMBL471737"   ## IVABRADINE aka PUBCHEM.COMPOUND:132999
+          oneOutput: "MESH:D000072658"             ## Non-ST Elevated Myocardial Infarction aka UMLS:C4255010
     treatsChembl-rev:
     - supportBatch: true
       useTemplating: true
@@ -1071,9 +1069,9 @@ components:
       source: "infores:chembl"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/chembl"
-      # testExamples:
-      #   - qInput: "MESH:D014376"                    ## Tuberculosis
-      #     oneOutput: "CHEMBL.COMPOUND:CHEMBL1441"   ## ETHIONAMIDE
+      testExamples:
+        - qInput: "MESH:D014376"                    ## Tuberculosis aka MONDO:0018076
+          oneOutput: "CHEMBL.COMPOUND:CHEMBL1441"   ## ETHIONAMIDE aka PUBCHEM.COMPOUND:2761171
   ## DrugCentral source
   ## Not annotating: 
   ## - drugcentral.approval (node properties?)
@@ -1157,9 +1155,9 @@ components:
       source: "infores:drugcentral"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/drugcentral-bioactivity"
-      # testExamples:
-      #   - qInput: "UMLS:C1452152"           ## ingenol mebutate
-      #     oneOutput: "UniProtKB:Q05655"     ## PRKCD
+      testExamples:
+        - qInput: "UMLS:C1452152"           ## ingenol mebutate
+          oneOutput: "UniProtKB:Q05655"     ## PRKCD
     drugcentral-bioactivity-agonist:
     ## right now "PARTIAL AGONIST" (14 records) is also included because of partial matching, see https://github.com/biothings/mychem.info/issues/153
     ## 563 records: https://mychem.info/v1/query?q=%20_exists_:%22drugcentral.bioactivity.uniprot.uniprot_id%22%20AND%20_exists_:%22drugcentral.xrefs.umlscui%22%20AND%20drugcentral.bioactivity.action_type:%22AGONIST%22&fields=drugcentral
@@ -1200,9 +1198,9 @@ components:
       source: "infores:drugcentral"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/drugcentral-bioactivity"
-      # testExamples:
-      #   - qInput: "UMLS:C0030071"           ## oxymetazoline
-      #     oneOutput: "UniProtKB:P35348"     ## ADRA1A
+      testExamples:
+        - qInput: "UMLS:C0030071"           ## oxymetazoline
+          oneOutput: "UniProtKB:P35348"     ## ADRA1A
     drugcentral-bioactivity-antagonist:
     ## right now "ALLOSTERIC ANTAGONIST" (1 chem / 6+ genes) is also included because of partial matching, see https://github.com/biothings/mychem.info/issues/153
     ## 382 records: https://mychem.info/v1/query?q=%20_exists_:%22drugcentral.bioactivity.uniprot.uniprot_id%22%20AND%20_exists_:%22drugcentral.xrefs.umlscui%22%20AND%20drugcentral.bioactivity.action_type:%22ANTAGONIST%22&fields=drugcentral
@@ -1243,9 +1241,9 @@ components:
       source: "infores:drugcentral"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/drugcentral-bioactivity"
-      # testExamples:
-      #   - qInput: "UMLS:C0724441"           ## yohimbine
-      #     oneOutput: "UniProtKB:P41595"     ## HTR2B
+      testExamples:
+        - qInput: "UMLS:C0724441"           ## yohimbine
+          oneOutput: "UniProtKB:P41595"     ## HTR2B
     drugcentral-bioactivity-antibody:
     ## 121 records: https://mychem.info/v1/query?q=%20_exists_:%22drugcentral.bioactivity.uniprot.uniprot_id%22%20AND%20_exists_:%22drugcentral.xrefs.umlscui%22%20AND%20drugcentral.bioactivity.action_type:%22ANTIBODY%20BINDING%22&fields=drugcentral
     - supportBatch: true
@@ -1285,9 +1283,9 @@ components:
       source: "infores:drugcentral"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/drugcentral-bioactivity"
-      # testExamples:
-      #   - qInput: "UMLS:C1172734"           ## natalizumab
-      #     oneOutput: "UniProtKB:P05556"     ## ITGA4
+      testExamples:
+        - qInput: "UMLS:C1172734"           ## natalizumab
+          oneOutput: "UniProtKB:P05556"     ## ITGA4
     drugcentral-bioactivity-antisense-inhibitor:
     ## 9 records: https://mychem.info/v1/query?q=%20_exists_:%22drugcentral.bioactivity.uniprot.uniprot_id%22%20AND%20_exists_:%22drugcentral.xrefs.umlscui%22%20AND%20drugcentral.bioactivity.action_type:%22ANTISENSE%20INHIBITOR%22&fields=drugcentral
     - supportBatch: true
@@ -1326,9 +1324,9 @@ components:
       source: "infores:drugcentral"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/drugcentral-bioactivity"
-      # testExamples:
-      #   - qInput: "UMLS:C4726970"           ## volanesorsen
-      #     oneOutput: "UniProtKB:P02656"     ## APOC3
+      testExamples:
+        - qInput: "UMLS:C4726970"           ## volanesorsen
+          oneOutput: "UniProtKB:P02656"     ## APOC3
     drugcentral-bioactivity-binding-agent:
     ## 22 records: https://mychem.info/v1/query?q=%20_exists_:%22drugcentral.bioactivity.uniprot.uniprot_id%22%20AND%20_exists_:%22drugcentral.xrefs.umlscui%22%20AND%20drugcentral.bioactivity.action_type:%22BINDING%20AGENT%22&fields=drugcentral
     - supportBatch: true
@@ -1362,9 +1360,9 @@ components:
       source: "infores:drugcentral"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/drugcentral-bioactivity"
-      # testExamples:
-      #   - qInput: "UMLS:C2346797"           ## moxetumomab pasudotox
-      #     oneOutput: "UniProtKB:P20273"     ## CD22
+      testExamples:
+        - qInput: "UMLS:C2346797"           ## moxetumomab pasudotox
+          oneOutput: "UniProtKB:P20273"     ## CD22
     drugcentral-bioactivity-blockage:
     ## includes action_type = 
     ## - "BLOCKER", 152 records: https://mychem.info/v1/query?q=%20_exists_:%22drugcentral.bioactivity.uniprot.uniprot_id%22%20AND%20_exists_:%22drugcentral.xrefs.umlscui%22%20AND%20drugcentral.bioactivity.action_type:%22BLOCKER%22&fields=drugcentral
@@ -1403,13 +1401,13 @@ components:
       source: "infores:drugcentral"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/drugcentral-bioactivity"
-      # testExamples:
-      ## for BLOCKER
-      #   - qInput: "UMLS:C0242375"           ## lidocaine
-      #     oneOutput: "UniProtKB:Q99250"     ## SCN2A
-      ## for GATING INHIBITOR
-      #   - qInput: "UMLS:C0028066"           ## nifedipine
-      #     oneOutput: "UniProtKB:Q01668"     ## CACNA1D
+      testExamples:
+      # for BLOCKER
+        - qInput: "UMLS:C0242375"           ## lidocaine
+          oneOutput: "UniProtKB:Q99250"     ## SCN2A
+      # for GATING INHIBITOR
+        - qInput: "UMLS:C0028066"           ## nifedipine
+          oneOutput: "UniProtKB:Q01668"     ## CACNA1D
     drugcentral-bioactivity-inhibitor:
     ## 793 records: https://mychem.info/v1/query?q=%20_exists_:%22drugcentral.bioactivity.uniprot.uniprot_id%22%20AND%20_exists_:%22drugcentral.xrefs.umlscui%22%20AND%20drugcentral.bioactivity.action_type:%22INHIBITOR%22&fields=drugcentral
     - supportBatch: true
@@ -1449,9 +1447,9 @@ components:
       source: "infores:drugcentral"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/drugcentral-bioactivity"
-      # testExamples:
-      #   - qInput: "UMLS:C2703109"           ## ponatinib
-      #     oneOutput: "UniProtKB:P35968"     ## KDR
+      testExamples:
+        - qInput: "UMLS:C2703109"           ## ponatinib
+          oneOutput: "UniProtKB:P35968"     ## KDR
     drugcentral-bioactivity-modulator:
     ## includes action_type = 
     ## - ALLOSTERIC MODULATOR: <= 61 chem/records
@@ -1488,13 +1486,13 @@ components:
       source: "infores:drugcentral"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/drugcentral-bioactivity"
-      # testExamples:
-      ## for ALLOSTERIC MODULATOR
-      #   - qInput: "UMLS:C0109102"           ## cervoxan
-      #     oneOutput: "UniProtKB:P20309"     ## CHRM3
-      ## for MODULATOR
-      #   - qInput: "UMLS:C4548896"           ## siponimod
-      #     oneOutput: "UniProtKB:P21453"     ## S1PR1
+      testExamples:
+      # for ALLOSTERIC MODULATOR
+        - qInput: "UMLS:C0109102"           ## cervoxan
+          oneOutput: "UniProtKB:P20309"     ## CHRM3
+      # for MODULATOR
+        - qInput: "UMLS:C4548896"           ## siponimod
+          oneOutput: "UniProtKB:P21453"     ## S1PR1
     drugcentral-bioactivity-opener:
     ## 15 records: https://mychem.info/v1/query?q=%20_exists_:%22drugcentral.bioactivity.uniprot.uniprot_id%22%20AND%20_exists_:%22drugcentral.xrefs.umlscui%22%20AND%20drugcentral.bioactivity.action_type:%22OPENER%22&fields=drugcentral
     - supportBatch: true
@@ -1533,9 +1531,9 @@ components:
       source: "infores:drugcentral"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/drugcentral-bioactivity"
-      # testExamples:
-      #   - qInput: "UMLS:C3265565"           ## sevoflurane
-      #     oneOutput: "UniProtKB:O95069"     ## KCNK2
+      testExamples:
+        - qInput: "UMLS:C3265565"           ## sevoflurane
+          oneOutput: "UniProtKB:O95069"     ## KCNK2
     drugcentral-bioactivity-positive-allosteric-modulator:
     ## 44 records: https://mychem.info/v1/query?q=%20_exists_:%22drugcentral.bioactivity.uniprot.uniprot_id%22%20AND%20_exists_:%22drugcentral.xrefs.umlscui%22%20AND%20drugcentral.bioactivity.action_type:%22POSITIVE%20ALLOSTERIC%20MODULATOR%22&fields=drugcentral
     - supportBatch: true
@@ -1575,9 +1573,9 @@ components:
       source: "infores:drugcentral"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/drugcentral-bioactivity"
-      # testExamples:
-      #   - qInput: "UMLS:C0072828"           ## quazepam
-      #     oneOutput: "UniProtKB:P18505"     ## GABRA3
+      testExamples:
+        - qInput: "UMLS:C0072828"           ## quazepam
+          oneOutput: "UniProtKB:P18505"     ## GABRA3
     drugcentral-bioactivity-positive-modulator:
     ## 14 records: https://mychem.info/v1/query?q=%20_exists_:%22drugcentral.bioactivity.uniprot.uniprot_id%22%20AND%20_exists_:%22drugcentral.xrefs.umlscui%22%20AND%20drugcentral.bioactivity.action_type:%22POSITIVE%20MODULATOR%22&fields=drugcentral
     - supportBatch: true
@@ -1617,9 +1615,9 @@ components:
       source: "infores:drugcentral"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/drugcentral-bioactivity"
-      # testExamples:
-      #   - qInput: "UMLS:C4256131"           ## enflurane
-      #     oneOutput: "UniProtKB:P23415"     ## GLRA1
+      testExamples:
+        - qInput: "UMLS:C4256131"           ## enflurane
+          oneOutput: "UniProtKB:P23415"     ## GLRA1
     drugcentral-bioactivity-rev:
     - supportBatch: true
       useTemplating: true
@@ -1643,9 +1641,9 @@ components:
       source: "infores:drugcentral"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/drugcentral-umls"
-      # testExamples:
-      #   - qInput: "UniProtKB:Q07912"    ## TNK2
-      #     oneOutput: "UMLS:C4086264"    ## entrectinib
+      testExamples:
+        - qInput: "UniProtKB:Q07912"    ## TNK2
+          oneOutput: "UMLS:C4086264"    ## entrectinib
     drugcentral-contraindication:
     - supportBatch: true
       useTemplating: true
@@ -1671,9 +1669,9 @@ components:
       source: "infores:drugcentral"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/drugcentral-contraindication"
-      # testExamples:
-      #   - qInput: "CHEMBL.COMPOUND:CHEMBL1441"    ## ethioniamide
-      #     oneOutput: "UMLS:C0001973"              ## Alcoholism
+      testExamples:
+        - qInput: "CHEMBL.COMPOUND:CHEMBL1441"    ## ethioniamide
+          oneOutput: "UMLS:C0001973"              ## Alcoholism
     drugcentral-contraindication-rev:
     - supportBatch: true
       useTemplating: true
@@ -1694,9 +1692,9 @@ components:
       source: "infores:drugcentral"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/drugcentral-chembl"
-      # testExamples:
-      #   - qInput: "UMLS:C0020621"                   ## Hypokalemia
-      #     oneOutput: "CHEMBL.COMPOUND:CHEMBL471"    ## sotalol
+      testExamples:
+        - qInput: "UMLS:C0020621"                   ## Hypokalemia
+          oneOutput: "CHEMBL.COMPOUND:CHEMBL471"    ## sotalol
     drugcentral-indication:
     ## note: some records don't have the needed output IDs...only a concept name...
     - supportBatch: true
@@ -1725,9 +1723,9 @@ components:
       source: "infores:drugcentral"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/drugcentral-indication"
-      # testExamples:
-      #   - qInput: "UNII:17VGG92R23"    ## pemafibrate
-      #     oneOutput: "UMLS:C0242339"   ## Dyslipidemia
+      testExamples:
+        - qInput: "UNII:17VGG92R23"    ## pemafibrate aka PUBCHEM.COMPOUND:11526038
+          oneOutput: "UMLS:C0242339"   ## Dyslipidemia aka HP:0003119
     drugcentral-indication-rev:
     - supportBatch: true
       useTemplating: true
@@ -1750,10 +1748,9 @@ components:
       source: "infores:drugcentral"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/drugcentral-unii"
-      # testExamples:
-      #   - qInput: "UMLS:C0234974"    ## Simple partial seizure
-      #     oneOutput: "UNII:44YRR34555"   ## keppra / Levetiracetam
-    ## edit, try this out once spaces in fields are fixed (next MyChem release)
+      testExamples:
+        - qInput: "UMLS:C0234974"        ## Simple partial seizure aka HP:0002349
+          oneOutput: "UNII:44YRR34555"   ## keppra / Levetiracetam aka PUBCHEM.COMPOUND:5284583
     drugcentral-offlabel:
     - supportBatch: true
       useTemplating: true
@@ -1780,9 +1777,9 @@ components:
       source: "infores:drugcentral"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/drugcentral-offlabel"
-      # testExamples:
-      #   - qInput: "CHEMBL.COMPOUND:CHEMBL11"    ## imipramine
-      #     oneOutput: "UMLS:C0027796"   ## Neuropathic pain / neuralgia
+      testExamples:
+        - qInput: "CHEMBL.COMPOUND:CHEMBL11"    ## imipramine aka PUBCHEM.COMPOUND:3696
+          oneOutput: "UMLS:C0027796"            ## Neuropathic pain / neuralgia aka MONDO:0021667
     drugcentral-offlabel-rev:
     - supportBatch: true
       useTemplating: true
@@ -1803,9 +1800,9 @@ components:
       source: "infores:drugcentral"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/drugcentral-chembl"
-      # testExamples:
-      #   - qInput: "UMLS:C0149931"                      ## Migraine
-      #     oneOutput: "CHEMBL.COMPOUND:CHEMBL2105833"   ## octodrine
+      testExamples:
+        - qInput: "UMLS:C0149931"                      ## Migraine aka MONDO:0005277
+          oneOutput: "CHEMBL.COMPOUND:CHEMBL2105833"   ## octodrine aka PUBCHEM.COMPOUND:10982
     drugcentral-adverseEvent:
     ## - chose to map to Disease semantic type since I saw SRI map some MEDDRA IDs to Disease...
     ##   https://nodenormalization-sri.renci.org/1.2/get_normalized_nodes?curie=MEDDRA%3A10035528&conflate=true
@@ -1843,9 +1840,9 @@ components:
       source: "infores:drugcentral"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/drugcentral-adverseEvent"
-      # testExamples:
-      #   - qInput: "CHEMBL.COMPOUND:CHEMBL440"    ## thiamylal sodium
-      #     oneOutput: "MEDDRA:10006093"           ## Bradycardia
+      testExamples:
+        - qInput: "CHEMBL.COMPOUND:CHEMBL440"    ## thiamylal sodium
+          oneOutput: "MEDDRA:10006093"           ## Bradycardia
     drugcentral-adverseEvent-rev:
     - supportBatch: true
       useTemplating: true
@@ -1867,9 +1864,9 @@ components:
       source: "infores:drugcentral"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/drugcentral-chembl"
-      # testExamples:
-      #   - qInput: "MEDDRA:10040108"                      ## Serotonin syndrome
-      #     oneOutput: "CHEMBL.COMPOUND:CHEMBL395091"      ## esketamine HCl
+      testExamples:
+        - qInput: "MEDDRA:10040108"                      ## Serotonin syndrome
+          oneOutput: "CHEMBL.COMPOUND:CHEMBL395091"      ## esketamine HCl
     fdaOrphanData:
     - supportBatch: true
       useTemplating: true
@@ -1906,13 +1903,13 @@ components:
         #   fda_orphan_drug.orphan_designation.original_text
         fields: fda_orphan_drug.orphan_designation.umls
       predicate: treats  ## current biolink predicate
-      ## through drugcentral, FDA Orphan Drug Designations and Approvals database...
-      source: "infores:drugcentral"
+      ## FDA Orphan Drug Designations and Approvals database
+      source: "infores:fda-orphan-drug-db"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/fdaOrphanDrug"
-      # testExamples:
-      #   - qInput: "PUBCHEM.COMPOUND:24889392"    ## quizartinib
-      #     oneOutput: "UMLS:C0023467"             ## Acute myeloid leukemia
+      testExamples:
+        - qInput: "PUBCHEM.COMPOUND:24889392"    ## quizartinib
+          oneOutput: "UMLS:C0023467"             ## Acute myeloid leukemia aka MONDO:0018874
     fdaOrphanData-rev:
     - supportBatch: true
       useTemplating: true
@@ -1930,10 +1927,10 @@ components:
         fields: fda_orphan_drug.pubchem_cid
         size: 1000  ## note size limit
       predicate: treated_by  ## current biolink predicate
-      ## through drugcentral, FDA Orphan Drug Designations and Approvals database...
-      source: "infores:drugcentral"
+      ## FDA Orphan Drug Designations and Approvals database
+      source: "infores:fda-orphan-drug-db"
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/fdaOrphanDrug-pubchemCompound"
-      # testExamples:
-      #   - qInput: "UMLS:C1412063"                     ## Stargardt disease
-      #     oneOutput: "PUBCHEM.COMPOUND:25221720"      ## emixustat
+      testExamples:
+        - qInput: "UMLS:C0013264"                     ## DUCHENNE MUSCULAR DYSTROPHY aka MONDO:0010679
+          oneOutput: "PUBCHEM.COMPOUND:9884642"       ## naproxcinod

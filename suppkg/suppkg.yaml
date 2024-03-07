@@ -7,29 +7,33 @@ info:
     x-role: responsible developers
   description: >-
     Documentation of the BioThings API for
-    [DDInter](http://ddinter.scbdd.com/) data.
+    [SuppKG](https://github.com/zhang-informatics/SemRep_DS/tree/main/SuppKG) data. SuppKG contains relations
+    between dietary supplements and other entities, such as diseases. More information can be found in [this 
+    paper](https://doi.org/10.1016/j.jbi.2022.104120). 
   termsOfService: https://biothings.io/about
-  title: BioThings DDInter API
+  title: BioThings SuppKG API
   version: '1.0'
   x-translator:
-    infores: "infores:biothings-ddinter"
+    infores: "infores:biothings-suppkg"
     component: KP
     team:
       - Service Provider
-    biolink-version: "3.5.0"
+    biolink-version: "3.5.3"
 servers:
 - description: Encrypted Production server
-  url: https://biothings.ncats.io/ddinter
+  url: https://biothings.ncats.io/suppkg
   x-maturity: production
 tags:
-- name: interaction
 - name: drug
+- name: disease
+- name: association
+- name: chemical
 - name: metadata
 - name: query
 - name: translator
 - name: biothings
 paths:
-  "/interaction/{id}":
+  "/association/{id}":
     get:
       description: >-
         By default, this will return the complete association in JSON format. If the input is not valid,
@@ -48,7 +52,7 @@ paths:
       - name: id
         in: path
         required: true
-        example: "DDInter1414_DDInter1004_Moderate"
+        example: "C0005847_DC0242726_PART_OF"
         schema:
           type: string
       - "$ref": "#/components/parameters/fields"
@@ -75,8 +79,8 @@ paths:
       #   '404':
       #     description: A response indicating an unknown association ID
       tags:
-      - interaction
-  "/interaction":
+      - association
+  "/association":
     post:
       description: >-
         Although making simple GET requests above to our service is sufficient in most use cases, 
@@ -112,8 +116,8 @@ paths:
           application/json:
             example:
               ids:
-              - "DDInter1214_DDInter100_Moderate"
-              - "DDInter1214_DDInter1017_Moderate"
+              - "C0013227_C0000737_TREATS"
+              - "C0013227_C0000768_TREATS"
             schema:
               type: object
               properties:
@@ -128,7 +132,7 @@ paths:
         '200':
           description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
       tags:
-      - interaction
+      - association
   "/metadata":
     get:
       description: Get metadata about the data available from the API
@@ -168,7 +172,7 @@ paths:
           API](https://docs.mychem.info/en/latest/doc/chem_query_service.html#query-syntax).
         in: query
         required: true
-        example: "drug_a.drugbank:DB08880"
+        example: "subject.umls:C0013227"
         schema:
           type: string
       - "$ref": "#/components/parameters/fields"
@@ -266,10 +270,10 @@ paths:
           application/json:
             example:
               q:
-              - "DB00707"
-              - "DB00997"
+              - "C0040383"
+              - "C0013227"
               scopes:
-              - "drug_a.drugbank"
+              - "subject.umls"
             schema:
               type: object
               properties:
@@ -305,8 +309,8 @@ paths:
       - query
       ## 2 operations
       x-bte-kgs-operations:
-      - $ref: '#/components/x-bte-kgs-operations/drugA-to-drugB'
-      - $ref: '#/components/x-bte-kgs-operations/drugB-to-drugA'
+      - $ref: '#/components/x-bte-kgs-operations/supplement-treats-disease'
+      - $ref: '#/components/x-bte-kgs-operations/disease-treated_by-supplement'
 components:
   parameters:
     callback:
@@ -567,75 +571,82 @@ components:
   #       type: array
   #     - type: string
   x-bte-kgs-operations:
-  ## Drug (drug_a) interacts with another Drug (drug_b): 160235
-  ## - looks like only 1 copy of each interaction exists in the data 
-  ##   (aka only "Drug A interacts with Drug B", without a repeat "Drug B interacts with Drug A")
-  ## using DRUGBANK namespace for both drugs (100% coverage)
-  ## - ddinter also has 100% coverage but is an internal database ID not supported by SRI
-  ## - chembl and pubchem coverage is 80-85%
-  ## levels of interaction: major, moderate, minor, unknown
-    drugA-to-drugB:
-    ## 160,235 records 
+  ## SuppKG mainly relates a dietary supplement (ex. chemical, drug) to an object (ex. body part, disease) with a predicate
+  ## SuppKG also contains records unrelated to dietary supplements (ex. abcess root is part of blood vessel)
+  ## - Subject: UMLS ID without prefixes in subject.umls
+  ## - Object: UMLS ID without prefixes in object.umls
+  ## - Predicate: Describes association between subject and object in predicate
+  ## The PubMed articles that contain the relationships between the subject and object are in relation
+  ## A subject or object's semantic type can be found in either subject.semtypes or object.semtypes 
+    supplement-treats-disease:
+    ## 595,222 records 
       - supportBatch: true
         useTemplating: true ## flag to say templating is being used below
         inputs:
-          - id: DRUGBANK
+          - id: UMLS
             semantic: SmallMolecule
         requestBody:
-          body:
-            ## API data has no prefix
-            ## joinSafe is only needed if the delimiter isn't a comma
-            q: "{{ queryInputs }}"
-            scopes: >-
-              drug_a.drugbank
+          body: 
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: subject.umls
         outputs:
-          - id: DRUGBANK
-            semantic: SmallMolecule
+          - id: UMLS
+            semantic: Disease
         parameters:
-        ## commenting out because data-processing / biolink-modeling issues
-          # fields: drug_b.drugbank,level
-          fields: drug_b.drugbank
+          fields: object.umls,relation.pmid,relation.sentence,subject.name,object.name
           size: 1000
-        predicate: interacts_with
-        source: "infores:ddinter"
+          filter: >-
+            subject.semtypes:(aapp OR antb OR bacs OR dsp OR food OR inch OR orch OR phsu OR vita) AND
+            (NOT subject.semtypes:(bact OR gngm OR plnt)) AND
+            predicate:TREATS AND
+            object.semtypes:(acab OR anab OR cgab OR comd OR dsyn OR mobd OR neop)
+        predicate: treats
+        source: "infores:suppkg" # no infores for suppkg yet
         response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/drugB"
-        ## compare to http://ddinter.scbdd.com/ddinter/interact/977140/
+          "$ref": "#/components/x-bte-response-mapping/object"
         testExamples:
-          - qInput: "DRUGBANK:DB00244"      ## Mesalazine 
-            oneOutput: "DRUGBANK:DB00414"   ## Acetohexamide
-    drugB-to-drugA:
+          - qInput: "UMLS:C0016277"      ## Fluconazole aka PUBCHEM.COMPOUND:3365
+            oneOutput: "UMLS:C0009324"   ## ulcerative colitis aka MONDO:0005101
+    disease-treated_by-supplement:
       - supportBatch: true
         useTemplating: true
         inputs:
-          - id: DRUGBANK
-            semantic: SmallMolecule
+          - id: UMLS
+            semantic: Disease
         requestBody:
-          body:
-            q: "{{ queryInputs }}"
-            scopes: drug_b.drugbank
+          body: 
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: object.umls
         outputs:
-          - id: DRUGBANK
+          - id: UMLS
             semantic: SmallMolecule
         parameters:
-        ## commenting out because data-processing / biolink-modeling issues
-          # fields: drug_a.drugbank,level
-          fields: drug_a.drugbank
+          fields: subject.umls,relation,subject.name,object.name
           size: 1000
-        predicate: interacts_with
-        source: "infores:ddinter"
+          filter: >-
+            subject.semtypes:(aapp OR antb OR bacs OR dsp OR food OR inch OR orch OR phsu OR vita) AND
+            (NOT subject.semtypes:(bact OR gngm OR plnt)) AND
+            predicate:TREATS AND
+            object.semtypes:(acab OR anab OR cgab OR comd OR dsyn OR mobd OR neop)
+        predicate: treated_by
+        source: "infores:suppkg" # no infores for suppkg yet
         response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/drugA"
-        ## compare to http://ddinter.scbdd.com/ddinter/interact/1047482/
+          "$ref": "#/components/x-bte-response-mapping/subject"
         testExamples:
-          - qInput: "DRUGBANK:DB00540"      ## Nortriptyline 
-            oneOutput: "DRUGBANK:DB00451"   ## Levothyroxine
+          - qInput: "UMLS:C0009324"       ## ulcerative colitis aka MONDO:0005101
+            oneOutput: "UMLS:DC0023791"   ## (r)-dithiolane-3-pentanoic acid
   x-bte-response-mapping:
-    drugB:
-      DRUGBANK: drug_b.drugbank
-      ## commenting out because data-processing / biolink-modeling issues
-      # "drug_interaction_severity_level": level
-    drugA:
-      DRUGBANK: drug_a.drugbank
-      ## commenting out because data-processing / biolink-modeling issues
-      # "drug_interaction_severity_level": level
+    object:
+      UMLS: object.umls
+      # suppkg_confidence_score: relation.conf
+      ref_pmid: relation.pmid
+      "biolink:supporting_text": relation.sentence
+      input_name: subject.name 
+      output_name: object.name
+    subject:
+      UMLS: subject.umls
+      # suppkg_confidence_score: relation.conf
+      ref_pmid: relation.pmid
+      "biolink:supporting_text": relation.sentence
+      input_name: object.name
+      output_name: subject.name 

@@ -1,0 +1,169 @@
+openapi: 3.0.3
+info:
+  description: >-
+    This is an API for iPTMNet providing information about post-translational
+    modifications (PTMs) combined from multiple sources and tools.
+  version: '2.1.1'
+  title: iPTMNet API
+  contact:
+    ## using contact info from https://research.bioinformatics.udel.edu/iptmnet/about/api
+    name: Sachin Gavali 
+    email: saching@udel.edu
+  termsOfService: https://research.bioinformatics.udel.edu/iptmnet/license
+  x-translator:
+    infores: "infores:iptmnet"
+    component: KP
+    team:
+      - Service Provider
+    biolink-version: "3.5.3"
+servers:
+- description: Encrypted Production server
+  url: https://research.bioinformatics.udel.edu/iptmnet/api
+  x-maturity: production
+tags:
+- name: translator
+paths:
+  "/{id}/substrate":
+    get:
+      summary: Retrieve the list of PTM sites with the given substrate
+      description: >-
+        By passing a IPTMNet identifier, you can retrieve the list of PTM sites
+        and annotations with that given substrate
+      operationId: asSubById
+      parameters:
+      - name: id
+        in: path
+        description:  The iPTMNet ID. Usually reuse UniProt Accession numbers.
+        required: true
+        schema:
+          type: string
+        example: "P24941"
+      responses:
+        '200':
+          description: >-
+            Set of tables for the PTM sites for each proteoform of the given
+            protein
+          ## while this is from the original swagger doc, it doesn't seem to match the actual response: 
+          ## an object where the keys are the protein IDs and the values are an array of objects.
+          ## the objects have fields like residue, site, ptm_type, score, sources, enzymes, pmids
+          # content:
+          #   application/json:
+          #     schema:
+          #       type: array
+          #       items:
+          #         type: object
+          #         properties:
+          #           form:
+          #             type: string
+          #             example: Q15796
+          #           table:
+          #             $ref: '#/definitions/substrate_table'
+          #       example:
+          #         - form: Q15796
+          #           table:
+          #             $ref: '#/definitions/substrate_table/example'
+          #         - form: Q15796-1
+          #           table:
+          #             - site: T8
+          #               type: Phosphorylation
+          #               enzyme:
+          #                 id: 'PR:000026189'
+          #                 type: pro_id
+          #                 name: 'hMAPK3/iso:1/Phos:1'
+          #               score: 2
+          #               sources:
+          #                 PRO: 'http://purl.obolibrary.org/obo/PR_Q15796'
+          #               PMIDs:
+          #                 - 12193595
+        '501':
+          description: Not yet implemented. Need to find format.
+      ## 1 operation
+      x-bte-kgs-operations:
+      - $ref: '#/components/x-bte-kgs-operations/is_substrate_of'
+  ## not in original swagger doc
+  "/{id}/as-enzyme":
+    get:
+      summary: Retrieve the list of PTM sites the given enzyme modifies
+      description: >-
+        By passing a IPTMNet identifier, you can retrieve the list of PTM sites
+        and annotations with that given enzyme
+      operationId: asEnzById
+      parameters:
+      - name: id
+        in: path
+        description:  The iPTMNet ID. Usually reuse UniProt Accession numbers.
+        required: true
+        schema:
+          type: string
+        example: "P24941"
+      responses:
+        '200':
+          description: >-
+            Set of tables for the PTM sites that each proteoform of the given
+            protein acts on 
+          content:
+            application/json:
+              schema:
+                type: object
+        '501':
+          description: Not yet implemented. Need to find format.
+      ## 1 operation
+      x-bte-kgs-operations:
+      - $ref: '#/components/x-bte-kgs-operations/has_substrate'
+components:
+  x-bte-kgs-operations:
+    ## chose to use Protein as category since they are catalyzing PTMs
+    is_substrate_of:
+    ## response: an object where the keys are the protein IDs and the values are an array of objects.
+    ## the objects have fields like residue, site, ptm_type, score, sources, enzymes, pmids
+      - supportBatch: false
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: UniProtKB
+            semantic: Protein
+        parameters:
+          ## no prefix on ID
+          id: "{{ queryInputs }}"
+        outputs:
+          - id: UniProtKB
+            semantic: Protein
+        predicate: is_substrate_of
+        ## use api-level source of "infores:iptmnet" for now
+        ## future? use JQ-post-processing on "sources" field?
+        ## "sources" is an array of objects
+        ##   each object has name/label/url
+        ## not sure what all the possible values are though...
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/is_substrate_of"
+        testExamples:
+          - qInput: "UniProtKB:P24941"       ## CDK2
+            oneOutput: "UniProtKB:P50613"    ## CDK7
+    has_substrate:
+    ## response: an object where the keys are the protein IDs and the values are an array of objects.
+    ## the objects have fields like substrate, substrate_symbol, site, score, sources, pmids
+      - supportBatch: false
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: UniProtKB
+            semantic: Protein
+        parameters:
+          ## no prefix on ID
+          id: "{{ queryInputs }}"
+        outputs:
+          - id: UniProtKB
+            semantic: Protein
+        predicate: has_substrate
+        ## use api-level source of "infores:iptmnet" for now
+        ## see notes on is_substrate_of
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/has_substrate"
+        testExamples:
+          - qInput: "UniProtKB:P24941"       ## CDK2
+            oneOutput: "UniProtKB:P33991"    ## MCM4
+  x-bte-response-mapping:
+    is_substrate_of:
+      UniProtKB: enzymes.id
+      ref_pmid: pmids  ## array of strings
+    has_substrate:
+      UniProtKB: substrate
+      ref_pmid: pmids  ## array of strings

@@ -21,9 +21,6 @@ servers:
 - description: Encrypted Production server
   url: https://biothings.ncats.io/bindingdb
   x-maturity: production
-- description: Production server
-  url: http://biothings.ncats.io/bindingdb
-  x-maturity: production
 tags:
 - name: association
 - name: protein
@@ -588,7 +585,7 @@ components:
             q: "{{ queryInputs }}"
             scopes: subject.uniprot.accession
         outputs:
-          - id: "PUBCHEM.COMPOUND"
+          - id: INCHIKEY
             semantic: SmallMolecule
         parameters:
         ## commenting out because data-processing / biolink-modeling issues
@@ -598,26 +595,26 @@ components:
         #     subject.name,subject.organism,
         #     relation.curation_datasource,relation.pmid,relation.bindingdb_link,relation.article_doi,relation.patent_number
           fields: >-
-            object.pubchem_cid,
-            subject.name,relation.pmid,relation.bindingdb_link,relation.article_doi
+            object.inchikey,
+            subject.name,object.name,relation.pmid,relation.bindingdb_link,relation.article_doi
           size: 1000
         predicate: physically_interacts_with
         source: "infores:bindingdb"
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/pubchem-object"
-        # testExamples:
-        #   - qInput: "UniProtKB:P51681"                    ## C-C chemokine receptor type 5
-        #     oneOutput: "PUBCHEM.COMPOUND:44401763"        ## (2R)-3-cyclobutyl-2-[(3S,4S)-3-phenyl-4-[[4-([1,2,4]triazolo[4,3-a]pyridin-3-yl)piperidin-1-yl]methyl]pyrrolidin-1-yl]propanoic acid 
+        testExamples:
+          - qInput: "UniProtKB:Q08722"                               ## Leukocyte surface antigen CD47
+            oneOutput: "INCHIKEY:CLTVCCLZSPKLRB-NRGGWPRRSA-N"        ## CHEMBL4474790 / H-D-Lys-N(Me)Arg-Phe-Tyr-Val-Val-Nle-Trp-Lys-D-Lys-OH
     ligand-protein:
       - supportBatch: true
         useTemplating: true
         inputs:
-          - id: "PUBCHEM.COMPOUND"
+          - id: INCHIKEY
             semantic: SmallMolecule
         requestBody:
           body:
             q: "{{ queryInputs }}"
-            scopes: object.pubchem_cid
+            scopes: object.inchikey
         outputs:
           - id: UniProtKB
             semantic: Gene
@@ -629,15 +626,15 @@ components:
           #   relation.curation_datasource,relation.pmid,relation.bindingdb_link,relation.article_doi,relation.patent_number
           fields: >-
             subject.uniprot.accession,
-            subject.name,relation.pmid,relation.bindingdb_link,relation.article_doi
+            subject.name,object.name,relation.pmid,relation.bindingdb_link,relation.article_doi
           size: 1000
         predicate: physically_interacts_with
         source: "infores:bindingdb"
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/uniprot-subject"
-        # testExamples:
-        #   - qInput: "PUBCHEM.COMPOUND:134553288"     ## US10736883, Example 387.0
-        #     oneOutput: "UniProtKB:P35414"            ## Apelin receptor
+        testExamples:
+          - qInput: "INCHIKEY:NZLXOECMDRNZDN-GUYCJALGSA-N"     ## US10736883, Example 387.0
+            oneOutput: "UniProtKB:P35414"                      ## Apelin receptor / APLNR
   x-bte-response-mapping:
   ## note on references:
   ##   sometimes the doi + pmid will refer to the same publication (so..."duplicate" references)
@@ -645,9 +642,10 @@ components:
   ##   only doi: https://biothings.transltr.io/bindingdb/query?q=_exists_:relation.article_doi%20AND%20(NOT%20_exists_:relation.pmid)
   ##   only pmid: https://biothings.transltr.io/bindingdb/query?q=_exists_:relation.pmid%20AND%20(NOT%20_exists_:relation.article_doi)
     pubchem-object:
-      "PUBCHEM.COMPOUND": object.pubchem_cid       ## no prefix
-      "biolink:original_subject": subject.name     ## was called "Target Name Assigned by Curator or DataSource"
-      ref_pmid: relation.pmid                          ## no prefix
+      INCHIKEY: object.inchikey    ## no prefix
+      output_name: object.name     ## problematic because it's "::" and ", " delimited string
+      input_name: subject.name     ## was called "Target Name Assigned by Curator or DataSource"
+      ref_pmid: relation.pmid      ## no prefix
       ref_doi: relation.article_doi
       ref_url: relation.bindingdb_link
       ## commenting out because data-processing / biolink-modeling issues
@@ -655,9 +653,10 @@ components:
       # bindingdb_curation_datasource: relation.curation_datasource    ## Curation/DataSource
       # patent_number: relation.patent_number
     uniprot-subject:
-      UniProtKB: subject.uniprot.accession  ## no prefix
-      "biolink:original_subject": subject.name
-      ref_pmid: relation.pmid                          ## no prefix
+      UniProtKB: subject.uniprot.accession       ## no prefix
+      output_name: subject.name
+      input_name: object.name
+      ref_pmid: relation.pmid                    ## no prefix
       ref_doi: relation.article_doi
       ref_url: relation.bindingdb_link
       ## commenting out because data-processing / biolink-modeling issues

@@ -22,9 +22,6 @@ servers:
 - description: Encrypted Production server
   url: https://biothings.ncats.io/text_mining_targeted_association
   x-maturity: production
-- description: Production server
-  url: http://biothings.ncats.io/text_mining_targeted_association
-  x-maturity: production
 tags:
 - name: gene
 - name: chemical
@@ -611,7 +608,6 @@ components:
   ##   - MONDO: Disease
   ##   - HP: PhenotypicFeaure
   ##   - UniProtKB: Gene
-  ## - currently we can't express _exists_ with this kind of query: useful for setting the output
   ## - currently, BTE handles prefix (MONDO / HP keep their prefixes, DRUGBANK / UniProtKB does not).
   ##   in the future, could edit parser + queries to handle prefixes
   ## - joinSafe is only needed if the delimiter isn't a comma
@@ -623,7 +619,6 @@ components:
         inputs:
           - id: DRUGBANK
             semantic: SmallMolecule
-        requestBodyType: object
         requestBody:
           body: >-
             {
@@ -633,6 +628,7 @@ components:
         parameters:
           fields: object.MONDO,association.edge_attributes,association.sources
           size: 1000
+          filter: _exists_:subject.DRUGBANK AND association.edge_label:treats AND _exists_:object.MONDO
         outputs:
           - id: MONDO
             semantic: Disease
@@ -650,7 +646,6 @@ components:
         inputs:
           - id: MONDO
             semantic: Disease
-        requestBodyType: object
         requestBody:
           body: >-
             {
@@ -660,6 +655,7 @@ components:
         parameters:
           fields: subject.DRUGBANK,association.edge_attributes,association.sources
           size: 1000
+          filter: _exists_:subject.DRUGBANK AND association.edge_label:treats AND _exists_:object.MONDO
         outputs:
           - id: DRUGBANK
             semantic: SmallMolecule
@@ -677,7 +673,6 @@ components:
         inputs:
           - id: DRUGBANK
             semantic: SmallMolecule
-        requestBodyType: object
         requestBody:
           body: >-
             {
@@ -687,6 +682,7 @@ components:
         parameters:
           fields: object.HP,association.edge_attributes,association.sources
           size: 1000
+          filter: _exists_:subject.DRUGBANK AND association.edge_label:treats AND _exists_:object.HP
         outputs:
           - id: HP
             semantic: PhenotypicFeature
@@ -704,7 +700,6 @@ components:
         inputs:
           - id: HP
             semantic: PhenotypicFeature
-        requestBodyType: object
         requestBody:
           body: >-
             {
@@ -714,6 +709,7 @@ components:
         parameters:
           fields: subject.DRUGBANK,association.edge_attributes,association.sources
           size: 1000
+          filter: _exists_:subject.DRUGBANK AND association.edge_label:treats AND _exists_:object.HP
         outputs:
           - id: DRUGBANK
             semantic: SmallMolecule
@@ -730,16 +726,14 @@ components:
         inputs:
           - id: DRUGBANK
             semantic: SmallMolecule
-        requestBodyType: object
         requestBody:
-          body: >-
-            {
-              "q": [ {{ queryInputs | wrap( '["' , '","entity_positively_regulates_entity"]') }} ],
-              "scopes": ["subject.DRUGBANK", "association.edge_label"]
-            }
+          body: 
+            q: "{{ queryInputs }}"
+            scopes: subject.DRUGBANK
         parameters:
           fields: object.UniProtKB,association.edge_attributes,association.sources
           size: 1000
+          filter: _exists_:subject.DRUGBANK AND association.edge_label:entity_positively_regulates_entity AND _exists_:object.UniProtKB
         outputs:
           - id: UniProtKB
             semantic: Gene
@@ -762,16 +756,14 @@ components:
         inputs:
           - id: UniProtKB
             semantic: Gene
-        requestBodyType: object
         requestBody:
-          body: >-
-            {
-              "q": [ {{ queryInputs | wrap( '["' , '","entity_positively_regulates_entity"]') }} ],
-              "scopes": ["object.UniProtKB", "association.edge_label"]
-            }
+          body: 
+            q: "{{ queryInputs }}"
+            scopes: object.UniProtKB
         parameters:
           fields: subject.DRUGBANK,association.edge_attributes,association.sources
           size: 1000
+          filter: _exists_:subject.DRUGBANK AND association.edge_label:entity_positively_regulates_entity AND _exists_:object.UniProtKB
         outputs:
           - id: DRUGBANK
             semantic: SmallMolecule
@@ -793,16 +785,14 @@ components:
         inputs:
           - id: DRUGBANK
             semantic: SmallMolecule
-        requestBodyType: object
         requestBody:
-          body: >-
-            {
-              "q": [ {{ queryInputs | wrap( '["' , '","entity_negatively_regulates_entity"]') }} ],
-              "scopes": ["subject.DRUGBANK", "association.edge_label"]
-            }
+          body: 
+            q: "{{ queryInputs }}"
+            scopes: subject.DRUGBANK
         parameters:
           fields: object.UniProtKB,association.edge_attributes,association.sources
           size: 1000
+          filter: _exists_:subject.DRUGBANK AND association.edge_label:entity_negatively_regulates_entity AND _exists_:object.UniProtKB
         outputs:
           - id: UniProtKB
             semantic: Gene
@@ -825,16 +815,14 @@ components:
         inputs:
           - id: UniProtKB
             semantic: Gene
-        requestBodyType: object
         requestBody:
-          body: >-
-            {
-              "q": [ {{ queryInputs | wrap( '["' , '","entity_negatively_regulates_entity"]') }} ],
-              "scopes": ["object.UniProtKB", "association.edge_label"]
-            }
+          body: 
+            q: "{{ queryInputs }}"
+            scopes: object.UniProtKB
         parameters:
           fields: subject.DRUGBANK,association.edge_attributes,association.sources
           size: 1000
+          filter: _exists_:subject.DRUGBANK AND association.edge_label:entity_negatively_regulates_entity AND _exists_:object.UniProtKB
         outputs:
           - id: DRUGBANK
             semantic: SmallMolecule
@@ -856,16 +844,14 @@ components:
         inputs:
           - id: UniProtKB
             semantic: Gene
-        requestBodyType: object
         requestBody:
-          body: >-
-            {
-              "q": [ {{ queryInputs | wrap( '["' , '","entity_positively_regulates_entity"]') }} ],
-              "scopes": ["subject.UniProtKB", "association.edge_label"]
-            }
+          body: 
+            q: "{{ queryInputs }}"
+            scopes: subject.UniProtKB
         parameters:
           fields: object.UniProtKB,association.edge_attributes,association.sources
           size: 1000
+          filter: _exists_:subject.UniProtKB AND association.edge_label:entity_positively_regulates_entity AND _exists_:object.UniProtKB
         outputs:
           - id: UniProtKB
             semantic: Gene
@@ -886,16 +872,14 @@ components:
         inputs:
           - id: UniProtKB
             semantic: Gene
-        requestBodyType: object
         requestBody:
-          body: >-
-            {
-              "q": [ {{ queryInputs | wrap( '["' , '","entity_positively_regulates_entity"]') }} ],
-              "scopes": ["object.UniProtKB", "association.edge_label"]
-            }
+          body: 
+            q: "{{ queryInputs }}"
+            scopes: object.UniProtKB
         parameters:
           fields: subject.UniProtKB,association.edge_attributes,association.sources
           size: 1000
+          filter: _exists_:subject.UniProtKB AND association.edge_label:entity_positively_regulates_entity AND _exists_:object.UniProtKB
         outputs:
           - id: UniProtKB
             semantic: Gene
@@ -916,16 +900,14 @@ components:
         inputs:
           - id: UniProtKB
             semantic: Gene
-        requestBodyType: object
         requestBody:
-          body: >-
-            {
-              "q": [ {{ queryInputs | wrap( '["' , '","entity_negatively_regulates_entity"]') }} ],
-              "scopes": ["subject.UniProtKB", "association.edge_label"]
-            }
+          body: 
+            q: "{{ queryInputs }}"
+            scopes: subject.UniProtKB
         parameters:
           fields: object.UniProtKB,association.edge_attributes,association.sources
           size: 1000
+          filter: _exists_:subject.UniProtKB AND association.edge_label:entity_negatively_regulates_entity AND _exists_:object.UniProtKB
         outputs:
           - id: UniProtKB
             semantic: Gene
@@ -946,16 +928,14 @@ components:
         inputs:
           - id: UniProtKB
             semantic: Gene
-        requestBodyType: object
         requestBody:
-          body: >-
-            {
-              "q": [ {{ queryInputs | wrap( '["' , '","entity_negatively_regulates_entity"]') }} ],
-              "scopes": ["object.UniProtKB", "association.edge_label"]
-            }
+          body: 
+            q: "{{ queryInputs }}"
+            scopes: object.UniProtKB
         parameters:
           fields: subject.UniProtKB,association.edge_attributes,association.sources
           size: 1000
+          filter: _exists_:subject.UniProtKB AND association.edge_label:entity_negatively_regulates_entity AND _exists_:object.UniProtKB
         outputs:
           - id: UniProtKB
             semantic: Gene
@@ -976,16 +956,14 @@ components:
         inputs:
           - id: UniProtKB
             semantic: Gene
-        requestBodyType: object
         requestBody:
-          body: >-
-            {
-              "q": [ {{ queryInputs | wrap( '["' , '","contributes_to"]') }} ],
-              "scopes": ["subject.UniProtKB", "association.edge_label"]
-            }
+          body: 
+            q: "{{ queryInputs }}"
+            scopes: subject.UniProtKB
         parameters:
           fields: object.MONDO,association.edge_attributes,association.sources
           size: 1000
+          filter: _exists_:subject.UniProtKB AND association.edge_label:contributes_to AND _exists_:object.MONDO
         outputs:
           - id: MONDO
             semantic: Disease
@@ -1003,16 +981,14 @@ components:
         inputs:
           - id: MONDO
             semantic: Disease
-        requestBodyType: object
         requestBody:
-          body: >-
-            {
-              "q": [ {{ queryInputs | wrap( '["' , '","contributes_to"]') }} ],
-              "scopes": ["object.MONDO", "association.edge_label"]
-            }
+          body: 
+            q: "{{ queryInputs }}"
+            scopes: object.MONDO
         parameters:
           fields: subject.UniProtKB,association.edge_attributes,association.sources
           size: 1000
+          filter: _exists_:subject.UniProtKB AND association.edge_label:contributes_to AND _exists_:object.MONDO
         outputs:
           - id: UniProtKB
             semantic: Gene
@@ -1029,16 +1005,14 @@ components:
         inputs:
           - id: UniProtKB
             semantic: Gene
-        requestBodyType: object
         requestBody:
-          body: >-
-            {
-              "q": [ {{ queryInputs | wrap( '["' , '","contributes_to"]') }} ],
-              "scopes": ["subject.UniProtKB", "association.edge_label"]
-            }
+          body: 
+            q: "{{ queryInputs }}"
+            scopes: subject.UniProtKB
         parameters:
           fields: object.HP,association.edge_attributes,association.sources
           size: 1000
+          filter: _exists_:subject.UniProtKB AND association.edge_label:contributes_to AND _exists_:object.HP
         outputs:
           - id: HP
             semantic: PhenotypicFeature
@@ -1056,16 +1030,14 @@ components:
         inputs:
           - id: HP
             semantic: PhenotypicFeature
-        requestBodyType: object
         requestBody:
-          body: >-
-            {
-              "q": [ {{ queryInputs | wrap( '["' , '","contributes_to"]') }} ],
-              "scopes": ["object.HP", "association.edge_label"]
-            }
+          body: 
+            q: "{{ queryInputs }}"
+            scopes: object.HP
         parameters:
           fields: subject.UniProtKB,association.edge_attributes,association.sources
           size: 1000
+          filter: _exists_:subject.UniProtKB AND association.edge_label:contributes_to AND _exists_:object.HP
         outputs:
           - id: UniProtKB
             semantic: Gene
@@ -1082,16 +1054,14 @@ components:
         inputs:
           - id: DRUGBANK
             semantic: SmallMolecule
-        requestBodyType: object
         requestBody:
-          body: >-
-            {
-              "q": [ {{ queryInputs | wrap( '["' , '","contributes_to"]') }} ],
-              "scopes": ["subject.DRUGBANK", "association.edge_label"]
-            }
+          body: 
+            q: "{{ queryInputs }}"
+            scopes: subject.DRUGBANK
         parameters:
           fields: object.HP,association.edge_attributes,association.sources
           size: 1000
+          filter: _exists_:subject.DRUGBANK AND association.edge_label:contributes_to AND _exists_:object.HP
         outputs:
           - id: HP
             semantic: PhenotypicFeature
@@ -1105,16 +1075,14 @@ components:
         inputs:
           - id: HP
             semantic: PhenotypicFeature
-        requestBodyType: object
         requestBody:
-          body: >-
-            {
-              "q": [ {{ queryInputs | wrap( '["' , '","contributes_to"]') }} ],
-              "scopes": ["object.HP", "association.edge_label"]
-            }
+          body: 
+            q: "{{ queryInputs }}"
+            scopes: object.HP
         parameters:
           fields: subject.DRUGBANK,association.edge_attributes,association.sources
           size: 1000
+          filter: _exists_:subject.DRUGBANK AND association.edge_label:contributes_to AND _exists_:object.HP
         outputs:
           - id: DRUGBANK
             semantic: SmallMolecule
@@ -1128,16 +1096,14 @@ components:
         inputs:
           - id: DRUGBANK
             semantic: SmallMolecule
-        requestBodyType: object
         requestBody:
-          body: >-
-            {
-              "q": [ {{ queryInputs | wrap( '["' , '","contributes_to"]') }} ],
-              "scopes": ["subject.DRUGBANK", "association.edge_label"]
-            }
+          body: 
+            q: "{{ queryInputs }}"
+            scopes: subject.DRUGBANK
         parameters:
           fields: object.MONDO,association.edge_attributes,association.sources
           size: 1000
+          filter: _exists_:subject.DRUGBANK AND association.edge_label:contributes_to AND _exists_:object.MONDO
         outputs:
           - id: MONDO
             semantic: Disease
@@ -1151,16 +1117,14 @@ components:
         inputs:
           - id: MONDO
             semantic: Disease
-        requestBodyType: object
         requestBody:
-          body: >-
-            {
-              "q": [ {{ queryInputs | wrap( '["' , '","contributes_to"]') }} ],
-              "scopes": ["object.MONDO", "association.edge_label"]
-            }
+          body: 
+            q: "{{ queryInputs }}"
+            scopes: object.MONDO
         parameters:
           fields: subject.DRUGBANK,association.edge_attributes,association.sources
           size: 1000
+          filter: _exists_:subject.DRUGBANK AND association.edge_label:contributes_to AND _exists_:object.MONDO
         outputs:
           - id: DRUGBANK
             semantic: SmallMolecule

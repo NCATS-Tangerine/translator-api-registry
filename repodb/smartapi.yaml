@@ -6,30 +6,34 @@ info:
     x-id: https://github.com/biothings
     x-role: responsible developers
   description: >-
-    Documentation of the BioThings API for
-    [DDInter](http://ddinter.scbdd.com/) data.
+    Documentation of the BioThings API for the Drug Repositioning Database, 
+    [repoDB](https://unmtid-shinyapps.net/shiny/repodb/), data. 
+    repoDB contains a standard set of drug repositioning successes and failures that can be used to 
+    fairly and reproducibly benchmark computational repositioning methods. 
+    repoDB data was extracted from DrugCentral and ClinicalTrials.gov.
   termsOfService: https://biothings.io/about
-  title: BioThings DDInter API
-  version: '1.0'
+  title: BioThings repoDB API
+  version: '2.0'
   x-translator:
-    infores: "infores:biothings-ddinter"
+    infores: "infores:biothings-repodb"
     component: KP
     team:
       - Service Provider
-    biolink-version: "3.5.0"
+    biolink-version: "3.5.3"
 servers:
 - description: Encrypted Production server
-  url: https://biothings.ncats.io/ddinter
+  url: https://biothings.ncats.io/repodb
   x-maturity: production
 tags:
-- name: interaction
-- name: drug
+- name: indication
+- name: chemical
+- name: disease
 - name: metadata
 - name: query
 - name: translator
 - name: biothings
 paths:
-  "/interaction/{id}":
+  "/indication/{id}":
     get:
       description: >-
         By default, this will return the complete association in JSON format. If the input is not valid,
@@ -48,7 +52,7 @@ paths:
       - name: id
         in: path
         required: true
-        example: "DDInter1414_DDInter1004_Moderate"
+        example: "DB14539_C0151467"
         schema:
           type: string
       - "$ref": "#/components/parameters/fields"
@@ -75,8 +79,8 @@ paths:
       #   '404':
       #     description: A response indicating an unknown association ID
       tags:
-      - interaction
-  "/interaction":
+      - indication
+  "/indication":
     post:
       description: >-
         Although making simple GET requests above to our service is sufficient in most use cases, 
@@ -112,8 +116,8 @@ paths:
           application/json:
             example:
               ids:
-              - "DDInter1214_DDInter100_Moderate"
-              - "DDInter1214_DDInter1017_Moderate"
+              - "DB14539_C0151467"
+              - "DB14509_C0003873"
             schema:
               type: object
               properties:
@@ -128,7 +132,7 @@ paths:
         '200':
           description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
       tags:
-      - interaction
+      - indication
   "/metadata":
     get:
       description: Get metadata about the data available from the API
@@ -168,7 +172,7 @@ paths:
           API](https://docs.mychem.info/en/latest/doc/chem_query_service.html#query-syntax).
         in: query
         required: true
-        example: "drug_a.drugbank:DB08880"
+        example: "drug.drugbank:DB14006"
         schema:
           type: string
       - "$ref": "#/components/parameters/fields"
@@ -266,10 +270,10 @@ paths:
           application/json:
             example:
               q:
-              - "DB00707"
-              - "DB00997"
+              - "DB14006"
+              - "DB00012"
               scopes:
-              - "drug_a.drugbank"
+              - "drug.drugbank"
             schema:
               type: object
               properties:
@@ -303,10 +307,13 @@ paths:
       # summary: Make batch gene queries and return matching gene hits
       tags:
       - query
-      ## 2 operations
+      ## 4 operations (2 sets)
       x-bte-kgs-operations:
-      - $ref: '#/components/x-bte-kgs-operations/drugA-to-drugB'
-      - $ref: '#/components/x-bte-kgs-operations/drugB-to-drugA'
+      - $ref: '#/components/x-bte-kgs-operations/drug-disease-approved'
+      - $ref: '#/components/x-bte-kgs-operations/disease-drug-approved'
+      ## uncomment for "treats-refactor"/biolink-model 4 update
+      # - $ref: '#/components/x-bte-kgs-operations/drug-disease-not-approved'
+      # - $ref: '#/components/x-bte-kgs-operations/disease-drug-not-approved'
 components:
   parameters:
     callback:
@@ -567,75 +574,161 @@ components:
   #       type: array
   #     - type: string
   x-bte-kgs-operations:
-  ## Drug (drug_a) interacts with another Drug (drug_b): 160235
-  ## - looks like only 1 copy of each interaction exists in the data 
-  ##   (aka only "Drug A interacts with Drug B", without a repeat "Drug B interacts with Drug A")
-  ## using DRUGBANK namespace for both drugs (100% coverage)
-  ## - ddinter also has 100% coverage but is an internal database ID not supported by SRI
-  ## - chembl and pubchem coverage is 80-85%
-  ## levels of interaction: major, moderate, minor, unknown
-    drugA-to-drugB:
-    ## 160,235 records 
+  ## NOTES
+  ## - possible edge-attributes:
+  ##   - 2185 / 10602 records have detailed status (free-text): https://biothings.ncats.io/repodb/query?q=_exists_:trials.detailed_status
+  ##   - status: all records have this, but the values need to be mapped to biolink-model ClinicalApprovalStatusEnum
+    drug-disease-approved:
+    ## 8390 records: https://biothings.ncats.io/repodb/query?q=trials.status:approved
       - supportBatch: true
         useTemplating: true ## flag to say templating is being used below
         inputs:
           - id: DRUGBANK
             semantic: SmallMolecule
         requestBody:
-          body:
-            ## API data has no prefix
-            ## joinSafe is only needed if the delimiter isn't a comma
-            q: "{{ queryInputs }}"
-            scopes: >-
-              drug_a.drugbank
+          body: 
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: drug.drugbank
+        outputs:
+          - id: UMLS
+            semantic: Disease
+        parameters:
+        ## not including clinical trial field since none of the approved entries seem to have it
+          fields: >-
+            indication.umls,
+            drug.name,
+            indication.name,
+            trials.status
+          size: 1000
+          filter: trials.status:approved
+        predicate: treats
+        source: "infores:repodb"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/disease-only"
+        testExamples:
+          - qInput: "DRUGBANK:DB00002"    ## Cetuximab / Methyl 4,7,10,13,16-docosapentaenoate
+            oneOutput: "UMLS:C0007102"    ## Malignant tumor of colon / MONDO:0021063 malignant colon neoplasm
+    disease-drug-approved:
+      - supportBatch: true
+        useTemplating: true
+        inputs:
+          - id: UMLS
+            semantic: Disease
+        requestBody:
+          body: 
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: indication.umls
         outputs:
           - id: DRUGBANK
             semantic: SmallMolecule
         parameters:
-        ## commenting out because data-processing / biolink-modeling issues
-          # fields: drug_b.drugbank,level
-          fields: drug_b.drugbank
+          fields: >-
+            drug.drugbank,
+            drug.name,
+            indication.name,
+            trials.status
           size: 1000
-        predicate: interacts_with
-        source: "infores:ddinter"
+          filter: trials.status:approved
+        predicate: treated_by
+        source: "infores:repodb"
         response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/drugB"
-        ## compare to http://ddinter.scbdd.com/ddinter/interact/977140/
+          "$ref": "#/components/x-bte-response-mapping/drug-only"
         testExamples:
-          - qInput: "DRUGBANK:DB00244"      ## Mesalazine 
-            oneOutput: "DRUGBANK:DB00414"   ## Acetohexamide
-    drugB-to-drugA:
+          - qInput: "UMLS:C0032797"          ## Postpartum Hemorrhage / HP:0011891 Post-partum hemorrhage
+            oneOutput: "DRUGBANK:DB00107"    ## Oxytocin / PUBCHEM.COMPOUND:439302
+    drug-disease-not-approved:
+    ## 2583 records (going off of existence of trials.phase which doesn't seem to exist in approved entries)
+    ## biothings.ncats.io/repodb/query?q=_exists_:trials.phase
+    ## phase values are either Phase 1, Phase 2, Phase 3 (so all went through clinical trials)
+    ## status values are either terminated, withdrawn, suspended
       - supportBatch: true
-        useTemplating: true
+        useTemplating: true ## flag to say templating is being used below
         inputs:
           - id: DRUGBANK
             semantic: SmallMolecule
         requestBody:
-          body:
-            q: "{{ queryInputs }}"
-            scopes: drug_b.drugbank
+          body: 
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: drug.drugbank
+        outputs:
+          - id: UMLS
+            semantic: Disease
+        parameters:
+        ## include clinical trial field since some will have it
+          fields: >-
+            indication.umls,
+            drug.name,
+            indication.name,
+            trials.id,
+            trials.status
+          size: 1000
+          filter: _exists_:trials.phase
+        predicate: in_clinical_trials_for
+        source: "infores:repodb"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/disease-clinicaltrial"
+        testExamples:
+        ## for Terminated
+          - qInput: "DRUGBANK:DB00043"    ## Omalizumab / UNII:2P471X1Z11
+            oneOutput: "UMLS:C0004096"    ## Asthma / MONDO:0004979
+        ## for Withdrawn
+          - qInput: "DRUGBANK:DB14482"    ## Sodium ascorbate / PUBCHEM.COMPOUND:23667548
+            oneOutput: "UMLS:C0004238"    ## Atrial Fibrillation / MONDO:0004981
+        ## for Suspended
+          - qInput: "DRUGBANK:DB00104"    ## Octreotide / PUBCHEM.COMPOUND:448601
+            oneOutput: "UMLS:C0001206"    ## Acromegaly / MONDO:0019933
+    disease-drug-not-approved:
+      - supportBatch: true
+        useTemplating: true
+        inputs:
+          - id: UMLS
+            semantic: Disease
+        requestBody:
+          body: 
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: indication.umls
         outputs:
           - id: DRUGBANK
             semantic: SmallMolecule
         parameters:
-        ## commenting out because data-processing / biolink-modeling issues
-          # fields: drug_a.drugbank,level
-          fields: drug_a.drugbank
+          fields: >-
+            drug.drugbank,
+            drug.name,
+            indication.name,
+            trials.id,
+            trials.status
           size: 1000
-        predicate: interacts_with
-        source: "infores:ddinter"
+          filter: _exists_:trials.phase
+        predicate: tested_by_clinical_trials_of
+        source: "infores:repodb"
         response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/drugA"
-        ## compare to http://ddinter.scbdd.com/ddinter/interact/1047482/
+          "$ref": "#/components/x-bte-response-mapping/drug-clinicaltrial"
         testExamples:
-          - qInput: "DRUGBANK:DB00540"      ## Nortriptyline 
-            oneOutput: "DRUGBANK:DB00451"   ## Levothyroxine
+        ## for Terminated
+          - qInput: "UMLS:C0184567"          ## Acute onset pain / NCIT:C27003
+            oneOutput: "DRUGBANK:DB14123"    ## Menthol / PUBCHEM.COMPOUND:1254
+        ## for Withdrawn
+          - qInput: "UMLS:C0022104"          ## Irritable Bowel Syndrome / MONDO:0005052
+            oneOutput: "DRUGBANK:DB14005"    ## Dimethicone 410 / PUBCHEM.COMPOUND:131740050 Bis(tert-butylsilyloxy)-dimethylsilane
+        ## for Suspended
+          - qInput: "UMLS:C0406317"          ## Chronic small plaque psoriasis
+            oneOutput: "DRUGBANK:DB14006"    ## Choline salicylate / PUBCHEM.COMPOUND:54686350
   x-bte-response-mapping:
-    drugB:
-      DRUGBANK: drug_b.drugbank
-      ## commenting out because data-processing / biolink-modeling issues
-      # "drug_interaction_severity_level": level
-    drugA:
-      DRUGBANK: drug_a.drugbank
-      ## commenting out because data-processing / biolink-modeling issues
-      # "drug_interaction_severity_level": level
+    disease-only:
+      UMLS: indication.umls
+      input_name: drug.name
+      output_name: indication.name
+    disease-clinicaltrial:
+      UMLS: indication.umls
+      input_name: drug.name
+      output_name: indication.name
+      ref_clinicaltrials: trials.id  ## no prefix
+    drug-only:
+      DRUGBANK: drug.drugbank
+      input_name: indication.name
+      output_name: drug.name
+    drug-clinicaltrial:
+      DRUGBANK: drug.drugbank
+      input_name: indication.name
+      output_name: drug.name
+      ref_clinicaltrials: trials.id  ## no prefix

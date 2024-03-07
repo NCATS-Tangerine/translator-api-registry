@@ -1,38 +1,39 @@
 openapi: 3.0.3
 info:
   contact:
-    email: guangrong.qin@isbscience.org
-    name: Guangrong Qin
-    x-role: responsible developer
+    email: help@biothings.io
+    name: BioThings Team
+    x-id: https://github.com/biothings
+    x-role: responsible developers
   description: >-
-    Documentation of the BioThings API for Translator Multiomics Team's
-    BigGIM-DrugResponse KP. This KP contains associations from multiple sources.
+    Documentation of the BioThings API for [InnateDB](https://www.innatedb.com/) data. 
+    InnateDB is a publicly available database of the genes, proteins, experimentally-verified interactions 
+    and signaling pathways involved in the innate immune response of humans, mice and bovines to microbial infection. 
+    The database captures an improved coverage of the innate immunity interactome by integrating known interactions 
+    and pathways from major public databases together with manually-curated data into a centralised resource.
   termsOfService: https://biothings.io/about
-  title: Multiomics BigGIM-DrugResponse KP API
-  version: '3.0'
+  title: BioThings InnateDB API
+  version: '2022-08-08'
   x-translator:
-    infores: "infores:biothings-multiomics-biggim-drugresponse"
+    infores: "infores:biothings-innatedb"
     component: KP
     team:
-      - Multiomics Provider
       - Service Provider
     biolink-version: "3.5.3"
 servers:
 - description: Encrypted Production server
-  url: https://biothings.ncats.io/biggim_drugresponse_kp
+  url: https://biothings.ncats.io/innatedb
   x-maturity: production
 tags:
 - name: gene
-- name: disease
-- name: chemical
+- name: transcript
 - name: association
-- name: annotation
+- name: metadata
 - name: query
 - name: translator
 - name: biothings
-- name: biothings_graph
 paths:
-  "/association/{id}":
+  "/gene/{id}":
     get:
       description: >-
         By default, this will return the complete association in JSON format. If the input is not valid,
@@ -51,7 +52,7 @@ paths:
       - name: id
         in: path
         required: true
-        example: "Disease_biolink:has_biomarker_Gene_GDSC_cancer_specific_signatures.csv_2998"
+        example: "innatedb:IDBG-30497_innatedb:IDBG-46918_InnateDB Allergy:IDB-1632289"
         schema:
           type: string
       - "$ref": "#/components/parameters/fields"
@@ -79,7 +80,7 @@ paths:
       #     description: A response indicating an unknown association ID
       tags:
       - association
-  "/association":
+  "/gene":
     post:
       description: >-
         Although making simple GET requests above to our service is sufficient in most use cases, 
@@ -115,8 +116,8 @@ paths:
           application/json:
             example:
               ids:
-              - "Disease_biolink:has_biomarker_Gene_GDSC_cancer_specific_signatures.csv_2998"
-              - "Protein_biolink:physically_interacts_with_Protein_Biogrid_formated.csv_170247"
+              - "innatedb:IDBG-30497_innatedb:IDBG-46918_InnateDB Allergy:IDB-1632289"
+              - "innatedb:IDBG-49080_innatedb:IDBG-54829_innatedb:IDB-118362"
             schema:
               type: object
               properties:
@@ -171,7 +172,7 @@ paths:
           API](https://docs.mychem.info/en/latest/doc/chem_query_service.html#query-syntax).
         in: query
         required: true
-        example: subject.NCBIGene:"NCBIGene:91526"
+        example: "object.alias.hgnc_name:MAP3K14"
         schema:
           type: string
       - "$ref": "#/components/parameters/fields"
@@ -269,10 +270,10 @@ paths:
           application/json:
             example:
               q:
-              - "NCBIGene:91526"
-              - "NCBIGene:5788"
+              - "MAP3K14"
+              - "TMEM173"
               scopes:
-              - "subject.NCBIGene"
+              - "object.alias.hgnc_name"
             schema:
               type: object
               properties:
@@ -306,28 +307,20 @@ paths:
       # summary: Make batch gene queries and return matching gene hits
       tags:
       - query
+      ## 12 operations (6 pairs)
       x-bte-kgs-operations:
-      - $ref: '#/components/x-bte-kgs-operations/gene-sensitivity-chem'
-      - $ref: '#/components/x-bte-kgs-operations/gene-sensitivity-chem-rev'
-      - $ref: '#/components/x-bte-kgs-operations/gene-resistance-chem'
-      - $ref: '#/components/x-bte-kgs-operations/gene-resistance-chem-rev'
-      - $ref: '#/components/x-bte-kgs-operations/gene-associated-disease'
-      - $ref: '#/components/x-bte-kgs-operations/gene-associated-disease-rev'
-      - $ref: '#/components/x-bte-kgs-operations/disease-biomarker-gene'
-      - $ref: '#/components/x-bte-kgs-operations/disease-biomarker-gene-rev'
-      - $ref: '#/components/x-bte-kgs-operations/chem-targets-gene'
-      - $ref: '#/components/x-bte-kgs-operations/chem-targets-gene-rev'
-      - $ref: '#/components/x-bte-kgs-operations/gene-physicallyInteracts-gene'
-      - $ref: '#/components/x-bte-kgs-operations/gene-physicallyInteracts-gene-rev'
-      - $ref: '#/components/x-bte-kgs-operations/gene-geneticallyInteracts-gene'
-      - $ref: '#/components/x-bte-kgs-operations/gene-geneticallyInteracts-gene-rev'
-      - $ref: '#/components/x-bte-kgs-operations/gene-negativelyCorrelated-gene'
-      - $ref: '#/components/x-bte-kgs-operations/gene-negativelyCorrelated-gene-rev'  
-      - $ref: '#/components/x-bte-kgs-operations/gene-positivelyCorrelated-gene'
-      - $ref: '#/components/x-bte-kgs-operations/gene-positivelyCorrelated-gene-rev'
-      - $ref: '#/components/x-bte-kgs-operations/gene-expressed-in-cell'
-      - $ref: '#/components/x-bte-kgs-operations/cell-expresses-gene'
-      
+      - $ref: '#/components/x-bte-kgs-operations/physical_association'
+      - $ref: '#/components/x-bte-kgs-operations/physical_association-rev'
+      - $ref: '#/components/x-bte-kgs-operations/phosphorylation'
+      - $ref: '#/components/x-bte-kgs-operations/phosphorylation-rev'
+      - $ref: '#/components/x-bte-kgs-operations/ubiquitination'
+      - $ref: '#/components/x-bte-kgs-operations/ubiquitination-rev'
+      - $ref: '#/components/x-bte-kgs-operations/protein_cleavage'
+      - $ref: '#/components/x-bte-kgs-operations/protein_cleavage-rev'
+      - $ref: '#/components/x-bte-kgs-operations/cleavage_reaction'
+      - $ref: '#/components/x-bte-kgs-operations/cleavage_reaction-rev'
+      - $ref: '#/components/x-bte-kgs-operations/dephosphorylation'
+      - $ref: '#/components/x-bte-kgs-operations/dephosphorylation-rev'
 components:
   parameters:
     callback:
@@ -588,569 +581,464 @@ components:
   #       type: array
   #     - type: string
   x-bte-kgs-operations:
-  ## in the API's records:
-  ## - subjects and objects can be Gene (NCBIGene), SmallMolecule (PUBCHEM.COMPOUND), Disease (MONDO)
-  ## - predicates can be associated_with_resistance_to, associated_with_sensitivity_to
-  ##   gene_associated_with_condition, has_biomarker, physically_interacts_with,
-  ##   physically_interacts_with, genetically_interacts_with,
-  ##   negatively_correlated_with, positively_correlated_with
-  ## - BTE automatically puts prefix on MONDO IDs, but prefix has to be added to other ID inputs 
-  ## - currently, BTE will also accept response with Translator-prefix (api-response-transform module).
-  ## - joinSafe is only needed if the delimiter isn't a comma
-
-    gene-expressed-in-cell:
-    ##  https://biothings.ncats.io/biggim_drugresponse_kp/query?q=predicate:"biolink:expressed_in"
-    ## 34719 records
+  ## did operations for all relation.interaction_type.label values > 10,
+  ##   except the one that was "other modification"
+  ## SUBJECT/OBJECT: treating all as Genes for now
+  ## - all records had ENSEMBL fields (object and subject alt_identifier.ensembl)
+  ##     with ENSG-type fields (Gene-specific)
+  ## - VS NOT all records have UniProtKB fields (object and subject alias.uniprotkb)
+  ##     even when the interactor_type.label is "protein"!
+  ##     and we are using NodeNorm default, which will "conflate" this ID to Gene anyways...
+  ## - both subject/object have interactor_type.label fields.
+  ##   only varies for "physical interaction", out of the relationships reviewed so far
+  ##   for the others, all subject/objects have been "protein"
+  ##   - "protein": would make more sense as Protein with UniProtKB ids...
+  ##   - "deoxyribonucleic acid": could treat as Gene, use ENSG IDs
+  ##   - "ribonucleic acid": could treat as Transcript (but ENSG IDs?) or NucleicAcidEntity
+  ##     - only noticed for "physical association" out of interaction_types I looked at
+  ## - all records had names (object and subject alias.hgnc_name field, more helpful than uniprotkb_name)
+  ## RELATIONSHIP
+  ## - set by relation.interaction_type.label: see stats https://github.com/biothings/pending.api/issues/17#issuecomment-1201684667
+  ## - note: relation.negative was always "false" biothings.ncats.io/innatedb/query?q=NOT relation.negative:"false"
+  ##         relation.source_database: was always "MI:0974(innatedb)"
+  ## - hard: relation.ncbi_taxid_host_organism could be a qualifier species context?
+  ##   BUT it's a lot: 27 species and 2 weird values, and some are viruses which I don't get...
+  ##   and it's not in biolink-model format
+  ##   values I saw: 9606 (human), 10090 (mouse), 4932 (Saccharomyces c.), 
+  ##                 9534 and 101841 (grivet - primate and subspecies), 9986 (rabbit),
+  ##                 7108 (fall armyworm), 9913 (cow), 10026 (hamster),
+  ##                 10029 (Chinese hamster), 9527 (Old World monkeys), 9615 (dog),
+  ##                 10036 (golden hamster), 10116 (rat), 10469 (baculovirus),
+  ##                 9479 (New World monkeys), 111296 (Yeast two-hybrid vector pC-ACT.2), 452646 (American mink),
+  ##                 10760 (Escherichia phage T7), 10455 (SfNPV), 9666 (European mink),
+  ##                 562 (E coli), 7088 (butterflies/moths), 93934 (Japanese quail),
+  ##                 7227 (fruit fly), 9031 (chicken), 9580 (common gibbon),
+  ##                 0 and -1 (not sure what this means)
+  ## POSSIBLE EDGE-ATTRIBUTES, but not biolink-model friendly
+  ## - relation.creation_date,relation.update_date: issue is that BTE will merge records
+  ##       so the attributes can be arrays, rather than single values
+  ##       might trigger biolink-model/TRAPI validation issues
+  ## - relation.interaction_detection_method.label
+  ## - relation.annotations_interaction (free-text info, only in some records)
+  ## - relation.expansion_method: not sure what this is, keyword info? only in some records
+  ## - relation.confidence_score: not sure what this is, 3 numeric fields: hpr, lpr, np
+    physical_association:
+    ## 31086 records 
+    ## breakdown by interactor_type: 6 combos (3 have <5 matching records)
+    ## - 22044: both subject/object "protein"
+    ## - 4523: subject "protein", object "deoxyribonucleic acid"
+    ## - 485: subject "protein", object "ribonucleic acid"
+    ## - 3480: subject "deoxyribonucleic acid", object "protein"
+    ## - 454: subject "ribonucleic acid", object "protein"
+    ## - 90: both subject/object "ribonucleic acid"
       - supportBatch: true
         useTemplating: true ## flag to say templating is being used below
         inputs:
-          - id: NCBIGene
+          - id: ENSEMBL
             semantic: Gene
-        requestBodyType: object
         requestBody:
-          body: >-
-            {
-              "q": [ {{ queryInputs | replPrefix('NCBIGene') | wrap( '["' , '","biolink:expressed_in"]') }} ],
-              "scopes": ["subject.NCBIGene", "predicate"]
-            }
-        parameters:
-          fields: object.CL,attributes,sources
-          size: 1000
+          body: 
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: subject.alt_identifier.ensembl
         outputs:
-          - id: CL
-            semantic: Cell
-        predicate: expressed_in
-        response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/cl-object"
-        # testExamples:
-        #   - qInput: "NCBIGene:930"                ## CD19
-        #     oneOutput: "CL_0000236"                ## Hodgkin Lymphoma B cell
-
-    cell-expresses-gene:
-      - supportBatch: true
-        useTemplating: true ## flag to say templating is being used below
-        inputs:
-          - id: CL
-            semantic: Cell
-        requestBodyType: object
-        requestBody:
-          body: >-
-            {
-              "q": [ {{ queryInputs | replPrefix('CL') | wrap( '["' , '","biolink:expresses"]') }} ],
-              "scopes": ["object.CL", "predicate"]
-            }
-        parameters:
-          fields: subject.NCBIGene,attributes,sources
-          size: 1000
-        outputs:
-          - id: NCBIGene
+          - id: ENSEMBL
             semantic: Gene
-        predicate: expresses
-        response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/ncbigene-subject"
-        # testExamples:
-        #   - qInput: "CL_0000236"                ## Hodgkin Lymphoma B cell
-        #     oneOutput: "NCBIGene:930"           ## CD19
-
-    gene-sensitivity-chem:
-    ##  https://biothings.ncats.io/biggim_drugresponse_kp/query?q=predicate:"biolink:associated_with_sensitivity_to"
-    ##  95994 records  
-      - supportBatch: true
-        useTemplating: true ## flag to say templating is being used below
-        inputs:
-          - id: NCBIGene #biolink prefix for id
-            semantic: Gene #category of id
-        requestBodyType: object
-        requestBody:
-          body: >-
-            {
-              "q": [ {{ queryInputs | replPrefix('NCBIGene') | wrap( '["' , '","biolink:associated_with_sensitivity_to"]') }} ], 
-              "scopes": ["subject.NCBIGene", "predicate"] 
-            }
         parameters:
-          fields: object.pubchem_compound,attributes,sources #field to return
+          fields: >-
+            object.alt_identifier.ensembl,
+            object.alias.hgnc_name,subject.alias.hgnc_name,
+            relation.pmid
           size: 1000
-        outputs:
-          - id: "PUBCHEM.COMPOUND" #
-            semantic: SmallMolecule
-        predicate: associated_with_sensitivity_to
-        response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/pubchem-object"
-        # testExamples:
-        #   - qInput: "NCBIGene:25878"                    ## MXRA5
-        #     oneOutput: "PUBCHEM.COMPOUND:135539077"     ## THZ-2-102-1 (Luminespib)
-    gene-sensitivity-chem-rev:
-      - supportBatch: true
-        useTemplating: true ## flag to say templating is being used below
-        inputs:
-          - id: "PUBCHEM.COMPOUND"
-            semantic: SmallMolecule
-        requestBodyType: object
-        requestBody:
-          body: >-
-            {
-              "q": [ {{ queryInputs | replPrefix('PUBCHEM.COMPOUND') | wrap( '["' , '","biolink:associated_with_sensitivity_to"]') }} ],
-              "scopes": ["object.pubchem_compound", "predicate"]
-            }
-        parameters:
-          fields: subject.NCBIGene,attributes,sources
-          size: 1000
-        outputs:
-          - id: NCBIGene
-            semantic: Gene
-        predicate: sensitivity_associated_with
-        response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/ncbigene-subject"
-        # testExamples:
-        #   - qInput: "PUBCHEM.COMPOUND:24856436"       ## JNK-9L (Adavosertib)
-        #     oneOutput: "NCBIGene:59352"               ## LGR6
-    gene-resistance-chem:
-    ##  https://biothings.ncats.io/biggim_drugresponse_kp/query?q=predicate:"biolink:associated_with_resistance_to"
-    ##  107719 records
-      - supportBatch: true
-        useTemplating: true ## flag to say templating is being used below
-        inputs:
-          - id: NCBIGene
-            semantic: Gene
-        requestBodyType: object
-        requestBody:
-          body: >-
-            {
-              "q": [ {{ queryInputs | replPrefix('NCBIGene') | wrap( '["' , '","biolink:associated_with_resistance_to"]') }} ],
-              "scopes": ["subject.NCBIGene", "predicate"]
-            }
-        parameters:
-          fields: object.pubchem_compound,attributes,sources
-          size: 1000
-        outputs:
-          - id: "PUBCHEM.COMPOUND"
-            semantic: SmallMolecule
-        predicate: associated_with_resistance_to
-        response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/pubchem-object"
-        # testExamples:
-        #   - qInput: "NCBIGene:5724"                ## PTAFR
-        #     oneOutput: "PUBCHEM.COMPOUND:4261"     ## Elesclomol (Entinostat)
-    gene-resistance-chem-rev:
-      - supportBatch: true
-        useTemplating: true ## flag to say templating is being used below
-        inputs:
-          - id: "PUBCHEM.COMPOUND"
-            semantic: SmallMolecule
-        requestBodyType: object
-        requestBody:
-          body: >-
-            {
-              "q": [ {{ queryInputs | replPrefix('PUBCHEM.COMPOUND') | wrap( '["' , '","biolink:associated_with_resistance_to"]') }} ],
-              "scopes": ["object.pubchem_compound", "predicate"]
-            }
-        parameters:
-          fields: subject.NCBIGene,attributes,sources
-          size: 1000
-        outputs:
-          - id: NCBIGene
-            semantic: Gene
-        predicate: resistance_associated_with
-        response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/ncbigene-subject"
-        # testExamples:
-        #   - qInput: "PUBCHEM.COMPOUND:46844147"       ## AZD8055 (Erk5-IN-1)
-        #     oneOutput: "NCBIGene:26119"               ## LDLRAP1
-    gene-associated-disease:
-    ##  https://biothings.ncats.io/biggim_drugresponse_kp/query?q=predicate:"biolink:gene_associated_with_condition"
-    ##  922 records  
-      - supportBatch: true
-        useTemplating: true ## flag to say templating is being used below
-        inputs:
-          - id: NCBIGene
-            semantic: Gene
-        requestBodyType: object
-        requestBody:
-          body: >-
-            {
-              "q": [ {{ queryInputs | replPrefix('NCBIGene') | wrap( '["' , '","biolink:gene_associated_with_condition"]') }} ],
-              "scopes": ["subject.NCBIGene", "predicate"]
-            }
-        parameters:
-          fields: object.MONDO,attributes,sources
-          size: 1000
-        outputs:
-          - id: MONDO
-            semantic: Disease
-        predicate: gene_associated_with_condition
-        response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/mondo-object"
-        # testExamples:
-        #   - qInput: "NCBIGene:10459"       ## MAD2L2
-        #     oneOutput: "MONDO:0019391"     ## Fanconi anemia
-    gene-associated-disease-rev:
-      - supportBatch: true
-        useTemplating: true ## flag to say templating is being used below
-        inputs:
-          - id: MONDO
-            semantic: Disease
-        requestBodyType: object
-        requestBody:  
-          body: >-
-            {
-              "q": [ {{ queryInputs | replPrefix('MONDO') | wrap( '["' , '","biolink:gene_associated_with_condition"]') }} ],
-              "scopes": ["object.MONDO", "predicate"]
-            }
-        parameters:
-          fields: subject.NCBIGene,attributes,sources
-          size: 1000
-        outputs:
-          - id: NCBIGene
-            semantic: Gene
-        predicate: condition_associated_with_gene
-        response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/ncbigene-subject"
-        # testExamples:
-        #   - qInput: "MONDO:0004056"         ## TCGA-BLCA (bladder papillary urothelial carcinoma)
-        #     oneOutput: "NCBIGene:7157"      ## TP53
-    disease-biomarker-gene:
-    ##  https://biothings.ncats.io/biggim_drugresponse_kp/query?q=predicate:"biolink:has_biomarker"
-    ##  13811 records  
-      - supportBatch: true
-        useTemplating: true ## flag to say templating is being used below
-        inputs:
-          - id: MONDO
-            semantic: Disease
-        requestBodyType: object
-        requestBody:  
-          body: >-
-            {
-              "q": [ {{ queryInputs | replPrefix('MONDO') | wrap( '["' , '","biolink:has_biomarker"]') }} ],
-              "scopes": ["subject.MONDO", "predicate"]
-            }
-        parameters:
-          fields: object.NCBIGene,attributes,sources
-          size: 1000
-        outputs:
-          - id: NCBIGene
-            semantic: Gene
-        predicate: has_biomarker
-        response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/ncbigene-object"
-        # testExamples:
-        #   - qInput: "MONDO:0005097"       ## LUSC (squamous cell lung carcinoma)
-        #     oneOutput: "NCBIGene:131"     ## ADH7
-    disease-biomarker-gene-rev:
-      - supportBatch: true
-        useTemplating: true ## flag to say templating is being used below
-        inputs:
-          - id: NCBIGene
-            semantic: Gene
-        requestBodyType: object
-        requestBody:
-          body: >-
-            {
-              "q": [ {{ queryInputs | replPrefix('NCBIGene') | wrap( '["' , '","biolink:has_biomarker"]') }} ],
-              "scopes": ["object.NCBIGene", "predicate"]
-            }
-        parameters:
-          fields: subject.MONDO,attributes,sources
-          size: 1000
-        outputs:
-          - id: MONDO
-            semantic: Disease
-        predicate: biomarker_for
-        response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/mondo-subject"
-        # testExamples:
-        #   - qInput: "NCBIGene:1145"         ## CHRNE
-        #     oneOutput: "MONDO:0018874"      ## LAML (acute myeloid leukemia)
-    chem-targets-gene:
-    ##  https://biothings.ncats.io/biggim_drugresponse_kp/query?q=predicate:"biolink:physically_interacts_with"
-    ##  14806 records
-      - supportBatch: true
-        useTemplating: true ## flag to say templating is being used below
-        inputs:
-          - id: "PUBCHEM.COMPOUND"
-            semantic: SmallMolecule
-        requestBodyType: object
-        requestBody:
-          body: >-
-            {
-              "q": [ {{ queryInputs | replPrefix('PUBCHEM.COMPOUND') | wrap( '["' , '","biolink:physically_interacts_with"]') }} ],
-              "scopes": ["subject.pubchem_compound", "predicate"]
-            }
-        parameters:
-          fields: object.NCBIGene,attributes,sources
-          size: 1000
-        outputs:
-          - id: NCBIGene
-            semantic: Gene
+          filter: >-
+            relation.interaction_type.label:"physical association"
         predicate: physically_interacts_with
+        source: "infores:innatedb"
         response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/ncbigene-object"
-        # testExamples:
-        #   - qInput: "PUBCHEM.COMPOUND:444"     ## Bupropion
-        #     oneOutput: "NCBIGene:6530"         ## SLC6A2
-    chem-targets-gene-rev:
+          "$ref": "#/components/x-bte-response-mapping/object"
+        testExamples:
+          - qInput: "ENSEMBL:ENSG00000078142"       ## PIK3C3
+            oneOutput: "ENSEMBL:ENSG00000126775"    ## ATG14
+    physical_association-rev:
       - supportBatch: true
-        useTemplating: true ## flag to say templating is being used below
+        useTemplating: true
         inputs:
-          - id: NCBIGene
+          - id: ENSEMBL
             semantic: Gene
-        requestBodyType: object
         requestBody:
-          body: >-
-            {
-              "q": [ {{ queryInputs | replPrefix('NCBIGene') | wrap( '["' , '","biolink:physically_interacts_with"]') }} ],
-              "scopes": ["object.NCBIGene", "predicate"]
-            }
-        parameters:
-          fields: subject.pubchem_compound,attributes,sources
-          size: 1000
+          body: 
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: object.alt_identifier.ensembl
         outputs:
-          - id: "PUBCHEM.COMPOUND"
-            semantic: SmallMolecule
-        predicate: physically_interacts_with #change predicate
-        response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/pubchem-subject"
-        # testExamples:
-        #   - qInput: "NCBIGene:8424"                 ## BBOX1
-        #     oneOutput: "PUBCHEM.COMPOUND:5455"      ## Thiram
-    gene-physicallyInteracts-gene:
-    ##  https://biothings.ncats.io/biggim_drugresponse_kp/query?q=predicate:"biolink:physically_interacts_with"
-    ##  888994 records  
-      - supportBatch: true
-        useTemplating: true ## flag to say templating is being used below
-        inputs:
-          - id: NCBIGene
+          - id: ENSEMBL
             semantic: Gene
-        requestBodyType: object
-        requestBody:
-          body: >-
-            {
-              "q": [ {{ queryInputs | replPrefix('NCBIGene') | wrap( '["' , '","biolink:physically_interacts_with"]') }} ],
-              "scopes": ["subject.NCBIGene", "predicate"]
-            }
         parameters:
-          fields: object.NCBIGene,attributes,sources
+          fields: >-
+            subject.alt_identifier.ensembl,
+            object.alias.hgnc_name,subject.alias.hgnc_name,
+            relation.pmid
           size: 1000
-        outputs:
-          - id: NCBIGene
-            semantic: Gene
+          filter: >-
+            relation.interaction_type.label:"physical association"
         predicate: physically_interacts_with
+        source: "infores:innatedb"
         response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/ncbigene-object"
-        # testExamples:
-        #   - qInput: "NCBIGene:9282"        ## MED14
-        #     oneOutput: "NCBIGene:55588"     ## MED29
-    gene-physicallyInteracts-gene-rev:
+          "$ref": "#/components/x-bte-response-mapping/subject"
+        testExamples:
+          - qInput: "ENSEMBL:ENSG00000113558"       ## SKP1
+            oneOutput: "ENSEMBL:ENSG00000100906"    ## NFKBIA
+    phosphorylation:
+    ## 1201 records
+    ## all have subject/object as "protein"
+    ## for now, this has a generic predicate.
+    ## biolink-model seems to lack good predicate-qualifiers for protein-protein phosphorylation
+    ## an almost-complete breakdown (covers 1124 records):
+    ## - 795 records were subject probably phosphorylates Object
+    ##   subject isn't enzyme target (NOT subject.biological_role.label:"enzyme target")
+    ##   object is enzyme target (object.biological_role.label:"enzyme target" or "self")
+    ##   https://biothings.ncats.io/innatedb/query?q=relation.interaction_type.label:%22phosphorylation%20reaction%22%20AND%20(object.biological_role.label:%22enzyme%20target%22%20OR%20object.biological_role.label:%22self%22)%20AND%20(NOT%20subject.biological_role.label:%22enzyme%20target%22)
+    ## - 332 records were Object probably phosphorylates subject
+    ##   note 3 overlapping records where roles are "self"
+    ##   subject is enzyme target (subject.biological_role.label:"enzyme target" or "self")
+    ##   object isn't enzyme target (NOT object.biological_role.label:"enzyme target")
+    ##   https://biothings.ncats.io/innatedb/query?q=relation.interaction_type.label:%22phosphorylation%20reaction%22%20AND%20(subject.biological_role.label:%22enzyme%20target%22%20OR%20subject.biological_role.label:%22self%22)%20AND%20(NOT%20object.biological_role.label:%22enzyme%20target%22)
       - supportBatch: true
         useTemplating: true ## flag to say templating is being used below
         inputs:
-          - id: NCBIGene
+          - id: ENSEMBL
             semantic: Gene
-        requestBodyType: object
         requestBody:
-          body: >-
-            {
-              "q": [ {{ queryInputs | replPrefix('NCBIGene') | wrap( '["' , '","biolink:physically_interacts_with"]') }} ],
-              "scopes": ["object.NCBIGene", "predicate"]
-            }
-        parameters:
-          fields: subject.NCBIGene,attributes,sources
-          size: 1000
+          body: 
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: subject.alt_identifier.ensembl
         outputs:
-          - id: NCBIGene
+          - id: ENSEMBL
             semantic: Gene
+        parameters:
+          fields: >-
+            object.alt_identifier.ensembl,
+            object.alias.hgnc_name,subject.alias.hgnc_name,
+            relation.pmid
+          size: 1000
+          filter: >-
+            relation.interaction_type.label:"phosphorylation reaction"
         predicate: physically_interacts_with
+        source: "infores:innatedb"
         response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/ncbigene-subject"
-        # testExamples:
-        #   - qInput: "NCBIGene:6874"       ## TAF4
-        #     oneOutput: "NCBIGene:6881"    ## TAF10
-    gene-geneticallyInteracts-gene:
-    ##  https://biothings.ncats.io/biggim_drugresponse_kp/query?q=predicate:"biolink:genetically_interacts_with"
-    ##  10754 records  
+          "$ref": "#/components/x-bte-response-mapping/object"
+        testExamples:
+          - qInput: "ENSEMBL:ENSG00000109339"       ## MAPK10 (enzyme)
+            oneOutput: "ENSEMBL:ENSG00000196793"    ## ZNF239 (enzyme target)
+    phosphorylation-rev:
+      - supportBatch: true
+        useTemplating: true
+        inputs:
+          - id: ENSEMBL
+            semantic: Gene
+        requestBody:
+          body: 
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: object.alt_identifier.ensembl
+        outputs:
+          - id: ENSEMBL
+            semantic: Gene
+        parameters:
+          fields: >-
+            subject.alt_identifier.ensembl,
+            object.alias.hgnc_name,subject.alias.hgnc_name,
+            relation.pmid
+          size: 1000
+          filter: >-
+            relation.interaction_type.label:"phosphorylation reaction"
+        predicate: physically_interacts_with
+        source: "infores:innatedb"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/subject"
+        testExamples:
+          - qInput: "ENSEMBL:ENSG00000213341"       ## CHUK (enzyme target)
+            oneOutput: "ENSEMBL:ENSG00000105221"    ## AKT2 (enzyme)
+    ubiquitination:
+    ## 423 records 
+    ## all have subject/object as "protein"
+    ## for now, this has a generic predicate.
+    ## biolink-model seems to lack good predicate-qualifiers for protein-protein ubiquitination
+    ## 249 records have both subject/object biological role as "unspecified role"
+    ## https://biothings.ncats.io/innatedb/query?q=relation.interaction_type.label:%22ubiquitination%20reaction%22%20AND%20(object.biological_role.label:%22unspecified%20role%22)%20AND%20(subject.biological_role.label:%22unspecified%20role%22)
+    ## so breakdown into "enzyme target" and "not enzyme target" is less useful
+    ##   only seems to cover ~100 records
       - supportBatch: true
         useTemplating: true ## flag to say templating is being used below
         inputs:
-          - id: NCBIGene
+          - id: ENSEMBL
             semantic: Gene
-        requestBodyType: object
         requestBody:
-          body: >-
-            {
-              "q": [ {{ queryInputs | replPrefix('NCBIGene') | wrap( '["' , '","biolink:genetically_interacts_with"]') }} ],
-              "scopes": ["subject.NCBIGene", "predicate"]
-            }
-        parameters:
-          fields: object.NCBIGene,attributes,sources
-          size: 1000
+          body: 
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: subject.alt_identifier.ensembl
         outputs:
-          - id: NCBIGene
+          - id: ENSEMBL
             semantic: Gene
-        predicate: genetically_interacts_with
+        parameters:
+          fields: >-
+            object.alt_identifier.ensembl,
+            object.alias.hgnc_name,subject.alias.hgnc_name,
+            relation.pmid
+          size: 1000
+          filter: >-
+            relation.interaction_type.label:"ubiquitination reaction"
+        predicate: physically_interacts_with
+        source: "infores:innatedb"
         response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/ncbigene-object"
-        # testExamples:
-        #   - qInput: "NCBIGene:5980"        ## REV3L
-        #     oneOutput: "NCBIGene:7295"     ## TXN
-    gene-geneticallyInteracts-gene-rev:
+          "$ref": "#/components/x-bte-response-mapping/object"
+        testExamples:
+          - qInput: "ENSEMBL:ENSG00000100906"       ## NFKBIA (enzyme target)
+            oneOutput: "ENSEMBL:ENSG00000131508"    ## UBE2D2 (enzyme)
+    ubiquitination-rev:
+      - supportBatch: true
+        useTemplating: true
+        inputs:
+          - id: ENSEMBL
+            semantic: Gene
+        requestBody:
+          body: 
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: object.alt_identifier.ensembl
+        outputs:
+          - id: ENSEMBL
+            semantic: Gene
+        parameters:
+          fields: >-
+            subject.alt_identifier.ensembl,
+            object.alias.hgnc_name,subject.alias.hgnc_name,
+            relation.pmid
+          size: 1000
+          filter: >-
+            relation.interaction_type.label:"ubiquitination reaction"
+        predicate: physically_interacts_with
+        source: "infores:innatedb"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/subject"
+        testExamples:
+          - qInput: "ENSEMBL:ENSG00000173039"       ## RELA (unspecified role)
+            oneOutput: "ENSEMBL:ENSG00000100906"    ## NFKBIA (enzyme target)
+    protein_cleavage:
+    ## 324 records
+    ## all have subject/object as "protein"
+    ## for now, this has a generic predicate.
+    ## biolink-model seems to lack good predicate-qualifiers for protein catalyzing cleavage of another protein
+    ## an almost-complete breakdown (covers 320 records):
+    ## - 199 records were subject probably cleaves Object
+    ##   subject isn't enzyme target (NOT subject.biological_role.label:"enzyme target")
+    ##   object is enzyme target (object.biological_role.label:"enzyme target")
+    ##   https://biothings.ncats.io/innatedb/query?q=relation.interaction_type.label:%22protein%20cleavage%22%20AND%20(object.biological_role.label:%22enzyme%20target%22)%20AND%20(NOT%20subject.biological_role.label:%22enzyme%20target%22)
+    ## - 121 records were Object probably cleaves subject
+    ##   subject is enzyme target (subject.biological_role.label:"enzyme target")
+    ##   object isn't enzyme target (NOT object.biological_role.label:"enzyme target")
+    ##   https://biothings.ncats.io/innatedb/query?q=relation.interaction_type.label:%22protein%20cleavage%22%20AND%20(subject.biological_role.label:%22enzyme%20target%22)%20AND%20(NOT%20object.biological_role.label:%22enzyme%20target%22)
+    ## - none have the role "self"
       - supportBatch: true
         useTemplating: true ## flag to say templating is being used below
         inputs:
-          - id: NCBIGene
+          - id: ENSEMBL
             semantic: Gene
-        requestBodyType: object
         requestBody:
-          body: >-
-            {
-              "q": [ {{ queryInputs | replPrefix('NCBIGene') | wrap( '["' , '","biolink:genetically_interacts_with"]') }} ],
-              "scopes": ["object.NCBIGene", "predicate"]
-            }
-        parameters:
-          fields: subject.NCBIGene,attributes,sources
-          size: 1000
+          body: 
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: subject.alt_identifier.ensembl
         outputs:
-          - id: NCBIGene
+          - id: ENSEMBL
             semantic: Gene
-        predicate: genetically_interacts_with
+        parameters:
+          fields: >-
+            object.alt_identifier.ensembl,
+            object.alias.hgnc_name,subject.alias.hgnc_name,
+            relation.pmid
+          size: 1000
+          filter: >-
+            relation.interaction_type.label:"protein cleavage"
+        predicate: physically_interacts_with
+        source: "infores:innatedb"
         response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/ncbigene-subject"
-        # testExamples:
-        #   - qInput: "NCBIGene:2081"         ## ERN1
-        #     oneOutput: "NCBIGene:4609"      ## MYC
-    gene-negativelyCorrelated-gene:
-    ##  https://biothings.ncats.io/biggim_drugresponse_kp/query?q=predicate:"biolink:negatively_correlated_with"
-    ##  565 records  
+          "$ref": "#/components/x-bte-response-mapping/object"
+        testExamples:
+          - qInput: "ENSEMBL:ENSG00000092009"          ## CMA1 (enzyme)
+            oneOutput: "ENSEMBL:ENSMUSG00000024810"    ## mgi:Il33 (enzyme target)
+    protein_cleavage-rev:
+      - supportBatch: true
+        useTemplating: true
+        inputs:
+          - id: ENSEMBL
+            semantic: Gene
+        requestBody:
+          body: 
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: object.alt_identifier.ensembl
+        outputs:
+          - id: ENSEMBL
+            semantic: Gene
+        parameters:
+          fields: >-
+            subject.alt_identifier.ensembl,
+            object.alias.hgnc_name,subject.alias.hgnc_name,
+            relation.pmid
+          size: 1000
+          filter: >-
+            relation.interaction_type.label:"protein cleavage"
+        predicate: physically_interacts_with
+        source: "infores:innatedb"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/subject"
+        testExamples:
+          - qInput: "ENSEMBL:ENSG00000108700"       ## CCL8 (enzyme target)
+            oneOutput: "ENSEMBL:ENSG00000262406"    ## MMP12 (enzyme)
+    cleavage_reaction:
+    ## 147 records
+    ## not sure how this differs from the "protein cleavage" label
+    ## all have subject/object as "protein"
+    ## for now, this has a generic predicate.
+    ## biolink-model seems to lack good predicate-qualifiers for protein catalyzing cleavage of another protein
+    ## an almost-complete breakdown (covers 139 records):
+    ## - 65 records were subject probably cleaves Object
+    ##   subject isn't enzyme target (NOT subject.biological_role.label:"enzyme target")
+    ##   object is enzyme target (object.biological_role.label:"enzyme target" or "self")
+    ##   https://biothings.ncats.io/innatedb/query?q=relation.interaction_type.label:%22cleavage%20reaction%22%20AND%20(object.biological_role.label:%22enzyme%20target%22)%20AND%20(NOT%20subject.biological_role.label:%22enzyme%20target%22)
+    ## - 74 records were Object probably cleaves subject
+    ##   subject is enzyme target (subject.biological_role.label:"enzyme target" or "self")
+    ##   object isn't enzyme target (NOT object.biological_role.label:"enzyme target")
+    ##   https://biothings.ncats.io/innatedb/query?q=relation.interaction_type.label:%22cleavage%20reaction%22%20AND%20(subject.biological_role.label:%22enzyme%20target%22)%20AND%20(NOT%20object.biological_role.label:%22enzyme%20target%22)
+    ## - none have the role "self"
       - supportBatch: true
         useTemplating: true ## flag to say templating is being used below
         inputs:
-          - id: NCBIGene
+          - id: ENSEMBL
             semantic: Gene
-        requestBodyType: object
         requestBody:
-          body: >-
-            {
-              "q": [ {{ queryInputs | replPrefix('NCBIGene') | wrap( '["' , '","biolink:negatively_correlated_with"]') }} ],
-              "scopes": ["subject.NCBIGene", "predicate"]
-            }
-        parameters:
-          fields: object.NCBIGene,attributes,sources
-          size: 1000
+          body: 
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: subject.alt_identifier.ensembl
         outputs:
-          - id: NCBIGene
+          - id: ENSEMBL
             semantic: Gene
-        predicate: negatively_correlated_with
+        parameters:
+          fields: >-
+            object.alt_identifier.ensembl,
+            object.alias.hgnc_name,subject.alias.hgnc_name,
+            relation.pmid
+          size: 1000
+          filter: >-
+            relation.interaction_type.label:"cleavage reaction"
+        predicate: physically_interacts_with
+        source: "infores:innatedb"
         response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/ncbigene-object"
-        # testExamples:
-        #   - qInput: "NCBIGene:823"        ## CAPN1
-        #     oneOutput: "NCBIGene:4539"    ## MT-ND4L (ND4L)
-    gene-negativelyCorrelated-gene-rev:
+          "$ref": "#/components/x-bte-response-mapping/object"
+        testExamples:
+          - qInput: "ENSEMBL:ENSG00000014216"       ## CAPN1 (enzyme)
+            oneOutput: "ENSEMBL:ENSG00000196396"    ## PTPN1 (enzyme target)
+    cleavage_reaction-rev:
+      - supportBatch: true
+        useTemplating: true
+        inputs:
+          - id: ENSEMBL
+            semantic: Gene
+        requestBody:
+          body: 
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: object.alt_identifier.ensembl
+        outputs:
+          - id: ENSEMBL
+            semantic: Gene
+        parameters:
+          fields: >-
+            subject.alt_identifier.ensembl,
+            object.alias.hgnc_name,subject.alias.hgnc_name,
+            relation.pmid
+          size: 1000
+          filter: >-
+            relation.interaction_type.label:"cleavage reaction"
+        predicate: physically_interacts_with
+        source: "infores:innatedb"
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/subject"
+        testExamples:
+          - qInput: "ENSEMBL:ENSG00000150782"       ## IL18 (enzyme target)
+            oneOutput: "ENSEMBL:ENSG00000137752"    ## CASP1 (enzyme)
+    dephosphorylation:
+    ## 40 records
+    ## all have subject/object as "protein"
+    ## for now, this has a generic predicate.
+    ## biolink-model seems to lack good predicate-qualifiers for protein-protein dephosphorylation
+    ## a complete breakdown (covers all records):
+    ## - 26 records were subject probably dephosphorylates Object
+    ##   subject isn't enzyme target (NOT subject.biological_role.label:"enzyme target")
+    ##   object is enzyme target (object.biological_role.label:"enzyme target" or "self")
+    ##   https://biothings.ncats.io/innatedb/query?q=relation.interaction_type.label:%22dephosphorylation%20reaction%22%20AND%20(object.biological_role.label:%22enzyme%20target%22)%20AND%20(NOT%20subject.biological_role.label:%22enzyme%20target%22)
+    ## - 14 records were Object probably dephosphorylates subject
+    ##   subject is enzyme target (subject.biological_role.label:"enzyme target" or "self")
+    ##   object isn't enzyme target (NOT object.biological_role.label:"enzyme target")
+    ##   https://biothings.ncats.io/innatedb/query?q=relation.interaction_type.label:%22dephosphorylation%20reaction%22%20AND%20(subject.biological_role.label:%22enzyme%20target%22)%20AND%20(NOT%20object.biological_role.label:%22enzyme%20target%22)
+    ## - none have the role "self"
       - supportBatch: true
         useTemplating: true ## flag to say templating is being used below
         inputs:
-          - id: NCBIGene
+          - id: ENSEMBL
             semantic: Gene
-        requestBodyType: object
         requestBody:
-          body: >-
-            {
-              "q": [ {{ queryInputs | replPrefix('NCBIGene') | wrap( '["' , '","biolink:negatively_correlated_with"]') }} ],
-              "scopes": ["object.NCBIGene", "predicate"]
-            }
-        parameters:
-          fields: subject.NCBIGene,attributes,sources
-          size: 1000
+          body: 
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: subject.alt_identifier.ensembl
         outputs:
-          - id: NCBIGene
+          - id: ENSEMBL
             semantic: Gene
-        predicate: negatively_correlated_with
+        parameters:
+          fields: >-
+            object.alt_identifier.ensembl,
+            object.alias.hgnc_name,subject.alias.hgnc_name,
+            relation.pmid
+          size: 1000
+          filter: >-
+            relation.interaction_type.label:"dephosphorylation reaction"
+        predicate: physically_interacts_with
+        source: "infores:innatedb"
         response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/ncbigene-subject"
-        # testExamples:
-        #   - qInput: "NCBIGene:6540"         ## SLC6A13
-        #     oneOutput: "NCBIGene:1072"      ## CFL1
-    gene-positivelyCorrelated-gene:
-    ##  https://biothings.ncats.io/biggim_drugresponse_kp/query?q=predicate:"biolink:positively_correlated_with"
-    ##  437054 records  
+          "$ref": "#/components/x-bte-response-mapping/object"
+        testExamples:
+          - qInput: "ENSEMBL:ENSG00000127329"       ## PTPRB (enzyme)
+            oneOutput: "ENSEMBL:ENSG00000120156"    ## TEK (enzyme target)
+    dephosphorylation-rev:
       - supportBatch: true
-        useTemplating: true ## flag to say templating is being used below
+        useTemplating: true
         inputs:
-          - id: NCBIGene
+          - id: ENSEMBL
             semantic: Gene
-        requestBodyType: object
         requestBody:
-          body: >-
-            {
-              "q": [ {{ queryInputs | replPrefix('NCBIGene') | wrap( '["' , '","biolink:positively_correlated_with"]') }} ],
-              "scopes": ["subject.NCBIGene", "predicate"]
-            }
-        parameters:
-          fields: object.NCBIGene,attributes,sources
-          size: 1000
+          body: 
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: object.alt_identifier.ensembl
         outputs:
-          - id: NCBIGene
+          - id: ENSEMBL
             semantic: Gene
-        predicate: positively_correlated_with
-        response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/ncbigene-object"
-        # testExamples:
-        #   - qInput: "NCBIGene:988"        ## CDC5L
-        #     oneOutput: "NCBIGene:6197"    ## RPS6KA3
-    gene-positivelyCorrelated-gene-rev:
-      - supportBatch: true
-        useTemplating: true ## flag to say templating is being used below
-        inputs:
-          - id: NCBIGene
-            semantic: Gene
-        requestBodyType: object
-        requestBody:
-          body: >-
-            {
-              "q": [ {{ queryInputs | replPrefix('NCBIGene') | wrap( '["' , '","biolink:positively_correlated_with"]') }} ],
-              "scopes": ["object.NCBIGene", "predicate"]
-            }
         parameters:
-          fields: subject.NCBIGene,attributes,sources
+          fields: >-
+            subject.alt_identifier.ensembl,
+            object.alias.hgnc_name,subject.alias.hgnc_name,
+            relation.pmid
           size: 1000
-        outputs:
-          - id: NCBIGene
-            semantic: Gene
-        predicate: positively_correlated_with
+          filter: >-
+            relation.interaction_type.label:"dephosphorylation reaction"
+        predicate: physically_interacts_with
+        source: "infores:innatedb"
         response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/ncbigene-subject"
-        # testExamples:
-        #   - qInput: "NCBIGene:7094"         ## TLN1
-        #     oneOutput: "NCBIGene:7941"      ## PLA2G7
+          "$ref": "#/components/x-bte-response-mapping/subject"
+        testExamples:
+          - qInput: "ENSEMBL:ENSG00000135341"       ## MAP3K7 (enzyme target)
+            oneOutput: "ENSEMBL:ENSG00000138032"    ## PPM1B (enzyme)
   x-bte-response-mapping:
-  ## all have prefix
-    pubchem-subject:
-      "PUBCHEM.COMPOUND": subject.pubchem_compound
-      edge-attributes: attributes
-      trapi_sources: sources
-    pubchem-object:
-      "PUBCHEM.COMPOUND": object.pubchem_compound
-      edge-attributes: attributes
-      trapi_sources: sources
-    ncbigene-subject:
-      NCBIGene: subject.NCBIGene
-      edge-attributes: attributes
-      trapi_sources: sources
-    ncbigene-object:
-      NCBIGene: object.NCBIGene
-      edge-attributes: attributes
-      trapi_sources: sources
-    mondo-subject:
-      MONDO: subject.MONDO
-      edge-attributes: attributes
-      trapi_sources: sources
-    mondo-object:
-      MONDO: object.MONDO
-      edge-attributes: attributes
-      trapi_sources: sources
-    cl-object:
-      CL: object.CL
-      edge-attributes: attributes
-      trapi_sources: sources
-    cl-subject:
-      CL: subject.CL
-      edge-attributes: attributes
-      trapi_sources: sources
+    object:
+      ENSEMBL: object.alt_identifier.ensembl
+      input_name: subject.alias.hgnc_name
+      output_name: object.alias.hgnc_name
+      ref_pmid: relation.pmid
+    subject:
+      ENSEMBL: subject.alt_identifier.ensembl
+      input_name: object.alias.hgnc_name
+      output_name: subject.alias.hgnc_name
+      ref_pmid: relation.pmid

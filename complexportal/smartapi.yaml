@@ -1,0 +1,250 @@
+openapi: 3.0.3
+info:
+  version: '1.0'
+  title: Complex Portal Web Service
+  description: >-
+    The Complex Portal is a manually curated, encyclopaedic resource of macromolecular complexes 
+    from a number of key model organisms. The majority of complexes are made up of proteins 
+    but may also include nucleic acids or small molecules.
+  termsOfService: https://www.ebi.ac.uk/complexportal/about#license_privacy
+  contact:
+    name: EMBL-EBI form for support and feedback
+    url: https://www.ebi.ac.uk/about/contact/support/complexportal
+  x-translator:
+    infores: "infores:complex-portal"
+    component: KP
+    team:
+      - Service Provider
+    biolink-version: "3.5.3"
+servers:
+- url: https://www.ebi.ac.uk/intact/complex-ws
+  description: Production server
+  x-maturity: production
+tags:
+- name: translator
+paths:
+  "/search/{search_term}":
+    get:
+      description: search for complexes matching your search term
+      parameters:
+      - name: search_term
+        in: path
+        description: >-
+          can be a ID (ex: for a protein, chemical, or disease) or a complex name
+        required: true
+        example: P69905
+        schema:
+          type: string
+      responses:
+        '200':
+          description: response object
+          content:
+            application/json:
+              schema: 
+                type: object
+      x-bte-kgs-operations:
+      - "$ref": "#/components/x-bte-kgs-operations/protein2complex"
+      - "$ref": "#/components/x-bte-kgs-operations/chemical2complex"
+      - "$ref": "#/components/x-bte-kgs-operations/disease2complex"
+      - "$ref": "#/components/x-bte-kgs-operations/bp2complex"
+      - "$ref": "#/components/x-bte-kgs-operations/mf2complex"
+  "/complex/{id}":
+    get:
+      description: retrieve full complex info using the ComplexPortal ID
+      parameters:
+      - name: id
+        in: path
+        description: ComplexPortal ID for the complex
+        required: true
+        example: CPX-2158
+        schema:
+          type: string
+      responses:
+        '200':
+          description: response object
+          content:
+            application/json:
+              schema:
+                type: object
+      ## Commenting out for now
+      ## Complex -> entity x-bte operations use JQ post-processing
+      # x-bte-kgs-operations:
+      # - "$ref": "#/components/x-bte-kgs-operations/complex2protein"
+      # - "$ref": "#/components/x-bte-kgs-operations/complex2chemical"
+      # - "$ref": "#/components/x-bte-kgs-operations/complex2disease"
+components:
+  x-bte-kgs-operations:
+    protein2complex:
+    - supportBatch: false
+      useTemplating: true
+      inputs:
+      - id: UniProtKB
+        semantic: Protein
+      outputs:
+      - id: ComplexPortal
+        semantic: MacromolecularComplex
+      parameters:
+        search_term: "{{ queryInputs }}"  ## no prefix
+      predicate: part_of
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/complex-output"
+      testExamples:
+        - qInput: "UniProtKB:P69905"             ## Hemoglobin subunit alpha
+          oneOutput: "ComplexPortal:CPX-2158"    ## Hemoglobin HbA complex
+    chemical2complex:
+    - supportBatch: false 
+      useTemplating: true
+      inputs:
+      - id: CHEBI
+        semantic: SmallMolecule
+      outputs:
+      - id: ComplexPortal
+        semantic: MacromolecularComplex
+      parameters:
+        search_term: "{{ queryInputs | replPrefix('CHEBI') }}"  ## requires prefix
+      predicate: part_of
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/complex-output"
+      testExamples:
+        - qInput: "CHEBI:30413"                  ## heme
+          oneOutput: "ComplexPortal:CPX-2158"    ## Hemoglobin HbA complex
+    disease2complex:
+    - supportBatch: false
+      useTemplating: true
+      inputs:
+      - id: orphanet
+        semantic: Disease
+      outputs:
+      - id: ComplexPortal
+        semantic: MacromolecularComplex
+      parameters:
+        search_term: "{{ queryInputs | replPrefix('Orphanet') }}"    ## requires prefix
+      predicate: related_to
+      ## "complex is linked to a specific disease condition" according to 
+      ##   https://www.ebi.ac.uk/complexportal/documentation
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/complex-output"
+      testExamples:
+        - qInput: "orphanet:848"                 ## Beta-thalassemia
+          oneOutput: "ComplexPortal:CPX-2158"    ## Hemoglobin HbA complex
+    bp2complex:
+    - supportBatch: false
+      useTemplating: true
+      inputs:
+      - id: GO
+        semantic: BiologicalProcess
+      outputs:
+      - id: ComplexPortal
+        semantic: MacromolecularComplex
+      parameters:
+        search_term: "{{ queryInputs | replPrefix('GO') }}"    ## requires prefix
+      predicate: has_participant
+      ## using the same predicate that MyGene uses for BP -> Gene
+      ## not sure if a different predicate should be used...
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/complex-output"
+      testExamples:
+        - qInput: "GO:0015670"                   ## carbon dioxide transport
+          oneOutput: "ComplexPortal:CPX-2936"    ## Hemoglobin HbH complex
+    mf2complex:
+    - supportBatch: false
+      useTemplating: true
+      inputs:
+      - id: GO
+        semantic: MolecularActivity
+      outputs:
+      - id: ComplexPortal
+        semantic: MacromolecularComplex
+      parameters:
+        search_term: "{{ queryInputs | replPrefix('GO') }}"    ## requires prefix
+      predicate: enabled_by
+      ## using the same predicate that MyGene uses for MF -> Gene
+      ## not sure if a different predicate should be used...
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/complex-output"
+      testExamples:
+        - qInput: "GO:0070026"                  ## nitric oxide binding
+          oneOutput: "ComplexPortal:CPX-52"     ## iNOS-S100A8/A9 complex
+    ## Commenting out for now
+    ## Complex -> entity x-bte operations use JQ post-processing
+    ## MISSING: Complex -> BP, Complex -> MF operations. Will need different custom JQ post-processing
+    # complex2protein:
+    # - supportBatch: false
+    #   useTemplating: true
+    #   inputs:
+    #   - id: ComplexPortal
+    #     semantic: MacromolecularComplex
+    #   outputs:
+    #   - id: UniProtKB
+    #     semantic: Protein
+    #   parameters:
+    #     id: "{{ queryInputs }}" ## no prefix
+    #   predicate: has_part
+    #   transformer:
+    #     wrap_jq: |
+    #       .participants |= map(if (.identifier | contains(":") | not) then . else empty end)
+    #   response_mapping:
+    #     "$ref": "#/components/x-bte-response-mapping/complex2protein"
+    #   testExamples:
+    #     - qInput: "ComplexPortal:CPX-2158"    ## Hemoglobin HbA complex
+    #       oneOutput: "UniProtKB:P69905"       ## Hemoglobin subunit alpha
+    # complex2chemical:
+    # - supportBatch: false
+    #   useTemplating: true
+    #   inputs:
+    #   - id: ComplexPortal
+    #     semantic: MacromolecularComplex
+    #   outputs:
+    #   - id: CHEBI
+    #     semantic: SmallMolecule
+    #   parameters:
+    #     id: "{{ queryInputs }}" ## no prefix
+    #   predicate: has_part
+    #   transformer:
+    #     wrap_jq: |
+    #       .participants |= map(if (.identifier | contains(":")) then .identifier = (.identifier | split(":") | last) else empty end)
+    #   response_mapping:
+    #     "$ref": "#/components/x-bte-response-mapping/complex2chemical"
+    #   testExamples:
+    #     - qInput: "ComplexPortal:CPX-2158"        ## Hemoglobin HbA complex
+    #       oneOutput: "CHEBI:30413"                ## heme
+    # complex2disease:
+    # - supportBatch: false
+    #   useTemplating: true
+    #   inputs:
+    #   - id: ComplexPortal
+    #     semantic: MacromolecularComplex
+    #   outputs:
+    #   - id: orphanet
+    #     semantic: Disease
+    #   parameters:
+    #     id: "{{ queryInputs }}" ## no prefix
+    #   predicate: related_to
+    #   ## "complex is linked to a specific disease condition" according to 
+    #   ##   https://www.ebi.ac.uk/complexportal/documentation
+    #   transformer:
+    #     wrap_jq: |
+    #       # matches [non_space_text] in disease text and removes prefix
+    #       .disease_ids = (.diseases | map([ . | match("\\[(\\S*)\\]"; "g") | .captures | .[0] | .string | split(":") | last ]) | flatten)
+    #   response_mapping:
+    #     "$ref": "#/components/x-bte-response-mapping/complex2disease"
+    #   # testExamples:
+    #   #   - qInput: "ComplexPortal:CPX-2158"      ## Hemoglobin HbA complex
+    #   #     oneOutput: "orphanet:848"             ## Beta-thalassemia
+  x-bte-response-mapping:
+    complex-output:
+      ComplexPortal: elements.complexAC
+      output_name: elements.complexName
+      ## other fields:
+      ## - organismName (not in biolink-model format)
+      ## - description: for the complex, not the relationship...
+    complex2protein:
+      ## this is after JQ-post-processing
+      UniProtKB: participants.identifier
+    complex2chemical:
+      ## this is after JQ-post-processing
+      CHEBI: participants.identifier
+    complex2disease:
+      ## this is a field made with JQ-post-processing
+      orphanet: disease_ids
+   

@@ -6,30 +6,30 @@ info:
     x-id: https://github.com/biothings
     x-role: responsible developers
   description: >-
-    Documentation of the BioThings API for
-    [DDInter](http://ddinter.scbdd.com/) data.
+    Documentation of the BioThings API for [FooDB](https://www.foodb.ca/) data. 
+    FooDB is the world’s largest and most comprehensive resource on food constituents, chemistry and biology.
   termsOfService: https://biothings.io/about
-  title: BioThings DDInter API
+  title: BioThings FooDB API
   version: '1.0'
   x-translator:
-    infores: "infores:biothings-ddinter"
+    infores: "infores:biothings-foodb"
     component: KP
     team:
       - Service Provider
-    biolink-version: "3.5.0"
+    biolink-version: "3.5.3"
 servers:
 - description: Encrypted Production server
-  url: https://biothings.ncats.io/ddinter
+  url: https://biothings.ncats.io/foodb
   x-maturity: production
 tags:
-- name: interaction
-- name: drug
+- name: food
+- name: chemical
 - name: metadata
 - name: query
 - name: translator
 - name: biothings
 paths:
-  "/interaction/{id}":
+  "/food/{id}":
     get:
       description: >-
         By default, this will return the complete association in JSON format. If the input is not valid,
@@ -48,7 +48,7 @@ paths:
       - name: id
         in: path
         required: true
-        example: "DDInter1414_DDInter1004_Moderate"
+        example: "FOOD00914"
         schema:
           type: string
       - "$ref": "#/components/parameters/fields"
@@ -75,8 +75,8 @@ paths:
       #   '404':
       #     description: A response indicating an unknown association ID
       tags:
-      - interaction
-  "/interaction":
+      - food
+  "/food":
     post:
       description: >-
         Although making simple GET requests above to our service is sufficient in most use cases, 
@@ -112,8 +112,8 @@ paths:
           application/json:
             example:
               ids:
-              - "DDInter1214_DDInter100_Moderate"
-              - "DDInter1214_DDInter1017_Moderate"
+              - "FOOD00914"
+              - "FOOD00001"
             schema:
               type: object
               properties:
@@ -128,7 +128,7 @@ paths:
         '200':
           description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
       tags:
-      - interaction
+      - food
   "/metadata":
     get:
       description: Get metadata about the data available from the API
@@ -168,7 +168,7 @@ paths:
           API](https://docs.mychem.info/en/latest/doc/chem_query_service.html#query-syntax).
         in: query
         required: true
-        example: "drug_a.drugbank:DB08880"
+        example: "_id:FOOD00951"
         schema:
           type: string
       - "$ref": "#/components/parameters/fields"
@@ -266,10 +266,10 @@ paths:
           application/json:
             example:
               q:
-              - "DB00707"
-              - "DB00997"
+              - "FOOD00319"
+              - "FOOD00906"
               scopes:
-              - "drug_a.drugbank"
+              - "_id"
             schema:
               type: object
               properties:
@@ -303,10 +303,10 @@ paths:
       # summary: Make batch gene queries and return matching gene hits
       tags:
       - query
-      ## 2 operations
+      ## 2 operations (1 set)
       x-bte-kgs-operations:
-      - $ref: '#/components/x-bte-kgs-operations/drugA-to-drugB'
-      - $ref: '#/components/x-bte-kgs-operations/drugB-to-drugA'
+      - $ref: '#/components/x-bte-kgs-operations/food-compound'
+      - $ref: '#/components/x-bte-kgs-operations/food-compound-rev'
 components:
   parameters:
     callback:
@@ -567,75 +567,69 @@ components:
   #       type: array
   #     - type: string
   x-bte-kgs-operations:
-  ## Drug (drug_a) interacts with another Drug (drug_b): 160235
-  ## - looks like only 1 copy of each interaction exists in the data 
-  ##   (aka only "Drug A interacts with Drug B", without a repeat "Drug B interacts with Drug A")
-  ## using DRUGBANK namespace for both drugs (100% coverage)
-  ## - ddinter also has 100% coverage but is an internal database ID not supported by SRI
-  ## - chembl and pubchem coverage is 80-85%
-  ## levels of interaction: major, moderate, minor, unknown
-    drugA-to-drugB:
-    ## 160,235 records 
+  ## 890 / 992 records (aka foods) have compound info: https://biothings.ncats.io/foodb/query?q=_exists_:compounds
+  ## compounds have both cas numbers and inchikey, 
+  ##   but I chose inchikey because SRI NodeNorm seemed to support that namespace more
+  ## possible edge-attributes:
+  ## - compounds.orig_contents: the quantity of compound this food contains 
+  ##                            (min, max, average numbers as floats, and a string for the units). 
+  ##                            Not clear how to map these to biolink-model
+  ## - compounds.reference: string for underlying source. Values I've seen: PHENOL EXPLORER, DTU, USDA
+  ## - ncbi_taxonomy_id: exists for many records->related to what this food is / where it comes from?
+    food-compound:
       - supportBatch: true
         useTemplating: true ## flag to say templating is being used below
         inputs:
-          - id: DRUGBANK
-            semantic: SmallMolecule
+          - id: "foodb.food"
+            semantic: Food
         requestBody:
-          body:
-            ## API data has no prefix
-            ## joinSafe is only needed if the delimiter isn't a comma
-            q: "{{ queryInputs }}"
-            scopes: >-
-              drug_a.drugbank
+          body: 
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: _id
         outputs:
-          - id: DRUGBANK
+          - id: INCHIKEY
             semantic: SmallMolecule
         parameters:
-        ## commenting out because data-processing / biolink-modeling issues
-          # fields: drug_b.drugbank,level
-          fields: drug_b.drugbank
+          fields: compounds.moldb_inchikey,name,compounds.name
           size: 1000
-        predicate: interacts_with
-        source: "infores:ddinter"
+        ## more specific version of has_part
+        predicate: has_food_component    
+        source: "infores:fooddb"
         response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/drugB"
-        ## compare to http://ddinter.scbdd.com/ddinter/interact/977140/
+          "$ref": "#/components/x-bte-response-mapping/compound"
         testExamples:
-          - qInput: "DRUGBANK:DB00244"      ## Mesalazine 
-            oneOutput: "DRUGBANK:DB00414"   ## Acetohexamide
-    drugB-to-drugA:
+          - qInput: "foodb.food:FOOD00914"                       ## Soybean oil
+            oneOutput: "INCHIKEY:KZJWDPNRJALLNS-VJSFXXLFSA-N"    ## beta-Sitosterol
+    food-compound-rev:
+    ## not including compound name because getting this nested info from reverse queries is tricky
       - supportBatch: true
         useTemplating: true
         inputs:
-          - id: DRUGBANK
+          - id: INCHIKEY
             semantic: SmallMolecule
         requestBody:
-          body:
-            q: "{{ queryInputs }}"
-            scopes: drug_b.drugbank
+          body: 
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: compounds.moldb_inchikey
         outputs:
-          - id: DRUGBANK
-            semantic: SmallMolecule
+          - id: "foodb.food"
+            semantic: Food
         parameters:
-        ## commenting out because data-processing / biolink-modeling issues
-          # fields: drug_a.drugbank,level
-          fields: drug_a.drugbank
+          fields: _id,name
           size: 1000
-        predicate: interacts_with
-        source: "infores:ddinter"
+        ## more specific version of part_of
+        predicate: food_component_of
+        source: "infores:fooddb"
         response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/drugA"
-        ## compare to http://ddinter.scbdd.com/ddinter/interact/1047482/
+          "$ref": "#/components/x-bte-response-mapping/food"
         testExamples:
-          - qInput: "DRUGBANK:DB00540"      ## Nortriptyline 
-            oneOutput: "DRUGBANK:DB00451"   ## Levothyroxine
+          - qInput: "INCHIKEY:QZAYGJVTTNCVMB-UHFFFAOYSA-N"      ## Serotonin
+            oneOutput: "foodb.food:FOOD00022"                   ## Oat
   x-bte-response-mapping:
-    drugB:
-      DRUGBANK: drug_b.drugbank
-      ## commenting out because data-processing / biolink-modeling issues
-      # "drug_interaction_severity_level": level
-    drugA:
-      DRUGBANK: drug_a.drugbank
-      ## commenting out because data-processing / biolink-modeling issues
-      # "drug_interaction_severity_level": level
+    compound:
+      INCHIKEY: compounds.moldb_inchikey
+      input_name: name
+      output_name: compounds.name
+    food:
+      "foodb.food": _id
+      output_name: name
