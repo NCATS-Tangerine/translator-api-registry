@@ -618,8 +618,10 @@ components:
   x-bte-response-mapping:
     aeolusIndication-meddra:
       MEDDRA: aeolus.indications.meddra_code
-    aeolus-unii:
+      "biolink:evidence_count": aeolus.indications.count
+    aeolusIndication-unii:
       UNII: aeolus.unii
+      "biolink:evidence_count": aeolus.indications.count
     chebiXrefs-reactome:
       REACT: chebi.xrefs.reactome
     chebi:
@@ -747,7 +749,7 @@ components:
         - qInput: "UNII:90347YTW5F"     ## alfuzosin aka PUBCHEM.COMPOUND:2092
           oneOutput: "MEDDRA:10004446"  ## Benign prostatic hyperplasia aka MONDO:0010811
     aeolusTreats-rev:
-    - supportBatch: true
+    - supportBatch: false
       useTemplating: true
       inputs:
       - id: MEDDRA
@@ -760,12 +762,14 @@ components:
       - id: UNII
         semantic: SmallMolecule
       parameters:
-        fields: aeolus.unii  ## no prefix
+      ## need the whole thing for jmespath to work
+        fields: aeolus.unii,aeolus.indications  ## no prefix
         size: 1000  ## note size limit
+        jmespath: "aeolus.indications|[?(meddra_code=='{{ queryInputs }}')]"
       predicate: treatment_applications_from
       source: "infores:aeolus"
       response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/aeolus-unii"
+        "$ref": "#/components/x-bte-response-mapping/aeolusIndication-unii"
       testExamples:
         - qInput: "MEDDRA:10012378"        ## Depression aka MONDO:0002050
           oneOutput: "UNII:OGG85SX4E4"     ## Imipramine aka PUBCHEM.COMPOUND:3696
