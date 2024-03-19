@@ -670,8 +670,10 @@ components:
       ## commenting out because data-processing / biolink-modeling issues
       # max_clinical_phase_for_indication: chembl.drug_indications.max_phase_for_ind
       # year_first_approved: chembl.drug_indications.first_approval
-    chembl:
+    chembl-treats-rev:
       "CHEMBL.COMPOUND": chembl.molecule_chembl_id  ## no prefix
+      ref_clinicaltrials: chembl.drug_indications.indication_refs.ClinicalTrials     ## no prefix
+      ref_url: chembl.drug_indications.indication_refs.url
     drugcentral-bioactivity:
       UniProtKB: drugcentral.bioactivity.uniprot.uniprot_id  ## no prefix
       ## commenting out because data-processing / biolink-modeling issues
@@ -1050,7 +1052,7 @@ components:
         - qInput: "CHEMBL.COMPOUND:CHEMBL471737"   ## IVABRADINE aka PUBCHEM.COMPOUND:132999
           oneOutput: "MESH:D000072658"             ## Non-ST Elevated Myocardial Infarction aka UMLS:C4255010
     treatsChembl-rev:
-    - supportBatch: true
+    - supportBatch: false
       useTemplating: true
       inputs:
       - id: MESH
@@ -1063,12 +1065,14 @@ components:
       - id: CHEMBL.COMPOUND
         semantic: SmallMolecule
       parameters:
-        fields: chembl.molecule_chembl_id  ## no prefix
+      ## need the whole thing for jmespath to work
+        fields: chembl.molecule_chembl_id,chembl.drug_indications  ## no prefix
         size: 1000  ## note size limit
+        jmespath: "chembl.drug_indications|[?mesh_id=='{{ queryInputs }}']"
       predicate: treated_by
       source: "infores:chembl"
       response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/chembl"
+        "$ref": "#/components/x-bte-response-mapping/chembl-treats-rev"
       testExamples:
         - qInput: "MESH:D014376"                    ## Tuberculosis aka MONDO:0018076
           oneOutput: "CHEMBL.COMPOUND:CHEMBL1441"   ## ETHIONAMIDE aka PUBCHEM.COMPOUND:2761171
