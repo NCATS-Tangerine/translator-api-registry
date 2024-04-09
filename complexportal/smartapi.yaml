@@ -74,6 +74,7 @@ paths:
       # - "$ref": "#/components/x-bte-kgs-operations/complex2disease"
 components:
   x-bte-kgs-operations:
+  ## knowledge_level / agent_type: manually-curated based on https://www.ebi.ac.uk/complexportal/about
     protein2complex:
     - supportBatch: false
       useTemplating: true
@@ -86,6 +87,8 @@ components:
       parameters:
         search_term: "{{ queryInputs }}"  ## no prefix
       predicate: part_of
+      knowledge_level: knowledge_assertion
+      agent_type: manual_agent
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/complex-output"
       testExamples:
@@ -103,6 +106,8 @@ components:
       parameters:
         search_term: "{{ queryInputs | replPrefix('CHEBI') }}"  ## requires prefix
       predicate: part_of
+      knowledge_level: knowledge_assertion
+      agent_type: manual_agent
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/complex-output"
       testExamples:
@@ -122,6 +127,8 @@ components:
       predicate: related_to
       ## "complex is linked to a specific disease condition" according to 
       ##   https://www.ebi.ac.uk/complexportal/documentation
+      knowledge_level: knowledge_assertion
+      agent_type: manual_agent
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/complex-output"
       testExamples:
@@ -141,6 +148,8 @@ components:
       predicate: has_participant
       ## using the same predicate that MyGene uses for BP -> Gene
       ## not sure if a different predicate should be used...
+      knowledge_level: knowledge_assertion
+      agent_type: manual_agent
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/complex-output"
       testExamples:
@@ -160,6 +169,8 @@ components:
       predicate: enabled_by
       ## using the same predicate that MyGene uses for MF -> Gene
       ## not sure if a different predicate should be used...
+      knowledge_level: knowledge_assertion
+      agent_type: manual_agent
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/complex-output"
       testExamples:
@@ -180,6 +191,8 @@ components:
     #   parameters:
     #     id: "{{ queryInputs }}" ## no prefix
     #   predicate: has_part
+    #   knowledge_level: knowledge_assertion
+    #   agent_type: manual_agent
     #   transformer:
     #     wrap_jq: |
     #       .participants |= map(if (.identifier | contains(":") | not) then . else empty end)
@@ -200,6 +213,8 @@ components:
     #   parameters:
     #     id: "{{ queryInputs }}" ## no prefix
     #   predicate: has_part
+    #   knowledge_level: knowledge_assertion
+    #   agent_type: manual_agent
     #   transformer:
     #     wrap_jq: |
     #       .participants |= map(if (.identifier | contains(":")) then .identifier = (.identifier | split(":") | last) else empty end)
@@ -222,6 +237,8 @@ components:
     #   predicate: related_to
     #   ## "complex is linked to a specific disease condition" according to 
     #   ##   https://www.ebi.ac.uk/complexportal/documentation
+    #   knowledge_level: knowledge_assertion
+    #   agent_type: manual_agent
     #   transformer:
     #     wrap_jq: |
     #       # matches [non_space_text] in disease text and removes prefix
