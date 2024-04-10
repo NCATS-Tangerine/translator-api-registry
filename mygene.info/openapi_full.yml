@@ -709,9 +709,12 @@ components:
   ## notes:
   ## - not including Gene <-> Transcript <-> Protein or Gene <-> Protein due to conflation, lack of use in Translator right now
   ## - for ConsensusPathDB, look at "content information" tab at http://cpdb.molgen.mpg.de/CPDB to see versions of the pathway databases they used
-  ## - pathway info includes Reactome, , Wikipathways, Biocarta
+  ## - pathway info includes Reactome, KEGG.PATHWAY, Wikipathways, Biocarta
   ##   However, SRI ID resolver only accepts SMPDB, REACT, GO, PANTHER.PATHWAY right now
   ##   not included: humancyc, mousecyc, netpath, pharmgkb, pid, yeastcyc
+  ## - knowledge_level / agent_type
+  ##   - reactome: manually curated by experts https://reactome.org/what-is-reactome
+  ##   - ConsensusPathDB: aggregator
     PathwayHasGene1:    ## using Reactome, KEGG, Wikipathways, Biocarta
       - supportBatch: true
         useTemplating: true
@@ -732,6 +735,8 @@ components:
           size: 1000  ## note the size limit
         predicate: has_participant
         source: "infores:reactome"
+        knowledge_level: knowledge_assertion
+        agent_type: manual_agent
         response_mapping: 
           $ref: "#/components/x-bte-response-mapping/entrezgene"
         testExamples:
@@ -757,6 +762,8 @@ components:
           size: 1000  ## note the size limit
         predicate: has_participant
         source: "infores:cpdb"   ## ConsensusPathDB
+        knowledge_level: knowledge_assertion
+        agent_type: automated_agent
         response_mapping: 
           $ref: "#/components/x-bte-response-mapping/entrezgene-keggname"
         testExamples:
@@ -782,6 +789,8 @@ components:
           size: 1000  ## note the size limit
         predicate: has_participant
         source: "infores:cpdb"   ## ConsensusPathDB
+        knowledge_level: knowledge_assertion
+        agent_type: automated_agent
         response_mapping: 
           $ref: "#/components/x-bte-response-mapping/entrezgene-wikiname"
         testExamples:
@@ -807,6 +816,8 @@ components:
           size: 1000  ## note the size limit
         predicate: has_participant
         source: "infores:cpdb"   ## ConsensusPathDB
+        knowledge_level: knowledge_assertion
+        agent_type: automated_agent
         response_mapping: 
           $ref: "#/components/x-bte-response-mapping/entrezgene-biocartaname"
         testExamples:
@@ -833,6 +844,8 @@ components:
           size: 1000
         predicate: participates_in
         source: "infores:reactome"
+        knowledge_level: knowledge_assertion
+        agent_type: manual_agent
         response_mapping: 
           $ref: "#/components/x-bte-response-mapping/reactomePathway"
         testExamples:
@@ -859,6 +872,8 @@ components:
           size: 1000
         predicate: participates_in
         source: "infores:cpdb"   ## ConsensusPathDB
+        knowledge_level: knowledge_assertion
+        agent_type: automated_agent
         response_mapping: 
           $ref: "#/components/x-bte-response-mapping/keggPathway"
         testExamples:
@@ -885,6 +900,8 @@ components:
           size: 1000
         predicate: participates_in
         source: "infores:cpdb"   ## ConsensusPathDB
+        knowledge_level: knowledge_assertion
+        agent_type: automated_agent
         response_mapping: 
           $ref: "#/components/x-bte-response-mapping/wikipathway"
         testExamples:
@@ -911,11 +928,15 @@ components:
           size: 1000
         predicate: participates_in
         source: "infores:cpdb"   ## ConsensusPathDB
+        knowledge_level: knowledge_assertion
+        agent_type: automated_agent
         response_mapping: 
           $ref: "#/components/x-bte-response-mapping/biocarta"
         testExamples:
           - qInput: "NCBIGene:5608"         ## MAP2K6
             oneOutput: "BIOCARTA:p38mapkpathway"  ## p38 mapk signaling pathway
+  ## knowledge_level / agent_type for ncbi-gene: aggregator. 
+  ## has info on how it gets go-annotation data https://www.ncbi.nlm.nih.gov/books/NBK3840/#genefaq.GO_terms
     involvedInBP:
       - supportBatch: true
         useTemplating: true
@@ -943,6 +964,8 @@ components:
           size: 1000
         predicate: participates_in
         source: "infores:ncbi-gene"   ## which got from GO Annotations...
+        knowledge_level: knowledge_assertion
+        agent_type: automated_agent
         response_mapping: 
           $ref: "#/components/x-bte-response-mapping/biologicalProcess"
         testExamples:
@@ -968,6 +991,8 @@ components:
           size: 1000  ## note size limit
         predicate: has_participant
         source: "infores:ncbi-gene"   ## which got from GO Annotations...
+        knowledge_level: knowledge_assertion
+        agent_type: automated_agent
         response_mapping: 
           $ref: "#/components/x-bte-response-mapping/entrezgene"
         testExamples:
@@ -1000,6 +1025,8 @@ components:
           size: 1000
         predicate: enables
         source: "infores:ncbi-gene"   ## which got from GO Annotations...
+        knowledge_level: knowledge_assertion
+        agent_type: automated_agent
         response_mapping: 
           $ref: "#/components/x-bte-response-mapping/molecularFunction"
         testExamples:
@@ -1025,6 +1052,8 @@ components:
           size: 1000  ## note size limit
         predicate: enabled_by
         source: "infores:ncbi-gene"   ## which got from GO Annotations...
+        knowledge_level: knowledge_assertion
+        agent_type: automated_agent
         response_mapping: 
           $ref: "#/components/x-bte-response-mapping/entrezgene"
         testExamples:
@@ -1057,6 +1086,8 @@ components:
           size: 1000
         predicate: active_in
         source: "infores:ncbi-gene"   ## which got from GO Annotations...
+        knowledge_level: knowledge_assertion
+        agent_type: automated_agent
         response_mapping: 
           $ref: "#/components/x-bte-response-mapping/cellularComponent"
         testExamples:
@@ -1082,11 +1113,15 @@ components:
           size: 1000  ## note size limit
         predicate: has_active_component
         source: "infores:ncbi-gene"   ## which got from GO Annotations...
+        knowledge_level: knowledge_assertion
+        agent_type: automated_agent
         response_mapping: 
           $ref: "#/components/x-bte-response-mapping/entrezgene"
         testExamples:
           - qInput: "GO:0033268"         ## node of Ranvier
             oneOutput: "NCBIGene:6326"   ## SCN2A
+  ## knowledge_level / agent_type: clingen
+  ##   seems to be heavily manually curated  https://www.clinicalgenome.org/start/
     geneToDisease:
       - supportBatch: true
         useTemplating: true
@@ -1119,6 +1154,8 @@ components:
         ##     can be a list if there were multiple assertions/clinical_validity objects
         predicate: related_to
         source: "infores:clingen"
+        knowledge_level: knowledge_assertion
+        agent_type: manual_agent
         response_mapping: 
           $ref: "#/components/x-bte-response-mapping/clingen"
         testExamples:
@@ -1144,6 +1181,8 @@ components:
           size: 1000
         predicate: related_to
         source: "infores:clingen"
+        knowledge_level: knowledge_assertion
+        agent_type: manual_agent
         response_mapping: 
           $ref: "#/components/x-bte-response-mapping/entrezgene"
         testExamples:
@@ -1152,6 +1191,9 @@ components:
     ## pantherdb gives orthologs and paralogs, which are both homologs. Hence we use homolog
     ## currently written: MGI 
     ## Also have Ensembl (for specific non-human species) and UniprotKB (for all orthologs)
+    ## - knowledge_level / agent_type: 
+    ##   Paper Figure 4 seems to show that automated pipeline creates orthologs, not really any manual-curation.
+    ##   https://onlinelibrary.wiley.com/doi/10.1002/pro.4218
     hasHomolog-MGI: 
       - supportBatch: true
         useTemplating: true
@@ -1176,6 +1218,8 @@ components:
           size: 1000
         predicate: homologous_to
         source: "infores:panther"
+        knowledge_level: knowledge_assertion
+        agent_type: computational_model
         response_mapping: 
           $ref: "#/components/x-bte-response-mapping/pantherMGI"
         testExamples:
@@ -1201,6 +1245,8 @@ components:
           size: 1000
         predicate: homologous_to
         source: "infores:panther"
+        knowledge_level: knowledge_assertion
+        agent_type: computational_model
         response_mapping: 
           $ref: "#/components/x-bte-response-mapping/pantherHGNC"
         testExamples:

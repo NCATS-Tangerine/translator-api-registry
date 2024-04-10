@@ -740,6 +740,8 @@ components:
   ## - gwassnps.trait: looks like curation of publications for variants / phenotypes. string, no IDs...
   x-bte-kgs-operations:
     ## CIVIC: 
+    ## knowledge_level / agent_type: appears to be heavily manually-curated
+    ##   see https://www.nature.com/articles/ng.3774 (and website https://civicdb.org/)
     ## data seems to be connecting variant-disease, sometimes with a drug (although that drug may not have an ID)
     ##   having a drug means looking at drug response (given the disease...)
     ## However, the civic variant IDs don't seem to be easily mapped...
@@ -779,6 +781,8 @@ components:
           assembly: hg19     
         predicate: affects
         source: "infores:civic"
+        knowledge_level: knowledge_assertion
+        agent_type: manual_agent
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/civic-geneDisease"
       ## this record has drug interaction: https://myvariant.info/v1/query?q=_exists_:%22civic.evidence_items.drug_interaction_type%22
@@ -804,6 +808,8 @@ components:
           assembly: hg19
         predicate: affected_by
         source: "infores:civic"
+        knowledge_level: knowledge_assertion
+        agent_type: manual_agent
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/civic-geneOnly"
       ## this record has drug interaction: https://myvariant.info/v1/query?q=_exists_:%22civic.evidence_items.drug_interaction_type%22
@@ -843,6 +849,8 @@ components:
           assembly: hg19
         predicate: affects
         source: "infores:civic"
+        knowledge_level: knowledge_assertion
+        agent_type: manual_agent
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/civic-variantDisease"
       ## this record has drug interaction: https://myvariant.info/v1/query?q=_exists_:%22civic.evidence_items.drug_interaction_type%22%20AND%20_exists_:%22dbsnp.rsid%22
@@ -868,6 +876,8 @@ components:
           assembly: hg19
         predicate: affected_by
         source: "infores:civic"
+        knowledge_level: knowledge_assertion
+        agent_type: manual_agent
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/dbsnp-rsid"
       ## this record has drug interaction: https://myvariant.info/v1/query?q=_exists_:%22civic.evidence_items.drug_interaction_type%22%20AND%20_exists_:%22dbsnp.rsid%22
@@ -875,6 +885,8 @@ components:
           - qInput: "DOID:2671"                ## Transitional Cell Carcinoma aka MONDO:0006474
             oneOutput: "DBSNP:rs1057519803"     ## chr12:g.56481922G>A in ERBB3
     dbsnp-variantGene:
+    ## knowledge_level / agent_type: gene assignments seem to happen in automated build process 
+    ##   https://www.ncbi.nlm.nih.gov/books/NBK21088/#_ch5_ch5_s4_
     ## note: there may be redundant results in the response
     ## there are 741 million records for hg38
     - supportBatch: true
@@ -895,6 +907,8 @@ components:
         assembly: hg38
       predicate: is_sequence_variant_of
       source: "infores:dbsnp"
+      knowledge_type: knowledge_assertion
+      agent_type: automated_agent
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/dbsnp-gene"
       ## https://myvariant.info/v1/query?q=_exists_:%22dbsnp.rsid%22%20AND%20_exists_:%22dbsnp.gene.geneid%22&fields=dbsnp&assembly=hg38
@@ -920,12 +934,17 @@ components:
         assembly: hg38
       predicate: has_sequence_variant
       source: "infores:dbsnp"
+      knowledge_type: knowledge_assertion
+      agent_type: automated_agent
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/dbsnp-rsid"
       ## https://myvariant.info/v1/query?q=_exists_:%22dbsnp.rsid%22%20AND%20_exists_:%22dbsnp.gene.geneid%22
       testExamples:
         - qInput: "NCBIGene:102724392"      ## LINC02197
           oneOutput: "DBSNP:rs188861200"    ## chr5:g.71414410C>T (diff for hg19)
+    ## CLINVAR
+    ## knowledge_level / agent_type: data going in seems to be manually-curated
+    ##   https://www.ncbi.nlm.nih.gov/clinvar/docs/datasources/
     clinvar-variantGene:
     ## possibly redundant, with all hg38 clinvar data already covered by hg38 dbsnp.rsid <-> gene...
     ## > 822k records for hg38
@@ -947,6 +966,8 @@ components:
         assembly: hg38
       predicate: is_sequence_variant_of
       source: "infores:clinvar"
+      knowledge_level: knowledge_assertion
+      agent_type: manual_agent
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/clinvar-gene-variant-start"
       testExamples:
@@ -971,6 +992,8 @@ components:
         assembly: hg38
       predicate: has_sequence_variant
       source: "infores:clinvar"
+      knowledge_level: knowledge_assertion
+      agent_type: manual_agent
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/clinvar-rsid"
       testExamples:
@@ -1017,6 +1040,8 @@ components:
       ## clinical significance is like a relation: 
       ##   Uncertain significance, Pathogenic, Likely pathogenic, other
       source: "infores:clinvar"
+      knowledge_level: knowledge_assertion
+      agent_type: manual_agent
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/clinvar-diseaseOMIM"
       testExamples:
@@ -1044,6 +1069,8 @@ components:
         assembly: hg38
       predicate: related_to
       source: "infores:clinvar"
+      knowledge_level: knowledge_assertion
+      agent_type: manual_agent
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/clinvar-diseaseORPHANET"
       testExamples:
@@ -1071,6 +1098,8 @@ components:
         assembly: hg38
       predicate: related_to
       source: "infores:clinvar"
+      knowledge_level: knowledge_assertion
+      agent_type: manual_agent
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/clinvar-diseaseMONDO"
       ## https://myvariant.info/v1/query?q=_exists_:clinvar.rcv.conditions.identifiers.mondo%20AND%20NOT%20(_exists_:clinvar.rcv.conditions.identifiers.mesh%20OR%20_exists_:clinvar.rcv.conditions.identifiers.omim%20%20OR%20_exists_:clinvar.rcv.conditions.identifiers.orphanet)%20AND%20_exists_:clinvar.gene%20AND%20clinvar.rcv.clinical_significance:Pathogenic&fields=clinvar,dbsnp.rsid
@@ -1099,6 +1128,8 @@ components:
         assembly: hg38
       predicate: related_to
       source: "infores:clinvar"
+      knowledge_level: knowledge_assertion
+      agent_type: manual_agent
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/clinvar-diseaseMESH"
       testExamples:
@@ -1126,6 +1157,8 @@ components:
         assembly: hg38
       predicate: related_to
       source: "infores:clinvar"
+      knowledge_level: knowledge_assertion
+      agent_type: manual_agent
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/clinvar-phenoHP"
       testExamples:
@@ -1150,6 +1183,8 @@ components:
         assembly: hg38
       predicate: related_to
       source: "infores:clinvar"
+      knowledge_level: knowledge_assertion
+      agent_type: manual_agent
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/clinvar-gene"
       testExamples:
@@ -1174,6 +1209,8 @@ components:
         assembly: hg38
       predicate: related_to
       source: "infores:clinvar"
+      knowledge_level: knowledge_assertion
+      agent_type: manual_agent
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/clinvar-gene"
       testExamples:
@@ -1198,6 +1235,8 @@ components:
         assembly: hg38
       predicate: related_to
       source: "infores:clinvar"
+      knowledge_level: knowledge_assertion
+      agent_type: manual_agent
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/clinvar-gene"
       testExamples:
@@ -1222,6 +1261,8 @@ components:
         assembly: hg38
       predicate: related_to
       source: "infores:clinvar"
+      knowledge_level: knowledge_assertion
+      agent_type: manual_agent
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/clinvar-gene"
       testExamples:
@@ -1246,6 +1287,8 @@ components:
         assembly: hg38
       predicate: related_to
       source: "infores:clinvar"
+      knowledge_level: knowledge_assertion
+      agent_type: manual_agent
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/clinvar-gene"
       testExamples:
@@ -1286,6 +1329,8 @@ components:
       ## clinical significance is like a relation: 
       ##   Uncertain significance, Pathogenic, Likely pathogenic, other
       source: "infores:clinvar"
+      knowledge_level: knowledge_assertion
+      agent_type: manual_agent
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/clinvar-variantDiseaseOMIM"
       ## https://myvariant.info/v1/query?q=_exists_:%22clinvar.rcv.conditions.identifiers.omim%22%20AND%20_exists_:%22dbsnp.rsid%22
@@ -1314,6 +1359,8 @@ components:
         assembly: hg38
       predicate: related_to
       source: "infores:clinvar"
+      knowledge_level: knowledge_assertion
+      agent_type: manual_agent
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/clinvar-variantDiseaseORPHANET"
       testExamples:
@@ -1341,6 +1388,8 @@ components:
         assembly: hg38
       predicate: related_to
       source: "infores:clinvar"
+      knowledge_level: knowledge_assertion
+      agent_type: manual_agent
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/clinvar-variantDiseaseMONDO"
       testExamples:
@@ -1368,6 +1417,8 @@ components:
         assembly: hg38
       predicate: related_to
       source: "infores:clinvar"
+      knowledge_level: knowledge_assertion
+      agent_type: manual_agent
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/clinvar-variantDiseaseMESH"
       testExamples:
@@ -1395,6 +1446,8 @@ components:
         assembly: hg38
       predicate: related_to
       source: "infores:clinvar"
+      knowledge_level: knowledge_assertion
+      agent_type: manual_agent
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/clinvar-variantPhenoHP"
       testExamples:
@@ -1419,6 +1472,8 @@ components:
         assembly: hg38
       predicate: related_to
       source: "infores:clinvar"
+      knowledge_level: knowledge_assertion
+      agent_type: manual_agent
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/dbsnp-rsid"
       testExamples:
@@ -1443,6 +1498,8 @@ components:
         assembly: hg38
       predicate: related_to
       source: "infores:clinvar"
+      knowledge_level: knowledge_assertion
+      agent_type: manual_agent
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/dbsnp-rsid"
       testExamples:
@@ -1467,6 +1524,8 @@ components:
         assembly: hg38
       predicate: related_to
       source: "infores:clinvar"
+      knowledge_level: knowledge_assertion
+      agent_type: manual_agent
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/dbsnp-rsid"
       testExamples:
@@ -1491,6 +1550,8 @@ components:
         assembly: hg38
       predicate: related_to
       source: "infores:clinvar"
+      knowledge_level: knowledge_assertion
+      agent_type: manual_agent
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/dbsnp-rsid"
       testExamples:
@@ -1515,6 +1576,8 @@ components:
         assembly: hg38
       predicate: related_to
       source: "infores:clinvar"
+      knowledge_level: knowledge_assertion
+      agent_type: manual_agent
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/dbsnp-rsid"
       testExamples:
