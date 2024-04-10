@@ -745,6 +745,8 @@ components:
       ## seem to come from the drug adverse event self-reporting
       predicate: applied_to_treat
       source: "infores:aeolus"
+      knowledge_level: observation
+      agent_type: manual_agent
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/aeolusIndication-meddra"
       testExamples:
@@ -771,6 +773,8 @@ components:
         jmespath_exclude_empty: true
       predicate: treatment_applications_from
       source: "infores:aeolus"
+      knowledge_level: observation
+      agent_type: manual_agent
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/aeolusIndication-unii"
       testExamples:
@@ -786,6 +790,9 @@ components:
   ##    or how accurately it's been ingested into chebi...
   ## - not including chebi.xrefs.intenz (EC numbers): not in curie or ID form 
   ##   (example: "EC 1.5.1.28")
+  ## - knowledge_level / agent_type: chebi claims these xrefs are automatically-generated
+  ##   ref manual that's linked in sources: https://www.ebi.ac.uk/chebi/aboutChebiForward.do#Sources
+  ##   https://docs.google.com/document/d/13_FqP_8qkDdw5RFv5qMYo7xRyfY4xUiuVtLn845A6Io/edit#heading=h.xwdjvrea1dca
     chebiToReactome:
     ## there are 1941 records with chebi.xrefs.reactome
     - supportBatch: true
@@ -806,6 +813,8 @@ components:
         size: 1000  ## note size limit; added just in case
       predicate: participates_in
       source: "infores:chebi"
+      knowledge_level: knowledge_assertion
+      agent_type: automated_agent
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/chebiXrefs-reactome"
       testExamples:
@@ -829,6 +838,8 @@ components:
         size: 1000  ## note size limit
       predicate: has_participant 
       source: "infores:chebi"
+      knowledge_level: knowledge_assertion
+      agent_type: automated_agent
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/chebi"
       testExamples:
@@ -853,6 +864,8 @@ components:
         size: 1000  ## note size limit; added just in case
       predicate: participates_in
       source: "infores:chebi"
+      knowledge_level: knowledge_assertion
+      agent_type: automated_agent
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/chebiXrefs-rhea"
       testExamples:
@@ -876,12 +889,15 @@ components:
         size: 1000  ## note size limit
       predicate: has_participant
       source: "infores:chebi"
+      knowledge_level: knowledge_assertion
+      agent_type: automated_agent
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/chebi"
       testExamples:
         - qInput: "RHEA:23312"      ## 2 sucrose = 1(F)-beta-D-fructosylsucrose + D-glucose
           oneOutput: "CHEBI:16885"  ## 1-kestose / 1(F)-beta-D-fructosylsucrose aka PUBCHEM.COMPOUND:440080
     ## chembl
+    ## knowledge_level / agent_type: assuming manual curation. 
     ## - drug_mechanisms: 
     ##   - can filter for human vs non-human targets and by target-type
     ##   - other target_organism values: Bacteria, Human respiratory syncytial virus, Fungi, Human herpesvirus 1, Hepatitis C virus,
@@ -927,6 +943,8 @@ components:
       ## not using affects because that's trickier to use with the new qualifier-modeling (can't ask for Edges without any qualifiers)
       predicate: interacts_with   
       source: "infores:chembl"
+      knowledge_level: knowledge_assertion
+      agent_type: manual_agent
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/drugMechChembl_EnsemblOutput"
       testExamples:
@@ -950,6 +968,8 @@ components:
         size: 1000  ## note size limit
       predicate: interacts_with
       source: "infores:chembl"
+      knowledge_level: knowledge_assertion
+      agent_type: manual_agent
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/drugMechChembl-rev"
       testExamples:
@@ -994,6 +1014,8 @@ components:
       ## see drugMechChemblEnsembl operation for more info on predicate
       predicate: interacts_with   
       source: "infores:chembl"
+      knowledge_level: knowledge_assertion
+      agent_type: manual_agent
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/drugMechChembl_UniprotOutput"
       testExamples:
@@ -1017,6 +1039,8 @@ components:
         size: 1000  ## note size limit
       predicate: interacts_with
       source: "infores:chembl"
+      knowledge_level: knowledge_assertion
+      agent_type: manual_agent
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/drugMechChembl-rev"
       testExamples:
@@ -1052,6 +1076,8 @@ components:
         size: 1000  ## note size limit; added just in case
       predicate: studied_to_treat
       source: "infores:chembl"
+      knowledge_level: knowledge_assertion
+      agent_type: manual_agent
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/chembl-treats"
       testExamples:
@@ -1077,6 +1103,8 @@ components:
         jmespath: "chembl.drug_indications|[?mesh_id=='{{ queryInputs }}']"
       predicate: treated_in_studies_by
       source: "infores:chembl"
+      knowledge_level: knowledge_assertion
+      agent_type: manual_agent
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/chembl-treats-rev"
       testExamples:
@@ -1163,6 +1191,8 @@ components:
         object_direction_qualifier: increased
         causal_mechanism_qualifier: activation        
       source: "infores:drugcentral"
+      knowledge_level: knowledge_assertion
+      agent_type: not_provided
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/drugcentral-bioactivity"
       testExamples:
@@ -1206,6 +1236,8 @@ components:
         object_direction_qualifier: increased
         causal_mechanism_qualifier: agonism        
       source: "infores:drugcentral"
+      knowledge_level: knowledge_assertion
+      agent_type: not_provided
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/drugcentral-bioactivity"
       testExamples:
@@ -1249,6 +1281,8 @@ components:
         object_direction_qualifier: decreased
         causal_mechanism_qualifier: antagonism
       source: "infores:drugcentral"
+      knowledge_level: knowledge_assertion
+      agent_type: not_provided
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/drugcentral-bioactivity"
       testExamples:
@@ -1291,6 +1325,8 @@ components:
       qualifiers:
         causal_mechanism_qualifier: antibody_inhibition
       source: "infores:drugcentral"
+      knowledge_level: knowledge_assertion
+      agent_type: not_provided
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/drugcentral-bioactivity"
       testExamples:
@@ -1332,6 +1368,8 @@ components:
         object_aspect_qualifier: synthesis
         object_direction_qualifier: decreased
       source: "infores:drugcentral"
+      knowledge_level: knowledge_assertion
+      agent_type: not_provided
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/drugcentral-bioactivity"
       testExamples:
@@ -1368,6 +1406,8 @@ components:
         size: 1000  ## note size limit; added just in case
       predicate: physically_interacts_with
       source: "infores:drugcentral"
+      knowledge_level: knowledge_assertion
+      agent_type: not_provided
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/drugcentral-bioactivity"
       testExamples:
@@ -1409,6 +1449,8 @@ components:
         object_direction_qualifier: decreased
         causal_mechanism_qualifier: molecular_channel_blockage
       source: "infores:drugcentral"
+      knowledge_level: knowledge_assertion
+      agent_type: not_provided
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/drugcentral-bioactivity"
       testExamples:
@@ -1455,6 +1497,8 @@ components:
         object_direction_qualifier: decreased
         causal_mechanism_qualifier: inhibition
       source: "infores:drugcentral"
+      knowledge_level: knowledge_assertion
+      agent_type: not_provided
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/drugcentral-bioactivity"
       testExamples:
@@ -1494,6 +1538,8 @@ components:
       qualifiers:
         object_aspect_qualifier: activity_or_abundance
       source: "infores:drugcentral"
+      knowledge_level: knowledge_assertion
+      agent_type: not_provided
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/drugcentral-bioactivity"
       testExamples:
@@ -1539,6 +1585,8 @@ components:
         object_direction_qualifier: increased
         causal_mechanism_qualifier: molecular_channel_opening
       source: "infores:drugcentral"
+      knowledge_level: knowledge_assertion
+      agent_type: not_provided
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/drugcentral-bioactivity"
       testExamples:
@@ -1581,6 +1629,8 @@ components:
         object_direction_qualifier: increased
         causal_mechanism_qualifier: positive_allosteric_modulation
       source: "infores:drugcentral"
+      knowledge_level: knowledge_assertion
+      agent_type: not_provided
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/drugcentral-bioactivity"
       testExamples:
@@ -1623,6 +1673,8 @@ components:
         object_aspect_qualifier: activity_or_abundance
         object_direction_qualifier: increased
       source: "infores:drugcentral"
+      knowledge_level: knowledge_assertion
+      agent_type: not_provided
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/drugcentral-bioactivity"
       testExamples:
@@ -1649,6 +1701,8 @@ components:
       ## not using affected_by because that's trickier to use with the new qualifier-modeling (can't ask for Edges without any qualifiers)
       predicate: interacts_with  
       source: "infores:drugcentral"
+      knowledge_level: knowledge_assertion
+      agent_type: not_provided
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/drugcentral-umls"
       testExamples:
@@ -1677,6 +1731,8 @@ components:
         size: 1000  ## note size limit; added just in case
       predicate: contraindicated_in  ## current biolink predicate
       source: "infores:drugcentral"
+      knowledge_level: knowledge_assertion
+      agent_type: manual_agent
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/drugcentral-contraindication"
       testExamples:
@@ -1700,6 +1756,8 @@ components:
         size: 1000  ## note size limit
       predicate: has_contraindication
       source: "infores:drugcentral"
+      knowledge_level: knowledge_assertion
+      agent_type: manual_agent
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/drugcentral-chembl"
       testExamples:
@@ -1732,6 +1790,8 @@ components:
       ##   see https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7881657/ for details
       predicate: treats_or_applied_or_studied_to_treat
       source: "infores:drugcentral"
+      knowledge_level: knowledge_assertion
+      agent_type: manual_agent
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/drugcentral-indication"
       testExamples:
@@ -1757,6 +1817,8 @@ components:
         size: 1000  ## note size limit
       predicate: subject_of_treatment_application_or_study_for_treatment_by
       source: "infores:drugcentral"
+      knowledge_level: knowledge_assertion
+      agent_type: manual_agent
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/drugcentral-unii"
       testExamples:
@@ -1787,6 +1849,8 @@ components:
       ## using predicate for off-label use. Also, on drugcentral website, users can submit off-label suggestions (so self-report)
       predicate: applied_to_treat
       source: "infores:drugcentral"
+      knowledge_level: knowledge_assertion
+      agent_type: manual_agent
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/drugcentral-offlabel"
       testExamples:
@@ -1810,6 +1874,8 @@ components:
         size: 1000  ## note size limit
       predicate: treatment_applications_from
       source: "infores:drugcentral"
+      knowledge_level: knowledge_assertion
+      agent_type: manual_agent
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/drugcentral-chembl"
       testExamples:
@@ -1850,6 +1916,8 @@ components:
       predicate: has_adverse_event
       ## through drugcentral, FDA Adverse Event Reporting System (FAERS) information
       source: "infores:drugcentral"
+      knowledge_level: observation
+      agent_type: manual_agent
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/drugcentral-adverseEvent"
       testExamples:
@@ -1874,6 +1942,8 @@ components:
       predicate: adverse_event_of
       ## through drugcentral, FDA Adverse Event Reporting System (FAERS) information
       source: "infores:drugcentral"
+      knowledge_level: observation
+      agent_type: not_provided
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/drugcentral-chembl"
       testExamples:
@@ -1919,6 +1989,8 @@ components:
       predicate: studied_to_treat
       ## FDA Orphan Drug Designations and Approvals database
       source: "infores:fda-orphan-drug-db"
+      knowledge_level: observation
+      agent_type: not_provided
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/fdaOrphanDrug"
       testExamples:
@@ -1943,6 +2015,8 @@ components:
       predicate: treated_in_studies_by
       ## FDA Orphan Drug Designations and Approvals database
       source: "infores:fda-orphan-drug-db"
+      knowledge_level: observation
+      agent_type: not_provided
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/fdaOrphanDrug-pubchemCompound"
       testExamples:
