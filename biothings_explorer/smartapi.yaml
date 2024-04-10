@@ -29,10 +29,11 @@ info:
       default: 
         url: "https://raw.githubusercontent.com/NCATS-Tangerine/translator-api-registry/master/biothings_explorer/sri-test-bte-ara.json"
 servers:
-## ITRB Production and Test deployments are made by ITRB, based on the staging instance
-## ITRB CI / staging deployments are made by our team (will add details later)
-## non-ITRB dev: deployments are made by our team
-##               we have full control on when / what branches for modules are used
+## ITRB Production and Test deployments are made by ITRB when we make a change request. 
+##   These deployments use a snapshot of the staging instance. 
+## ITRB CI / staging deployments are made by our team.
+## non-ITRB dev deployments are made by our team.
+##   We have full control on when / what branches for modules are used
 - url: https://bte.ci.transltr.io/v1
   description: ITRB CI server
   x-maturity: staging
@@ -127,19 +128,14 @@ paths:
       tags:
         - query
       summary: Initiate a TRAPI-format query to BTE (operating as an ARA) and wait to receive a Response
-      parameters:
-        - description: option to choose whether or not to enable caching
-          in: query
-          name: caching
-          required: false
-          schema:
-            type: boolean
-        - description: dryrun a query (logs the queries BTE will make)
-          in: query
-          name: dryrun
-          required: false
-          schema:
-            type: boolean
+      ## old feature: not sure if it still works
+      # parameters:
+      #   - description: dryrun a query (logs the queries BTE will make)
+      #     in: query
+      #     name: dryrun
+      #     required: false
+      #     schema:
+      #       type: boolean
       requestBody:
         description: Query information to be submitted
         required: true
@@ -228,18 +224,13 @@ paths:
           example: 09c8782d9f4027712e65b95424adba79  ## MyVariant
           schema:
             type: string
-        - description: option to choose whether or not to enable caching
-          in: query
-          name: caching
-          required: false
-          schema:
-            type: boolean
-        - description: dryrun a query (logs the queries BTE will make)
-          in: query
-          name: dryrun
-          required: false
-          schema:
-            type: boolean
+        ## old feature: not sure if it still works
+        # - description: dryrun a query (logs the queries BTE will make)
+        #   in: query
+        #   name: dryrun
+        #   required: false
+        #   schema:
+        #     type: boolean
       requestBody:
         description: Query information to be submitted
         required: true
@@ -336,18 +327,13 @@ paths:
               - Multiomics Provider
               - Text Mining Provider
               - Service Provider
-        - description: option to choose whether or not to enable caching
-          in: query
-          name: caching
-          required: false
-          schema:
-            type: boolean
-        - description: dryrun a query (logs the queries BTE will make)
-          in: query
-          name: dryrun
-          required: false
-          schema:
-            type: boolean
+        ## old feature: not sure if it still works
+        # - description: dryrun a query (logs the queries BTE will make)
+        #   in: query
+        #   name: dryrun
+        #   required: false
+        #   schema:
+        #     type: boolean
       requestBody:
         description: Query information to be submitted
         required: true
@@ -432,19 +418,14 @@ paths:
         the callback property is not included, BTE will handle the query in a polling
         manner: it will provide a job-id that can be used to check the status or retrieve
         the Response.
-      parameters:
-        - description: option to choose whether or not to enable caching
-          in: query
-          name: caching
-          required: false
-          schema:
-            type: boolean
-        - description: dryrun a query (logs the queries BTE will make)
-          in: query
-          name: dryrun
-          required: false
-          schema:
-            type: boolean
+      ## old feature: not sure if it still works
+      # parameters:
+      #   - description: dryrun a query (logs the queries BTE will make)
+      #     in: query
+      #     name: dryrun
+      #     required: false
+      #     schema:
+      #       type: boolean
       requestBody:
         description: Query information to be submitted
         required: true
@@ -546,18 +527,13 @@ paths:
           example: 09c8782d9f4027712e65b95424adba79  ## MyVariant
           schema:
             type: string
-        - description: option to choose whether or not to enable caching
-          in: query
-          name: caching
-          required: false
-          schema:
-            type: boolean
-        - description: dryrun a query (logs the queries BTE will make)
-          in: query
-          name: dryrun
-          required: false
-          schema:
-            type: boolean
+        ## old feature: not sure if it still works
+        # - description: dryrun a query (logs the queries BTE will make)
+        #   in: query
+        #   name: dryrun
+        #   required: false
+        #   schema:
+        #     type: boolean
       requestBody:
         description: Query information to be submitted
         required: true
@@ -665,18 +641,13 @@ paths:
               - Multiomics Provider
               - Text Mining Provider
               - Service Provider
-        - description: option to choose whether or not to enable caching
-          in: query
-          name: caching
-          required: false
-          schema:
-            type: boolean
-        - description: dryrun a query (logs the queries BTE will make)
-          in: query
-          name: dryrun
-          required: false
-          schema:
-            type: boolean
+        ## old feature: not sure if it still works
+        # - description: dryrun a query (logs the queries BTE will make)
+        #   in: query
+        #   name: dryrun
+        #   required: false
+        #   schema:
+        #     type: boolean
       requestBody:
         description: Query information to be submitted
         required: true
@@ -779,6 +750,47 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AsyncQueryStatusResponse'
+        '404':
+          description: job_id not found
+        '501':
+          description: >-
+            Return code 501 indicates that this endpoint has not been
+            implemented at this site. Sites that implement /asyncquery
+            MUST implement /asyncquery_status/{job_id}, but those that
+            do not implement /asyncquery SHOULD NOT implement
+            /asyncquery_status.
+          content:
+            application/json:
+              schema:
+                type: string
+  ## custom endpoint: copied and modified asyncquery_status endpoint spec
+  /asyncquery_response/{job_id}:
+    get:
+      tags:
+        - asyncquery_response
+      summary: >-
+        If the previously submitted asyncquery is still pending/in-progress, this endpoint will return the same
+        response as the asyncquery_status endpoint (status, logs). But if the asyncquery job is finished, 
+        the complete TRAPI response to the query will be returned
+      operationId: asyncquery_response
+      parameters:
+        - in: path
+          name: job_id
+          description: Identifier of the job for status request
+          # example: rXEOAosN3L
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: >-
+            Response format depends on status of the job (pending/in-progress vs finished)
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/AsyncQueryStatusResponse'
+                  - $ref: '#/components/schemas/Response'
         '404':
           description: job_id not found
         '501':
