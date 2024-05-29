@@ -159,6 +159,13 @@ paths:
             type: boolean
             default: false
             title: Direct
+        - name: compact
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: false
+            title: Compact
         - name: format
           in: query
           required: false
@@ -175,6 +182,8 @@ paths:
           required: false
           schema:
             type: integer
+            maximum: 500
+            minimum: 0
             default: 20
             title: Limit
         - name: offset
@@ -182,6 +191,7 @@ paths:
           required: false
           schema:
             type: integer
+            minimum: 0
             default: 0
             title: Offset
       responses:
@@ -192,6 +202,7 @@ paths:
               schema:
                 anyOf:
                   - $ref: '#/components/schemas/AssociationResults'
+                  - $ref: '#/components/schemas/CompactAssociationResults'
                   - type: string
                 title: Response  Get Associations V3 Api Association Get
         '404':
@@ -300,6 +311,16 @@ paths:
             title: query string to limit results to a subset
             # examples:
             #   - thumb
+        - name: traverse_orthologs
+          in: query
+          required: false
+          schema:
+            type: boolean
+            title: Traverse orthologs to get associations
+            # examples:
+            #   - true
+            #   - false
+            default: false
         - name: sort
           in: query
           required: false
@@ -338,6 +359,8 @@ paths:
           required: false
           schema:
             type: integer
+            maximum: 500
+            minimum: 0
             default: 20
             title: Limit
         - name: offset
@@ -345,6 +368,7 @@ paths:
           required: false
           schema:
             type: integer
+            minimum: 0
             default: 0
             title: Offset
       responses:
@@ -460,6 +484,8 @@ paths:
           required: false
           schema:
             type: integer
+            maximum: 500
+            minimum: 0
             default: 20
             title: Limit
         - name: offset
@@ -467,6 +493,7 @@ paths:
           required: false
           schema:
             type: integer
+            minimum: 0
             default: 0
             title: Offset
       responses:
@@ -558,7 +585,7 @@ paths:
             anyOf:
               - type: array
                 items:
-                  type: string
+                  $ref: '#/components/schemas/MappingPredicate'
               # - type: 'null'
             title: Predicate Id
         - name: object_id
@@ -597,6 +624,8 @@ paths:
           required: false
           schema:
             type: integer
+            maximum: 500
+            minimum: 0
             default: 20
             title: Limit
         - name: offset
@@ -604,6 +633,7 @@ paths:
           required: false
           schema:
             type: integer
+            minimum: 0
             default: 0
             title: Offset
       responses:
@@ -676,6 +706,7 @@ paths:
         <b>Args:</b> <br>
             subjects (str, optional): List of subjects for comparison. Defaults to "". <br>
             objects (str, optional): List of objects for comparison. Defaults to "". <br>
+            metric (str, optional): Similarity metric to use. Defaults to "ancestor_information_content".
 
         <b>Returns:</b> <br>
             TermSetPairwiseSimilarity: Pairwise similarity between subjects and objects
@@ -693,6 +724,14 @@ paths:
           schema:
             type: string
             title: List of objects for comparison
+        - name: metric
+          in: query
+          required: false
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/SemsimMetric'
+            title: Similarity metric to use
+            default: ancestor_information_content
       responses:
         '200':
           description: Successful Response
@@ -719,7 +758,8 @@ paths:
         <pre>
         {
           "subjects": ["MP:0010771","MP:0002169","MP:0005391","MP:0005389","MP:0005367"],
-          "objects": ["HP:0004325","HP:0000093","MP:0006144"]
+          "objects": ["HP:0004325","HP:0000093","MP:0006144"],
+          "metric": "ancestor_information_content"
         }
         </pre>
       operationId: _post_compare_v3_api_semsim_compare_post
@@ -728,6 +768,57 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/SemsimCompareRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '404':
+          description: Not Found
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /v3/api/semsim/multicompare:
+    post:
+      tags:
+        - semsim
+      summary: ' Post Multicompare'
+      description: |-
+        Pairwise similarity between two sets of terms <br>
+                <br>
+                Example: <br>
+            <pre>
+        {
+          "metric": "ancestor_information_content",
+          "subjects": [ "HP:0002616", "HP:0001763", "HP:0004944", "HP:0010749", "HP:0001533", "HP:0002020", "HP:0012450", "HP:0003394", "HP:0003771", "HP:0012378", "HP:0001278", "HP:0002827",
+        "HP:0002829", "HP:0002999", "HP:0003010"],
+          "object_sets": [
+            {
+              "id": "MGI:97486",
+              "label": "Pax2",
+              "phenotypes": [ "MP:0003675", "MP:0003675", "MP:0003675", "MP:0011382", "MP:0011366", "MP:0010097", "MP:0012536", "MP:0003558", "MP:0004729", "MP:0009113", "MP:0006090", "MP:0001325", "MP:0001325", "MP:0006309",
+        "MP:0004017", "MP:0012533", "MP:0004505", "MP:0004505", "MP:0004505"]
+            },
+            {
+              "id": "MGI:95819",
+              "label": "Grin1",
+              "phenotypes": ["MP:0001435", "MP:0001405", "MP:0002797", "MP:0001386", "MP:0001901", "MP:0001901", "MP:0001901", "MP:0001901", "MP:0001901", "MP:0002906", "MP:0004811", "MP:0001900",
+        "MP:0009748", "MP:0008428", "MP:0008428", "MP:0008428"]
+            }
+          ]
+        }
+            </pre>
+      operationId: _post_multicompare_v3_api_semsim_multicompare_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SemsimMultiCompareRequest'
         required: true
       responses:
         '200':
@@ -752,8 +843,9 @@ paths:
         Search for terms in a termset
 
         <b>Args:</b> <br>
-            termset (str, optional): Comma separated list of term IDs to find matches for. <br>
-            group (str, optional): Group of entities to search within (e.g. Human Genes) <br>
+            termset (str): Comma separated list of term IDs to find matches for. <br>
+            group (str): Group of entities to search within (e.g. Human Genes) <br>
+            metric: (str, optional): Similarity metric to use. Defaults to "ancestor_information_content". <br>
             limit (int, optional): Limit the number of results. Defaults to 10.
 
         <b>Returns:</b> <br>
@@ -773,6 +865,14 @@ paths:
             allOf:
               - $ref: '#/components/schemas/SemsimSearchGroup'
             title: Group of entities to search within (e.g. Human Genes)
+        - name: metric
+          in: query
+          required: false
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/SemsimMetric'
+            title: Similarity metric to use
+            default: ancestor_information_content
         - name: limit
           in: query
           required: false
@@ -809,6 +909,7 @@ paths:
         {
           "termset": ["HP:0002104", "HP:0012378", "HP:0012378", "HP:0012378"],
           "group": "Human Diseases",
+          "metric": "ancestor_information_content",
           "limit": 5
         }
         </pre>
@@ -951,26 +1052,63 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
-  # /:
-  #   get:
-  #     summary: ' Root'
-  #     operationId: _root__get
-  #     responses:
-  #       '200':
-  #         description: Successful Response
-  #         content:
-  #           application/json:
-  #             schema: {}
-  # /api:
-  #   get:
-  #     summary: ' Api'
-  #     operationId: _api_api_get
-  #     responses:
-  #       '200':
-  #         description: Successful Response
-  #         content:
-  #           application/json:
-  #             schema: {}
+  /:
+    get:
+      summary: ' Root'
+      operationId: _root__get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /api:
+    get:
+      summary: ' Api'
+      operationId: _api_api_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /v3/api/releases:
+    get:
+      summary: ' V3'
+      operationId: _v3_v3_api_releases_get
+      parameters:
+        - name: dev
+          in: query
+          required: false
+          schema:
+            type: boolean
+            title: Get dev releases of the KG (default False)
+            default: false
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            title: The number of releases to return (default 0 for no limit)
+            default: 0
+        - name: release
+          in: query
+          required: false
+          schema:
+            type: string
+            title: Get metadata for a specific release
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
 components:
   schemas:
     Association:
@@ -1120,6 +1258,19 @@ components:
           description: >-
             count of supporting documents, evidence codes, and sources supplying
             evidence
+        knowledge_level:
+          type: string
+          title: Knowledge Level
+          description: >-
+            Describes the level of knowledge expressed in a statement, based on
+            the reasoning or analysis methods used to generate the statement, or
+            the scope or specificity of what the statement expresses to be true.
+        agent_type:
+          type: string
+          title: Agent Type
+          description: >-
+            Describes the high-level category of agent who originally generated
+            a  statement of knowledge or other type of information.
         has_evidence:
           anyOf:
             - items:
@@ -1135,6 +1286,32 @@ components:
             # - type: 'null'
           title: Has Evidence Links
           description: List of ExpandedCuries with id and url for evidence
+        has_count:
+          anyOf:
+            - type: integer
+            # - type: 'null'
+          title: Has Count
+          description: count of out of has_total representing a frequency
+        has_total:
+          anyOf:
+            - type: integer
+            # - type: 'null'
+          title: Has Total
+          description: 'total, devided by has_count, representing a frequency'
+        has_percentage:
+          anyOf:
+            - type: number
+            # - type: 'null'
+          title: Has Percentage
+          description: >-
+            percentage, which may be calculated from has_count and has_total, as
+            100 * quotient or provided directly, rounded to the integer level
+        has_quotient:
+          anyOf:
+            - type: number
+            # - type: 'null'
+          title: Has Quotient
+          description: 'quotient, which should be 1/100 of has_percentage'
         grouping_key:
           anyOf:
             - type: string
@@ -1439,6 +1616,8 @@ components:
         - subject
         - predicate
         - object
+        - knowledge_level
+        - agent_type
       title: Association
     AssociationCategory:
       type: string
@@ -1457,7 +1636,6 @@ components:
         - 'biolink:CorrelatedGeneToDiseaseAssociation'
         - 'biolink:DiseaseOrPhenotypicFeatureToGeneticInheritanceAssociation'
         - 'biolink:CausalGeneToDiseaseAssociation'
-        - 'biolink:ChemicalToDiseaseOrPhenotypicFeatureAssociation'
       title: AssociationCategory
       description: Association categories
     AssociationCount:
@@ -1502,8 +1680,8 @@ components:
         - 'biolink:located_in'
         - 'biolink:subclass_of'
         - 'biolink:participates_in'
-        - 'biolink:related_to'
         - 'biolink:acts_upstream_of_or_within'
+        - 'biolink:related_to'
         - 'biolink:active_in'
         - 'biolink:part_of'
         - 'biolink:acts_upstream_of'
@@ -1514,7 +1692,6 @@ components:
         - 'biolink:colocalizes_with'
         - 'biolink:acts_upstream_of_or_within_positive_effect'
         - 'biolink:acts_upstream_of_positive_effect'
-        - 'biolink:affects'
         - 'biolink:acts_upstream_of_or_within_negative_effect'
         - 'biolink:acts_upstream_of_negative_effect'
       title: AssociationPredicate
@@ -1573,6 +1750,73 @@ components:
         - offset
         - total
       title: AssociationTableResults
+    CompactAssociation:
+      properties:
+        category:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Category
+        subject:
+          type: string
+          title: Subject
+        subject_label:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Subject Label
+          description: The name of the subject entity
+        predicate:
+          type: string
+          title: Predicate
+        object:
+          type: string
+          title: Object
+        object_label:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Object Label
+          description: The name of the object entity
+        negated:
+          anyOf:
+            - type: boolean
+            # - type: 'null'
+          title: Negated
+      additionalProperties: true
+      type: object
+      required:
+        - subject
+        - predicate
+        - object
+      title: CompactAssociation
+    CompactAssociationResults:
+      properties:
+        limit:
+          type: integer
+          title: Limit
+          description: number of items to return in a response
+        offset:
+          type: integer
+          title: Offset
+          description: offset into the total number of items
+        total:
+          type: integer
+          title: Total
+          description: total number of items matching a query
+        items:
+          items:
+            $ref: '#/components/schemas/CompactAssociation'
+          type: array
+          title: Items
+          description: 'A collection of items, with the type to be overriden by slot_usage'
+      additionalProperties: true
+      type: object
+      required:
+        - limit
+        - offset
+        - total
+      title: CompactAssociationResults
     DirectionalAssociation:
       properties:
         id:
@@ -1720,6 +1964,19 @@ components:
           description: >-
             count of supporting documents, evidence codes, and sources supplying
             evidence
+        knowledge_level:
+          type: string
+          title: Knowledge Level
+          description: >-
+            Describes the level of knowledge expressed in a statement, based on
+            the reasoning or analysis methods used to generate the statement, or
+            the scope or specificity of what the statement expresses to be true.
+        agent_type:
+          type: string
+          title: Agent Type
+          description: >-
+            Describes the high-level category of agent who originally generated
+            a  statement of knowledge or other type of information.
         has_evidence:
           anyOf:
             - items:
@@ -1735,6 +1992,32 @@ components:
             # - type: 'null'
           title: Has Evidence Links
           description: List of ExpandedCuries with id and url for evidence
+        has_count:
+          anyOf:
+            - type: integer
+            # - type: 'null'
+          title: Has Count
+          description: count of out of has_total representing a frequency
+        has_total:
+          anyOf:
+            - type: integer
+            # - type: 'null'
+          title: Has Total
+          description: 'total, devided by has_count, representing a frequency'
+        has_percentage:
+          anyOf:
+            - type: number
+            # - type: 'null'
+          title: Has Percentage
+          description: >-
+            percentage, which may be calculated from has_count and has_total, as
+            100 * quotient or provided directly, rounded to the integer level
+        has_quotient:
+          anyOf:
+            - type: number
+            # - type: 'null'
+          title: Has Quotient
+          description: 'quotient, which should be 1/100 of has_percentage'
         grouping_key:
           anyOf:
             - type: string
@@ -2047,6 +2330,8 @@ components:
         - subject
         - predicate
         - object
+        - knowledge_level
+        - agent_type
         - direction
       title: DirectionalAssociation
       description: An association that gives it's direction relative to a specified entity
@@ -2126,6 +2411,11 @@ components:
             # - type: 'null'
           title: Uri
           description: The URI of the entity
+        iri:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Iri
         namespace:
           anyOf:
             - type: string
@@ -2213,10 +2503,10 @@ components:
         - 'biolink:PathologicalProcess'
         - 'biolink:ChemicalEntity'
         - 'biolink:Drug'
-        - 'biolink:InformationContentEntity'
+        - 'biolink:OrganismTaxon'
         - 'biolink:SequenceVariant'
         - 'biolink:SmallMolecule'
-        - 'biolink:OrganismTaxon'
+        - 'biolink:InformationContentEntity'
         - 'biolink:NucleicAcidEntity'
         - 'biolink:EvidenceType'
         - 'biolink:GeographicExposure'
@@ -2224,15 +2514,14 @@ components:
         - 'biolink:Transcript'
         - 'biolink:Fungus'
         - 'biolink:Plant'
-        - 'biolink:PopulationOfIndividualOrganisms'
+        - 'biolink:Dataset'
         - 'biolink:Invertebrate'
-        - 'biolink:ProteinDomain'
+        - 'biolink:PopulationOfIndividualOrganisms'
         - 'biolink:ProteinFamily'
         - 'biolink:Activity'
         - 'biolink:Agent'
         - 'biolink:ChemicalExposure'
         - 'biolink:ConfidenceLevel'
-        - 'biolink:Dataset'
         - 'biolink:EnvironmentalFeature'
         - 'biolink:Exon'
         - 'biolink:GeneticInheritance'
@@ -2245,6 +2534,7 @@ components:
         - 'biolink:MaterialSample'
         - 'biolink:MicroRNA'
         - 'biolink:Patent'
+        - 'biolink:ProteinDomain'
         - 'biolink:Publication'
         - 'biolink:RegulatoryRegion'
         - 'biolink:Study'
@@ -2376,6 +2666,15 @@ components:
       required:
         - id
       title: HistoPheno
+    MappingPredicate:
+      type: string
+      enum:
+        - 'skos:exactMatch'
+        - 'skos:closeMatch'
+        - 'skos:broadMatch'
+        - 'skos:narrowMatch'
+      title: MappingPredicate
+      description: Mapping predicates
     Node:
       properties:
         id:
@@ -2452,6 +2751,11 @@ components:
             # - type: 'null'
           title: Uri
           description: The URI of the entity
+        iri:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Iri
         namespace:
           anyOf:
             - type: string
@@ -2661,6 +2965,11 @@ components:
             # - type: 'null'
           title: Uri
           description: The URI of the entity
+        iri:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: Iri
         namespace:
           anyOf:
             - type: string
@@ -2790,11 +3099,65 @@ components:
             type: string
           type: array
           title: List of objects for comparison
+        metric:
+          allOf:
+            - $ref: '#/components/schemas/SemsimMetric'
+          title: Similarity metric to use
+          default: ancestor_information_content
       type: object
       required:
         - subjects
         - objects
       title: SemsimCompareRequest
+    SemsimMetric:
+      type: string
+      enum:
+        - ancestor_information_content
+        - jaccard_similarity
+        - phenodigm_score
+      title: SemsimMetric
+    SemsimMultiCompareObject:
+      properties:
+        id:
+          anyOf:
+            - type: string
+            # - type: 'null'
+          title: ID of the object set
+        label:
+          type: string
+          title: Label of the object set
+        phenotypes:
+          items:
+            type: string
+          type: array
+          title: List of object for comparison
+      type: object
+      required:
+        - label
+        - phenotypes
+      title: SemsimMultiCompareObject
+    SemsimMultiCompareRequest:
+      properties:
+        subjects:
+          items:
+            type: string
+          type: array
+          title: List of subjects for comparison
+        object_sets:
+          items:
+            $ref: '#/components/schemas/SemsimMultiCompareObject'
+          type: array
+          title: List of object sets for comparison
+        metric:
+          allOf:
+            - $ref: '#/components/schemas/SemsimMetric'
+          title: Similarity metric to use
+          default: ancestor_information_content
+      type: object
+      required:
+        - subjects
+        - object_sets
+      title: SemsimMultiCompareRequest
     SemsimSearchGroup:
       type: string
       enum:
@@ -2816,6 +3179,11 @@ components:
           allOf:
             - $ref: '#/components/schemas/SemsimSearchGroup'
           title: Group of entities to search within (e.g. Human Genes)
+        metric:
+          allOf:
+            - $ref: '#/components/schemas/SemsimMetric'
+          title: Similarity metric to use
+          default: ancestor_information_content
         limit:
           anyOf:
             - type: integer
