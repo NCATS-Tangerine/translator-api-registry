@@ -15,7 +15,7 @@ info:
     component: KP
     team:
       - Service Provider
-    biolink-version: "3.5.0"
+    biolink-version: "4.1.6"
 servers:
 - description: Encrypted Production server
   url: https://mychem.info/v1
@@ -618,8 +618,10 @@ components:
   x-bte-response-mapping:
     aeolusIndication-meddra:
       MEDDRA: aeolus.indications.meddra_code
-    aeolus-unii:
+      "biolink:evidence_count": aeolus.indications.count
+    aeolusIndication-unii:
       UNII: aeolus.unii
+      "biolink:evidence_count": aeolus.indications.count
     chebiXrefs-reactome:
       REACT: chebi.xrefs.reactome
     chebi:
@@ -667,13 +669,14 @@ components:
       ## this url field will include expanded clinicaltrials (aka duplicates!)
       ##   but is required for other references: ATC, DailyMed, FDA
       ref_url: chembl.drug_indications.indication_refs.url
+      "biolink:max_research_phase": chembl.drug_indications.max_phase_for_ind
       ## commenting out because data-processing / biolink-modeling issues
-      # max_clinical_phase_for_indication: chembl.drug_indications.max_phase_for_ind
       # year_first_approved: chembl.drug_indications.first_approval
     chembl-treats-rev:
       "CHEMBL.COMPOUND": chembl.molecule_chembl_id  ## no prefix
       ref_clinicaltrials: chembl.drug_indications.indication_refs.ClinicalTrials     ## no prefix
       ref_url: chembl.drug_indications.indication_refs.url
+      "biolink:max_research_phase": chembl.drug_indications.max_phase_for_ind
     drugcentral-bioactivity:
       UniProtKB: drugcentral.bioactivity.uniprot.uniprot_id  ## no prefix
       ## commenting out because data-processing / biolink-modeling issues
@@ -740,7 +743,8 @@ components:
         fields: aeolus.indications     ## need the whole thing for jmespath to work
         jmespath: aeolus.indications|[?count>`20`]
         size: 1000  ## note size limit; added just in case
-      predicate: treats
+      ## seem to come from the drug adverse event self-reporting
+      predicate: applied_to_treat
       source: "infores:aeolus"
       knowledge_level: observation
       agent_type: manual_agent
@@ -750,7 +754,7 @@ components:
         - qInput: "UNII:90347YTW5F"     ## alfuzosin aka PUBCHEM.COMPOUND:2092
           oneOutput: "MEDDRA:10004446"  ## Benign prostatic hyperplasia aka MONDO:0010811
     aeolusTreats-rev:
-    - supportBatch: true
+    - supportBatch: false
       useTemplating: true
       inputs:
       - id: MEDDRA
@@ -763,14 +767,17 @@ components:
       - id: UNII
         semantic: SmallMolecule
       parameters:
-        fields: aeolus.unii  ## no prefix
+      ## need the whole thing for jmespath to work
+        fields: aeolus.unii,aeolus.indications  ## no prefix
         size: 1000  ## note size limit
-      predicate: treated_by
+        jmespath: "aeolus.indications|[?count>`20` && meddra_code=='{{ queryInputs }}']"
+        jmespath_exclude_empty: true
+      predicate: treatment_applications_from
       source: "infores:aeolus"
       knowledge_level: observation
       agent_type: manual_agent
       response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/aeolus-unii"
+        "$ref": "#/components/x-bte-response-mapping/aeolusIndication-unii"
       testExamples:
         - qInput: "MEDDRA:10012378"        ## Depression aka MONDO:0002050
           oneOutput: "UNII:82VFR53I78"     ## Aripiprazole aka PUBCHEM.COMPOUND:60795
@@ -933,7 +940,7 @@ components:
           chembl.drug_mechanisms.target_name
         size: 1000  ## note size limit; added just in case
       ## using the same predicate as dgidb's no-relationship-specified. 
-      ## not using psychically_interacts_with because it's not clear that all relationships involve a physical interaction between the chem and gene product
+      ## not using physically_interacts_with because it's not clear that all relationships involve a physical interaction between the chem and gene product
       ## not using affects because that's trickier to use with the new qualifier-modeling (can't ask for Edges without any qualifiers)
       predicate: interacts_with   
       source: "infores:chembl"
@@ -1066,9 +1073,10 @@ components:
         fields: >-
           chembl.drug_indications.mesh_id,
           chembl.drug_indications.indication_refs.ClinicalTrials,
-          chembl.drug_indications.indication_refs.url
+          chembl.drug_indications.indication_refs.url,
+          chembl.drug_indications.max_phase_for_ind
         size: 1000  ## note size limit; added just in case
-      predicate: treats
+      predicate: in_clinical_trials_for
       source: "infores:chembl"
       knowledge_level: knowledge_assertion
       agent_type: manual_agent
@@ -1095,7 +1103,7 @@ components:
         fields: chembl.molecule_chembl_id,chembl.drug_indications  ## no prefix
         size: 1000  ## note size limit
         jmespath: "chembl.drug_indications|[?mesh_id=='{{ queryInputs }}']"
-      predicate: treated_by
+      predicate: tested_by_clinical_trials_of
       source: "infores:chembl"
       knowledge_level: knowledge_assertion
       agent_type: manual_agent
@@ -1721,7 +1729,7 @@ components:
       parameters:
         fields: drugcentral.drug_use.contraindication.umls_cui  ## no prefix
         size: 1000  ## note size limit; added just in case
-      predicate: contraindicated_for  ## current biolink predicate
+      predicate: contraindicated_in  ## current biolink predicate
       source: "infores:drugcentral"
       knowledge_level: knowledge_assertion
       agent_type: manual_agent
@@ -1778,8 +1786,9 @@ components:
       ## FYI: output could also be SNOMED (specifically SNOMED-CT US Edition). 
       ##     Looks like the native ID for DrugCentral, see https://drugcentral.org/drugcard/1768#druguse. 
       ##     The original data source also may have some DOID mappings (see the linked example), but the API doesn't have this right now.
-      ## child of treats, seems to better fit the "indication" idea
-      predicate: treats
+      ## using the most-general "treats" predicate, because drugcentral seems to include text-mined assertions - with errors/imprecise 
+      ##   see https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7881657/ for details
+      predicate: treats_or_applied_or_studied_to_treat
       source: "infores:drugcentral"
       knowledge_level: knowledge_assertion
       agent_type: manual_agent
@@ -1806,7 +1815,7 @@ components:
       parameters:
         fields: drugcentral.xrefs.unii
         size: 1000  ## note size limit
-      predicate: treated_by
+      predicate: subject_of_treatment_application_or_study_for_treatment_by
       source: "infores:drugcentral"
       knowledge_level: knowledge_assertion
       agent_type: manual_agent
@@ -1837,7 +1846,8 @@ components:
       ## FYI: output could also be SNOMED (specifically SNOMED-CT US Edition). 
       ##     Looks like the native ID for DrugCentral, see https://drugcentral.org/drugcard/1768#druguse. 
       ##     The original data source also may have some DOID mappings (see the linked example), but the API doesn't have this right now.
-      predicate: treats
+      ## using predicate for off-label use. Also, on drugcentral website, users can submit off-label suggestions (so self-report)
+      predicate: applied_to_treat
       source: "infores:drugcentral"
       knowledge_level: knowledge_assertion
       agent_type: manual_agent
@@ -1862,7 +1872,7 @@ components:
       parameters:
         fields: drugcentral.xrefs.chembl_id
         size: 1000  ## note size limit
-      predicate: treated_by
+      predicate: treatment_applications_from
       source: "infores:drugcentral"
       knowledge_level: knowledge_assertion
       agent_type: manual_agent
@@ -1974,7 +1984,9 @@ components:
         #   fda_orphan_drug.marketing_approval_date,
         #   fda_orphan_drug.orphan_designation.original_text
         fields: fda_orphan_drug.orphan_designation.umls
-      predicate: treats  ## current biolink predicate
+      ## includes applications that were accepted, denied, revoked/withdrawn. I'm assuming that studies were done
+      ##   for the application in the first place. However, our data doesn't include this info
+      predicate: studied_to_treat
       ## FDA Orphan Drug Designations and Approvals database
       source: "infores:fda-orphan-drug-db"
       knowledge_level: observation
@@ -2000,7 +2012,7 @@ components:
       parameters:
         fields: fda_orphan_drug.pubchem_cid
         size: 1000  ## note size limit
-      predicate: treated_by  ## current biolink predicate
+      predicate: treated_in_studies_by
       ## FDA Orphan Drug Designations and Approvals database
       source: "infores:fda-orphan-drug-db"
       knowledge_level: observation

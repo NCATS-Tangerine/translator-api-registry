@@ -15,7 +15,7 @@ info:
     component: KP
     team:
       - Service Provider
-    biolink-version: "3.5.0"
+    biolink-version: "4.1.6"
 servers:
 - description: Encrypted Production server
   url: https://biothings.ncats.io/ttd
@@ -296,12 +296,36 @@ paths:
       # - $ref: '#/components/x-bte-kgs-operations/chebi_treats_icd11-rev'
       - $ref: '#/components/x-bte-kgs-operations/pubchem_treats_mondo'
       - $ref: '#/components/x-bte-kgs-operations/pubchem_treats_mondo-rev'
+      - $ref: '#/components/x-bte-kgs-operations/pubchem_studiedToTreat_mondo'
+      - $ref: '#/components/x-bte-kgs-operations/pubchem_studiedToTreat_mondo-rev'
+      - $ref: '#/components/x-bte-kgs-operations/pubchem_preclinicalTreats_mondo'
+      - $ref: '#/components/x-bte-kgs-operations/pubchem_preclinicalTreats_mondo-rev'
+      - $ref: '#/components/x-bte-kgs-operations/pubchem_clinicalTrialTreats_mondo'
+      - $ref: '#/components/x-bte-kgs-operations/pubchem_clinicalTrialTreats_mondo-rev'
       - $ref: '#/components/x-bte-kgs-operations/pubchem_treats_icd11'
       - $ref: '#/components/x-bte-kgs-operations/pubchem_treats_icd11-rev'
+      - $ref: '#/components/x-bte-kgs-operations/pubchem_studiedToTreat_icd11'
+      - $ref: '#/components/x-bte-kgs-operations/pubchem_studiedToTreat_icd11-rev'
+      - $ref: '#/components/x-bte-kgs-operations/pubchem_preclinicalTreats_icd11'
+      - $ref: '#/components/x-bte-kgs-operations/pubchem_preclinicalTreats_icd11-rev'
+      - $ref: '#/components/x-bte-kgs-operations/pubchem_clinicalTrialTreats_icd11'
+      - $ref: '#/components/x-bte-kgs-operations/pubchem_clinicalTrialTreats_icd11-rev'
       - $ref: '#/components/x-bte-kgs-operations/ttd_drug_id_treats_mondo'
       - $ref: '#/components/x-bte-kgs-operations/ttd_drug_id_treats_mondo-rev'
+      - $ref: '#/components/x-bte-kgs-operations/ttd_drug_id_studiedToTreat_mondo'
+      - $ref: '#/components/x-bte-kgs-operations/ttd_drug_id_studiedToTreat_mondo-rev'
+      - $ref: '#/components/x-bte-kgs-operations/ttd_drug_id_preclinicalTreats_mondo'
+      - $ref: '#/components/x-bte-kgs-operations/ttd_drug_id_preclinicalTreats_mondo-rev'
+      - $ref: '#/components/x-bte-kgs-operations/ttd_drug_id_clinicalTrialTreats_mondo'
+      - $ref: '#/components/x-bte-kgs-operations/ttd_drug_id_clinicalTrialTreats_mondo-rev'
       - $ref: '#/components/x-bte-kgs-operations/ttd_drug_id_treats_icd11'
       - $ref: '#/components/x-bte-kgs-operations/ttd_drug_id_treats_icd11-rev'
+      - $ref: '#/components/x-bte-kgs-operations/ttd_drug_id_studiedToTreat_icd11'
+      - $ref: '#/components/x-bte-kgs-operations/ttd_drug_id_studiedToTreat_icd11-rev'
+      - $ref: '#/components/x-bte-kgs-operations/ttd_drug_id_preclinicalTreats_icd11'
+      - $ref: '#/components/x-bte-kgs-operations/ttd_drug_id_preclinicalTreats_icd11-rev'
+      - $ref: '#/components/x-bte-kgs-operations/ttd_drug_id_clinicalTrialTreats_icd11'
+      - $ref: '#/components/x-bte-kgs-operations/ttd_drug_id_clinicalTrialTreats_icd11-rev'
       - $ref: '#/components/x-bte-kgs-operations/uniprotkb_target_for_mondo'
       - $ref: '#/components/x-bte-kgs-operations/uniprotkb_target_for_mondo-rev'
       - $ref: '#/components/x-bte-kgs-operations/uniprotkb_target_for_icd11'
@@ -595,14 +619,27 @@ components:
   ## - joinSafe is only needed if the delimiter isn't a comma
   ## - fields not included due to data-processing / biolink-modeling issues:
   ##   - association.clinical_trial.status:has lots of possible values 
-  ##     'investigative', 'patented', 'phase 2', 'approved', 'phase 1', 'terminated', 'phase 3',
-  ##     'discontinued in phase 2', 'phase 1/2', 'discontinued in phase 1', 'preclinical', 'discontinued in phase 3',
-  ##     'phase 2/3', 'clinical trial', 'withdrawn from market', 'phase 4', 'phase 3 trial', 'discontinued in phase1/2',
-  ##     'phase 2 trial', 'discontinued in preregistration', 'phase 2/3 trial', 'preregistration', 'phase 2a',
-  ##     'phase 1 trial', 'phase 0', 'registered', 'approved (orphan drug)', 'phase 1b', 'phase 2b',
-  ##     'discontinued in phase2/3', 'NDA filed', 'phase 1/2 trial', 'phase 1/2a', 'discontinued in phase 1 trial',
-  ##     'discontinued in phase 4', 'phase 1b/2a', 'application submitted', 'approval submitted', 'BLA submitted',
-  ##     'discontinued in phase 2a', 'discontinued in phase 2b'
+  ##     - "treats/treated by"
+  ##       - approved
+  ##       - phase 4
+  ##       - approved (orphan drug)
+  ##       - NDA filed
+  ##     - currently mapping to "studied to treat/treated in studies by"
+  ##       - investigative
+  ##       - patented
+  ##       - discontinued in preregistration
+  ##       - preregistration
+  ##       - withdrawn from market
+  ##     - "in preclinical trials for/tested by preclinical trials of"
+  ##       - preclinical
+  ##     - everything else (31 terms): "in clinical trials for/tested by clinical trials of"
+  ##       'phase 2', 'phase 1', 'terminated', 'phase 3', 'discontinued in phase 2', 
+  ##       'phase 1/2', 'discontinued in phase 1', 'discontinued in phase 3', 'phase 2/3', 'clinical trial', 
+  ##       'phase 3 trial', 'discontinued in phase1/2', 'phase 2 trial', 'phase 2/3 trial', 'phase 2a',
+  ##       'phase 1 trial', 'phase 0', 'registered', 'phase 1b', 'phase 2b',
+  ##       'discontinued in phase2/3', 'phase 1/2 trial', 'phase 1/2a', 'discontinued in phase 1 trial', 'discontinued in phase 4',
+  ##       'phase 1b/2a', 'application submitted', 'approval submitted', 'BLA submitted', 'discontinued in phase 2a', 
+  ##       'discontinued in phase 2b'
   ##   - subject.bioclass. TODO: list the values (if too many, make a notes, need to make keys that are certain vocabularies)
   ##   - subject.target_type. TODO: list the values (if too many, makes notes)
   #    chebi_treats_mondo:
@@ -631,7 +668,7 @@ components:
   #            object.name,
   #            subject.name
   #          size: 1000
-  #        predicate: treats
+  #        predicate: studied_to_treat
   #        source: "infores:ttd"
   #        knowledge_level: knowledge_assertion
   #        agent_type: manual_agent
@@ -662,7 +699,7 @@ components:
   #            subject.name,
   #            object.name
   #          size: 1000
-  #        predicate: treated_by
+  #        predicate: treated_in_studies_by
   #        source: "infores:ttd"
   #        knowledge_level: knowledge_assertion
   #        agent_type: manual_agent
@@ -698,7 +735,7 @@ components:
   #            object.name,
   #            subject.name
   #          size: 1000
-  #        predicate: treats
+  #        predicate: studied_to_treat
   #        source: "infores:ttd"
   #        knowledge_level: knowledge_assertion
   #        agent_type: manual_agent
@@ -731,7 +768,7 @@ components:
   #            subject.name,
   #            object.name
   #          size: 1000
-  #        predicate: treated_by
+  #        predicate: treated_in_studies_by
   #        source: "infores:ttd"
   #        knowledge_level: knowledge_assertion
   #        agent_type: manual_agent
@@ -741,8 +778,8 @@ components:
   #          - qInput: "ICD11:CB03.4"                  ## Pulmonary fibrosis
   #            oneOutput: "CHEBI:144367"               ## 3PO
     pubchem_treats_mondo:
-    ##  https://biothings.transltr.io/ttd/query?q=_exists_:subject.pubchem_compound%20AND%20_exists_:object.mondo%20AND%20association.predicate:%22biolink:treats%22
-    ##  1604 records
+    ##  https://biothings.ncats.io/ttd/query?q=_exists_:subject.pubchem_compound%20AND%20_exists_:object.mondo%20AND%20association.predicate:%22biolink:treats%22%20AND%20(association.clinical_trial.status:approved%20OR%20association.clinical_trial.status:%22phase%204%22%20OR%20association.clinical_trial.status:%22approved%20(orphan%20drug)%22%20OR%20association.clinical_trial.status:%22NDA%20filed%22)
+    ##  384 records
       - supportBatch: true
         useTemplating: true ## flag to say templating is being used below
         inputs:
@@ -763,7 +800,10 @@ components:
             object.name,
             subject.name
           size: 1000
-          filter: _exists_:subject.pubchem_compound AND _exists_:object.mondo AND association.predicate:"biolink:treats"
+          filter: >-
+            _exists_:subject.pubchem_compound AND _exists_:object.mondo AND association.predicate:"biolink:treats" AND 
+            (association.clinical_trial.status:approved OR association.clinical_trial.status:"phase 4" OR 
+            association.clinical_trial.status:"approved (orphan drug)" OR association.clinical_trial.status:"NDA filed")
         predicate: treats
         source: "infores:ttd"
         knowledge_level: knowledge_assertion
@@ -771,8 +811,8 @@ components:
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/mondo-object"
         testExamples:
-          - qInput: "PUBCHEM.COMPOUND:118063735"       ## LMB763 (Nidufexor)
-            oneOutput: "MONDO:0004790"                 ## fatty liver disease
+          - qInput: "PUBCHEM.COMPOUND:126565"       ## Lestaurtinib
+            oneOutput: "MONDO:0004643"              ## Acute myeloid leukaemia / myeloid leukemia
     pubchem_treats_mondo-rev:
       - supportBatch: true
         useTemplating: true
@@ -792,7 +832,10 @@ components:
             subject.name,
             object.name
           size: 1000
-          filter: _exists_:subject.pubchem_compound AND _exists_:object.mondo AND association.predicate:"biolink:treats"
+          filter: >-
+            _exists_:subject.pubchem_compound AND _exists_:object.mondo AND association.predicate:"biolink:treats" AND 
+            (association.clinical_trial.status:approved OR association.clinical_trial.status:"phase 4" OR 
+            association.clinical_trial.status:"approved (orphan drug)" OR association.clinical_trial.status:"NDA filed")
         predicate: treated_by
         source: "infores:ttd"
         knowledge_level: knowledge_assertion
@@ -800,11 +843,221 @@ components:
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/pubchem-subject"
         testExamples:
-          - qInput: "MONDO:0021094"                      ## Human immunodeficiency virus infection / immunodeficiency disease??
-            oneOutput: "PUBCHEM.COMPOUND:103596027"      ## GS-1156 (8-(3-Chloro-5-(trifluoromethyl)pyridin-2-yl)-8-azabicyclo[3.2.1]octan-3-one)
+          - qInput: "MONDO:0005083"                    ## Psoriasis vulgaris / psoriasis
+            oneOutput: "PUBCHEM.COMPOUND:9832804"      ## LEO 80185 / Enstilar
+    pubchem_studiedToTreat_mondo:
+    ##  https://biothings.ncats.io/ttd/query?q=_exists_:subject.pubchem_compound%20AND%20_exists_:object.mondo%20AND%20association.predicate:%22biolink:treats%22%20AND%20(association.clinical_trial.status:investigative%20OR%20association.clinical_trial.status:patented%20OR%20association.clinical_trial.status:%22discontinued%20in%20preregistration%22%20OR%20association.clinical_trial.status:preregistration%20OR%20association.clinical_trial.status:%22withdrawn%20from%20market%22)
+    ##  155 records
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: "PUBCHEM.COMPOUND"
+            semantic: SmallMolecule
+        requestBody: ## no prefix
+          body: 
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: subject.pubchem_compound
+        outputs:
+          - id: MONDO
+            semantic: Disease
+        parameters:
+        ## not including these fields due to data-processing / biolink-modeling issues
+        ## - association.clinical_trial.status
+          fields: >-
+            object.mondo,
+            object.name,
+            subject.name
+          size: 1000
+          filter: >-
+            _exists_:subject.pubchem_compound AND _exists_:object.mondo AND association.predicate:"biolink:treats" AND 
+            (association.clinical_trial.status:investigative OR association.clinical_trial.status:patented OR 
+            association.clinical_trial.status:"discontinued in preregistration" OR association.clinical_trial.status:preregistration OR 
+            association.clinical_trial.status:"withdrawn from market")
+        predicate: studied_to_treat
+        source: "infores:ttd"
+        knowledge_level: knowledge_assertion
+        agent_type: manual_agent
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/mondo-object"
+        testExamples:
+          - qInput: "PUBCHEM.COMPOUND:33625"       ## INDORAMIN
+            oneOutput: "MONDO:0001134"             ## Hypertension / essential hypertension
+    pubchem_studiedToTreat_mondo-rev:
+      - supportBatch: true
+        useTemplating: true
+        inputs:
+          - id: MONDO
+            semantic: Disease
+        requestBody: ## no prefix
+          body: 
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: object.mondo
+        outputs:
+          - id: "PUBCHEM.COMPOUND"
+            semantic: SmallMolecule
+        parameters:
+          fields: >-
+            subject.pubchem_compound,
+            subject.name,
+            object.name
+          size: 1000
+          filter: >-
+            _exists_:subject.pubchem_compound AND _exists_:object.mondo AND association.predicate:"biolink:treats" AND 
+            (association.clinical_trial.status:investigative OR association.clinical_trial.status:patented OR 
+            association.clinical_trial.status:"discontinued in preregistration" OR association.clinical_trial.status:preregistration OR 
+            association.clinical_trial.status:"withdrawn from market")
+        predicate: treated_in_studies_by
+        source: "infores:ttd"
+        knowledge_level: knowledge_assertion
+        agent_type: manual_agent
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/pubchem-subject"
+        testExamples:
+          - qInput: "MONDO:0008315"                   ## Prostate cancer
+            oneOutput: "PUBCHEM.COMPOUND:159594"      ## Atrasentan
+    pubchem_preclinicalTreats_mondo:
+    ##  https://biothings.ncats.io/ttd/query?q=_exists_:subject.pubchem_compound%20AND%20_exists_:object.mondo%20AND%20association.predicate:%22biolink:treats%22%20AND%20association.clinical_trial.status:preclinical
+    ##  14 records
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: "PUBCHEM.COMPOUND"
+            semantic: SmallMolecule
+        requestBody: ## no prefix
+          body: 
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: subject.pubchem_compound
+        outputs:
+          - id: MONDO
+            semantic: Disease
+        parameters:
+        ## not including these fields due to data-processing / biolink-modeling issues
+        ## - association.clinical_trial.status
+          fields: >-
+            object.mondo,
+            object.name,
+            subject.name
+          size: 1000
+          filter: >-
+            _exists_:subject.pubchem_compound AND _exists_:object.mondo AND association.predicate:"biolink:treats" AND 
+            association.clinical_trial.status:preclinical
+        predicate: in_preclinical_trials_for
+        source: "infores:ttd"
+        knowledge_level: knowledge_assertion
+        agent_type: manual_agent
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/mondo-object"
+        testExamples:
+          - qInput: "PUBCHEM.COMPOUND:15389743"       ## S32504 / (+/-)-trans-3,4,4a,5,6,10b-Hexahydro-9-carbamoyl-4-propyl-2h-naphth[1,2-b]-1,4-oxazine
+            oneOutput: "MONDO:0005180"                ## Parkinson disease
+    pubchem_preclinicalTreats_mondo-rev:
+      - supportBatch: true
+        useTemplating: true
+        inputs:
+          - id: MONDO
+            semantic: Disease
+        requestBody: ## no prefix
+          body: 
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: object.mondo
+        outputs:
+          - id: "PUBCHEM.COMPOUND"
+            semantic: SmallMolecule
+        parameters:
+          fields: >-
+            subject.pubchem_compound,
+            subject.name,
+            object.name
+          size: 1000
+          filter: >-
+            _exists_:subject.pubchem_compound AND _exists_:object.mondo AND association.predicate:"biolink:treats" AND 
+            association.clinical_trial.status:preclinical
+        predicate: tested_by_preclinical_trials_of
+        source: "infores:ttd"
+        knowledge_level: knowledge_assertion
+        agent_type: manual_agent
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/pubchem-subject"
+        testExamples:
+          - qInput: "MONDO:0021094"                     ## Human immunodeficiency virus infection / immunodeficiency disease?
+            oneOutput: "PUBCHEM.COMPOUND:463893"        ## PD-176931
+    pubchem_clinicalTrialTreats_mondo:
+    ##  https://biothings.ncats.io/ttd/query?q=_exists_:subject.pubchem_compound%20AND%20_exists_:object.mondo%20AND%20association.predicate:%22biolink:treats%22%20AND%20NOT%20(association.clinical_trial.status:approved%20OR%20association.clinical_trial.status:%22phase%204%22%20OR%20association.clinical_trial.status:%22approved%20(orphan%20drug)%22%20OR%20association.clinical_trial.status:%22NDA%20filed%22%20OR%20association.clinical_trial.status:investigative%20OR%20association.clinical_trial.status:patented%20OR%20association.clinical_trial.status:%22discontinued%20in%20preregistration%22%20OR%20association.clinical_trial.status:preregistration%20OR%20association.clinical_trial.status:%22withdrawn%20from%20market%22%20OR%20association.clinical_trial.status:preclinical)
+    ##  1051 records
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: "PUBCHEM.COMPOUND"
+            semantic: SmallMolecule
+        requestBody: ## no prefix
+          body: 
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: subject.pubchem_compound
+        outputs:
+          - id: MONDO
+            semantic: Disease
+        parameters:
+        ## not including these fields due to data-processing / biolink-modeling issues
+        ## - association.clinical_trial.status
+          fields: >-
+            object.mondo,
+            object.name,
+            subject.name
+          size: 1000
+          filter: >-
+            _exists_:subject.pubchem_compound AND _exists_:object.mondo AND association.predicate:"biolink:treats" AND NOT 
+            (association.clinical_trial.status:approved OR association.clinical_trial.status:"phase 4" OR 
+            association.clinical_trial.status:"approved (orphan drug)" OR association.clinical_trial.status:"NDA filed" OR 
+            association.clinical_trial.status:investigative OR association.clinical_trial.status:patented OR 
+            association.clinical_trial.status:"discontinued in preregistration" OR association.clinical_trial.status:preregistration OR 
+            association.clinical_trial.status:"withdrawn from market" OR association.clinical_trial.status:preclinical)
+        predicate: in_clinical_trials_for
+        source: "infores:ttd"
+        knowledge_level: knowledge_assertion
+        agent_type: manual_agent
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/mondo-object"
+        testExamples:
+          - qInput: "PUBCHEM.COMPOUND:133046"      ## PROXODOLOL
+            oneOutput: "MONDO:0005041"             ## Glaucoma/ocular hypertension
+    pubchem_clinicalTrialTreats_mondo-rev:
+      - supportBatch: true
+        useTemplating: true
+        inputs:
+          - id: MONDO
+            semantic: Disease
+        requestBody: ## no prefix
+          body: 
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: object.mondo
+        outputs:
+          - id: "PUBCHEM.COMPOUND"
+            semantic: SmallMolecule
+        parameters:
+          fields: >-
+            subject.pubchem_compound,
+            subject.name,
+            object.name
+          size: 1000
+          filter: >-
+            _exists_:subject.pubchem_compound AND _exists_:object.mondo AND association.predicate:"biolink:treats" AND NOT 
+            (association.clinical_trial.status:approved OR association.clinical_trial.status:"phase 4" OR 
+            association.clinical_trial.status:"approved (orphan drug)" OR association.clinical_trial.status:"NDA filed" OR 
+            association.clinical_trial.status:investigative OR association.clinical_trial.status:patented OR 
+            association.clinical_trial.status:"discontinued in preregistration" OR association.clinical_trial.status:preregistration OR 
+            association.clinical_trial.status:"withdrawn from market" OR association.clinical_trial.status:preclinical)
+        predicate: tested_by_clinical_trials_of
+        source: "infores:ttd"
+        knowledge_level: knowledge_assertion
+        agent_type: manual_agent
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/pubchem-subject"
+        testExamples:
+          - qInput: "MONDO:0019056"                      ## Myasthenia gravis / neuromuscular disease
+            oneOutput: "PUBCHEM.COMPOUND:133083018"      ## RA101495 / Zilucoplan
     pubchem_treats_icd11:
-    ##   url: https://biothings.transltr.io/ttd/query?q=_exists_:subject.pubchem_compound%20AND%20_exists_:object.icd11%20AND%20(NOT%20_exists_:object.mondo)%20AND%20association.predicate:%22biolink:treats%22
-    ##   9985 records
+    ##   url: https://biothings.transltr.io/ttd/query?q=_exists_:subject.pubchem_compound%20AND%20_exists_:object.icd11%20AND%20(NOT%20_exists_:object.mondo)%20AND%20association.predicate:%22biolink:treats%22%20AND%20(association.clinical_trial.status:approved%20OR%20association.clinical_trial.status:%22phase%204%22%20OR%20association.clinical_trial.status:%22approved%20(orphan%20drug)%22%20OR%20association.clinical_trial.status:%22NDA%20filed%22)
+    ##   2328 records
     ## exists: subject.pubchem_compound, association.predicate.biolink:treats, object.icd11
     ## not exists: object.mondo
       - supportBatch: true
@@ -827,7 +1080,11 @@ components:
             object.name,
             subject.name
           size: 1000
-          filter: _exists_:subject.pubchem_compound AND _exists_:object.icd11 AND (NOT _exists_:object.mondo) AND association.predicate:"biolink:treats"
+          filter: >-
+            _exists_:subject.pubchem_compound AND _exists_:object.icd11 AND 
+            (NOT _exists_:object.mondo) AND association.predicate:"biolink:treats" AND 
+            (association.clinical_trial.status:approved OR association.clinical_trial.status:"phase 4" OR 
+            association.clinical_trial.status:"approved (orphan drug)" OR association.clinical_trial.status:"NDA filed")
         predicate: treats
         source: "infores:ttd"
         knowledge_level: knowledge_assertion
@@ -835,8 +1092,8 @@ components:
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/icd11-object"
         testExamples:
-          - qInput: "PUBCHEM.COMPOUND:126843189"       ## AVN-101 (AVN-101 HCl)
-            oneOutput: "ICD11:6D71"                    ## Cognitive impairment
+          - qInput: "PUBCHEM.COMPOUND:11988953"       ## TS-071 / Luseogliflozin
+            oneOutput: "ICD11:5A11"                   ## Type-2 diabetes
     pubchem_treats_icd11-rev:
       - supportBatch: true
         useTemplating: true
@@ -856,7 +1113,11 @@ components:
             subject.name,
             object.name
           size: 1000
-          filter: _exists_:subject.pubchem_compound AND _exists_:object.icd11 AND (NOT _exists_:object.mondo) AND association.predicate:"biolink:treats"
+          filter: >-
+            _exists_:subject.pubchem_compound AND _exists_:object.icd11 AND 
+            (NOT _exists_:object.mondo) AND association.predicate:"biolink:treats" AND 
+            (association.clinical_trial.status:approved OR association.clinical_trial.status:"phase 4" OR 
+            association.clinical_trial.status:"approved (orphan drug)" OR association.clinical_trial.status:"NDA filed")
         predicate: treated_by
         source: "infores:ttd"
         knowledge_level: knowledge_assertion
@@ -864,11 +1125,233 @@ components:
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/pubchem-subject"
         testExamples:
-          - qInput: "ICD11:MG51"                         ## Multidrug resistant infection
-            oneOutput: "PUBCHEM.COMPOUND:139600308"      ## SPR206
+          - qInput: "ICD11:FB83.0"                      ## Osteoporosis
+            oneOutput: "PUBCHEM.COMPOUND:23663991"      ## CT-064 / Ibandronate sodium
+    pubchem_studiedToTreat_icd11:
+    ##   url: https://biothings.transltr.io/ttd/query?q=_exists_:subject.pubchem_compound%20AND%20_exists_:object.icd11%20AND%20(NOT%20_exists_:object.mondo)%20AND%20association.predicate:%22biolink:treats%22%20AND%20(association.clinical_trial.status:investigative%20OR%20association.clinical_trial.status:patented%20OR%20association.clinical_trial.status:%22discontinued%20in%20preregistration%22%20OR%20association.clinical_trial.status:preregistration%20OR%20association.clinical_trial.status:%22withdrawn%20from%20market%22)
+    ##   2005 records
+    ## exists: subject.pubchem_compound, association.predicate.biolink:treats, object.icd11
+    ## not exists: object.mondo
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: "PUBCHEM.COMPOUND"
+            semantic: SmallMolecule
+        requestBody: ## no prefix
+          body: 
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: subject.pubchem_compound
+        outputs:
+          - id: ICD11
+            semantic: Disease
+        parameters:
+        ## not including these fields due to data-processing / biolink-modeling issues
+        ## - association.clinical_trial.status
+          fields: >-
+            object.icd11,
+            object.name,
+            subject.name
+          size: 1000
+          filter: >-
+            _exists_:subject.pubchem_compound AND _exists_:object.icd11 AND 
+            (NOT _exists_:object.mondo) AND association.predicate:"biolink:treats" AND 
+            (association.clinical_trial.status:investigative OR association.clinical_trial.status:patented OR 
+            association.clinical_trial.status:"discontinued in preregistration" OR association.clinical_trial.status:preregistration OR 
+            association.clinical_trial.status:"withdrawn from market")
+        predicate: studied_to_treat
+        source: "infores:ttd"
+        knowledge_level: knowledge_assertion
+        agent_type: manual_agent
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/icd11-object"
+        testExamples:
+          - qInput: "PUBCHEM.COMPOUND:65869"       ## Ebrotidine
+            oneOutput: "ICD11:DA63"                ## Duodenal ulcer
+    pubchem_studiedToTreat_icd11-rev:
+      - supportBatch: true
+        useTemplating: true
+        inputs:
+          - id: ICD11
+            semantic: Disease
+        requestBody: ## no prefix
+          body: 
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: object.icd11
+        outputs:
+          - id: "PUBCHEM.COMPOUND"
+            semantic: SmallMolecule
+        parameters:
+          fields: >-
+            subject.pubchem_compound,
+            subject.name,
+            object.name
+          size: 1000
+          filter: >-
+            _exists_:subject.pubchem_compound AND _exists_:object.icd11 AND 
+            (NOT _exists_:object.mondo) AND association.predicate:"biolink:treats" AND 
+            (association.clinical_trial.status:investigative OR association.clinical_trial.status:patented OR 
+            association.clinical_trial.status:"discontinued in preregistration" OR association.clinical_trial.status:preregistration OR 
+            association.clinical_trial.status:"withdrawn from market")
+        predicate: treated_in_studies_by
+        source: "infores:ttd"
+        knowledge_level: knowledge_assertion
+        agent_type: manual_agent
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/pubchem-subject"
+        testExamples:
+          - qInput: "ICD11:MD90"                      ## Chemotherapy-induced nausea
+            oneOutput: "PUBCHEM.COMPOUND:9917021"     ## Casopitant
+    pubchem_preclinicalTreats_icd11:
+    ##   url: https://biothings.transltr.io/ttd/query?q=_exists_:subject.pubchem_compound%20AND%20_exists_:object.icd11%20AND%20(NOT%20_exists_:object.mondo)%20AND%20association.predicate:%22biolink:treats%22%20AND%20association.clinical_trial.status:preclinical
+    ##   236 records
+    ## exists: subject.pubchem_compound, association.predicate.biolink:treats, object.icd11
+    ## not exists: object.mondo
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: "PUBCHEM.COMPOUND"
+            semantic: SmallMolecule
+        requestBody: ## no prefix
+          body: 
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: subject.pubchem_compound
+        outputs:
+          - id: ICD11
+            semantic: Disease
+        parameters:
+        ## not including these fields due to data-processing / biolink-modeling issues
+        ## - association.clinical_trial.status
+          fields: >-
+            object.icd11,
+            object.name,
+            subject.name
+          size: 1000
+          filter: >-
+            _exists_:subject.pubchem_compound AND _exists_:object.icd11 AND 
+            (NOT _exists_:object.mondo) AND association.predicate:"biolink:treats" AND
+            association.clinical_trial.status:preclinical
+        predicate: in_preclinical_trials_for
+        source: "infores:ttd"
+        knowledge_level: knowledge_assertion
+        agent_type: manual_agent
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/icd11-object"
+        testExamples:
+          - qInput: "PUBCHEM.COMPOUND:133107"       ## U-99363E / 3-Ethoxy-N-methyl-N-(1-(phenylmethyl)-4-piperidinyl)-2-pyridinylamine
+            oneOutput: "ICD11:6A20"                 ## Schizophrenia
+    pubchem_preclinicalTreats_icd11-rev:
+      - supportBatch: true
+        useTemplating: true
+        inputs:
+          - id: ICD11
+            semantic: Disease
+        requestBody: ## no prefix
+          body: 
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: object.icd11
+        outputs:
+          - id: "PUBCHEM.COMPOUND"
+            semantic: SmallMolecule
+        parameters:
+          fields: >-
+            subject.pubchem_compound,
+            subject.name,
+            object.name
+          size: 1000
+          filter: >-
+            _exists_:subject.pubchem_compound AND _exists_:object.icd11 AND 
+            (NOT _exists_:object.mondo) AND association.predicate:"biolink:treats" AND 
+            association.clinical_trial.status:preclinical
+        predicate: tested_by_preclinical_trials_of
+        source: "infores:ttd"
+        knowledge_level: knowledge_assertion
+        agent_type: manual_agent
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/pubchem-subject"
+        testExamples:
+          - qInput: "ICD11:FA20"                         ## Rheumatoid arthritis
+            oneOutput: "PUBCHEM.COMPOUND:132504749"      ## CLIK-181 / (2R,3S)-3-N-[2-(4-acetamidophenyl)ethyl]-2-N-[(2S)-1-(dimethylamino)-1-oxo-3-phenylpropan-2-yl]oxirane-2,3-dicarboxamide
+    pubchem_clinicalTrialTreats_icd11:
+    ##   url: https://biothings.transltr.io/ttd/query?q=_exists_:subject.pubchem_compound%20AND%20_exists_:object.icd11%20AND%20(NOT%20_exists_:object.mondo)%20AND%20association.predicate:%22biolink:treats%22%20AND%20NOT%20(association.clinical_trial.status:approved%20OR%20association.clinical_trial.status:%22phase%204%22%20OR%20association.clinical_trial.status:%22approved%20(orphan%20drug)%22%20OR%20association.clinical_trial.status:%22NDA%20filed%22%20OR%20association.clinical_trial.status:investigative%20OR%20association.clinical_trial.status:patented%20OR%20association.clinical_trial.status:%22discontinued%20in%20preregistration%22%20OR%20association.clinical_trial.status:preregistration%20OR%20association.clinical_trial.status:%22withdrawn%20from%20market%22%20OR%20association.clinical_trial.status:preclinical)
+    ##   5419 records
+    ## exists: subject.pubchem_compound, association.predicate.biolink:treats, object.icd11
+    ## not exists: object.mondo
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: "PUBCHEM.COMPOUND"
+            semantic: SmallMolecule
+        requestBody: ## no prefix
+          body: 
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: subject.pubchem_compound
+        outputs:
+          - id: ICD11
+            semantic: Disease
+        parameters:
+        ## not including these fields due to data-processing / biolink-modeling issues
+        ## - association.clinical_trial.status
+          fields: >-
+            object.icd11,
+            object.name,
+            subject.name
+          size: 1000
+          filter: >-
+            _exists_:subject.pubchem_compound AND _exists_:object.icd11 
+            AND (NOT _exists_:object.mondo) AND association.predicate:"biolink:treats" AND NOT 
+            (association.clinical_trial.status:approved OR association.clinical_trial.status:"phase 4" OR 
+            association.clinical_trial.status:"approved (orphan drug)" OR association.clinical_trial.status:"NDA filed" OR 
+            association.clinical_trial.status:investigative OR association.clinical_trial.status:patented OR 
+            association.clinical_trial.status:"discontinued in preregistration" OR association.clinical_trial.status:preregistration OR 
+            association.clinical_trial.status:"withdrawn from market" OR association.clinical_trial.status:preclinical)
+        predicate: in_clinical_trials_for
+        source: "infores:ttd"
+        knowledge_level: knowledge_assertion
+        agent_type: manual_agent
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/icd11-object"
+        testExamples:
+          - qInput: "PUBCHEM.COMPOUND:127912"       ## 1192U90 / 2-Amino-N-(4-(4-(1,2-benzisothiazol-3-yl)-1-piperazinyl)butyl)benzamide
+            oneOutput: "ICD11:6A20"                 ## Schizophrenia
+    pubchem_clinicalTrialTreats_icd11-rev:
+      - supportBatch: true
+        useTemplating: true
+        inputs:
+          - id: ICD11
+            semantic: Disease
+        requestBody: ## no prefix
+          body: 
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: object.icd11
+        outputs:
+          - id: "PUBCHEM.COMPOUND"
+            semantic: SmallMolecule
+        parameters:
+          fields: >-
+            subject.pubchem_compound,
+            subject.name,
+            object.name
+          size: 1000
+          filter: >-
+            _exists_:subject.pubchem_compound AND _exists_:object.icd11 
+            AND (NOT _exists_:object.mondo) AND association.predicate:"biolink:treats" AND NOT 
+            (association.clinical_trial.status:approved OR association.clinical_trial.status:"phase 4" OR 
+            association.clinical_trial.status:"approved (orphan drug)" OR association.clinical_trial.status:"NDA filed" OR 
+            association.clinical_trial.status:investigative OR association.clinical_trial.status:patented OR 
+            association.clinical_trial.status:"discontinued in preregistration" OR association.clinical_trial.status:preregistration OR 
+            association.clinical_trial.status:"withdrawn from market" OR association.clinical_trial.status:preclinical)
+        predicate: tested_by_clinical_trials_of
+        source: "infores:ttd"
+        knowledge_level: knowledge_assertion
+        agent_type: manual_agent
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/pubchem-subject"
+        testExamples:
+          - qInput: "ICD11:2A37"                         ## Myelodysplastic syndrome
+            oneOutput: "PUBCHEM.COMPOUND:126637809"      ## JNJ-64619178 / Onametostat
     ttd_drug_id_treats_mondo:
-      ## url: https://biothings.transltr.io/ttd/query?q=_exists_:subject.ttd_drug_id%20AND%20(NOT%20_exists_:subject.pubchem_compound)%20AND%20_exists_:object.mondo%20AND%20association.predicate:%22biolink:treats%22
-      ## 2240 records
+      ## url: https://biothings.transltr.io/ttd/query?q=_exists_:subject.ttd_drug_id%20AND%20(NOT%20_exists_:subject.pubchem_compound)%20AND%20_exists_:object.mondo%20AND%20association.predicate:%22biolink:treats%22%20AND%20(association.clinical_trial.status:approved%20OR%20association.clinical_trial.status:%22phase%204%22%20OR%20association.clinical_trial.status:%22approved%20(orphan%20drug)%22%20OR%20association.clinical_trial.status:%22NDA%20filed%22)
+      ## 100 records
       ## exists: subject.ttd_drug_id, association.predicate.biolink:treats, object.mondo
       ## not exists: subject.pubchem_compound
       - supportBatch: true
@@ -891,7 +1374,11 @@ components:
             object.name,
             subject.name
           size: 1000
-          filter: _exists_:subject.ttd_drug_id AND (NOT _exists_:subject.pubchem_compound) AND _exists_:object.mondo AND association.predicate:"biolink:treats"
+          filter: >-
+            _exists_:subject.ttd_drug_id AND (NOT _exists_:subject.pubchem_compound) AND 
+            _exists_:object.mondo AND association.predicate:"biolink:treats" AND 
+            (association.clinical_trial.status:approved OR association.clinical_trial.status:"phase 4" OR 
+            association.clinical_trial.status:"approved (orphan drug)" OR association.clinical_trial.status:"NDA filed")
         predicate: treats
         source: "infores:ttd"
         knowledge_level: knowledge_assertion
@@ -899,8 +1386,8 @@ components:
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/mondo-object"
         testExamples:
-          - qInput: "TTD.DRUG:DZJ3D5"                       ## PF-07220060
-            oneOutput: "MONDO:0008315"                      ## Prostate cancer
+          - qInput: "TTD.DRUG:D09RJA"                       ## RELVARTM or BREOTM ELLIPTATM
+            oneOutput: "MONDO:0004979"                      ## Asthma
     ttd_drug_id_treats_mondo-rev:
       - supportBatch: true
         useTemplating: true
@@ -920,7 +1407,11 @@ components:
             subject.name,
             object.name
           size: 1000
-          filter: _exists_:subject.ttd_drug_id AND (NOT _exists_:subject.pubchem_compound) AND _exists_:object.mondo AND association.predicate:"biolink:treats"
+          filter: >-
+            _exists_:subject.ttd_drug_id AND (NOT _exists_:subject.pubchem_compound) AND 
+            _exists_:object.mondo AND association.predicate:"biolink:treats" AND 
+            (association.clinical_trial.status:approved OR association.clinical_trial.status:"phase 4" OR 
+            association.clinical_trial.status:"approved (orphan drug)" OR association.clinical_trial.status:"NDA filed")
         predicate: treated_by
         source: "infores:ttd"
         knowledge_level: knowledge_assertion
@@ -928,11 +1419,389 @@ components:
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/ttd_drug_id-subject"
         testExamples:
-          - qInput: "MONDO:0019056"                       ## Myasthenia gravis / neuromuscular disease??
-            oneOutput: "TTD.DRUG:DZA98D"                  ## ARGX-113
+          - qInput: "MONDO:0005180"                       ## Parkinson disease
+            oneOutput: "TTD.DRUG:D06GYJ"                  ## PD-01
+    ttd_drug_id_studiedToTreat_mondo:
+      ## url: https://biothings.transltr.io/ttd/query?q=_exists_:subject.ttd_drug_id%20AND%20(NOT%20_exists_:subject.pubchem_compound)%20AND%20_exists_:object.mondo%20AND%20association.predicate:%22biolink:treats%22%20AND%20(association.clinical_trial.status:investigative%20OR%20association.clinical_trial.status:patented%20OR%20association.clinical_trial.status:%22discontinued%20in%20preregistration%22%20OR%20association.clinical_trial.status:preregistration%20OR%20association.clinical_trial.status:%22withdrawn%20from%20market%22)
+      ## 601 records
+      ## exists: subject.ttd_drug_id, association.predicate.biolink:treats, object.mondo
+      ## not exists: subject.pubchem_compound
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: "TTD.DRUG"
+            semantic: SmallMolecule
+        requestBody: ## no prefix
+          body: 
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: subject.ttd_drug_id
+        outputs:
+          - id: MONDO
+            semantic: Disease
+        parameters:
+          ## not including these fields due to data-processing / biolink-modeling issues
+          ## - association.clinical_trial.status
+          fields: >-
+            object.mondo,
+            object.name,
+            subject.name
+          size: 1000
+          filter: >-
+            _exists_:subject.ttd_drug_id AND (NOT _exists_:subject.pubchem_compound) AND 
+            _exists_:object.mondo AND association.predicate:"biolink:treats" AND 
+            (association.clinical_trial.status:investigative OR association.clinical_trial.status:patented OR 
+            association.clinical_trial.status:"discontinued in preregistration" OR association.clinical_trial.status:preregistration OR 
+            association.clinical_trial.status:"withdrawn from market")
+        predicate: studied_to_treat
+        source: "infores:ttd"
+        knowledge_level: knowledge_assertion
+        agent_type: manual_agent
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/mondo-object"
+        testExamples:
+          - qInput: "TTD.DRUG:D03UFM"                       ## BMS-200980
+            oneOutput: "MONDO:0004781"                      ## Myocardial infarction / acute myocardial infarction
+    ttd_drug_id_studiedToTreat_mondo-rev:
+      - supportBatch: true
+        useTemplating: true
+        inputs:
+          - id: MONDO
+            semantic: Disease
+        requestBody: ## no prefix
+          body: 
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: object.mondo
+        outputs:
+          - id: "TTD.DRUG"
+            semantic: SmallMolecule
+        parameters:
+          fields: >-
+            subject.ttd_drug_id,
+            subject.name,
+            object.name
+          size: 1000
+          filter: >-
+            _exists_:subject.ttd_drug_id AND (NOT _exists_:subject.pubchem_compound) AND 
+            _exists_:object.mondo AND association.predicate:"biolink:treats" AND 
+            (association.clinical_trial.status:investigative OR association.clinical_trial.status:patented OR 
+            association.clinical_trial.status:"discontinued in preregistration" OR association.clinical_trial.status:preregistration OR 
+            association.clinical_trial.status:"withdrawn from market")
+        predicate: treated_in_studies_by
+        source: "infores:ttd"
+        knowledge_level: knowledge_assertion
+        agent_type: manual_agent
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/ttd_drug_id-subject"
+        testExamples:
+          - qInput: "MONDO:0005012"                       ## Melanoma / cutaneous melanoma
+            oneOutput: "TTD.DRUG:D01FWR"                  ## MPL-containing Pollinex allergy desensitization vaccine
+    ttd_drug_id_preclinicalTreats_mondo:
+      ## url: https://biothings.transltr.io/ttd/query?q=_exists_:subject.ttd_drug_id%20AND%20(NOT%20_exists_:subject.pubchem_compound)%20AND%20_exists_:object.mondo%20AND%20association.predicate:%22biolink:treats%22%20AND%20association.clinical_trial.status:preclinical
+      ## 37 records
+      ## exists: subject.ttd_drug_id, association.predicate.biolink:treats, object.mondo
+      ## not exists: subject.pubchem_compound
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: "TTD.DRUG"
+            semantic: SmallMolecule
+        requestBody: ## no prefix
+          body: 
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: subject.ttd_drug_id
+        outputs:
+          - id: MONDO
+            semantic: Disease
+        parameters:
+          ## not including these fields due to data-processing / biolink-modeling issues
+          ## - association.clinical_trial.status
+          fields: >-
+            object.mondo,
+            object.name,
+            subject.name
+          size: 1000
+          filter: >-
+            _exists_:subject.ttd_drug_id AND (NOT _exists_:subject.pubchem_compound) AND 
+            _exists_:object.mondo AND association.predicate:"biolink:treats" AND 
+            association.clinical_trial.status:preclinical
+        predicate: in_preclinical_trials_for
+        source: "infores:ttd"
+        knowledge_level: knowledge_assertion
+        agent_type: manual_agent
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/mondo-object"
+        testExamples:
+          - qInput: "TTD.DRUG:D03JZD"                       ## Neurosolve
+            oneOutput: "MONDO:0005041"                      ## Glaucoma/ocular hypertension
+    ttd_drug_id_preclinicalTreats_mondo-rev:
+      - supportBatch: true
+        useTemplating: true
+        inputs:
+          - id: MONDO
+            semantic: Disease
+        requestBody: ## no prefix
+          body: 
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: object.mondo
+        outputs:
+          - id: "TTD.DRUG"
+            semantic: SmallMolecule
+        parameters:
+          fields: >-
+            subject.ttd_drug_id,
+            subject.name,
+            object.name
+          size: 1000
+          filter: >-
+            _exists_:subject.ttd_drug_id AND (NOT _exists_:subject.pubchem_compound) AND 
+            _exists_:object.mondo AND association.predicate:"biolink:treats" AND 
+            association.clinical_trial.status:preclinical
+        predicate: tested_by_preclinical_trials_of
+        source: "infores:ttd"
+        knowledge_level: knowledge_assertion
+        agent_type: manual_agent
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/ttd_drug_id-subject"
+        testExamples:
+          - qInput: "MONDO:0021094"                       ## Human immunodeficiency virus infection / immunodeficiency disease?
+            oneOutput: "TTD.DRUG:D03RYN"                  ## Cytolin
+    ttd_drug_id_clinicalTrialTreats_mondo:
+      ## url: https://biothings.transltr.io/ttd/query?q=_exists_:subject.ttd_drug_id%20AND%20(NOT%20_exists_:subject.pubchem_compound)%20AND%20_exists_:object.mondo%20AND%20association.predicate:%22biolink:treats%22%20AND%20NOT%20(association.clinical_trial.status:approved%20OR%20association.clinical_trial.status:%22phase%204%22%20OR%20association.clinical_trial.status:%22approved%20(orphan%20drug)%22%20OR%20association.clinical_trial.status:%22NDA%20filed%22%20OR%20association.clinical_trial.status:investigative%20OR%20association.clinical_trial.status:patented%20OR%20association.clinical_trial.status:%22discontinued%20in%20preregistration%22%20OR%20association.clinical_trial.status:preregistration%20OR%20association.clinical_trial.status:%22withdrawn%20from%20market%22%20OR%20association.clinical_trial.status:preclinical)
+      ## 1502 records
+      ## exists: subject.ttd_drug_id, association.predicate.biolink:treats, object.mondo
+      ## not exists: subject.pubchem_compound
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: "TTD.DRUG"
+            semantic: SmallMolecule
+        requestBody: ## no prefix
+          body: 
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: subject.ttd_drug_id
+        outputs:
+          - id: MONDO
+            semantic: Disease
+        parameters:
+          ## not including these fields due to data-processing / biolink-modeling issues
+          ## - association.clinical_trial.status
+          fields: >-
+            object.mondo,
+            object.name,
+            subject.name
+          size: 1000
+          filter: >-
+            _exists_:subject.ttd_drug_id AND (NOT _exists_:subject.pubchem_compound) AND 
+            _exists_:object.mondo AND association.predicate:"biolink:treats" AND NOT 
+            (association.clinical_trial.status:approved OR association.clinical_trial.status:"phase 4" OR 
+            association.clinical_trial.status:"approved (orphan drug)" OR association.clinical_trial.status:"NDA filed" OR 
+            association.clinical_trial.status:investigative OR association.clinical_trial.status:patented OR 
+            association.clinical_trial.status:"discontinued in preregistration" OR association.clinical_trial.status:preregistration OR 
+            association.clinical_trial.status:"withdrawn from market" OR association.clinical_trial.status:preclinical)
+        predicate: in_clinical_trials_for
+        source: "infores:ttd"
+        knowledge_level: knowledge_assertion
+        agent_type: manual_agent
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/mondo-object"
+        testExamples:
+          - qInput: "TTD.DRUG:D02CFV"                       ## Solubilized type 1 native bovine collagen
+            oneOutput: "MONDO:0005100"                      ## Scleroderma / systemic sclerosis
+    ttd_drug_id_clinicalTrialTreats_mondo-rev:
+      - supportBatch: true
+        useTemplating: true
+        inputs:
+          - id: MONDO
+            semantic: Disease
+        requestBody: ## no prefix
+          body: 
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: object.mondo
+        outputs:
+          - id: "TTD.DRUG"
+            semantic: SmallMolecule
+        parameters:
+          fields: >-
+            subject.ttd_drug_id,
+            subject.name,
+            object.name
+          size: 1000
+          filter: >-
+            _exists_:subject.ttd_drug_id AND (NOT _exists_:subject.pubchem_compound) AND 
+            _exists_:object.mondo AND association.predicate:"biolink:treats" AND NOT 
+            (association.clinical_trial.status:approved OR association.clinical_trial.status:"phase 4" OR 
+            association.clinical_trial.status:"approved (orphan drug)" OR association.clinical_trial.status:"NDA filed" OR 
+            association.clinical_trial.status:investigative OR association.clinical_trial.status:patented OR 
+            association.clinical_trial.status:"discontinued in preregistration" OR association.clinical_trial.status:preregistration OR 
+            association.clinical_trial.status:"withdrawn from market" OR association.clinical_trial.status:preclinical)
+        predicate: tested_by_clinical_trials_of
+        source: "infores:ttd"
+        knowledge_level: knowledge_assertion
+        agent_type: manual_agent
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/ttd_drug_id-subject"
+        testExamples:
+          - qInput: "MONDO:0008315"                       ## Prostate cancer
+            oneOutput: "TTD.DRUG:D02DWX"                  ## Prostvac-VF
     ttd_drug_id_treats_icd11:
-      ## url: https://biothings.transltr.io/ttd/query?q=_exists_:subject.ttd_drug_id%20AND%20association.predicate:%22biolink:treats%22%20AND%20_exists_:object.icd11%20AND%20NOT%20_exists_:object.mondoAND%20NOT%20_exists_:subject.pubchem_compound
-      ## 16,956 records
+      ## url: https://biothings.transltr.io/ttd/query?q=_exists_:subject.ttd_drug_id%20AND%20association.predicate:%22biolink:treats%22%20AND%20_exists_:object.icd11%20AND%20NOT%20_exists_:object.mondo%20AND%20NOT%20_exists_:subject.pubchem_compound%20AND%20(association.clinical_trial.status:approved%20OR%20association.clinical_trial.status:%22phase%204%22%20OR%20association.clinical_trial.status:%22approved%20(orphan%20drug)%22%20OR%20association.clinical_trial.status:%22NDA%20filed%22)
+      ## 795 records
+      ## exists: subject.ttd_drug_id, association.predicate.biolink:treats, object.icd11
+      ## not exists: subject.pubchem_compound, object.mondo
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: "TTD.DRUG"
+            semantic: SmallMolecule
+        requestBody: ## no prefix
+          body: 
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: subject.ttd_drug_id
+        outputs:
+          - id: ICD11
+            semantic: Disease
+        parameters:
+          ## not including these fields due to data-processing / biolink-modeling issues
+          ## - association.clinical_trial.status
+          ## - object.mondo Not all object node has mondo
+          fields: >-
+            object.icd11,
+            object.name,
+            subject.name
+          size: 1000
+          filter: >-
+            _exists_:subject.ttd_drug_id AND (NOT _exists_:subject.pubchem_compound) AND 
+            _exists_:object.icd11 AND (NOT _exists_:object.mondo) AND 
+            association.predicate:"biolink:treats" AND 
+            (association.clinical_trial.status:approved OR association.clinical_trial.status:"phase 4" OR 
+            association.clinical_trial.status:"approved (orphan drug)" OR association.clinical_trial.status:"NDA filed")
+        predicate: treats
+        source: "infores:ttd"
+        knowledge_level: knowledge_assertion
+        agent_type: manual_agent
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/icd11-object"
+        testExamples:
+          - qInput: "TTD.DRUG:D0A5DJ"                   ## Pancrecarb
+            oneOutput: "ICD11:DC30-DC3Z"                ## Pancreatic malfunction
+    ttd_drug_id_treats_icd11-rev:
+      - supportBatch: true
+        useTemplating: true
+        inputs:
+          - id: ICD11
+            semantic: Disease
+        requestBody: ## no prefix
+          body: 
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: object.icd11
+        outputs:
+          - id: "TTD.DRUG"
+            semantic: SmallMolecule
+        parameters:
+          ## not including these fields due to data-processing / biolink-modeling issues
+          ## - association.clinical_trial.status
+          fields: >-
+            subject.ttd_drug_id,
+            subject.name,
+            object.name
+          size: 1000
+          filter: >-
+            _exists_:subject.ttd_drug_id AND (NOT _exists_:subject.pubchem_compound) AND 
+            _exists_:object.icd11 AND (NOT _exists_:object.mondo) AND 
+            association.predicate:"biolink:treats" AND 
+            (association.clinical_trial.status:approved OR association.clinical_trial.status:"phase 4" OR 
+            association.clinical_trial.status:"approved (orphan drug)" OR association.clinical_trial.status:"NDA filed")
+        predicate: treated_by
+        source: "infores:ttd"
+        knowledge_level: knowledge_assertion
+        agent_type: manual_agent
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/ttd_drug_id-subject"
+        testExamples:
+          - qInput: "ICD11:3B64.10"                       ## Idiopathic thrombocytopenic purpura
+            oneOutput: "TTD.DRUG:D09WZV"                  ## GMA-161
+    ttd_drug_id_studiedToTreat_icd11:
+      ## url: https://biothings.transltr.io/ttd/query?q=_exists_:subject.ttd_drug_id%20AND%20association.predicate:%22biolink:treats%22%20AND%20_exists_:object.icd11%20AND%20NOT%20_exists_:object.mondo%20AND%20NOT%20_exists_:subject.pubchem_compound%20AND%20(association.clinical_trial.status:investigative%20OR%20association.clinical_trial.status:patented%20OR%20association.clinical_trial.status:%22discontinued%20in%20preregistration%22%20OR%20association.clinical_trial.status:preregistration%20OR%20association.clinical_trial.status:%22withdrawn%20from%20market%22)
+      ## 5000 records
+      ## exists: subject.ttd_drug_id, association.predicate.biolink:treats, object.icd11
+      ## not exists: subject.pubchem_compound, object.mondo
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: "TTD.DRUG"
+            semantic: SmallMolecule
+        requestBody: ## no prefix
+          body: 
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: subject.ttd_drug_id
+        outputs:
+          - id: ICD11
+            semantic: Disease
+        parameters:
+          ## not including these fields due to data-processing / biolink-modeling issues
+          ## - association.clinical_trial.status
+          ## - object.mondo Not all object node has mondo
+          fields: >-
+            object.icd11,
+            object.name,
+            subject.name
+          size: 1000
+          filter: >-
+            _exists_:subject.ttd_drug_id AND (NOT _exists_:subject.pubchem_compound) AND 
+            _exists_:object.icd11 AND (NOT _exists_:object.mondo) AND 
+            association.predicate:"biolink:treats" AND 
+            (association.clinical_trial.status:investigative OR association.clinical_trial.status:patented OR 
+            association.clinical_trial.status:"discontinued in preregistration" OR association.clinical_trial.status:preregistration OR 
+            association.clinical_trial.status:"withdrawn from market")
+        predicate: studied_to_treat
+        source: "infores:ttd"
+        knowledge_level: knowledge_assertion
+        agent_type: manual_agent
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/icd11-object"
+        testExamples:
+          - qInput: "TTD.DRUG:D0DG0P"                   ## Triflupromazine
+            oneOutput: "ICD11:6A20"                     ## Schizophrenia
+    ttd_drug_id_studiedToTreat_icd11-rev:
+      - supportBatch: true
+        useTemplating: true
+        inputs:
+          - id: ICD11
+            semantic: Disease
+        requestBody: ## no prefix
+          body: 
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: object.icd11
+        outputs:
+          - id: "TTD.DRUG"
+            semantic: SmallMolecule
+        parameters:
+          ## not including these fields due to data-processing / biolink-modeling issues
+          ## - association.clinical_trial.status
+          fields: >-
+            subject.ttd_drug_id,
+            subject.name,
+            object.name
+          size: 1000
+          filter: >-
+            _exists_:subject.ttd_drug_id AND (NOT _exists_:subject.pubchem_compound) AND 
+            _exists_:object.icd11 AND (NOT _exists_:object.mondo) AND 
+            association.predicate:"biolink:treats" AND 
+            (association.clinical_trial.status:investigative OR association.clinical_trial.status:patented OR 
+            association.clinical_trial.status:"discontinued in preregistration" OR association.clinical_trial.status:preregistration OR 
+            association.clinical_trial.status:"withdrawn from market")
+        predicate: treated_in_studies_by
+        source: "infores:ttd"
+        knowledge_level: knowledge_assertion
+        agent_type: manual_agent
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/ttd_drug_id-subject"
+        testExamples:
+          - qInput: "ICD11:1F40-1F45"                     ## Malaria
+            oneOutput: "TTD.DRUG:D0YQ9P"                  ## Amodiaquine
+    ttd_drug_id_preclinicalTreats_icd11:
+      ## url: https://biothings.transltr.io/ttd/query?q=_exists_:subject.ttd_drug_id%20AND%20association.predicate:%22biolink:treats%22%20AND%20_exists_:object.icd11%20AND%20NOT%20_exists_:object.mondoAND%20NOT%20_exists_:subject.pubchem_compound%20AND%20association.clinical_trial.status:preclinical
+      ## 335 records
       ## exists: subject.ttd_drug_id, association.predicate.biolink:treats, object.icd11
       ## not exists: subject.pubchem_compound, object.mondo
       - supportBatch: true
@@ -959,17 +1828,18 @@ components:
           filter: >-
             _exists_:subject.ttd_drug_id AND (NOT _exists_:subject.pubchem_compound) AND
             _exists_:object.icd11 AND (NOT _exists_:object.mondo) AND
-            association.predicate:"biolink:treats"
-        predicate: treats
+            association.predicate:"biolink:treats" AND 
+            association.clinical_trial.status:preclinical
+        predicate: in_preclinical_trials_for
         source: "infores:ttd"
         knowledge_level: knowledge_assertion
         agent_type: manual_agent
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/icd11-object"
         testExamples:
-          - qInput: "TTD.DRUG:DZW53X"                   ## GSK4069889
-            oneOutput: "ICD11:2C25"                     ## Non-small cell lung cancer
-    ttd_drug_id_treats_icd11-rev:
+          - qInput: "TTD.DRUG:D01ZCL"                   ## ACT-N
+            oneOutput: "ICD11:NA07.Z"                   ## Brain injury
+    ttd_drug_id_preclinicalTreats_icd11-rev:
       - supportBatch: true
         useTemplating: true
         inputs:
@@ -993,16 +1863,100 @@ components:
           filter: >-
             _exists_:subject.ttd_drug_id AND (NOT _exists_:subject.pubchem_compound) AND
             _exists_:object.icd11 AND (NOT _exists_:object.mondo) AND
-            association.predicate:"biolink:treats"
-        predicate: treated_by
+            association.predicate:"biolink:treats" AND 
+            association.clinical_trial.status:preclinical
+        predicate: tested_by_preclinical_trials_of
         source: "infores:ttd"
         knowledge_level: knowledge_assertion
         agent_type: manual_agent
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/ttd_drug_id-subject"
         testExamples:
-          - qInput: "ICD11:1D48"                          ## Zika virus infection
-            oneOutput: "TTD.DRUG:DZTL59"                  ## INO-A002
+          - qInput: "ICD11:1D64"                          ## Middle East Respiratory Syndrome (MERS)
+            oneOutput: "TTD.DRUG:D0CR6E"                  ## SSYA10-001
+    ttd_drug_id_clinicalTrialTreats_icd11:
+      ## url: https://biothings.transltr.io/ttd/query?q=_exists_:subject.ttd_drug_id%20AND%20association.predicate:%22biolink:treats%22%20AND%20_exists_:object.icd11%20AND%20NOT%20_exists_:object.mondoAND%20NOT%20_exists_:subject.pubchem_compound%20AND%20NOT%20(association.clinical_trial.status:approved%20OR%20association.clinical_trial.status:%22phase%204%22%20OR%20association.clinical_trial.status:%22approved%20(orphan%20drug)%22%20OR%20association.clinical_trial.status:%22NDA%20filed%22%20OR%20association.clinical_trial.status:investigative%20OR%20association.clinical_trial.status:patented%20OR%20association.clinical_trial.status:%22discontinued%20in%20preregistration%22%20OR%20association.clinical_trial.status:preregistration%20OR%20association.clinical_trial.status:%22withdrawn%20from%20market%22%20OR%20association.clinical_trial.status:preclinical)
+      ## 8586 records
+      ## exists: subject.ttd_drug_id, association.predicate.biolink:treats, object.icd11
+      ## not exists: subject.pubchem_compound, object.mondo
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: "TTD.DRUG"
+            semantic: SmallMolecule
+        requestBody: ## no prefix
+          body: 
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: subject.ttd_drug_id
+        outputs:
+          - id: ICD11
+            semantic: Disease
+        parameters:
+          ## not including these fields due to data-processing / biolink-modeling issues
+          ## - association.clinical_trial.status
+          ## - object.mondo Not all object node has mondo
+          fields: >-
+            object.icd11,
+            object.name,
+            subject.name
+          size: 1000
+          filter: >-
+            _exists_:subject.ttd_drug_id AND (NOT _exists_:subject.pubchem_compound) AND
+            _exists_:object.icd11 AND (NOT _exists_:object.mondo) AND
+            association.predicate:"biolink:treats" AND NOT 
+            (association.clinical_trial.status:approved OR association.clinical_trial.status:"phase 4" OR 
+            association.clinical_trial.status:"approved (orphan drug)" OR association.clinical_trial.status:"NDA filed" OR 
+            association.clinical_trial.status:investigative OR association.clinical_trial.status:patented OR 
+            association.clinical_trial.status:"discontinued in preregistration" OR association.clinical_trial.status:preregistration OR 
+            association.clinical_trial.status:"withdrawn from market" OR association.clinical_trial.status:preclinical)
+        predicate: in_clinical_trials_for
+        source: "infores:ttd"
+        knowledge_level: knowledge_assertion
+        agent_type: manual_agent
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/icd11-object"
+        testExamples:
+          - qInput: "TTD.DRUG:D01YDH"                   ## GSK2981710
+            oneOutput: "ICD11:8A20"                     ## Alzheimer disease
+    ttd_drug_id_clinicalTrialTreats_icd11-rev:
+      - supportBatch: true
+        useTemplating: true
+        inputs:
+          - id: ICD11
+            semantic: Disease
+        requestBody: ## no prefix
+          body: 
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: object.icd11
+        outputs:
+          - id: "TTD.DRUG"
+            semantic: SmallMolecule
+        parameters:
+          ## not including these fields due to data-processing / biolink-modeling issues
+          ## - association.clinical_trial.status
+          fields: >-
+            subject.ttd_drug_id,
+            subject.name,
+            object.name
+          size: 1000
+          filter: >-
+            _exists_:subject.ttd_drug_id AND (NOT _exists_:subject.pubchem_compound) AND
+            _exists_:object.icd11 AND (NOT _exists_:object.mondo) AND
+            association.predicate:"biolink:treats" AND NOT 
+            (association.clinical_trial.status:approved OR association.clinical_trial.status:"phase 4" OR 
+            association.clinical_trial.status:"approved (orphan drug)" OR association.clinical_trial.status:"NDA filed" OR 
+            association.clinical_trial.status:investigative OR association.clinical_trial.status:patented OR 
+            association.clinical_trial.status:"discontinued in preregistration" OR association.clinical_trial.status:preregistration OR 
+            association.clinical_trial.status:"withdrawn from market" OR association.clinical_trial.status:preclinical)
+        predicate: tested_by_clinical_trials_of
+        source: "infores:ttd"
+        knowledge_level: knowledge_assertion
+        agent_type: manual_agent
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/ttd_drug_id-subject"
+        testExamples:
+          - qInput: "ICD11:2A83"                          ## Multiple myeloma
+            oneOutput: "TTD.DRUG:D01YZF"                  ## CART-BCMA
     uniprotkb_target_for_mondo:
     ## url: https://biothings.transltr.io/ttd/query?q=_exists_:subject.uniprotkb%20AND%20association.predicate:%22biolink:target_for%22%20AND%20_exists_:object.mondo
     ## 601 records
