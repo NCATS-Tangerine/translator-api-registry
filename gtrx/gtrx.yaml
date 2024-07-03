@@ -19,13 +19,10 @@ info:
     component: KP
     team:
       - Service Provider
-    biolink-version: "3.5.0"
+    biolink-version: "4.1.6"
 servers:
 - description: Encrypted Production server
   url: https://biothings.ncats.io/gtrx
-  x-maturity: production
-- description: Production server
-  url: http://biothings.ncats.io/gtrx
   x-maturity: production
 - url: https://biothings.test.transltr.io/gtrx
   description: ITRB Test server
@@ -583,7 +580,9 @@ components:
   ## 2 potential types:
   ## - Disease: OMIM ID without prefixes in subject.omim
   ## - SmallMolecule: UNII ID without prefix in object.intervention.inxight
+  ## keeping predicates as treats/treated_by because these are curated, recommended interventions by experts 
   ## 695 records total
+  ## knowledge_level / agent_type: highly curated, see Fig.2 and Methods of https://www.nature.com/articles/s41467-022-31446-6#Sec2
     disease-drug:
       - supportBatch: true
         useTemplating: true
@@ -626,12 +625,14 @@ components:
           size: 1000
         predicate: treated_by
         source: "infores:gtrx"
+        knowledge_level: knowledge_assertion
+        agent_type: manual_agent
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/drug"
         ## compare to hhttps://gtrx.rbsapp.net/?q=1&i=true
-        # testExamples:
-        #   - qInput: "OMIM:250250"            ## CARTILAGE-HAIR HYPOPLASIA;
-        #     oneOutput: "UNII:MZ1IW7Q79D"     ## Valaciclovir
+        testExamples:
+          - qInput: "OMIM:250250"            ## CARTILAGE-HAIR HYPOPLASIA;
+            oneOutput: "UNII:MZ1IW7Q79D"     ## Valaciclovir
     drug-disease:
       - supportBatch: true
         useTemplating: true ## flag to say templating is being used below
@@ -665,12 +666,14 @@ components:
           size: 1000
         predicate: treats
         source: "infores:gtrx"
+        knowledge_level: knowledge_assertion
+        agent_type: manual_agent
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/disease"
         ## compare to https://gtrx.rbsapp.net/?q=MALIGNANT%20HYPERTHERMIA,%20SUSCEPTIBILITY%20TO,%201
-        # testExamples:
-        #   - qInput: "UNII:F64QU97QCR"     ## Dantrolene 
-        #     oneOutput: "OMIM:145600"      ## MALIGNANT HYPERTHERMIA, SUSCEPTIBILITY TO, 1
+        testExamples:
+          - qInput: "UNII:F64QU97QCR"     ## Dantrolene 
+            oneOutput: "OMIM:145600"      ## MALIGNANT HYPERTHERMIA, SUSCEPTIBILITY TO, 1
   x-bte-response-mapping:
     drug:
     ## using order and language from gtrx website for these fields

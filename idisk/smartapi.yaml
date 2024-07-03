@@ -16,13 +16,10 @@ info:
     component: KP
     team:
       - Service Provider
-    biolink-version: "3.5.0"
+    biolink-version: "4.1.6"
 servers:
 - description: Encrypted Production server
   url: https://biothings.ncats.io/idisk
-  x-maturity: production
-- description: Production server
-  url: http://biothings.ncats.io/idisk
   x-maturity: production
 - url: https://biothings.test.transltr.io/idisk
   description: ITRB Test server
@@ -588,6 +585,8 @@ components:
   ##   some are thought to be Protein/Polypeptides...
   ##   many aren't resolved at all...
   ## reference for data: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7075538/
+  ## knowledge_level / agent_type: seems like data-cleaning/mapping/merging - with only a small subset manually-evaluated later
+  ##   based on my understanding of "Phase 3: creation of iDISK" https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7075538/
     has_adverse_effect_on:
     ## there are 626 records with the has_adverse_effect_on field
     ## the dietary supplement has an adverse effect (that can be categorized into this class of diseases)
@@ -617,11 +616,13 @@ components:
       ## ref:  Table 3 of the linked publication, or by comparing number of records total with 
       ##   the number of records from https://biothings.ncats.io/idisk/query?q=has_adverse_effect_on.source.name:%22NMCD%22
       source: "infores:idisk"
+      knowledge_level: knowledge_assertion
+      agent_type: automated_agent
       response_mapping:
         $ref: '#/components/x-bte-response-mapping/has_adverse_effect_on'
-      # testExamples:
-      #   - qInput: "UMLS:C0000392"       ## beta-Alanine
-      #     oneOutput: "MEDDRA:10017947"  ## gastrointestinal disorders
+      testExamples:
+        - qInput: "UMLS:C0000392"       ## beta-Alanine
+          oneOutput: "MEDDRA:10017947"  ## gastrointestinal disorders
     has_adverse_effect_on-rev:
     - supportBatch: true
       useTemplating: true ## flag to say templating is being used below
@@ -642,11 +643,13 @@ components:
         size: 1000    ## note size limit
       predicate: adverse_event_of
       source: "infores:idisk"
+      knowledge_level: knowledge_assertion
+      agent_type: automated_agent
       response_mapping:
         $ref: '#/components/x-bte-response-mapping/rev'
-      # testExamples:
-      #   - qInput: "MEDDRA:10017947"     ## gastrointestinal disorders 
-      #     oneOutput: "UMLS:C0000392"    ## beta-Alanine
+      testExamples:
+        - qInput: "MEDDRA:10017947"     ## gastrointestinal disorders 
+          oneOutput: "UMLS:C0000392"    ## beta-Alanine
     has_adverse_reaction:
     ## there are 204 records with the has_adverse_reaction field
     ## the dietary supplement has an adverse effect/reaction (specific sign/symptom)
@@ -679,11 +682,13 @@ components:
       ## ref:  Table 3 of the linked publication, or by comparing number of records total with 
       ##   the number of records from https://biothings.ncats.io/idisk/query?q=has_adverse_reaction.source.name:%22MSKCC%22
       source: "infores:idisk"
+      knowledge_level: knowledge_assertion
+      agent_type: automated_agent
       response_mapping:
         $ref: '#/components/x-bte-response-mapping/has_adverse_reaction'
-      # testExamples:
-      #   - qInput: "UMLS:C0000578"     ## 5-Hydroxytryptophan
-      #     oneOutput: "UMLS:C0027497"  ## nausea
+      testExamples:
+        - qInput: "UMLS:C0000578"     ## 5-Hydroxytryptophan
+          oneOutput: "UMLS:C0027497"  ## nausea
     has_adverse_reaction-rev:
     - supportBatch: true
       useTemplating: true ## flag to say templating is being used below
@@ -704,11 +709,13 @@ components:
         size: 1000    ## note size limit
       predicate: adverse_event_of
       source: "infores:idisk"
+      knowledge_level: knowledge_assertion
+      agent_type: automated_agent
       response_mapping:
         $ref: '#/components/x-bte-response-mapping/rev'
-      # testExamples:
-      #   - qInput: "UMLS:C0027497"       ## nausea 
-      #     oneOutput: "UMLS:C0000578"    ## 5-Hydroxytryptophan
+      testExamples:
+        - qInput: "UMLS:C0027497"       ## nausea 
+          oneOutput: "UMLS:C0000578"    ## 5-Hydroxytryptophan
     interacts_with:
     ## there are 673 records with the interacts_with field 
     ##   most use NMCD (604), but some use MSKCC (178). Some records must have both?
@@ -735,11 +742,13 @@ components:
         size: 1000  ## size limit; just in case
       predicate: interacts_with  ## closest biolink predicate?
       source: "infores:idisk"
+      knowledge_level: knowledge_assertion
+      agent_type: automated_agent
       response_mapping:
         $ref: '#/components/x-bte-response-mapping/interacts_with'
-      # testExamples:
-      #   - qInput: "UMLS:C0000473"     ## 4-Aminobenzoic Acid
-      #     oneOutput: "UMLS:C0010137"  ## Cortisone
+      testExamples:
+        - qInput: "UMLS:C0000473"     ## 4-Aminobenzoic Acid
+          oneOutput: "UMLS:C0010137"  ## Cortisone
     interacts_with-rev:
     - supportBatch: true
       useTemplating: true ## flag to say templating is being used below
@@ -760,15 +769,16 @@ components:
         size: 1000  ## note size limit
       predicate: interacts_with
       source: "infores:idisk"
+      knowledge_level: knowledge_assertion
+      agent_type: automated_agent
       response_mapping:
         $ref: '#/components/x-bte-response-mapping/rev'
-      # testExamples:
-      #   - qInput: "UMLS:C0010137"      ## Cortisone 
-      #     oneOutput: "UMLS:C0000473"   ## 4-Aminobenzoic Acid
+      testExamples:
+        - qInput: "UMLS:C0010137"      ## Cortisone 
+          oneOutput: "UMLS:C0000473"   ## 4-Aminobenzoic Acid
     is_effective_for:
     ## there are 654 records with the is_effective_for field 
     ##   most use NMCD (552), but some use MSKCC (238). Some records must have both?
-    ## the dietary supplement is said to treat disease/condition or may be used for it...
     - supportBatch: true
       useTemplating: true ## flag to say templating is being used below
       inputs:
@@ -790,13 +800,16 @@ components:
         # fields: is_effective_for.umls,is_effective_for.source.name
         fields: is_effective_for.umls
         size: 1000  ## size limit; just in case
-      predicate: treats  ## closest biolink predicate?
+      ## the dietary supplement is said to treat disease/condition or may be used for it...
+      predicate: applied_to_treat
       source: "infores:idisk"
+      knowledge_level: knowledge_assertion
+      agent_type: automated_agent
       response_mapping:
         $ref: '#/components/x-bte-response-mapping/is_effective_for'
-      # testExamples:
-      #   - qInput: "UMLS:C0000503"      ## gamma hydroxybutyrate 
-      #     oneOutput: "UMLS:C0016053"   ## Fibromyalgias
+      testExamples:
+        - qInput: "UMLS:C0000503"      ## gamma hydroxybutyrate / oxybate
+          oneOutput: "UMLS:C0016053"   ## Fibromyalgias aka MONDO:0005546
     is_effective_for-rev:
     - supportBatch: true
       useTemplating: true ## flag to say templating is being used below
@@ -815,13 +828,15 @@ components:
       parameters:
         fields: umls
         size: 1000  ## note size limit
-      predicate: treated_by
+      predicate: treatment_applications_from
       source: "infores:idisk"
+      knowledge_level: knowledge_assertion
+      agent_type: automated_agent
       response_mapping:
         $ref: '#/components/x-bte-response-mapping/rev'
-      # testExamples:
-      #   - qInput: "UMLS:C0016053"   ## Fibromyalgias 
-      #     oneOutput: "UMLS:C0000503"      ## gamma hydroxybutyrate 
+      testExamples:
+        - qInput: "UMLS:C0016053"         ## Fibromyalgias aka MONDO:0005546
+          oneOutput: "UMLS:C0000503"      ## gamma hydroxybutyrate / oxybate
   x-bte-response-mapping:
   ## name not included since BTE doesn't ingest it right now...
     has_adverse_effect_on:

@@ -16,13 +16,10 @@ info:
     component: KP
     team:
       - Service Provider
-    biolink-version: "3.5.0"
+    biolink-version: "4.1.6"
 servers:
 - description: Encrypted Production server
   url: https://biothings.ncats.io/rare_source
-  x-maturity: production
-- description: Production server
-  url: http://biothings.ncats.io/rare_source
   x-maturity: production
 - url: https://biothings.test.transltr.io/rare_source
   description: ITRB Test server
@@ -579,6 +576,8 @@ components:
   #       type: array
   #     - type: string
   x-bte-kgs-operations:
+  ## knowledge_level / agent_type: disease-gene relationship is from GARD
+  ##   so I'm setting it as manually-curated...
   ## - look here for more details: https://raresource.nih.gov/genes/
   ## - gene ids: using entrezgene
   ##   - all have entrezgene and symbol, most have hgnc (2864/2901) or ensemblgene (2863)
@@ -605,7 +604,7 @@ components:
           q: "{{ queryInputs }}"   ## no prefix
           scopes: entrezgene
       outputs:
-      - id: ORPHANET
+      - id: orphanet
         semantic: Disease
       parameters:
       ## orphanet ID has no prefix
@@ -613,16 +612,18 @@ components:
         size: 1000              ## note size limit
       predicate: gene_associated_with_condition
       source: "infores:rare-source"
+      knowledge_level: knowledge_assertion
+      agent_type: manual_agent
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/diseaseOrphanet-object"
-      # testExamples:
-      #   - qInput: "NCBIGene:100"           ## ADA
-      #     oneOutput: "ORPHANET:39041"      ## Omenn syndrome
+      testExamples:
+        - qInput: "NCBIGene:100"           ## ADA
+          oneOutput: "orphanet:39041"      ## Omenn syndrome
     diseaseOrphanet-gene:
-    - supportBatch: true
+    - supportBatch: false
       useTemplating: true
       inputs:
-      - id: ORPHANET
+      - id: orphanet
         semantic: Disease
       requestBody:
         body:
@@ -632,17 +633,19 @@ components:
       - id: NCBIGene
         semantic: Gene
       parameters:
-      ## no prefix on output
-        fields: >-
-          entrezgene,symbol
+      ## no prefix on output, need the whole thing for jmespath to work
+        fields: entrezgene,symbol,raresource.disease
+        jmespath: "raresource.disease|[?orphanet=='{{ queryInputs }}']"
         size: 1000  ## size limit; adding just in case
       predicate: condition_associated_with_gene
       source: "infores:rare-source"
+      knowledge_level: knowledge_assertion
+      agent_type: manual_agent
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/gene-object"
-      # testExamples:
-      #   - qInput: "ORPHANET:110"          ## Bardet-Biedl syndrome
-      #     oneOutput: "NCBIGene:10806"    ## SDCCAG8
+      testExamples:
+        - qInput: "orphanet:110"          ## Bardet-Biedl syndrome
+          oneOutput: "NCBIGene:10806"    ## SDCCAG8
     gene-diseaseUMLS:
     - supportBatch: true
       useTemplating: true
@@ -662,13 +665,15 @@ components:
         size: 1000              ## note size limit
       predicate: gene_associated_with_condition
       source: "infores:rare-source"
+      knowledge_level: knowledge_assertion
+      agent_type: manual_agent
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/diseaseUMLS-object"
-      # testExamples:
-      #   - qInput: "NCBIGene:10075"        ## HUWE1
-      #     oneOutput: "UMLS:C0796003"      ## Intellectual developmental disorder, x-linked, syndromic, turner type
+      testExamples:
+        - qInput: "NCBIGene:10075"        ## HUWE1
+          oneOutput: "UMLS:C0796003"      ## Intellectual developmental disorder, x-linked, syndromic, turner type
     diseaseUMLS-gene:
-    - supportBatch: true
+    - supportBatch: false
       useTemplating: true
       inputs:
       - id: UMLS
@@ -681,24 +686,26 @@ components:
       - id: NCBIGene
         semantic: Gene
       parameters:
-      ## no prefix on output
-        fields: >-
-          entrezgene,symbol
+      ## no prefix on output, need the whole thing for jmespath to work
+        fields: entrezgene,symbol,raresource.disease
+        jmespath: "raresource.disease|[?umls=='{{ queryInputs }}']"
         size: 1000  ## size limit; adding just in case
       predicate: condition_associated_with_gene
       source: "infores:rare-source"
+      knowledge_level: knowledge_assertion
+      agent_type: manual_agent
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/gene-object"
-      # testExamples:
-      #   - qInput: "UMLS:C3887743"            ## Wilms tumor 2
-      #     oneOutput: "NCBIGene:105259599"    ## H19-ICR (will use output_name)
+      testExamples:
+        - qInput: "UMLS:C3887743"            ## Wilms tumor 2
+          oneOutput: "NCBIGene:105259599"    ## H19-ICR (will use output_name)
       ## testing with "UMLS:C2675767" (Epiphyseal dysplasia, multiple, 6) ->
       ##   "NCBIGene:1297" (COL9A1) will use SRI-Node-Norm-retrieved name
   x-bte-response-mapping:
   ## didn't add names for gene -> disease. when I tried, the co-occurrence urls would appear on every Edge, 
   ##   when they're supposed to show up only on the edge they correspond to
     diseaseOrphanet-object:
-      ORPHANET: raresource.disease.orphanet    ## no prefix
+      orphanet: raresource.disease.orphanet    ## no prefix
       ref_url: raresource.disease.cooccurrence_url
       ## this url leads to a webpage with literature supporting the gene-disease relationship 
     diseaseUMLS-object:
@@ -707,3 +714,4 @@ components:
     gene-object:
       NCBIGene: entrezgene    ## no prefix
       output_name: symbol   ## SRI Node Norm sometimes doesn't know the NCBIGene name. Using "gene" symbol as name
+      ref_url: raresource.disease.cooccurrence_url

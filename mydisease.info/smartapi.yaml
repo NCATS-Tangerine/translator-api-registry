@@ -7,7 +7,7 @@ info:
     x-role: responsible developer
   description: Documentation of the MyDisease.info disease query web services.  Learn
     more about [MyDisease.info](https://docs.mydisease.info/en/latest/index.html)
-  termsOfService: http://mydisease.info/terms
+  termsOfService: https://mydisease.info/terms
   title: MyDisease.info API
   version: '1.0'
   x-translator:
@@ -15,13 +15,10 @@ info:
     component: KP
     team:
       - Service Provider
-    biolink-version: "3.5.0"
+    biolink-version: "4.1.6"
 servers:
 - description: Encrypted Production server
   url: https://mydisease.info/v1
-  x-maturity: production
-- description: Production server
-  url: http://mydisease.info/v1
   x-maturity: production
 tags:
 - name: disease
@@ -661,7 +658,7 @@ components:
     omim:
       OMIM: hpo.omim  ## no prefix
     orphanet:
-      ORPHANET: hpo.orphanet  ## no prefix
+      orphanet: hpo.orphanet  ## no prefix
     mondo:  ## added for a bunch of operations
       MONDO: mondo.mondo  ## HAS PREFIX (MONDO)
     ctd-mesh-disease:  ## added for chemical-disease operation
@@ -723,11 +720,13 @@ components:
         ## can't be more specific because we can't restrict (see note above)
         predicate: condition_associated_with_gene 
         source: "infores:disgenet"
+        knowledge_level: not_provided
+        agent_type: automated_agent
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/disease-gene"
-        # testExamples:
-        #   - qInput: "UMLS:C0023264"     ## Leigh Disease
-        #     oneOutput: "NCBIGene:4694"  ## NDUFA1
+        testExamples:
+          - qInput: "UMLS:C0023264"     ## Leigh Disease
+            oneOutput: "NCBIGene:4694"  ## NDUFA1
     disease-variant:
     ## 11200 / 12605 disgenet.variants_related_to_disease records have disgenet.xrefs.umls
       - supportBatch: true
@@ -760,11 +759,13 @@ components:
         ## can't be more specific because we can't restrict (see note above)
         predicate: related_to
         source: "infores:disgenet"
+        knowledge_level: not_provided
+        agent_type: automated_agent
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/disease-variant"
-        # testExamples:
-        #   - qInput: "UMLS:C0023264"     ## Leigh Disease
-        #     oneOutput: "DBSNP:rs1161932777"
+        testExamples:
+          - qInput: "UMLS:C0023264"     ## Leigh Disease
+            oneOutput: "DBSNP:rs1161932777"
   ## for hpo-annotation-based operations:
   ## - currently, the mydisease parser for hpo maps the resources' IDs (OMIM or orphanet) to MONDO. 
   ##   If two IDs (ex: OMIM:218340 and orphanet:1777 for Temtamy syndrome) map to the same MONDO ID, it looks like only the OMIM data was kept.
@@ -818,16 +819,18 @@ components:
         ## includes annotations with aspect == "P"
         ##   (aspect as "I" became hpo.inheritance, "C" became hpo.course, "M" became hpo.modifier)
         source: "infores:hpo-annotations"
+        knowledge_level: knowledge_assertion
+        agent_type: manual_agent
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/disease-phenotype"
-        # testExamples:
-        #   - qInput: "OMIM:246900"     ## Dihydrolipoamide Dehydrogenase Deficiency
-        #     oneOutput: "HP:0001254"   ## Lethargy
+        testExamples:
+          - qInput: "OMIM:246900"     ## Dihydrolipoamide Dehydrogenase Deficiency
+            oneOutput: "HP:0001254"   ## Lethargy
     disease-phenotype2:
       - supportBatch: true
         useTemplating: true
         inputs:
-        - id: ORPHANET
+        - id: orphanet
           semantic: Disease
         requestBody:
           body:
@@ -867,12 +870,15 @@ components:
             hpo.phenotype_related_to_disease.freq_denominator
         predicate: has_phenotype
         source: "infores:hpo-annotations"
+        knowledge_level: knowledge_assertion
+        agent_type: manual_agent
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/disease-phenotype"
-        # testExamples:
-        #   - qInput: "ORPHANET:881"    ## Turner Syndrome
-        #     oneOutput: "HP:0000137"   ## Abnormality of the ovary
+        testExamples:
+          - qInput: "orphanet:881"    ## Turner Syndrome
+            oneOutput: "HP:0000137"   ## Abnormality of the ovary
   ## for ctd-based operations:
+  ## - knowledge_level / agent_type: parser removes all inferred annotations for disease-chemical
   ## - when the mydisease parser maps the resources' IDs to MONDO, are there situations where a MESH and a OMIM ID map to the same MONDO? 
   ##   If so, 1) Is only one of them kept?, 
   ##          2) Do those IDs have different data linked to them? (so data is missing with the current behavior)
@@ -911,11 +917,13 @@ components:
         ## direct_evidence is kinda like a relation....
         ##   can have value "marker/mechanism" or "therapeutic").
         source: "infores:ctd"
+        knowledge_level: knowledge_assertion
+        agent_type: manual_agent
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/disease-chemical"
-        # testExamples:
-        #   - qInput: "MESH:D009102"    ## Multiple Organ Failure
-        #     oneOutput: "MESH:C448659"   ## Geldanamycin, monohydrochloride
+        testExamples:
+          - qInput: "MESH:D009102"    ## Multiple Organ Failure
+            oneOutput: "MESH:C448659"   ## Geldanamycin, monohydrochloride
     disease-chemical2:
       - supportBatch: true
         useTemplating: true
@@ -942,11 +950,13 @@ components:
             ctd.chemical_related_to_disease.pubmed
         predicate: related_to
         source: "infores:ctd"
+        knowledge_level: knowledge_assertion
+        agent_type: manual_agent
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/disease-chemical"
-        # testExamples:
-        #   - qInput: "OMIM:613290"       ## hearing loss, cisplatin-induced, susceptibility to
-        #     oneOutput: "MESH:D002945"   ## Cisplatin
+        testExamples:
+          - qInput: "OMIM:613290"       ## hearing loss, cisplatin-induced, susceptibility to
+            oneOutput: "MESH:D002945"   ## Cisplatin
 ##########################################################################
 ## with "reverse" querying, we will pull up ALL info under the disease, rather than under a specific record...
 ##   so we can't retrieve the subset of data for the specific gene / variant / etc's record 
@@ -970,11 +980,13 @@ components:
           size: 1000  ## note the size limit
         predicate: gene_associated_with_condition
         source: "infores:disgenet"
+        knowledge_level: not_provided
+        agent_type: automated_agent
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/umls"
-        # testExamples:
-        #   - qInput: "NCBIGene:1629"       ## DBT
-        #     oneOutput: "UMLS:C3658290"    ## Drug-Induced Acute Liver Injury
+        testExamples:
+          - qInput: "NCBIGene:1629"       ## DBT
+            oneOutput: "UMLS:C3658290"    ## Drug-Induced Acute Liver Injury
     variant-disease:
       - supportBatch: true
         useTemplating: true
@@ -995,11 +1007,13 @@ components:
           size: 1000  ## note the size limit
         predicate: related_to
         source: "infores:disgenet"
+        knowledge_level: not_provided
+        agent_type: automated_agent
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/umls"
-        # testExamples:
-        #   - qInput: "DBSNP:rs78655421"
-        #     oneOutput: "UMLS:C4021107"    ## Non-obstructive azoospermia
+        testExamples:
+          - qInput: "DBSNP:rs78655421"
+            oneOutput: "UMLS:C4021107"    ## Non-obstructive azoospermia
     phenotype-disease:
       - supportBatch: true
         useTemplating: true
@@ -1020,11 +1034,13 @@ components:
           size: 1000  ## note the size limit
         predicate: phenotype_of
         source: "infores:hpo-annotations"
+        knowledge_level: knowledge_assertion
+        agent_type: manual_agent
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/omim"
-        # testExamples:
-        #   - qInput: "HP:0000224"       ## Hypogeusia
-        #     oneOutput: "OMIM:201300"   ## Neuropathy, hereditary sensory and autonomic, type II
+        testExamples:
+          - qInput: "HP:0000224"       ## Hypogeusia
+            oneOutput: "OMIM:201300"   ## Neuropathy, hereditary sensory and autonomic, type II
     phenotype-disease2:
       - supportBatch: true
         useTemplating: true
@@ -1038,18 +1054,20 @@ components:
             q: "{{ queryInputs }}"
             scopes: hpo.phenotype_related_to_disease.hpo_id
         outputs:
-        - id: ORPHANET
+        - id: orphanet
           semantic: Disease
         parameters:
           fields: hpo.orphanet
           size: 1000  ## note the size limit
         predicate: phenotype_of
         source: "infores:hpo-annotations"
+        knowledge_level: knowledge_assertion
+        agent_type: manual_agent
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/orphanet"
-        # testExamples:
-        #   - qInput: "HP:0000224"          ## Hypogeusia
-        #     oneOutput: "ORPHANET:99857"   ## Secondary Syringomyelia
+        testExamples:
+          - qInput: "HP:0000224"          ## Hypogeusia
+            oneOutput: "orphanet:99857"   ## Secondary Syringomyelia
     chemical-disease:
       - supportBatch: true
         useTemplating: true
@@ -1070,11 +1088,13 @@ components:
           size: 1000  ## note the size limit
         predicate: related_to
         source: "infores:ctd"
+        knowledge_level: knowledge_assertion
+        agent_type: manual_agent
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/ctd-mesh-disease"
-        # testExamples:
-        #   - qInput: "MESH:D000655"      ## Amodiaquine
-        #     oneOutput: "MESH:D008288"   ## Malaria (maps to MONDO:0005136)
+        testExamples:
+          - qInput: "MESH:D000655"      ## Amodiaquine
+            oneOutput: "MESH:D008288"   ## Malaria (maps to MONDO:0005136)
     chemical-disease2:
       - supportBatch: true
         useTemplating: true
@@ -1095,11 +1115,13 @@ components:
           size: 1000  ## note the size limit
         predicate: related_to
         source: "infores:ctd"
+        knowledge_level: knowledge_assertion
+        agent_type: manual_agent
         response_mapping: 
           "$ref": "#/components/x-bte-response-mapping/ctd-omim-disease"  
-        # testExamples:
-        #   - qInput: "MESH:D000655"     ## Amodiaquine
-        #     oneOutput: "OMIM:248310"   ## PLASMODIUM FALCIPARUM BLOOD INFECTION LEVEL (maps to MONDO:0009553)
+        testExamples:
+          - qInput: "MESH:D000655"     ## Amodiaquine
+            oneOutput: "OMIM:248310"   ## PLASMODIUM FALCIPARUM BLOOD INFECTION LEVEL (maps to MONDO:0009553)
 ############################################################################
     ## - there's also disease_ontology info (ancestors, children, descendants, parents)
     ## - there's also mondo info (ancestors, descendants)
@@ -1130,11 +1152,13 @@ components:
         predicate: superclass_of  ## this is the inverse of subclass_of right now
         ## relation: "has children"?
         source: "infores:mondo"
+        knowledge_level: knowledge_assertion
+        agent_type: manual_agent
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/has_subclass"
-        # testExamples:
-        #   - qInput: "MONDO:0002494"      ## substance-related disorder
-        #     oneOutput: "MONDO:0021698"   ## alcohol-related disorders          
+        testExamples:
+          - qInput: "MONDO:0002494"      ## substance-related disorder
+            oneOutput: "MONDO:0021698"   ## alcohol-related disorders          
     subclass_of:
       - supportBatch: true
         useTemplating: true
@@ -1156,11 +1180,13 @@ components:
         predicate: subclass_of
         ## relation: "has parents"?
         source: "infores:mondo"
+        knowledge_level: knowledge_assertion
+        agent_type: manual_agent
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/subclass_of"
-        # testExamples:
-        #   - qInput: "MONDO:0002494"      ## substance-related disorder
-        #     oneOutput: "MONDO:0002025"   ## psychiatric disorder
+        testExamples:
+          - qInput: "MONDO:0002494"      ## substance-related disorder
+            oneOutput: "MONDO:0002025"   ## psychiatric disorder
     predisposes_towards:
       - supportBatch: true
         useTemplating: true
@@ -1180,13 +1206,14 @@ components:
           fields: mondo.predisposes_towards.mondo
           size: 1000  ## note the size limit
         predicate: contributes_to  ## maps to "MONDO:predisposes_towards"
-        ## could use more specific biolink predicate like predisposes??
         source: "infores:mondo"
+        knowledge_level: knowledge_assertion
+        agent_type: manual_agent
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/predisposes_towards"
-        # testExamples:
-        #   - qInput: "MONDO:0010940"      ## inherited susceptibility to asthma
-        #     oneOutput: "MONDO:0004979"   ## asthma
+        testExamples:
+          - qInput: "MONDO:0010940"      ## inherited susceptibility to asthma
+            oneOutput: "MONDO:0004979"   ## asthma
     predisposes_towards-rev:
       - supportBatch: true
         useTemplating: true
@@ -1209,11 +1236,13 @@ components:
         ## inverse of contributes_to, which is mapped to "MONDO:predisposes_towards"
         ## no relation then...
         source: "infores:mondo"
+        knowledge_level: knowledge_assertion
+        agent_type: manual_agent
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/mondo"
-        # testExamples:
-        #   - qInput: "MONDO:0004979"      ## asthma
-        #     oneOutput: "MONDO:0010940"   ## inherited susceptibility to asthma
+        testExamples:
+          - qInput: "MONDO:0004979"      ## asthma
+            oneOutput: "MONDO:0010940"   ## inherited susceptibility to asthma
     disease_shares_features_of:
       - supportBatch: true
         useTemplating: true
@@ -1235,11 +1264,13 @@ components:
         predicate: similar_to  ## could biolink have a more specific predicate?
         ##   note that relation maps to biolink:related_to right now...
         source: "infores:mondo"
+        knowledge_level: knowledge_assertion
+        agent_type: manual_agent
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/disease_shares_features_of"
-        # testExamples:
-        #   - qInput: "MONDO:0008711"      ## Goodman syndrome
-        #     oneOutput: "MONDO:0019012"   ## Carpenter syndrome
+        testExamples:
+          - qInput: "MONDO:0008711"      ## Goodman syndrome
+            oneOutput: "MONDO:0019012"   ## Carpenter syndrome
     disease_shares_features_of-rev:
     ## checked and inverse relationship doesn't exist already in the data
     ##   for example, the record for Carpenter syndrome doesn't have disease_shares_features_of
@@ -1262,11 +1293,13 @@ components:
           size: 1000  ## note the size limit
         predicate: similar_to  ## could biolink have a more specific predicate?
         source: "infores:mondo"
+        knowledge_level: knowledge_assertion
+        agent_type: manual_agent
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/mondo"
-        # testExamples:
-        #   - qInput: "MONDO:0019012"      ## Carpenter syndrome
-        #     oneOutput: "MONDO:0008711"   ## Goodman syndrome
+        testExamples:
+          - qInput: "MONDO:0019012"      ## Carpenter syndrome
+            oneOutput: "MONDO:0008711"   ## Goodman syndrome
     disease_has_major_feature:
       - supportBatch: true
         useTemplating: true
@@ -1287,11 +1320,13 @@ components:
           size: 1000  ## note the size limit
         predicate: has_part  ## maps to "MONDO:disease_has_major_feature"
         source: "infores:mondo"
+        knowledge_level: knowledge_assertion
+        agent_type: manual_agent
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/disease_has_major_feature"
-        # testExamples:
-        #   - qInput: "MONDO:0015140"      ## early-onset autosomal dominant Alzheimer disease
-        #     oneOutput: "MONDO:0001627"   ## dementia (disease)
+        testExamples:
+          - qInput: "MONDO:0015140"      ## early-onset autosomal dominant Alzheimer disease
+            oneOutput: "MONDO:0001627"   ## dementia (disease)
     disease_has_major_feature-rev:
       - supportBatch: true
         useTemplating: true
@@ -1312,11 +1347,13 @@ components:
           size: 1000  ## note the size limit
         predicate: part_of  ## could biolink have a more specific predicate?
         source: "infores:mondo"
+        knowledge_level: knowledge_assertion
+        agent_type: manual_agent
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/mondo"
-        # testExamples:
-        #   - qInput: "MONDO:0001627"      ## dementia (disease)
-        #     oneOutput: "MONDO:0015140"   ## early-onset autosomal dominant Alzheimer disease
+        testExamples:
+          - qInput: "MONDO:0001627"      ## dementia (disease)
+            oneOutput: "MONDO:0015140"   ## early-onset autosomal dominant Alzheimer disease
     disease_has_feature:
       - supportBatch: true
         useTemplating: true
@@ -1337,11 +1374,13 @@ components:
           size: 1000  ## note the size limit
         predicate: has_part  ## no biolink mapping...
         source: "infores:mondo"
+        knowledge_level: knowledge_assertion
+        agent_type: manual_agent
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/disease_has_feature"
-        # testExamples:
-        #   - qInput: "MONDO:0005796"      ## HIV enteropathy
-        #     oneOutput: "MONDO:0005020"   ## intestinal disease
+        testExamples:
+          - qInput: "MONDO:0005796"      ## HIV enteropathy
+            oneOutput: "MONDO:0005020"   ## intestinal disease
     disease_has_feature-rev:
       - supportBatch: true
         useTemplating: true
@@ -1362,11 +1401,13 @@ components:
           size: 1000  ## note the size limit
         predicate: part_of
         source: "infores:mondo"
+        knowledge_level: knowledge_assertion
+        agent_type: manual_agent
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/mondo"
-        # testExamples:
-        #   - qInput: "MONDO:0005020"      ## intestinal disease
-        #     oneOutput: "MONDO:0005796"   ## HIV enteropathy
+        testExamples:
+          - qInput: "MONDO:0005020"      ## intestinal disease
+            oneOutput: "MONDO:0005796"   ## HIV enteropathy
     disease_causes_feature:
       - supportBatch: true
         useTemplating: true
@@ -1387,11 +1428,13 @@ components:
           size: 1000  ## note the size limit
         predicate: causes  ## maps to "MONDO:disease_causes_feature"
         source: "infores:mondo"
+        knowledge_level: knowledge_assertion
+        agent_type: manual_agent
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/disease_causes_feature"
-        # testExamples:
-        #   - qInput: "MONDO:0000490"      ## glomerulosclerosis
-        #     oneOutput: "MONDO:0001106"   ## kidney failure
+        testExamples:
+          - qInput: "MONDO:0000490"      ## glomerulosclerosis
+            oneOutput: "MONDO:0001106"   ## kidney failure
     disease_causes_feature-rev:
       - supportBatch: true
         useTemplating: true
@@ -1412,11 +1455,13 @@ components:
           size: 1000  ## note the size limit
         predicate: caused_by
         source: "infores:mondo"
+        knowledge_level: knowledge_assertion
+        agent_type: manual_agent
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/mondo"
-        # testExamples:
-        #   - qInput: "MONDO:0001106"      ## kidney failure
-        #     oneOutput: "MONDO:0000490"   ## glomerulosclerosis
+        testExamples:
+          - qInput: "MONDO:0001106"      ## kidney failure
+            oneOutput: "MONDO:0000490"   ## glomerulosclerosis
     disease_arises_from_feature:
       - supportBatch: true
         useTemplating: true
@@ -1437,11 +1482,13 @@ components:
           size: 1000  ## note the size limit
         predicate: caused_by
         source: "infores:mondo"
+        knowledge_level: knowledge_assertion
+        agent_type: manual_agent
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/disease_arises_from_feature"
-          # testExamples:
-          #   - qInput: "MONDO:0009346"      ## histidinuria due to a renal tubular defect
-          #     oneOutput: "MONDO:0021568"   ## renal tubule disease
+          testExamples:
+            - qInput: "MONDO:0009346"      ## histidinuria due to a renal tubular defect
+              oneOutput: "MONDO:0021568"   ## renal tubule disease
     disease_arises_from_feature-rev:
       - supportBatch: true
         useTemplating: true
@@ -1460,8 +1507,10 @@ components:
           size: 1000  ## note the size limit
         predicate: causes
         source: "infores:mondo"
+        knowledge_level: knowledge_assertion
+        agent_type: manual_agent
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/mondo"
-        # testExamples:
-        #   - qInput: "MONDO:0021568"      ## renal tubule disease
-        #     oneOutput: "MONDO:0009346"   ## histidinuria due to a renal tubular defect
+        testExamples:
+          - qInput: "MONDO:0021568"      ## renal tubule disease
+            oneOutput: "MONDO:0009346"   ## histidinuria due to a renal tubular defect

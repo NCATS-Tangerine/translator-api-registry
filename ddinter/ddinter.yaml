@@ -16,13 +16,10 @@ info:
     component: KP
     team:
       - Service Provider
-    biolink-version: "3.5.0"
+    biolink-version: "4.1.6"
 servers:
 - description: Encrypted Production server
   url: https://biothings.ncats.io/ddinter
-  x-maturity: production
-- description: Production server
-  url: http://biothings.ncats.io/ddinter
   x-maturity: production
 - url: https://biothings.test.transltr.io/ddinter
   description: ITRB Test server
@@ -583,6 +580,9 @@ components:
   ## - ddinter also has 100% coverage but is an internal database ID not supported by SRI
   ## - chembl and pubchem coverage is 80-85%
   ## levels of interaction: major, moderate, minor, unknown
+  ## knowledge_level / agent_type: based on paper https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8728114/
+  ## - seemed like a semi-automated process to collect all the interactions, 
+  ##   then manual curation to go through them all and assign "level"
     drugA-to-drugB:
     ## 160,235 records 
       - supportBatch: true
@@ -607,12 +607,14 @@ components:
           size: 1000
         predicate: interacts_with
         source: "infores:ddinter"
+        knowledge_level: knowledge_assertion
+        agent_type: manual_validation_of_automated_agent
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/drugB"
         ## compare to http://ddinter.scbdd.com/ddinter/interact/977140/
-        # testExamples:
-        #   - qInput: "DRUGBANK:DB00244"      ## Mesalazine 
-        #     oneOutput: "DRUGBANK:DB00414"   ## Acetohexamide
+        testExamples:
+          - qInput: "DRUGBANK:DB00244"      ## Mesalazine 
+            oneOutput: "DRUGBANK:DB00414"   ## Acetohexamide
     drugB-to-drugA:
       - supportBatch: true
         useTemplating: true
@@ -633,12 +635,14 @@ components:
           size: 1000
         predicate: interacts_with
         source: "infores:ddinter"
+        knowledge_level: knowledge_assertion
+        agent_type: manual_validation_of_automated_agent
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/drugA"
         ## compare to http://ddinter.scbdd.com/ddinter/interact/1047482/
-        # testExamples:
-        #   - qInput: "DRUGBANK:DB00540"      ## Nortriptyline 
-        #     oneOutput: "DRUGBANK:DB00451"   ## Levothyroxine
+        testExamples:
+          - qInput: "DRUGBANK:DB00540"      ## Nortriptyline 
+            oneOutput: "DRUGBANK:DB00451"   ## Levothyroxine
   x-bte-response-mapping:
     drugB:
       DRUGBANK: drug_b.drugbank

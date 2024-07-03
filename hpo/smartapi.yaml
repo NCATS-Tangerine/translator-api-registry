@@ -15,13 +15,10 @@ info:
     component: KP
     team:
       - Service Provider
-    biolink-version: "3.5.3"
+    biolink-version: "4.1.6"
 servers:
 - description: Encrypted Production server
   url: https://biothings.ncats.io/hpo
-  x-maturity: production
-- description: Production server
-  url: http://biothings.ncats.io/hpo
   x-maturity: production
 - url: https://biothings.test.transltr.io/hpo
   description: ITRB Test server
@@ -598,11 +595,13 @@ components:
         fields: annotations.gene.id
       predicate: condition_associated_with_gene
       source: "infores:hpo-annotations"
+      knowledge_level: knowledge_assertion
+      agent_type: not_provided
       response_mapping:
         $ref: '#/components/x-bte-response-mapping/annotated-genes'
-      # testExamples:
-      #   - qInput: "HP:0031445"            ## Oral mucosa nodule
-      #     oneOutput: "NCBIGene:11146"     ## GLMN
+      testExamples:
+        - qInput: "HP:0031445"            ## Oral mucosa nodule
+          oneOutput: "NCBIGene:11146"     ## GLMN
     pheno_gene-rev:
     - supportBatch: true
       useTemplating: true
@@ -621,11 +620,13 @@ components:
         fields: _id
       predicate: gene_associated_with_condition
       source: "infores:hpo-annotations"
+      knowledge_level: knowledge_assertion
+      agent_type: not_provided
       response_mapping:
         $ref: '#/components/x-bte-response-mapping/hp-id'
-      # testExamples:
-      #   - qInput: "NCBIGene:3909"     ## LAMA3
-      #     oneOutput: "HP:0031446"     ## Erosion of oral mucosa
+      testExamples:
+        - qInput: "NCBIGene:3909"     ## LAMA3
+          oneOutput: "HP:0031446"     ## Erosion of oral mucosa
     has_subclass:
     ## 5607 records: https://biothings.ncats.io/hpo/query?q=_exists_:descendants
     - supportBatch: true
@@ -644,11 +645,13 @@ components:
         fields: descendants
       predicate: superclass_of  ## this is current biolink, same meaning as "has_subclass"
       source: "infores:hpo"
+      knowledge_level: knowledge_assertion
+      agent_type: manual_agent
       response_mapping:
         $ref: '#/components/x-bte-response-mapping/has_subclass'
-      # testExamples:
-      #   - qInput: "HP:0025598"        ## Inferior oblique muscle weakness
-      #     oneOutput: "HP:0025597"     ## Inferior oblique muscle restriction
+      testExamples:
+        - qInput: "HP:0025598"        ## Inferior oblique muscle weakness
+          oneOutput: "HP:0025597"     ## Inferior oblique muscle restriction
     subclass_of:
     - supportBatch: true
       useTemplating: true
@@ -666,11 +669,13 @@ components:
         fields: ancestors
       predicate: subclass_of
       source: "infores:hpo"
+      knowledge_level: knowledge_assertion
+      agent_type: manual_agent
       response_mapping:
         $ref: '#/components/x-bte-response-mapping/subclass_of'
-      # testExamples:
-      #   - qInput: "HP:0025532"        ## Positive pathergy test
-      #     oneOutput: "HP:0011122"     ## Abnormality of skin physiology
+      testExamples:
+        - qInput: "HP:0025532"        ## Positive pathergy test
+          oneOutput: "HP:0011122"     ## Abnormality of skin physiology
   x-bte-response-mapping:
     annotated-genes:
       NCBIGene: annotations.gene.id

@@ -17,13 +17,10 @@ info:
     component: KP
     team:
       - Service Provider
-    biolink-version: "3.5.0"
+    biolink-version: "4.1.6"
 servers:
 - description: Encrypted Production server
   url: https://biothings.ncats.io/bioplanet_pathway_gene
-  x-maturity: production
-- description: Production server
-  url: http://biothings.ncats.io/bioplanet_pathway_gene
   x-maturity: production
 - url: https://biothings.test.transltr.io/bioplanet_pathway_gene
   description: ITRB Test server
@@ -579,6 +576,7 @@ components:
   x-bte-kgs-operations:
   ##   API pathway IDs don't have a bioplanet prefix on them (but they are in the format bioplanet_276)
   ## also has pathway categories but that's more of a node-attribute
+  ## knowledge_level / agent_type: based on manual curation work described in https://doi.org/10.3389/fphar.2019.00445
     pathway-gene:
       - supportBatch: true
         useTemplating: true ## flag to say templating is being used below
@@ -602,11 +600,13 @@ components:
         ## using the same predicate that biolink (monarch) api uses
         predicate: has_participant
         source: "infores:bioplanet"
+        knowledge_level: knowledge_assertion
+        agent_type: manual_agent
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/gene"
-        # testExamples:
-        #   - qInput: "ncats.bioplanet:bioplanet_869"     ## Chondroitin sulfate/dermatan sulfate metabolism
-        #     oneOutput: "NCBIGene:9672"                  ## SDC3
+        testExamples:
+          - qInput: "ncats.bioplanet:bioplanet_869"     ## Chondroitin sulfate/dermatan sulfate metabolism
+            oneOutput: "NCBIGene:9672"                  ## SDC3
     gene-pathway:
       - supportBatch: true
         useTemplating: true ## flag to say templating is being used below
@@ -629,11 +629,13 @@ components:
           size: 1000
         predicate: participates_in
         source: "infores:bioplanet"
+        knowledge_level: knowledge_assertion
+        agent_type: manual_agent
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/pathway"
-        # testExamples:
-        #   - qInput: "NCBIGene:1463"                         ## NCAN 
-        #     oneOutput: "ncats.bioplanet:bioplanet_789"      ## Dermatan sulfate biosynthesis
+        testExamples:
+          - qInput: "NCBIGene:1463"                         ## NCAN 
+            oneOutput: "ncats.bioplanet:bioplanet_789"      ## Dermatan sulfate biosynthesis
   x-bte-response-mapping:
     gene:
       NCBIGene: subject.GENE_ID           ## no prefix

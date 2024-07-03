@@ -18,7 +18,7 @@ info:
     component: KP
     team:
       - Service Provider
-    biolink-version: "3.5.3"
+    biolink-version: "4.1.6"
 servers:
 - description: Encrypted Production server
   url: https://biothings.ncats.io/suppkg
@@ -605,14 +605,17 @@ components:
             subject.semtypes:(aapp OR antb OR bacs OR dsp OR food OR inch OR orch OR phsu OR vita) AND
             (NOT subject.semtypes:(bact OR gngm OR plnt)) AND
             predicate:TREATS AND
-            object.semtypes:(acab OR anab OR cgab OR comd OR dsyn OR mobd OR neop)
-        predicate: treats
-        source: "infores:suppkg" # no infores for suppkg yet
+            object.semtypes:(acab OR cgab OR comd OR dsyn OR mobd OR neop)
+        ## using these predicates because the relationship comes from text-mining
+        predicate: treats_or_applied_or_studied_to_treat
+        source: "infores:suppkg"
+        knowledge_level: not_provided
+        agent_type: text_mining_agent
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/object"
-        # testExamples:
-        #   - qInput: "UMLS:C0016277"      ## Fluconazole
-        #     oneOutput: "UMLS:C0009324"   ## ulcerative colitis
+        testExamples:
+          - qInput: "UMLS:C0016277"      ## Fluconazole aka PUBCHEM.COMPOUND:3365
+            oneOutput: "UMLS:C0009324"   ## ulcerative colitis aka MONDO:0005101
     disease-treated_by-supplement:
       - supportBatch: true
         useTemplating: true
@@ -633,14 +636,16 @@ components:
             subject.semtypes:(aapp OR antb OR bacs OR dsp OR food OR inch OR orch OR phsu OR vita) AND
             (NOT subject.semtypes:(bact OR gngm OR plnt)) AND
             predicate:TREATS AND
-            object.semtypes:(acab OR anab OR cgab OR comd OR dsyn OR mobd OR neop)
-        predicate: treated_by
-        source: "infores:suppkg" # no infores for suppkg yet
+            object.semtypes:(acab OR cgab OR comd OR dsyn OR mobd OR neop)
+        predicate: subject_of_treatment_application_or_study_for_treatment_by
+        source: "infores:suppkg"
+        knowledge_level: not_provided
+        agent_type: text_mining_agent
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/subject"
-        # testExamples:
-        #   - qInput: "UMLS:C0009324"      ## ulcerative colitis
-        #     oneOutput: "UMLS:DC0023791"   ## (r)-dithiolane-3-pentanoic acid
+        testExamples:
+          - qInput: "UMLS:C0009324"       ## ulcerative colitis aka MONDO:0005101
+            oneOutput: "UMLS:DC0023791"   ## (r)-dithiolane-3-pentanoic acid
   x-bte-response-mapping:
     object:
       UMLS: object.umls

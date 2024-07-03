@@ -18,7 +18,7 @@ info:
     component: KP
     team:
       - Service Provider
-    biolink-version: "3.5.0"
+    biolink-version: "4.1.6"
 servers:
 - url: https://www.ncbi.nlm.nih.gov/research/bionlp/litvar/api/v1
   description: Production server
@@ -44,6 +44,8 @@ paths:
       x-bte-kgs-operations:
       - "$ref": "#/components/x-bte-kgs-operations/variant_located_in_gene"
 components:
+## knowledge_level / agent_type: gene assignments seem to happen in automated build process 
+##   https://www.ncbi.nlm.nih.gov/books/NBK21088/#_ch5_ch5_s4_
   x-bte-kgs-operations:
     variant_located_in_gene:
     ## API cannot do the reverse operation
@@ -59,11 +61,13 @@ components:
         semantic: Gene
       predicate: is_sequence_variant_of
       source: "infores:dbsnp"
+      knowledge_level: knowledge_assertion
+      agent_type: automated_agent
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/variant_located_in_gene"
-      # testExamples:
-      #   - qInput: "DBSNP:rs121913527"   
-      #     oneOutput: "NCBIGene:3845"    ## KRAS
+      testExamples:
+        - qInput: "DBSNP:rs121913527"   
+          oneOutput: "NCBIGene:3845"    ## KRAS
       ## another example input is rs1193171808
   ## raw query example: https://www.ncbi.nlm.nih.gov/research/bionlp/litvar/api/v1/entity/litvar/rs121913527%23%23
   x-bte-response-mapping:
