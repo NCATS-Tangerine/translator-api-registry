@@ -15,12 +15,13 @@ info:
     biolink-version: "4.1.6"
     infores: "infores:biothings-explorer"
   x-trapi:
-    version: 1.4.0
+    version: "1.5.0"
+    multicuriequery: false
+    pathfinderquery: true  ## dev instance only
     asyncquery: true
     operations:
     ## look at https://standards.ncats.io/operation.json for details.
-    ## could use lookup_and_score in the future?
-      - lookup
+      - lookup_and_score
     ## /query endpoints have a limit of 15 requests/client/min
     ## /meta_knowledge_graph endpoints have a limit of 30 requests/client/min
     ## other endpoints don't have rate limits
@@ -30,10 +31,11 @@ info:
       default: 
         url: "https://raw.githubusercontent.com/NCATS-Tangerine/translator-api-registry/master/biothings_explorer/sri-test-bte-ara.json"
 servers:
-## ITRB Production and Test deployments are made by ITRB, based on the staging instance
-## ITRB CI / staging deployments are made by our team (will add details later)
-## non-ITRB dev: deployments are made by our team
-##               we have full control on when / what branches for modules are used
+## ITRB Production and Test deployments are made by ITRB when we make a change request. 
+##   These deployments use a snapshot of the staging instance. 
+## ITRB CI / staging deployments are made by our team.
+## non-ITRB dev deployments are made by our team.
+##   We have full control on when / what branches for modules are used
 - url: https://bte.transltr.io/v1
   description: ITRB Production server
   x-maturity: production
@@ -47,7 +49,7 @@ servers:
   description: Non-ITRB dev (internal use)
   x-maturity: development
 tags:
-- name: 1.4.0
+- name: "1.5.0"
 - name: meta_knowledge_graph
 - name: query
 - name: asyncquery
@@ -135,13 +137,13 @@ paths:
         - query
       summary: Initiate a TRAPI-format query to BTE (operating as an ARA) and wait to receive a Response
       parameters:
-        - description: option to choose whether or not to enable caching
+        - description: Legacy option to explicitly enable/disable caching.
           in: query
           name: caching
           required: false
           schema:
             type: boolean
-        - description: dryrun a query (logs the queries BTE will make)
+        - description: Dryrun a query (logs the queries BTE would make without running them)
           in: query
           name: dryrun
           required: false
@@ -235,13 +237,13 @@ paths:
           example: 09c8782d9f4027712e65b95424adba79  ## MyVariant
           schema:
             type: string
-        - description: option to choose whether or not to enable caching
+        - description: Legacy option to explicitly enable/disable caching.
           in: query
           name: caching
           required: false
           schema:
             type: boolean
-        - description: dryrun a query (logs the queries BTE will make)
+        - description: Dryrun a query (logs the queries BTE would make without running them)
           in: query
           name: dryrun
           required: false
@@ -343,13 +345,13 @@ paths:
               - Multiomics Provider
               - Text Mining Provider
               - Service Provider
-        - description: option to choose whether or not to enable caching
+        - description: Legacy option to explicitly enable/disable caching.
           in: query
           name: caching
           required: false
           schema:
             type: boolean
-        - description: dryrun a query (logs the queries BTE will make)
+        - description: Dryrun a query (logs the queries BTE would make without running them)
           in: query
           name: dryrun
           required: false
@@ -440,13 +442,13 @@ paths:
         manner: it will provide a job-id that can be used to check the status or retrieve
         the Response.
       parameters:
-        - description: option to choose whether or not to enable caching
+        - description: Legacy option to explicitly enable/disable caching.
           in: query
           name: caching
           required: false
           schema:
             type: boolean
-        - description: dryrun a query (logs the queries BTE will make)
+        - description: Dryrun a query (logs the queries BTE would make without running them)
           in: query
           name: dryrun
           required: false
@@ -553,13 +555,13 @@ paths:
           example: 09c8782d9f4027712e65b95424adba79  ## MyVariant
           schema:
             type: string
-        - description: option to choose whether or not to enable caching
+        - description: Legacy option to explicitly enable/disable caching.
           in: query
           name: caching
           required: false
           schema:
             type: boolean
-        - description: dryrun a query (logs the queries BTE will make)
+        - description: Dryrun a query (logs the queries BTE would make without running them)
           in: query
           name: dryrun
           required: false
@@ -672,13 +674,13 @@ paths:
               - Multiomics Provider
               - Text Mining Provider
               - Service Provider
-        - description: option to choose whether or not to enable caching
+        - description: Legacy option to explicitly enable/disable caching.
           in: query
           name: caching
           required: false
           schema:
             type: boolean
-        - description: dryrun a query (logs the queries BTE will make)
+        - description: Dryrun a query (logs the queries BTE would make without running them)
           in: query
           name: dryrun
           required: false
@@ -777,6 +779,22 @@ paths:
           required: true
           schema:
             type: string
+        - description: >-
+            When specified, the TRAPI logs returned will be of this level of importance or higher. This setting
+            will override the log_level setting in the job's TRAPI query.
+
+            If it's not specified, BTE will use the log_level setting in the job's TRAPI query or return all logs
+            (the default). 
+          in: query
+          name: log_level
+          required: false
+          schema:
+            type: string
+            enum:
+              - ERROR
+              - WARNING
+              - INFO
+              - DEBUG
       responses:
         '200':
           description: >-
@@ -799,6 +817,63 @@ paths:
             application/json:
               schema:
                 type: string
+  ## custom endpoint: copied and modified asyncquery_status endpoint spec
+  /asyncquery_response/{job_id}:
+    get:
+      tags:
+        - asyncquery_response
+      summary: >-
+        If the previously submitted asyncquery is still pending/in-progress, this endpoint will return the same
+        response as the asyncquery_status endpoint (status, logs). But if the asyncquery job is finished, 
+        the complete TRAPI response to the query will be returned
+      operationId: asyncquery_response
+      parameters:
+        - in: path
+          name: job_id
+          description: Identifier of the job for status request
+          # example: rXEOAosN3L
+          required: true
+          schema:
+            type: string
+        - description: >-
+            When specified, the TRAPI logs returned will be of this level of importance or higher. This setting
+            will override the log_level setting in the job's TRAPI query.
+
+            If it's not specified, BTE will use the log_level setting in the job's TRAPI query or return all logs
+            (the default). 
+          in: query
+          name: log_level
+          required: false
+          schema:
+            type: string
+            enum:
+              - ERROR
+              - WARNING
+              - INFO
+              - DEBUG
+      responses:
+        '200':
+          description: >-
+            Response format depends on status of the job (pending/in-progress vs finished)
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/AsyncQueryStatusResponse'
+                  - $ref: '#/components/schemas/Response'
+        '404':
+          description: job_id not found
+        '501':
+          description: >-
+            Return code 501 indicates that this endpoint has not been
+            implemented at this site. Sites that implement /asyncquery
+            MUST implement /asyncquery_status/{job_id}, but those that
+            do not implement /asyncquery SHOULD NOT implement
+            /asyncquery_status.
+          content:
+            application/json:
+              schema:
+                type: string
 components:
   ## look for comments to see parts that have been modified for BTE
   ## also, many sections have additionalProperties: true
@@ -806,8 +881,10 @@ components:
   ## - AsyncQuery: callback property not required (commented it out of the 'required' field),
   ##               comment out workflow.oneOf section
   ## - Response: comment out workflow.oneOf section
-  ## - Attribute: comment out properties.attributes.items since the self-$ref breaks execution of 
-  ##              BTE's api-schema-builder/openapi-validator-middleware
+  ## - Attribute: comment out type and items. The self-$ref in items breaks BTE, because
+  ##              an error occurs in its api-schema-builder/openapi-validator-middleware.
+  ##              The type is commented out because there'd be a semantic error for
+  ##              specifying an array without items. 
   schemas:
     Query:
       description: >-
@@ -822,7 +899,9 @@ components:
       type: object
       properties:
         message:
-          $ref: '#/components/schemas/Message'
+          oneOf:
+            - $ref: '#/components/schemas/Message'
+          nullable: false
           description: >-
             The query Message is a serialization of the user request. Content
             of the Message object depends on the intended TRAPI operation. For
@@ -837,7 +916,7 @@ components:
         workflow:
           description: List of workflow steps to be executed.
           # oneOf:
-          #   - $ref: http://standards.ncats.io/workflow/1.3.4/schema
+          #   - $ref: https://standards.ncats.io/workflow/1.3.5/schema
           nullable: true
         submitter:
           type: string
@@ -846,6 +925,16 @@ components:
             purpose of this optional field is to aid in the tracking of
             the source of queries for development and issue resolution.
           nullable: true
+        bypass_cache:
+          type: boolean
+          default: false
+          description: >-
+            Set to true in order to request that the agent obtain
+            fresh information from its sources in all cases where
+            it has a viable choice between requesting fresh information
+            in real time and using cached information. The agent
+            receiving this flag MUST also include it in TRAPI sent to
+            downstream sources (e.g., ARS -> ARAs -> KPs).
       additionalProperties: true
       required:
         - message
@@ -858,6 +947,7 @@ components:
       properties:
         callback:
           type: string
+          nullable: false
           format: uri
           pattern: ^https?://
           description: >-
@@ -870,7 +960,9 @@ components:
             does not succeed, the server SHOULD retry the POST at least
             once.
         message:
-          $ref: '#/components/schemas/Message'
+          oneOf:
+            - $ref: '#/components/schemas/Message'
+          nullable: false
           description: >-
             The query Message is a serialization of the user request. Content
             of the Message object depends on the intended TRAPI operation. For
@@ -885,7 +977,7 @@ components:
         workflow:
           description: List of workflow steps to be executed.
           # oneOf:
-          #   - $ref: http://standards.ncats.io/workflow/1.3.4/schema
+          #   - $ref: https://standards.ncats.io/workflow/1.3.5/schema
           nullable: true
         submitter:
           type: string
@@ -894,6 +986,16 @@ components:
             purpose of this optional field is to aid in the tracking of
             the source of queries for development and issue resolution.
           nullable: true
+        bypass_cache:
+          type: boolean
+          default: false
+          description: >-
+            Set to true in order to request that the agent obtain
+            fresh information from its sources in all cases where
+            it has a viable choice between requesting fresh information
+            in real time and using cached information. The agent
+            receiving this flag MUST also include it in TRAPI sent to
+            downstream sources (e.g., ARS -> ARAs -> KPs).
       additionalProperties: true
       required:
       ## BTE does not require the callback property, see the asyncquery
@@ -961,6 +1063,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/LogEntry'
+          minItems: 1
           nullable: false
         response_url:
           description: >-
@@ -988,7 +1091,9 @@ components:
           description: >-
             Contains the knowledge of the response (query graph, knowledge
             graph, and results).
-          $ref: '#/components/schemas/Message'
+          oneOf:
+            - $ref: '#/components/schemas/Message'
+          nullable: false
         status:
           description: >-
             One of a standardized set of short codes,
@@ -1009,20 +1114,23 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/LogEntry'
-          nullable: true
+          minItems: 0
+          nullable: false
         workflow:
           description: List of workflow steps that were executed.
           # oneOf:
-          #   - $ref: http://standards.ncats.io/workflow/1.3.4/schema
+          #   - $ref: https://standards.ncats.io/workflow/1.3.5/schema
           nullable: true
         schema_version:
           type: string
           example: 1.4.0
           description: Version label of the TRAPI schema used in this document
+          nullable: true
         biolink_version:
           type: string
           example: 3.1.2
           description: Version label of the Biolink model used in this document
+          nullable: true
       additionalProperties: true
       required:
         - message
@@ -1042,11 +1150,16 @@ components:
           description: >-
             List of all returned Result objects for the query posed.
             The list SHOULD NOT be assumed to be ordered. The 'score' property,
-             if present, MAY be used to infer result rankings.
+            if present, MAY be used to infer result rankings. If Results are
+            not expected (such as for a query Message), this property SHOULD
+            be null or absent. If Results are expected (such as for a response
+            Message) and no Results are available, this property SHOULD be an
+            array with 0 Results in it.
           type: array
           items:
             $ref: '#/components/schemas/Result'
           nullable: true
+          minItems: 0
         query_graph:
           description: >-
             QueryGraph object that contains a serialization of a query in the
@@ -1142,6 +1255,8 @@ components:
             type: array
             items:
               $ref: '#/components/schemas/NodeBinding'
+            minItems: 1
+          nullable: false 
         analyses:
           type: array
           description: >-
@@ -1149,6 +1264,8 @@ components:
             See below for Analysis components.
           items:
             $ref: '#/components/schemas/Analysis'
+          minItems: 0
+          nullable: false 
       additionalProperties: true
       required:
         - node_bindings
@@ -1164,7 +1281,9 @@ components:
           Binding must bind directly to node in the original Query Graph.
       properties:
         id:
-          $ref: '#/components/schemas/CURIE'
+          oneOf:
+            - $ref: '#/components/schemas/CURIE'
+          nullable: false
           description: >-
             The CURIE of a Node within the Knowledge Graph.
         query_id:
@@ -1190,10 +1309,12 @@ components:
             result.
           items:
             $ref: '#/components/schemas/Attribute'
-          nullable: true
+          minItems: 0
+          nullable: false
       additionalProperties: true
       required:
         - id
+        - attributes
     Analysis:
       type: object
       description: >-
@@ -1271,6 +1392,7 @@ components:
         id:
           type: string
           description: The key identifier of a specific KnowledgeGraph Edge.
+          nullable: false
         attributes:
           type: array
           description: >-
@@ -1280,10 +1402,12 @@ components:
             result.
           items:
             $ref: '#/components/schemas/Attribute'
-          nullable: true
+          minItems: 0
+          nullable: false
       additionalProperties: true
       required:
         - id
+        - attributes
     AuxiliaryGraph:
       type: object
       description: >-
@@ -1310,10 +1434,12 @@ components:
             Attributes of the Auxiliary Graph
           items:
             $ref: '#/components/schemas/Attribute'
-          nullable: true
+          minItems: 0
+          nullable: false
       additionalProperties: true
       required:
         - edges
+        - attributes
     KnowledgeGraph:
       type: object
       description: >-
@@ -1381,8 +1507,20 @@ components:
           items:
             $ref: '#/components/schemas/CURIE'
           minItems: 1
-          example: [OMIM:603903]
-          description: CURIE identifier for this node
+          example: ["OMIM:603903"]
+          description: >-
+            A CURIE identifier (or list of identifiers) for this node. 
+            The 'ids' field will hold a list of CURIEs only in the case of a
+            BATCH set_interpretation, where each CURIE is queried 
+            separately. If a list of queried CURIEs is to be considered as a  
+            set (as under a MANY or ALL set_interpretation), the 'ids' field 
+            will hold a single id representing this set, and the individual members 
+            of this set will be captured in a separate 'member_ids' field. 
+            Note that the set id MUST be created as a UUID by the system that 
+            defines the queried set, using a centralized nodenorm service. 
+            Note also that downstream systems MUST re-use the original set UUID 
+            in the messages they create/send, which will facilitate merging or 
+            caching operations.
           nullable: true
         categories:
           type: array
@@ -1394,20 +1532,33 @@ components:
             $ref: '#/components/schemas/BiolinkEntity'
           minItems: 1
           nullable: true
-        is_set:
-          type: boolean
+        set_interpretation:
+          type: string
           description: >-
-            Boolean that if set to true, indicates that this QNode MAY have
-            multiple KnowledgeGraph Nodes bound to it within each Result.
-            The nodes in a set should be considered as a set of independent
-            nodes, rather than a set of dependent nodes, i.e., the answer
-            would still be valid if the nodes in the set were instead returned
-            individually. Multiple QNodes may have is_set=True. If a QNode
-            (n1) with is_set=True is connected to a QNode (n2) with
-            is_set=False, each n1 must be connected to n2. If a QNode (n1)
-            with is_set=True is connected to a QNode (n2) with is_set=True,
-            each n1 must be connected to at least one n2.
-          default: false
+            Indicates how multiple CURIEs in the ids property MUST be
+            interpreted. BATCH indicates that the query is intended to be
+            a batch query and each CURIE is treated independently. ALL means
+            that all specified CURIES MUST appear in each Result.
+            MANY means that member CURIEs MUST form one or more
+            sets in the Results, and sets with more members are generally
+            considered more desirable that sets with fewer members.
+            If this property is missing or null, the default is BATCH.
+          enum:
+            - BATCH
+            - ALL
+            - MANY
+          nullable: true
+        member_ids:
+          type: array
+          description: >-
+            A list of CURIE identifiers for members of a queried set. This 
+            field MUST be populated under a set_interpretation of MANY
+            or ALL, when the 'ids' field holds a UUID representing the set 
+            itself. This field MUST NOT be used under a set_interpretation 
+            of BATCH.
+          nullable: true
+          items:
+            $ref: '#/components/schemas/CURIE'
         constraints:
           type: array
           description: >-
@@ -1513,13 +1664,25 @@ components:
             categories should also be avoided.
           items:
             $ref: '#/components/schemas/BiolinkEntity'
-          nullable: true
+          minItems: 1
+          nullable: false
         attributes:
           type: array
           description: A list of attributes describing the node
           items:
             $ref: '#/components/schemas/Attribute'
-          nullable: true
+          minItems: 0
+          nullable: false
+        is_set:
+          type: boolean
+          description: >-
+            Indicates that the node represents a set of entities.
+            If this property is missing or null, it is assumed to be
+            false.
+          nullable: true        
+      required:
+        - categories
+        - attributes
       additionalProperties: false
     Attribute:
       type: object
@@ -1595,7 +1758,7 @@ components:
           example: Assertion Authored By Dr. Trans L. Ator
           nullable: true
         attributes:
-          type: array
+          # type: array
           description: >-
             A list of attributes providing further information about the
             parent attribute (for example to provide provenance
@@ -2063,7 +2226,7 @@ components:
             an Edge provided by the ARAGORN ARA can expressing knowledge it
             retrieved from both the automat-mychem-info and molepro KPs,
             which both provided it with records of this single fact.
-          example: [infores:automat-mychem-info, infores:molepro]
+          example: ["infores:automat-mychem-info", "infores:molepro"]
         source_record_urls:
           type: array
           nullable: true

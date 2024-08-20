@@ -4,7 +4,7 @@ info:
     email: help@biothings.io
     name: BioThings Team
     x-id: https://github.com/biothings
-    x-role: responsible developers
+    x-role: responsible organization
   description: >-
     Documentation of the BioThings API for [Pathway Figure OCR (pfocr)](https://pfocr.wikipathways.org/) 
     data.
@@ -21,6 +21,12 @@ servers:
 - description: Encrypted Production server
   url: https://biothings.ncats.io/pfocr
   x-maturity: production
+- url: https://biothings.test.transltr.io/pfocr
+  description: ITRB Test server
+  x-maturity: testing
+- url: https://biothings.ci.transltr.io/pfocr
+  description: ITRB CI server
+  x-maturity: staging
 tags:
 - name: geneset
 - name: gene
@@ -48,7 +54,7 @@ paths:
       - name: id
         in: path
         required: true
-        example: "PMC6063820__10815_2018_1180_Fig4_HTML.jpg"
+        example: "PMC9278000__gr2_lrg"
         schema:
           type: string
       - "$ref": "#/components/parameters/fields"
@@ -112,8 +118,8 @@ paths:
           application/json:
             example:
               ids:
-              - "PMC6063820__10815_2018_1180_Fig4_HTML.jpg"
-              - "PMC6057828__nihms944638f9.jpg"
+              - "PMC9278000__gr2_lrg"
+              - "PMC7835522__fcell-08-624216-g001"
             schema:
               type: object
               properties:
@@ -168,7 +174,7 @@ paths:
           API](https://docs.mychem.info/en/latest/doc/chem_query_service.html#query-syntax).
         in: query
         required: true
-        example: "associatedWith.mentions.genes.ncbigene:8740"
+        example: "associatedWith.mentions.diseases.mesh:D045169"
         schema:
           type: string
       - "$ref": "#/components/parameters/fields"
@@ -266,10 +272,10 @@ paths:
           application/json:
             example:
               q:
-              - "8740"
-              - "9771"
+              - "D045169"
+              - "D005355"
               scopes:
-              - "associatedWith.mentions.genes.ncbigene"
+              - "associatedWith.mentions.diseases.mesh"
             schema:
               type: object
               properties:
@@ -575,7 +581,7 @@ components:
   ## - Pathways don't have formal IDs that can be used
     gene-chem:
     ## https://biothings.ncats.io/pfocr/query?q=_exists_:associatedWith.mentions.chemicals%20AND%20_exists_:associatedWith.mentions.genes
-    ## 44081 documents. not clear how many gene-chem pairs there are. 
+    ## 34857 documents. not clear how many gene-chem pairs there are. 
       - supportBatch: true
         useTemplating: true ## flag to say templating is being used below
         inputs:
@@ -593,7 +599,7 @@ components:
         parameters:
           fields: >-
             associatedWith.mentions.chemicals.mesh,
-            associatedWith.figureUrl,associatedWith.pmc
+            associatedWith.figureUrl,associatedWith.pmc,associatedWith.pfocrUrl
           size: 1000
         predicate: occurs_together_in_literature_with
         source: "infores:pfocr"
@@ -603,7 +609,7 @@ components:
           "$ref": "#/components/x-bte-response-mapping/chem"
         testExamples:
           - qInput: "NCBIGene:3620"      ## IDO1
-            oneOutput: "MESH:D004958"    ## Estradiol
+            oneOutput: "MESH:D004958"    ## Estradiol / CHEBI:16469
         ## should have 2 figures: https://biothings.ncats.io/pfocr/query?q=associatedWith.mentions.chemicals.mesh:D004958%20AND%20associatedWith.mentions.genes.ncbigene:3620
     chem-gene:
       - supportBatch: true
@@ -623,7 +629,7 @@ components:
         parameters:
           fields: >-
             associatedWith.mentions.genes.ncbigene,
-            associatedWith.figureUrl,associatedWith.pmc
+            associatedWith.figureUrl,associatedWith.pmc,associatedWith.pfocrUrl
           size: 1000
         predicate: occurs_together_in_literature_with
         source: "infores:pfocr"
@@ -637,7 +643,7 @@ components:
         ## should have 9 figures: https://biothings.ncats.io/pfocr/query?q=associatedWith.mentions.chemicals.mesh:C000541%20AND%20associatedWith.mentions.genes.ncbigene:208
     disease-chem:
     ## https://biothings.ncats.io/pfocr/query?q=_exists_:associatedWith.mentions.diseases%20AND%20_exists_:associatedWith.mentions.chemicals
-    ## 9232 documents. not clear how many disease-chem pairs there are. 
+    ## 10180 documents. not clear how many disease-chem pairs there are. 
       - supportBatch: true
         useTemplating: true ## flag to say templating is being used below
         inputs:
@@ -655,7 +661,7 @@ components:
         parameters:
           fields: >-
             associatedWith.mentions.chemicals.mesh,
-            associatedWith.figureUrl,associatedWith.pmc
+            associatedWith.figureUrl,associatedWith.pmc,associatedWith.pfocrUrl
           size: 1000
         predicate: occurs_together_in_literature_with
         source: "infores:pfocr"
@@ -665,8 +671,8 @@ components:
           "$ref": "#/components/x-bte-response-mapping/chem"
         testExamples:
           - qInput: "MESH:D006623"       ## von Hippel-Lindau Disease
-            oneOutput: "MESH:C516667"    ## pazopanib
-        ## should have 9 figures: https://biothings.ncats.io/pfocr/query?q=associatedWith.mentions.chemicals.mesh:C516667%20AND%20associatedWith.mentions.diseases.mesh:D006623
+            oneOutput: "MESH:C516667"    ## pazopanib / CHEBI:71219
+        ## should have 2 figures: https://biothings.ncats.io/pfocr/query?q=associatedWith.mentions.chemicals.mesh:C516667%20AND%20associatedWith.mentions.diseases.mesh:D006623
     chem-disease:
       - supportBatch: true
         useTemplating: true ## flag to say templating is being used below
@@ -685,7 +691,7 @@ components:
         parameters:
           fields: >-
             associatedWith.mentions.diseases.mesh,
-            associatedWith.figureUrl,associatedWith.pmc
+            associatedWith.figureUrl,associatedWith.pmc,associatedWith.pfocrUrl
           size: 1000
         predicate: occurs_together_in_literature_with
         source: "infores:pfocr"
@@ -695,11 +701,11 @@ components:
           "$ref": "#/components/x-bte-response-mapping/disease"
         testExamples:
           - qInput: "MESH:D002945"       ## Cisplatin 
-            oneOutput: "MESH:D009369"    ## Neoplasms
-        ## should have 18 figures: https://biothings.ncats.io/pfocr/query?q=associatedWith.mentions.chemicals.mesh:D002945%20AND%20associatedWith.mentions.diseases.mesh:D009369
+            oneOutput: "MESH:D009369"    ## Neoplasms / MONDO:0005070
+        ## should have 22 figures: https://biothings.ncats.io/pfocr/query?q=associatedWith.mentions.chemicals.mesh:D002945%20AND%20associatedWith.mentions.diseases.mesh:D009369
     disease-gene:
     ## https://biothings.ncats.io/pfocr/query?q=_exists_:associatedWith.mentions.diseases%20AND%20_exists_:associatedWith.mentions.genes
-    ## 13354 documents. not clear how many disease-gene pairs there are. 
+    ## 11338 documents. not clear how many disease-gene pairs there are. 
       - supportBatch: true
         useTemplating: true ## flag to say templating is being used below
         inputs:
@@ -717,7 +723,7 @@ components:
         parameters:
           fields: >-
             associatedWith.mentions.genes.ncbigene,
-            associatedWith.figureUrl,associatedWith.pmc
+            associatedWith.figureUrl,associatedWith.pmc,associatedWith.pfocrUrl
           size: 1000
         predicate: occurs_together_in_literature_with
         source: "infores:pfocr"
@@ -747,7 +753,7 @@ components:
         parameters:
           fields: >-
             associatedWith.mentions.diseases.mesh,
-            associatedWith.figureUrl,associatedWith.pmc
+            associatedWith.figureUrl,associatedWith.pmc,associatedWith.pfocrUrl
           size: 1000
         predicate: occurs_together_in_literature_with
         source: "infores:pfocr"
@@ -757,8 +763,8 @@ components:
           "$ref": "#/components/x-bte-response-mapping/disease"
         testExamples:
           - qInput: "NCBIGene:3791"      ## KDR 
-            oneOutput: "MESH:D002318"    ## Cardiovascular Diseases
-        ## should have 1 figure: https://biothings.ncats.io/pfocr/query?q=associatedWith.mentions.genes.ncbigene:3791%20AND%20associatedWith.mentions.diseases.mesh:D002318
+            oneOutput: "MESH:D002289"    ## non-small cell lung carcinoma / MONDO:0005233
+        ## should have 3 figures: https://biothings.ncats.io/pfocr/query?q=associatedWith.mentions.genes.ncbigene:3791%20AND%20associatedWith.mentions.diseases.mesh:D002289
   x-bte-response-mapping:
     ## not including because because data-processing / biolink-modeling issues
     ## - associatedWith.title (title of figure)
@@ -766,11 +772,14 @@ components:
       MESH: associatedWith.mentions.chemicals.mesh   ## no prefix
       ref_url: associatedWith.figureUrl
       ref_pmcid: associatedWith.pmc                  ## no prefix (but IDs start with "PMC")
+      source_url: associatedWith.pfocrUrl
     gene:
       NCBIGene: associatedWith.mentions.genes.ncbigene   ## no prefix
       ref_url: associatedWith.figureUrl
       ref_pmcid: associatedWith.pmc
+      source_url: associatedWith.pfocrUrl
     disease:
       MESH: associatedWith.mentions.diseases.mesh   ## no prefix
       ref_url: associatedWith.figureUrl
       ref_pmcid: associatedWith.pmc
+      source_url: associatedWith.pfocrUrl
