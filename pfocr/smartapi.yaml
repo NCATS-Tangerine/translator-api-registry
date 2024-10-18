@@ -10,7 +10,7 @@ info:
     data.
   termsOfService: https://biothings.io/about
   title: BioThings PFOCR API
-  version: '2022-04-05'
+  version: '2024-09-01'
   x-translator:
     infores: "infores:biothings-pfocr"
     component: KP
@@ -311,12 +311,22 @@ paths:
       - query
       ## 6 operations
       x-bte-kgs-operations:
-      - $ref: '#/components/x-bte-kgs-operations/gene-chem'
-      - $ref: '#/components/x-bte-kgs-operations/chem-gene'
-      - $ref: '#/components/x-bte-kgs-operations/disease-chem'
-      - $ref: '#/components/x-bte-kgs-operations/chem-disease'
-      - $ref: '#/components/x-bte-kgs-operations/disease-gene'
-      - $ref: '#/components/x-bte-kgs-operations/gene-disease'
+      - $ref: '#/components/x-bte-kgs-operations/gene-chemMesh'
+      - $ref: '#/components/x-bte-kgs-operations/chemMesh-gene'
+      - $ref: '#/components/x-bte-kgs-operations/gene-chemChebi'
+      - $ref: '#/components/x-bte-kgs-operations/chemChebi-gene'
+      - $ref: '#/components/x-bte-kgs-operations/diseaseMesh-chemMesh'
+      - $ref: '#/components/x-bte-kgs-operations/chemMesh-diseaseMesh'
+      - $ref: '#/components/x-bte-kgs-operations/diseaseMesh-chemChebi'
+      - $ref: '#/components/x-bte-kgs-operations/chemChebi-diseaseMesh'
+      - $ref: '#/components/x-bte-kgs-operations/diseaseDoid-chemMesh'
+      - $ref: '#/components/x-bte-kgs-operations/chemMesh-diseaseDoid'
+      - $ref: '#/components/x-bte-kgs-operations/diseaseDoid-chemChebi'
+      - $ref: '#/components/x-bte-kgs-operations/chemChebi-diseaseDoid'
+      - $ref: '#/components/x-bte-kgs-operations/diseaseMesh-gene'
+      - $ref: '#/components/x-bte-kgs-operations/gene-diseaseMesh'
+      - $ref: '#/components/x-bte-kgs-operations/diseaseDoid-gene'
+      - $ref: '#/components/x-bte-kgs-operations/gene-diseaseDoid'
 components:
   parameters:
     callback:
@@ -579,9 +589,9 @@ components:
   x-bte-kgs-operations:
   ## 3 potential types: Disease, Gene, SmallMolecule (chem)
   ## - Pathways don't have formal IDs that can be used
-    gene-chem:
-    ## https://biothings.ncats.io/pfocr/query?q=_exists_:associatedWith.mentions.chemicals%20AND%20_exists_:associatedWith.mentions.genes
-    ## 34857 documents. not clear how many gene-chem pairs there are. 
+    gene-chemMesh:
+    ## https://biothings.ci.transltr.io/pfocr/query?q=_exists_:associatedWith.mentions.chemicals.mesh%20AND%20_exists_:associatedWith.mentions.genes
+    ## 35972 documents. not clear how many gene-chem pairs there are. 
       - supportBatch: true
         useTemplating: true ## flag to say templating is being used below
         inputs:
@@ -606,12 +616,12 @@ components:
         knowledge_level: not_provided
         agent_type: image_processing_agent
         response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/chem"
+          "$ref": "#/components/x-bte-response-mapping/chemMesh"
         testExamples:
-          - qInput: "NCBIGene:3620"      ## IDO1
-            oneOutput: "MESH:D004958"    ## Estradiol / CHEBI:16469
-        ## should have 2 figures: https://biothings.ncats.io/pfocr/query?q=associatedWith.mentions.chemicals.mesh:D004958%20AND%20associatedWith.mentions.genes.ncbigene:3620
-    chem-gene:
+          - qInput: "NCBIGene:9839"      ## ZEB2
+            oneOutput: "MESH:C024755"    ## H-2K(K) antigen
+        ## examples from https://biothings.ci.transltr.io/pfocr/query?q=_exists_:associatedWith.mentions.chemicals.mesh%20AND%20_exists_:associatedWith.mentions.genes%20AND%20NOT%20_exists_:associatedWith.mentions.chemicals.chebi
+    chemMesh-gene:
       - supportBatch: true
         useTemplating: true ## flag to say templating is being used below
         inputs:
@@ -638,12 +648,72 @@ components:
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/gene"
         testExamples:
-          - qInput: "MESH:C000541"       ## cyclopamine 
-            oneOutput: "NCBIGene:208"    ## AKT2
-        ## should have 9 figures: https://biothings.ncats.io/pfocr/query?q=associatedWith.mentions.chemicals.mesh:C000541%20AND%20associatedWith.mentions.genes.ncbigene:208
-    disease-chem:
-    ## https://biothings.ncats.io/pfocr/query?q=_exists_:associatedWith.mentions.diseases%20AND%20_exists_:associatedWith.mentions.chemicals
-    ## 10180 documents. not clear how many disease-chem pairs there are. 
+          - qInput: "MESH:C065632"       ## PUBCHEM.COMPOUND:131149 / glucosamine 3-O-sulfate
+            oneOutput: "NCBIGene:652"    ## BMP4
+    gene-chemChebi:
+    ## https://biothings.ci.transltr.io/pfocr/query?q=_exists_:associatedWith.mentions.chemicals.chebi%20AND%20_exists_:associatedWith.mentions.genes
+    ## 33791 documents. not clear how many gene-chem pairs there are. 
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: NCBIGene
+            semantic: Gene
+        requestBody:
+          body:
+            ## API data has no prefix
+            ## joinSafe is only needed if the delimiter isn't a comma
+            q: "{{ queryInputs }}"
+            scopes: associatedWith.mentions.genes.ncbigene
+        outputs:
+          - id: CHEBI
+            semantic: SmallMolecule
+        parameters:
+          fields: >-
+            associatedWith.mentions.chemicals.chebi,
+            associatedWith.figureUrl,associatedWith.pmc,associatedWith.pfocrUrl
+          size: 1000
+        predicate: occurs_together_in_literature_with
+        source: "infores:pfocr"
+        knowledge_level: not_provided
+        agent_type: image_processing_agent
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/chemChebi"
+        testExamples:
+          - qInput: "NCBIGene:5194"     ## PEX13
+            oneOutput: "CHEBI:61293"    ## adenyl nucleotide
+        ## examples from https://biothings.ci.transltr.io/pfocr/query?q=NOT%20_exists_:associatedWith.mentions.chemicals.mesh%20AND%20_exists_:associatedWith.mentions.genes%20AND%20_exists_:associatedWith.mentions.chemicals.chebi
+    chemChebi-gene:
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: CHEBI
+            semantic: SmallMolecule
+        requestBody:
+          body:
+            ## API data has no prefix
+            ## joinSafe is only needed if the delimiter isn't a comma
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: associatedWith.mentions.chemicals.chebi
+        outputs:
+          - id: NCBIGene
+            semantic: Gene
+        parameters:
+          fields: >-
+            associatedWith.mentions.genes.ncbigene,
+            associatedWith.figureUrl,associatedWith.pmc,associatedWith.pfocrUrl
+          size: 1000
+        predicate: occurs_together_in_literature_with
+        source: "infores:pfocr"
+        knowledge_level: not_provided
+        agent_type: image_processing_agent
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/gene"
+        testExamples:
+          - qInput: "CHEBI:4305"           ## dacarbazine
+            oneOutput: "NCBIGene:10657"    ## KHDRBS1
+    diseaseMesh-chemMesh:
+    ## https://biothings.ci.transltr.io/pfocr/query?q=_exists_:associatedWith.mentions.diseases.mesh%20AND%20_exists_:associatedWith.mentions.chemicals.mesh
+    ## 10739 documents. not clear how many disease-chem pairs there are. 
       - supportBatch: true
         useTemplating: true ## flag to say templating is being used below
         inputs:
@@ -668,12 +738,12 @@ components:
         knowledge_level: not_provided
         agent_type: image_processing_agent
         response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/chem"
+          "$ref": "#/components/x-bte-response-mapping/chemMesh"
         testExamples:
-          - qInput: "MESH:D006623"       ## von Hippel-Lindau Disease
-            oneOutput: "MESH:C516667"    ## pazopanib / CHEBI:71219
-        ## should have 2 figures: https://biothings.ncats.io/pfocr/query?q=associatedWith.mentions.chemicals.mesh:C516667%20AND%20associatedWith.mentions.diseases.mesh:D006623
-    chem-disease:
+          - qInput: "MESH:D056735"       ## autoimmune lymphoproliferative syndrome
+            oneOutput: "MESH:D017260"    ## Receptor-CD3 Complex, Antigen, T-Cell
+        ## examples from https://biothings.ci.transltr.io/pfocr/query?q=_exists_:associatedWith.mentions.diseases.mesh%20AND%20_exists_:associatedWith.mentions.chemicals.mesh%20AND%20NOT%20_exists_:associatedWith.mentions.diseases.doid%20AND%20NOT%20_exists_:associatedWith.mentions.chemicals.chebi
+    chemMesh-diseaseMesh:
       - supportBatch: true
         useTemplating: true ## flag to say templating is being used below
         inputs:
@@ -698,14 +768,196 @@ components:
         knowledge_level: not_provided
         agent_type: image_processing_agent
         response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/disease"
+          "$ref": "#/components/x-bte-response-mapping/diseaseMesh"
         testExamples:
-          - qInput: "MESH:D002945"       ## Cisplatin 
-            oneOutput: "MESH:D009369"    ## Neoplasms / MONDO:0005070
-        ## should have 22 figures: https://biothings.ncats.io/pfocr/query?q=associatedWith.mentions.chemicals.mesh:D002945%20AND%20associatedWith.mentions.diseases.mesh:D009369
-    disease-gene:
-    ## https://biothings.ncats.io/pfocr/query?q=_exists_:associatedWith.mentions.diseases%20AND%20_exists_:associatedWith.mentions.genes
-    ## 11338 documents. not clear how many disease-gene pairs there are. 
+          - qInput: "MESH:C051905"       ## Pectenotoxin 1
+            oneOutput: "MESH:C538445"    ## UMLS:C2931852 / Clear-cell metastatic renal cell carcinoma
+    diseaseMesh-chemChebi:
+    ## https://biothings.ci.transltr.io/pfocr/query?q=_exists_:associatedWith.mentions.diseases.mesh%20AND%20_exists_:associatedWith.mentions.chemicals.chebi
+    ## 9034 documents. not clear how many disease-chem pairs there are. 
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: MESH
+            semantic: Disease
+        requestBody:
+          body:
+            ## API data has no prefix
+            ## joinSafe is only needed if the delimiter isn't a comma
+            q: "{{ queryInputs }}"
+            scopes: associatedWith.mentions.diseases.mesh
+        outputs:
+          - id: CHEBI
+            semantic: SmallMolecule
+        parameters:
+          fields: >-
+            associatedWith.mentions.chemicals.chebi,
+            associatedWith.figureUrl,associatedWith.pmc,associatedWith.pfocrUrl
+          size: 1000
+        predicate: occurs_together_in_literature_with
+        source: "infores:pfocr"
+        knowledge_level: not_provided
+        agent_type: image_processing_agent
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/chemChebi"
+        testExamples:
+          - qInput: "MESH:D007239"      ## UMLS:C3714514 / Infection
+            oneOutput: "CHEBI:18186"    ## tyrosine
+        ## examples from https://biothings.ci.transltr.io/pfocr/query?q=_exists_:associatedWith.mentions.diseases.mesh%20AND%20NOT%20_exists_:associatedWith.mentions.chemicals.mesh%20AND%20NOT%20_exists_:associatedWith.mentions.diseases.doid%20AND%20_exists_:associatedWith.mentions.chemicals.chebi
+    chemChebi-diseaseMesh:
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: CHEBI
+            semantic: SmallMolecule
+        requestBody:
+          body:
+            ## API data has no prefix
+            ## joinSafe is only needed if the delimiter isn't a comma
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: associatedWith.mentions.chemicals.chebi
+        outputs:
+          - id: MESH
+            semantic: Disease
+        parameters:
+          fields: >-
+            associatedWith.mentions.diseases.mesh,
+            associatedWith.figureUrl,associatedWith.pmc,associatedWith.pfocrUrl
+          size: 1000
+        predicate: occurs_together_in_literature_with
+        source: "infores:pfocr"
+        knowledge_level: not_provided
+        agent_type: image_processing_agent
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/diseaseMesh"
+        testExamples:
+          - qInput: "CHEBI:29987"        ## glutamate(2-)
+            oneOutput: "MESH:D020388"    ## MONDO:0010679 / Duchenne muscular dystrophy
+    diseaseDoid-chemMesh:
+    ## https://biothings.ci.transltr.io/pfocr/query?q=_exists_:associatedWith.mentions.diseases.doid%20AND%20_exists_:associatedWith.mentions.chemicals.mesh
+    ## 4740 documents. not clear how many disease-chem pairs there are. 
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: DOID
+            semantic: Disease
+        requestBody:
+          body:
+            ## API data has no prefix
+            ## joinSafe is only needed if the delimiter isn't a comma
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: associatedWith.mentions.diseases.doid
+        outputs:
+          - id: MESH
+            semantic: SmallMolecule
+        parameters:
+          fields: >-
+            associatedWith.mentions.chemicals.mesh,
+            associatedWith.figureUrl,associatedWith.pmc,associatedWith.pfocrUrl
+          size: 1000
+        predicate: occurs_together_in_literature_with
+        source: "infores:pfocr"
+        knowledge_level: not_provided
+        agent_type: image_processing_agent
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/chemMesh"
+        testExamples:
+          - qInput: "DOID:3490"          ## MONDO:0018997 / Noonan syndrome
+            oneOutput: "MESH:D043169"    ## PUBCHEM.COMPOUND:187888 / Endostatin
+        ## examples from https://biothings.ci.transltr.io/pfocr/query?q=NOT%20_exists_:associatedWith.mentions.diseases.mesh%20AND%20_exists_:associatedWith.mentions.chemicals.mesh%20AND%20_exists_:associatedWith.mentions.diseases.doid%20AND%20NOT%20_exists_:associatedWith.mentions.chemicals.chebi
+    chemMesh-diseaseDoid:
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: MESH
+            semantic: SmallMolecule
+        requestBody:
+          body:
+            ## API data has no prefix
+            ## joinSafe is only needed if the delimiter isn't a comma
+            q: "{{ queryInputs }}"
+            scopes: associatedWith.mentions.chemicals.mesh
+        outputs:
+          - id: DOID
+            semantic: Disease
+        parameters:
+          fields: >-
+            associatedWith.mentions.diseases.doid,
+            associatedWith.figureUrl,associatedWith.pmc,associatedWith.pfocrUrl
+          size: 1000
+        predicate: occurs_together_in_literature_with
+        source: "infores:pfocr"
+        knowledge_level: not_provided
+        agent_type: image_processing_agent
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/diseaseDoid"
+        testExamples:
+          - qInput: "MESH:C544831"    ## CHEBI:91418 / Foretinib
+            oneOutput: "DOID:1324"    ## MONDO:0008903 / lung cancer
+    diseaseDoid-chemChebi:
+    ## https://biothings.ci.transltr.io/pfocr/query?q=_exists_:associatedWith.mentions.diseases.doid%20AND%20_exists_:associatedWith.mentions.chemicals.chebi
+    ## 4472 documents. not clear how many disease-chem pairs there are. 
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: DOID
+            semantic: Disease
+        requestBody:
+          body:
+            ## API data has no prefix
+            ## joinSafe is only needed if the delimiter isn't a comma
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: associatedWith.mentions.diseases.doid
+        outputs:
+          - id: CHEBI
+            semantic: SmallMolecule
+        parameters:
+          fields: >-
+            associatedWith.mentions.chemicals.chebi,
+            associatedWith.figureUrl,associatedWith.pmc,associatedWith.pfocrUrl
+          size: 1000
+        predicate: occurs_together_in_literature_with
+        source: "infores:pfocr"
+        knowledge_level: not_provided
+        agent_type: image_processing_agent
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/chemChebi"
+        testExamples:
+          - qInput: "DOID:576"          ## MONDO:0003634 / proteinuria
+            oneOutput: "CHEBI:26523"    ## reactive oxygen species
+        ## examples from https://biothings.ci.transltr.io/pfocr/query?q=NOT%20_exists_:associatedWith.mentions.diseases.mesh%20AND%20NOT%20_exists_:associatedWith.mentions.chemicals.mesh%20AND%20_exists_:associatedWith.mentions.diseases.doid%20AND%20_exists_:associatedWith.mentions.chemicals.chebi
+    chemChebi-diseaseDoid:
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: CHEBI
+            semantic: SmallMolecule
+        requestBody:
+          body:
+            ## API data has no prefix
+            ## joinSafe is only needed if the delimiter isn't a comma
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: associatedWith.mentions.chemicals.chebi
+        outputs:
+          - id: DOID
+            semantic: Disease
+        parameters:
+          fields: >-
+            associatedWith.mentions.diseases.doid,
+            associatedWith.figureUrl,associatedWith.pmc,associatedWith.pfocrUrl
+          size: 1000
+        predicate: occurs_together_in_literature_with
+        source: "infores:pfocr"
+        knowledge_level: not_provided
+        agent_type: image_processing_agent
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/diseaseDoid"
+        testExamples:
+          - qInput: "CHEBI:50903"      ## carcinogenic agent
+            oneOutput: "DOID:10283"    ## MONDO:0008315 / prostate cancer
+    diseaseMesh-gene:
+    ## https://biothings.ci.transltr.io/pfocr/query?q=_exists_:associatedWith.mentions.diseases.mesh%20AND%20_exists_:associatedWith.mentions.genes
+    ## 11992 documents. not clear how many disease-gene pairs there are. 
       - supportBatch: true
         useTemplating: true ## flag to say templating is being used below
         inputs:
@@ -732,10 +984,10 @@ components:
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/gene"
         testExamples:
-          - qInput: "MESH:D005199"       ## Fanconi Anemia
-            oneOutput: "NCBIGene:672"    ## BRCA1
-        ## should have 7 figures: https://biothings.ncats.io/pfocr/query?q=associatedWith.mentions.genes.ncbigene:672%20AND%20associatedWith.mentions.diseases.mesh:D005199
-    gene-disease:
+          - qInput: "MESH:D000860"         ## MONDO:0004952 / Hodgkins lymphoma
+            oneOutput: "NCBIGene:27035"    ## NOX1
+        ## examples from https://biothings.ci.transltr.io/pfocr/query?q=_exists_:associatedWith.mentions.diseases.mesh%20AND%20_exists_:associatedWith.mentions.genes%20AND%20NOT%20_exists_:associatedWith.mentions.diseases.doid
+    gene-diseaseMesh:
       - supportBatch: true
         useTemplating: true ## flag to say templating is being used below
         inputs:
@@ -760,16 +1012,81 @@ components:
         knowledge_level: not_provided
         agent_type: image_processing_agent
         response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/disease"
+          "$ref": "#/components/x-bte-response-mapping/diseaseMesh"
         testExamples:
-          - qInput: "NCBIGene:3791"      ## KDR 
-            oneOutput: "MESH:D002289"    ## non-small cell lung carcinoma / MONDO:0005233
-        ## should have 3 figures: https://biothings.ncats.io/pfocr/query?q=associatedWith.mentions.genes.ncbigene:3791%20AND%20associatedWith.mentions.diseases.mesh:D002289
+          - qInput: "NCBIGene:940"       ## CD28
+            oneOutput: "MESH:D056735"    ## MONDO:0017979 / autoimmune lymphoproliferative syndrome
+    diseaseDoid-gene:
+    ## https://biothings.ci.transltr.io/pfocr/query?q=_exists_:associatedWith.mentions.diseases.doid%20AND%20_exists_:associatedWith.mentions.genes
+    ## 10929 documents. not clear how many disease-gene pairs there are. 
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: DOID
+            semantic: Disease
+        requestBody:
+          body:
+            ## API data has no prefix
+            ## joinSafe is only needed if the delimiter isn't a comma
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: associatedWith.mentions.diseases.doid
+        outputs:
+          - id: NCBIGene
+            semantic: Gene
+        parameters:
+          fields: >-
+            associatedWith.mentions.genes.ncbigene,
+            associatedWith.figureUrl,associatedWith.pmc,associatedWith.pfocrUrl
+          size: 1000
+        predicate: occurs_together_in_literature_with
+        source: "infores:pfocr"
+        knowledge_level: not_provided
+        agent_type: image_processing_agent
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/gene"
+        testExamples:
+          - qInput: "DOID:8398"           ## MONDO:0005178 / osteoarthritis
+            oneOutput: "NCBIGene:3553"    ## IL1B
+        ## examples from https://biothings.ci.transltr.io/pfocr/query?q=NOT%20_exists_:associatedWith.mentions.diseases.mesh%20AND%20_exists_:associatedWith.mentions.genes%20AND%20_exists_:associatedWith.mentions.diseases.doid
+    gene-diseaseDoid:
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: NCBIGene
+            semantic: Gene
+        requestBody:
+          body:
+            ## API data has no prefix
+            ## joinSafe is only needed if the delimiter isn't a comma
+            q: "{{ queryInputs }}"
+            scopes: associatedWith.mentions.genes.ncbigene
+        outputs:
+          - id: DOID
+            semantic: Disease
+        parameters:
+          fields: >-
+            associatedWith.mentions.diseases.doid,
+            associatedWith.figureUrl,associatedWith.pmc,associatedWith.pfocrUrl
+          size: 1000
+        predicate: occurs_together_in_literature_with
+        source: "infores:pfocr"
+        knowledge_level: not_provided
+        agent_type: image_processing_agent
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/diseaseDoid"
+        testExamples:
+          - qInput: "NCBIGene:2048"    ## EPHB2
+            oneOutput: "DOID:10283"    ## MONDO:0008315 / prostate cancer
   x-bte-response-mapping:
     ## not including because because data-processing / biolink-modeling issues
     ## - associatedWith.title (title of figure)
-    chem:
+    chemMesh:
       MESH: associatedWith.mentions.chemicals.mesh   ## no prefix
+      ref_url: associatedWith.figureUrl
+      ref_pmcid: associatedWith.pmc                  ## no prefix (but IDs start with "PMC")
+      source_url: associatedWith.pfocrUrl
+    chemChebi:
+      CHEBI: associatedWith.mentions.chemicals.chebi   ## no prefix
       ref_url: associatedWith.figureUrl
       ref_pmcid: associatedWith.pmc                  ## no prefix (but IDs start with "PMC")
       source_url: associatedWith.pfocrUrl
@@ -778,8 +1095,13 @@ components:
       ref_url: associatedWith.figureUrl
       ref_pmcid: associatedWith.pmc
       source_url: associatedWith.pfocrUrl
-    disease:
+    diseaseMesh:
       MESH: associatedWith.mentions.diseases.mesh   ## no prefix
+      ref_url: associatedWith.figureUrl
+      ref_pmcid: associatedWith.pmc
+      source_url: associatedWith.pfocrUrl
+    diseaseDoid:
+      DOID: associatedWith.mentions.diseases.doid   ## no prefix
       ref_url: associatedWith.figureUrl
       ref_pmcid: associatedWith.pmc
       source_url: associatedWith.pfocrUrl
