@@ -331,8 +331,6 @@ paths:
       - "$ref": "#/components/x-bte-kgs-operations/drugMechChemblEnsembl-rev"
       - "$ref": "#/components/x-bte-kgs-operations/drugMechChemblUniprot"
       - "$ref": "#/components/x-bte-kgs-operations/drugMechChemblUniprot-rev"
-      - "$ref": "#/components/x-bte-kgs-operations/treatsChembl"
-      - "$ref": "#/components/x-bte-kgs-operations/treatsChembl-rev"
       - "$ref": "#/components/x-bte-kgs-operations/drugcentral-bioactivity-activator"
       - "$ref": "#/components/x-bte-kgs-operations/drugcentral-bioactivity-agonist"
       - "$ref": "#/components/x-bte-kgs-operations/drugcentral-bioactivity-antagonist"
@@ -663,20 +661,6 @@ components:
       ref_pmcid: chembl.drug_mechanisms.mechanism_refs.PMC                         ## no prefix (but IDs start with "PMC")
       ref_url: chembl.drug_mechanisms.mechanism_refs.url
       output_name: chembl.drug_mechanisms.target_name
-    chembl-treats:
-      MESH: chembl.drug_indications.mesh_id
-      ref_clinicaltrials: chembl.drug_indications.indication_refs.ClinicalTrials     ## no prefix
-      ## this url field will include expanded clinicaltrials (aka duplicates!)
-      ##   but is required for other references: ATC, DailyMed, FDA
-      ref_url: chembl.drug_indications.indication_refs.url
-      "biolink:max_research_phase": chembl.drug_indications.max_phase_for_ind
-      ## commenting out because data-processing / biolink-modeling issues
-      # year_first_approved: chembl.drug_indications.first_approval
-    chembl-treats-rev:
-      "CHEMBL.COMPOUND": chembl.molecule_chembl_id  ## no prefix
-      ref_clinicaltrials: chembl.drug_indications.indication_refs.ClinicalTrials     ## no prefix
-      ref_url: chembl.drug_indications.indication_refs.url
-      "biolink:max_research_phase": chembl.drug_indications.max_phase_for_ind
     drugcentral-bioactivity:
       UniProtKB: drugcentral.bioactivity.uniprot.uniprot_id  ## no prefix
       ## commenting out because data-processing / biolink-modeling issues
@@ -897,12 +881,13 @@ components:
       testExamples:
         - qInput: "RHEA:23312"      ## 2 sucrose = 1(F)-beta-D-fructosylsucrose + D-glucose
           oneOutput: "CHEBI:16885"  ## 1-kestose / 1(F)-beta-D-fructosylsucrose aka PUBCHEM.COMPOUND:440080
-    ## chembl
-    ## knowledge_level / agent_type: assuming manual curation. 
-    ## - drug_mechanisms: 
-    ##   - can filter for human vs non-human targets and by target-type
-    ##   - other target_organism values: Bacteria, Human respiratory syncytial virus, Fungi, Human herpesvirus 1, Hepatitis C virus,
-    ##     Human immunodeficiency virus 1, Varicella-zoster virus (strain Oka vaccine) (HHV-3) (Human herpesvirus 3)
+  ## chembl
+  ## knowledge_level / agent_type: assuming manual curation. 
+  ## - not including drug_indications. Translator wants us to use Multiomics Clinical Trials KP (CTKP) instead
+  ## - drug_mechanisms: 
+  ##   - can filter for human vs non-human targets and by target-type
+  ##   - other target_organism values: Bacteria, Human respiratory syncytial virus, Fungi, Human herpesvirus 1, Hepatitis C virus,
+  ##     Human immunodeficiency virus 1, Varicella-zoster virus (strain Oka vaccine) (HHV-3) (Human herpesvirus 3)
     drugMechChemblEnsembl:
     ## 60 chem/records have chembl.drug_mechanisms.target_components.ensembl_gene
     - supportBatch: true
@@ -1047,71 +1032,6 @@ components:
       testExamples:
         - qInput: "UniProtKB:Q16539"                   ## MAP kinase p38 alpha
           oneOutput: "CHEMBL.COMPOUND:CHEMBL585902"    ## AMG-548 aka PUBCHEM.COMPOUND:11167112
-    treatsChembl:
-    ## all drug_indication records have a mesh ID for the indication...
-    - supportBatch: true
-      useTemplating: true
-      inputs:
-      - id: CHEMBL.COMPOUND
-        semantic: SmallMolecule
-      requestBody:
-        body:
-          q: "{{ queryInputs }}"  ## no prefix
-          scopes: chembl.molecule_chembl_id
-      outputs:
-      - id: MESH
-        semantic: Disease
-      parameters:
-      ## not including: mesh_heading (name)
-      ## including: first_approval is only in some records (not indexed right now)
-      ## commenting out because data-processing / biolink-modeling issues
-        # fields: >-
-        #   chembl.drug_indications.mesh_id,
-        #   chembl.drug_indications.max_phase_for_ind,
-        #   chembl.drug_indications.indication_refs.url,
-        #   chembl.drug_indications.first_approval
-        fields: >-
-          chembl.drug_indications.mesh_id,
-          chembl.drug_indications.indication_refs.ClinicalTrials,
-          chembl.drug_indications.indication_refs.url,
-          chembl.drug_indications.max_phase_for_ind
-        size: 1000  ## note size limit; added just in case
-      predicate: in_clinical_trials_for
-      source: "infores:chembl"
-      knowledge_level: knowledge_assertion
-      agent_type: manual_agent
-      response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/chembl-treats"
-      testExamples:
-        - qInput: "CHEMBL.COMPOUND:CHEMBL471737"   ## IVABRADINE aka PUBCHEM.COMPOUND:132999
-          oneOutput: "MESH:D000072658"             ## Non-ST Elevated Myocardial Infarction aka UMLS:C4255010
-    treatsChembl-rev:
-    - supportBatch: false
-      useTemplating: true
-      inputs:
-      - id: MESH
-        semantic: Disease
-      requestBody:
-        body:
-          q: "{{ queryInputs }}"  ## no prefix
-          scopes: chembl.drug_indications.mesh_id
-      outputs:
-      - id: CHEMBL.COMPOUND
-        semantic: SmallMolecule
-      parameters:
-      ## need the whole thing for jmespath to work
-        fields: chembl.molecule_chembl_id,chembl.drug_indications  ## no prefix
-        size: 1000  ## note size limit
-        jmespath: "chembl.drug_indications|[?mesh_id=='{{ queryInputs }}']"
-      predicate: tested_by_clinical_trials_of
-      source: "infores:chembl"
-      knowledge_level: knowledge_assertion
-      agent_type: manual_agent
-      response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/chembl-treats-rev"
-      testExamples:
-        - qInput: "MESH:D014376"                    ## Tuberculosis aka MONDO:0018076
-          oneOutput: "CHEMBL.COMPOUND:CHEMBL1441"   ## ETHIONAMIDE aka PUBCHEM.COMPOUND:2761171
   ## DrugCentral source
   ## Not annotating: 
   ## - drugcentral.approval (node properties?)
