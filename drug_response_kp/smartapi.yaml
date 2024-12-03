@@ -611,16 +611,14 @@ components:
         inputs:
           - id: NCBIGene
             semantic: Gene
-        requestBodyType: object
         requestBody:
-          body: >-
-            {
-              "q": [ {{ queryInputs | replPrefix('NCBIGene') | wrap( '["' , '","biolink:expressed_in"]') }} ],
-              "scopes": ["subject.NCBIGene", "predicate"]
-            }
+          body: 
+            q: "{{ queryInputs | replPrefix('NCBIGene') }}"
+            scopes: subject.NCBIGene
         parameters:
           fields: object.CL,attributes,sources
           size: 1000
+          filter: predicate:"biolink:expressed_in"
         outputs:
           - id: CL
             semantic: Cell
@@ -636,16 +634,14 @@ components:
         inputs:
           - id: CL
             semantic: Cell
-        requestBodyType: object
         requestBody:
-          body: >-
-            {
-              "q": [ {{ queryInputs | replPrefix('CL') | wrap( '["' , '","biolink:expresses"]') }} ],
-              "scopes": ["object.CL", "predicate"]
-            }
+          body: 
+            q: "{{ queryInputs | replPrefix('CL') }}"
+            scopes: object.CL
         parameters:
           fields: subject.NCBIGene,attributes,sources
           size: 1000
+          filter: predicate:"biolink:expressed_in"
         outputs:
           - id: NCBIGene
             semantic: Gene
@@ -653,7 +649,7 @@ components:
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/ncbigene-subject"
         testExamples:
-          - qInput: "CL:0000236"                ## Hodgkin Lymphoma B cell
+          - qInput: "CL:0000843"                ## follicular B cell
             oneOutput: "NCBIGene:930"           ## CD19
     gene-sensitivity-chem:
     ##  https://biothings.ci.transltr.io/biggim_drugresponse_kp/query?q=predicate:"biolink:associated_with_sensitivity_to"
@@ -663,41 +659,37 @@ components:
         inputs:
           - id: NCBIGene #biolink prefix for id
             semantic: Gene #category of id
-        requestBodyType: object
         requestBody:
-          body: >-
-            {
-              "q": [ {{ queryInputs | replPrefix('NCBIGene') | wrap( '["' , '","biolink:associated_with_sensitivity_to"]') }} ], 
-              "scopes": ["subject.NCBIGene", "predicate"] 
-            }
+          body: 
+            q: "{{ queryInputs | replPrefix('NCBIGene') }}"
+            scopes: subject.NCBIGene
         parameters:
           fields: object.pubchem_compound,attributes,sources #field to return
           size: 1000
+          filter: predicate:"biolink:associated_with_sensitivity_to"
         outputs:
-          - id: "PUBCHEM.COMPOUND" #
+          - id: "PUBCHEM.COMPOUND"
             semantic: SmallMolecule
         predicate: associated_with_sensitivity_to
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/pubchem-object"
         testExamples:
           - qInput: "NCBIGene:25878"                    ## MXRA5
-            oneOutput: "PUBCHEM.COMPOUND:135539077"     ## THZ-2-102-1 (Luminespib)
+            oneOutput: "PUBCHEM.COMPOUND:135539077"     ## THZ-2-102-1 (Luminespib / CHEBI:83656)
     gene-sensitivity-chem-rev:
       - supportBatch: true
         useTemplating: true ## flag to say templating is being used below
         inputs:
           - id: "PUBCHEM.COMPOUND"
             semantic: SmallMolecule
-        requestBodyType: object
         requestBody:
-          body: >-
-            {
-              "q": [ {{ queryInputs | replPrefix('PUBCHEM.COMPOUND') | wrap( '["' , '","biolink:associated_with_sensitivity_to"]') }} ],
-              "scopes": ["object.pubchem_compound", "predicate"]
-            }
+          body: 
+            q: "{{ queryInputs | replPrefix('PUBCHEM.COMPOUND') }}"
+            scopes: object.pubchem_compound
         parameters:
           fields: subject.NCBIGene,attributes,sources
           size: 1000
+          filter: predicate:"biolink:associated_with_sensitivity_to"
         outputs:
           - id: NCBIGene
             semantic: Gene
@@ -705,7 +697,7 @@ components:
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/ncbigene-subject"
         testExamples:
-          - qInput: "PUBCHEM.COMPOUND:24856436"       ## JNK-9L (Adavosertib)
+          - qInput: "PUBCHEM.COMPOUND:24856436"       ## JNK-9L (Adavosertib / CHEBI:91414)
             oneOutput: "NCBIGene:59352"               ## LGR6
     gene-resistance-chem:
     ##  https://biothings.ci.transltr.io/biggim_drugresponse_kp/query?q=predicate:"biolink:associated_with_resistance_to"
@@ -715,16 +707,14 @@ components:
         inputs:
           - id: NCBIGene
             semantic: Gene
-        requestBodyType: object
         requestBody:
-          body: >-
-            {
-              "q": [ {{ queryInputs | replPrefix('NCBIGene') | wrap( '["' , '","biolink:associated_with_resistance_to"]') }} ],
-              "scopes": ["subject.NCBIGene", "predicate"]
-            }
+          body: 
+            q: "{{ queryInputs | replPrefix('NCBIGene') }}"
+            scopes: subject.NCBIGene
         parameters:
           fields: object.pubchem_compound,attributes,sources
           size: 1000
+          filter: predicate:"biolink:associated_with_resistance_to"
         outputs:
           - id: "PUBCHEM.COMPOUND"
             semantic: SmallMolecule
@@ -733,23 +723,21 @@ components:
           "$ref": "#/components/x-bte-response-mapping/pubchem-object"
         testExamples:
           - qInput: "NCBIGene:5724"                ## PTAFR
-            oneOutput: "PUBCHEM.COMPOUND:4261"     ## Elesclomol (Entinostat)
+            oneOutput: "PUBCHEM.COMPOUND:4261"     ## Elesclomol (Entinostat / CHEBI:132082)
     gene-resistance-chem-rev:
       - supportBatch: true
         useTemplating: true ## flag to say templating is being used below
         inputs:
           - id: "PUBCHEM.COMPOUND"
             semantic: SmallMolecule
-        requestBodyType: object
         requestBody:
-          body: >-
-            {
-              "q": [ {{ queryInputs | replPrefix('PUBCHEM.COMPOUND') | wrap( '["' , '","biolink:associated_with_resistance_to"]') }} ],
-              "scopes": ["object.pubchem_compound", "predicate"]
-            }
+          body: 
+            q: "{{ queryInputs | replPrefix('PUBCHEM.COMPOUND') }}"
+            scopes: object.pubchem_compound
         parameters:
           fields: subject.NCBIGene,attributes,sources
           size: 1000
+          filter: predicate:"biolink:associated_with_resistance_to"
         outputs:
           - id: NCBIGene
             semantic: Gene
@@ -757,7 +745,7 @@ components:
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/ncbigene-subject"
         testExamples:
-          - qInput: "PUBCHEM.COMPOUND:46844147"       ## AZD8055 (Erk5-IN-1)
+          - qInput: "PUBCHEM.COMPOUND:46844147"       ## AZD8055 (Erk5-IN-1 / CHEBI:91375)
             oneOutput: "NCBIGene:26119"               ## LDLRAP1
     gene-associated-disease:
     ##  https://biothings.ci.transltr.io/biggim_drugresponse_kp/query?q=predicate:"biolink:gene_associated_with_condition"
@@ -767,16 +755,14 @@ components:
         inputs:
           - id: NCBIGene
             semantic: Gene
-        requestBodyType: object
         requestBody:
-          body: >-
-            {
-              "q": [ {{ queryInputs | replPrefix('NCBIGene') | wrap( '["' , '","biolink:gene_associated_with_condition"]') }} ],
-              "scopes": ["subject.NCBIGene", "predicate"]
-            }
+          body: 
+            q: "{{ queryInputs | replPrefix('NCBIGene') }}"
+            scopes: subject.NCBIGene
         parameters:
           fields: object.MONDO,attributes,sources
           size: 1000
+          filter: predicate:"biolink:gene_associated_with_condition"
         outputs:
           - id: MONDO
             semantic: Disease
@@ -792,16 +778,14 @@ components:
         inputs:
           - id: MONDO
             semantic: Disease
-        requestBodyType: object
-        requestBody:  
-          body: >-
-            {
-              "q": [ {{ queryInputs | replPrefix('MONDO') | wrap( '["' , '","biolink:gene_associated_with_condition"]') }} ],
-              "scopes": ["object.MONDO", "predicate"]
-            }
+        requestBody:
+          body: 
+            q: "{{ queryInputs | replPrefix('MONDO') }}"
+            scopes: object.MONDO
         parameters:
           fields: subject.NCBIGene,attributes,sources
           size: 1000
+          filter: predicate:"biolink:gene_associated_with_condition"
         outputs:
           - id: NCBIGene
             semantic: Gene
@@ -819,16 +803,14 @@ components:
         inputs:
           - id: MONDO
             semantic: Disease
-        requestBodyType: object
-        requestBody:  
-          body: >-
-            {
-              "q": [ {{ queryInputs | replPrefix('MONDO') | wrap( '["' , '","biolink:has_biomarker"]') }} ],
-              "scopes": ["subject.MONDO", "predicate"]
-            }
+        requestBody:
+          body: 
+            q: "{{ queryInputs | replPrefix('MONDO') }}"
+            scopes: subject.MONDO
         parameters:
           fields: object.NCBIGene,attributes,sources
           size: 1000
+          filter: predicate:"biolink:has_biomarker"
         outputs:
           - id: NCBIGene
             semantic: Gene
@@ -844,16 +826,14 @@ components:
         inputs:
           - id: NCBIGene
             semantic: Gene
-        requestBodyType: object
         requestBody:
-          body: >-
-            {
-              "q": [ {{ queryInputs | replPrefix('NCBIGene') | wrap( '["' , '","biolink:has_biomarker"]') }} ],
-              "scopes": ["object.NCBIGene", "predicate"]
-            }
+          body: 
+            q: "{{ queryInputs | replPrefix('NCBIGene') }}"
+            scopes: object.NCBIGene
         parameters:
           fields: subject.MONDO,attributes,sources
           size: 1000
+          filter: predicate:"biolink:has_biomarker"
         outputs:
           - id: MONDO
             semantic: Disease
@@ -865,22 +845,20 @@ components:
             oneOutput: "MONDO:0018874"      ## LAML (acute myeloid leukemia)
     chem-targets-gene:
     ##  https://biothings.ci.transltr.io/biggim_drugresponse_kp/query?q=predicate:"biolink:physically_interacts_with"
-    ##  14806 records
+    ##  14806 records??
       - supportBatch: true
         useTemplating: true ## flag to say templating is being used below
         inputs:
           - id: "PUBCHEM.COMPOUND"
             semantic: SmallMolecule
-        requestBodyType: object
         requestBody:
-          body: >-
-            {
-              "q": [ {{ queryInputs | replPrefix('PUBCHEM.COMPOUND') | wrap( '["' , '","biolink:physically_interacts_with"]') }} ],
-              "scopes": ["subject.pubchem_compound", "predicate"]
-            }
+          body: 
+            q: "{{ queryInputs | replPrefix('PUBCHEM.COMPOUND') }}"
+            scopes: subject.pubchem_compound
         parameters:
           fields: object.NCBIGene,attributes,sources
           size: 1000
+          filter: predicate:"biolink:physically_interacts_with" AND _exists_:subject.pubchem_compound AND _exists_:object.NCBIGene
         outputs:
           - id: NCBIGene
             semantic: Gene
@@ -888,7 +866,7 @@ components:
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/ncbigene-object"
         testExamples:
-          - qInput: "PUBCHEM.COMPOUND:444"     ## Bupropion
+          - qInput: "PUBCHEM.COMPOUND:444"     ## Bupropion / CHEBI:3219
             oneOutput: "NCBIGene:6530"         ## SLC6A2
     chem-targets-gene-rev:
       - supportBatch: true
@@ -896,16 +874,14 @@ components:
         inputs:
           - id: NCBIGene
             semantic: Gene
-        requestBodyType: object
         requestBody:
-          body: >-
-            {
-              "q": [ {{ queryInputs | replPrefix('NCBIGene') | wrap( '["' , '","biolink:physically_interacts_with"]') }} ],
-              "scopes": ["object.NCBIGene", "predicate"]
-            }
+          body: 
+            q: "{{ queryInputs | replPrefix('NCBIGene') }}"
+            scopes: object.NCBIGene
         parameters:
           fields: subject.pubchem_compound,attributes,sources
           size: 1000
+          filter: predicate:"biolink:physically_interacts_with" AND _exists_:subject.pubchem_compound AND _exists_:object.NCBIGene
         outputs:
           - id: "PUBCHEM.COMPOUND"
             semantic: SmallMolecule
@@ -914,25 +890,23 @@ components:
           "$ref": "#/components/x-bte-response-mapping/pubchem-subject"
         testExamples:
           - qInput: "NCBIGene:8424"                 ## BBOX1
-            oneOutput: "PUBCHEM.COMPOUND:5455"      ## Thiram
+            oneOutput: "PUBCHEM.COMPOUND:5455"      ## Thiram / CHEBI:9495
     gene-physicallyInteracts-gene:
     ##  https://biothings.ci.transltr.io/biggim_drugresponse_kp/query?q=predicate:"biolink:physically_interacts_with"
-    ##  888994 records  
+    ##  888994 records??  
       - supportBatch: true
         useTemplating: true ## flag to say templating is being used below
         inputs:
           - id: NCBIGene
             semantic: Gene
-        requestBodyType: object
         requestBody:
-          body: >-
-            {
-              "q": [ {{ queryInputs | replPrefix('NCBIGene') | wrap( '["' , '","biolink:physically_interacts_with"]') }} ],
-              "scopes": ["subject.NCBIGene", "predicate"]
-            }
+          body: 
+            q: "{{ queryInputs | replPrefix('NCBIGene') }}"
+            scopes: subject.NCBIGene
         parameters:
           fields: object.NCBIGene,attributes,sources
           size: 1000
+          filter: predicate:"biolink:physically_interacts_with" AND _exists_:subject.NCBIGene AND _exists_:object.NCBIGene
         outputs:
           - id: NCBIGene
             semantic: Gene
@@ -948,16 +922,14 @@ components:
         inputs:
           - id: NCBIGene
             semantic: Gene
-        requestBodyType: object
         requestBody:
-          body: >-
-            {
-              "q": [ {{ queryInputs | replPrefix('NCBIGene') | wrap( '["' , '","biolink:physically_interacts_with"]') }} ],
-              "scopes": ["object.NCBIGene", "predicate"]
-            }
+          body: 
+            q: "{{ queryInputs | replPrefix('NCBIGene') }}"
+            scopes: object.NCBIGene
         parameters:
           fields: subject.NCBIGene,attributes,sources
           size: 1000
+          filter: predicate:"biolink:physically_interacts_with" AND _exists_:subject.NCBIGene AND _exists_:object.NCBIGene
         outputs:
           - id: NCBIGene
             semantic: Gene
@@ -975,16 +947,14 @@ components:
         inputs:
           - id: NCBIGene
             semantic: Gene
-        requestBodyType: object
         requestBody:
-          body: >-
-            {
-              "q": [ {{ queryInputs | replPrefix('NCBIGene') | wrap( '["' , '","biolink:genetically_interacts_with"]') }} ],
-              "scopes": ["subject.NCBIGene", "predicate"]
-            }
+          body: 
+            q: "{{ queryInputs | replPrefix('NCBIGene') }}"
+            scopes: subject.NCBIGene
         parameters:
           fields: object.NCBIGene,attributes,sources
           size: 1000
+          filter: predicate:"biolink:genetically_interacts_with"
         outputs:
           - id: NCBIGene
             semantic: Gene
@@ -1000,16 +970,14 @@ components:
         inputs:
           - id: NCBIGene
             semantic: Gene
-        requestBodyType: object
         requestBody:
-          body: >-
-            {
-              "q": [ {{ queryInputs | replPrefix('NCBIGene') | wrap( '["' , '","biolink:genetically_interacts_with"]') }} ],
-              "scopes": ["object.NCBIGene", "predicate"]
-            }
+          body: 
+            q: "{{ queryInputs | replPrefix('NCBIGene') }}"
+            scopes: object.NCBIGene
         parameters:
           fields: subject.NCBIGene,attributes,sources
           size: 1000
+          filter: predicate:"biolink:genetically_interacts_with"
         outputs:
           - id: NCBIGene
             semantic: Gene
@@ -1027,16 +995,14 @@ components:
         inputs:
           - id: NCBIGene
             semantic: Gene
-        requestBodyType: object
         requestBody:
-          body: >-
-            {
-              "q": [ {{ queryInputs | replPrefix('NCBIGene') | wrap( '["' , '","biolink:negatively_correlated_with"]') }} ],
-              "scopes": ["subject.NCBIGene", "predicate"]
-            }
+          body: 
+            q: "{{ queryInputs | replPrefix('NCBIGene') }}"
+            scopes: subject.NCBIGene
         parameters:
           fields: object.NCBIGene,attributes,sources
           size: 1000
+          filter: predicate:"biolink:negatively_correlated_with"
         outputs:
           - id: NCBIGene
             semantic: Gene
@@ -1052,16 +1018,14 @@ components:
         inputs:
           - id: NCBIGene
             semantic: Gene
-        requestBodyType: object
         requestBody:
-          body: >-
-            {
-              "q": [ {{ queryInputs | replPrefix('NCBIGene') | wrap( '["' , '","biolink:negatively_correlated_with"]') }} ],
-              "scopes": ["object.NCBIGene", "predicate"]
-            }
+          body: 
+            q: "{{ queryInputs | replPrefix('NCBIGene') }}"
+            scopes: object.NCBIGene
         parameters:
           fields: subject.NCBIGene,attributes,sources
           size: 1000
+          filter: predicate:"biolink:negatively_correlated_with"
         outputs:
           - id: NCBIGene
             semantic: Gene
@@ -1079,16 +1043,14 @@ components:
         inputs:
           - id: NCBIGene
             semantic: Gene
-        requestBodyType: object
         requestBody:
-          body: >-
-            {
-              "q": [ {{ queryInputs | replPrefix('NCBIGene') | wrap( '["' , '","biolink:positively_correlated_with"]') }} ],
-              "scopes": ["subject.NCBIGene", "predicate"]
-            }
+          body: 
+            q: "{{ queryInputs | replPrefix('NCBIGene') }}"
+            scopes: subject.NCBIGene
         parameters:
           fields: object.NCBIGene,attributes,sources
           size: 1000
+          filter: predicate:"biolink:positively_correlated_with"
         outputs:
           - id: NCBIGene
             semantic: Gene
@@ -1104,16 +1066,14 @@ components:
         inputs:
           - id: NCBIGene
             semantic: Gene
-        requestBodyType: object
         requestBody:
-          body: >-
-            {
-              "q": [ {{ queryInputs | replPrefix('NCBIGene') | wrap( '["' , '","biolink:positively_correlated_with"]') }} ],
-              "scopes": ["object.NCBIGene", "predicate"]
-            }
+          body: 
+            q: "{{ queryInputs | replPrefix('NCBIGene') }}"
+            scopes: object.NCBIGene
         parameters:
           fields: subject.NCBIGene,attributes,sources
           size: 1000
+          filter: predicate:"biolink:positively_correlated_with"
         outputs:
           - id: NCBIGene
             semantic: Gene
