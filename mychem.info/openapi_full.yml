@@ -1121,10 +1121,10 @@ components:
   ## - drugcentral.drug_use.symptomatic_treatment (only has 2 matching records...)
   ################################################################################################################################
   ## DrugCentral Bioactivity: chemical - gene/protein relationships
-  ## - 3035 chemicals/records have the drugcentral.bioactivity field https://mychem.info/v1/query?q=_exists_:drugcentral.bioactivity
-  ##   - using drugcentral.xrefs.umlscui for the chem ID, since 3031/3035 chem have this field (vs 3021 that have drugcentral.xrefs.chembl_id)
+  ## - 3229 chemicals/records have the drugcentral.bioactivity field https://mychem.info/v1/query?q=_exists_:drugcentral.bioactivity
+  ##   - using drugcentral.xrefs.umlscui for the chem ID, since 3225 of those chem have this field (vs 3215 that have drugcentral.xrefs.chembl_id)
   ##     https://mychem.info/v1/query?q=_exists_:drugcentral.bioactivity%20AND%20_exists_:drugcentral.xrefs.umlscui
-  ##   - using drugcentral.bioactivity.uniprot.uniprot_id for the gene ID. all 3031 chem have this field 
+  ##   - using drugcentral.bioactivity.uniprot.uniprot_id for the gene ID. all of those chem have this field 
   ##     https://mychem.info/v1/query?q=_exists_:drugcentral.bioactivity%20AND%20_exists_:drugcentral.xrefs.umlscui%20AND%20_exists_:drugcentral.bioactivity.uniprot.uniprot_id
   ##   - for chem -> gene operations (not the "reverse" direction aka not "rev"):
   ##     we can write more specific operations by setting the drugcentral.bioactivity.action_type value
@@ -1136,8 +1136,8 @@ components:
   ##       * NEGATIVE ALLOSTERIC MODULATOR (5)
   ##       * RELEASING AGENT (5)
   ##       * PHARMACOLOGICAL CHAPERONE (3)
-  ##       * OTHER (2)
-  ##       * NEGATIVE MODULATOR (1 chem related to 5 unique genes) 
+  ##       * OTHER (4)
+  ##       * NEGATIVE MODULATOR (1 chem related to multiple unique genes) 
   ##   - for now, not including these fields in the response:
   ##     - about the gene: bioactivity.target_name, bioactivity.target_class, bioactivity.uniprot.gene_symbol, bioactivity.uniprot.swissprot_entry
   ##     - seem to be measurements of the activity: act_type, act_value. Seems like these would need to be combined, augmented with info like units to be fully "TRAPI-ified"
@@ -1148,41 +1148,34 @@ components:
   ## - note that these genes can be from non-human species
   ##   String genus-species name stored in drugcentral.bioactivity.organism field
   ##   Possible values: haven't found all of them
-  ##   - Most are "Homo sapiens" (2432 / 2650)
-  ##   - Common ones: "Rattus norvegicus" (765), "Mus musculus" (316), "Bos taurus" (226), Escherichia coli (156)
-  ##   - Other: Sus scrofa (56), Bacillus anthracis (13), Lactobacillus casei (11), Enterococcus faecium (2)
+  ##   - Most are "Homo sapiens" (2964 / 3229 chem)
+  ##   - Common ones: "Rattus norvegicus" (839), "Mus musculus" (386), "Bos taurus" (249), Escherichia coli (167)
+  ##   - Other: Sus scrofa (60), Bacillus anthracis (17), Lactobacillus casei (11), Enterococcus faecium (2)
   ################################################################################################################################
     drugcentral-bioactivity-activator:
-    ## 83 records: https://mychem.info/v1/query?q=%20_exists_:%22drugcentral.bioactivity.uniprot.uniprot_id%22%20AND%20_exists_:%22drugcentral.xrefs.umlscui%22%20AND%20drugcentral.bioactivity.action_type:%22ACTIVATOR%22&fields=drugcentral
+    ## 91 records: https://mychem.info/v1/query?q=%20_exists_:%22drugcentral.bioactivity.uniprot.uniprot_id%22%20AND%20_exists_:%22drugcentral.xrefs.umlscui%22%20AND%20drugcentral.bioactivity.action_type:%22ACTIVATOR%22&fields=drugcentral
     - supportBatch: true
       useTemplating: true
       inputs:
       - id: UMLS
         semantic: SmallMolecule
-      requestBodyType: object
       requestBody:
-        body: >-
-          {
-            "q": [ {{ queryInputs | wrap( '["' , '","ACTIVATOR"]') }} ],
-            "scopes": ["drugcentral.xrefs.umlscui", "drugcentral.bioactivity.action_type"]
-          }
+        body:
+          q: "{{ queryInputs }}"  ## no prefix
+          scopes: drugcentral.xrefs.umlscui
       outputs:
       - id: UniProtKB
         semantic: Gene
       parameters:
-        ## only show array elements where action_type is ACTIVATOR
-        ## the field used in list_filter must be listed in "fields"
-        list_filter: "drugcentral.bioactivity:action_type=ACTIVATOR"
-        ## commenting out because data-processing / biolink-modeling issues
-        # fields: >-
-        #   drugcentral.bioactivity.uniprot.uniprot_id,
-        #   drugcentral.bioactivity.action_type,
-        #   drugcentral.bioactivity.act_source,
-        #   drugcentral.bioactivity.organism
-        fields: >-
-          drugcentral.bioactivity.uniprot.uniprot_id,
-          drugcentral.bioactivity.action_type
+      ## need the whole thing for jmespath to work
+        fields: drugcentral.bioactivity
         size: 1000  ## note size limit; added just in case
+        ## only want records where at <=1 array element has action_type ACTIVATOR
+        filter: drugcentral.bioactivity.action_type:ACTIVATOR
+        ## only show the array elements where action_type is ACTIVATOR
+        jmespath: "drugcentral.bioactivity|[?action_type==`ACTIVATOR`]"
+        ## needed for jmespath to work, because sometimes the value of this field is an object and sometimes an array of objects
+        always_list: drugcentral.bioactivity
       ## using same predicate/qualifiers as dgidb activator
       predicate: affects
       qualifiers:
