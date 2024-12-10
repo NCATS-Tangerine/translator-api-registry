@@ -334,6 +334,7 @@ paths:
       - "$ref": "#/components/x-bte-kgs-operations/treatsChembl"
       - "$ref": "#/components/x-bte-kgs-operations/treatsChembl-rev"
       - "$ref": "#/components/x-bte-kgs-operations/drugcentral-bioactivity-activator"
+      # - "$ref": "#/components/x-bte-kgs-operations/drugcentral-bioactivity-activator-rev"
       - "$ref": "#/components/x-bte-kgs-operations/drugcentral-bioactivity-agonist"
       - "$ref": "#/components/x-bte-kgs-operations/drugcentral-bioactivity-antagonist"
       - "$ref": "#/components/x-bte-kgs-operations/drugcentral-bioactivity-antibody"
@@ -1192,6 +1193,50 @@ components:
       testExamples:
         - qInput: "UMLS:C0019134"           ## heparin aka CHEBI:28304
           oneOutput: "UniProtKB:P01008"     ## SERPINC1 aka NCBIGene:462
+    drugcentral-bioactivity-activator-rev:
+    - supportBatch: false   ## because of jmespath handling to get the specific chem-gene pair info
+      useTemplating: true
+      inputs:
+      - id: UniProtKB
+        semantic: Gene
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"  ## no prefix
+          scopes: drugcentral.bioactivity.uniprot.uniprot_id
+      outputs:
+      - id: UMLS
+        semantic: SmallMolecule
+      parameters:
+      ## need the whole thing for jmespath to work
+        fields: drugcentral.bioactivity,drugcentral.xrefs.umlscui
+        size: 1000  ## note size limit; added just in case
+        ## only want records where at <=1 array element has action_type ACTIVATOR
+        filter: drugcentral.bioactivity.action_type:ACTIVATOR
+        ## only show the array elements where action_type is ACTIVATOR and uniprot_id value is what we asked for 
+        jmespath: "drugcentral.bioactivity|[?action_type==`ACTIVATOR`]|[].{action_type:action_type, uniprot:uniprot[?uniprot_id=='{{ queryInputs }}']}"
+        ## needed for jmespath to work: only keep array elements that meet both criteria
+        jmespath_exclude_empty: true  
+        ## needed for jmespath to work, because sometimes the value of this field is an object and sometimes an array of objects
+        always_list: drugcentral.bioactivity
+      ## using same predicate/qualifiers as dgidb activator
+      predicate: affected_by
+      qualifiers:
+        qualified_predicate: caused_by
+        subject_aspect_qualifier: activity
+        subject_direction_qualifier: increased
+        causal_mechanism_qualifier: activation        
+      source: "infores:drugcentral"
+      knowledge_level: knowledge_assertion
+      agent_type: not_provided
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/drugcentral-umls"
+      testExamples:
+        - qInput: "UniProtKB:P01008"           ## SERPINC1 aka NCBIGene:462
+          oneOutput: "UMLS:C0019134"           ## heparin aka CHEBI:28304
+        - qInput: "UniProtKB:O75343"           ## GUCY1B2 protein
+          oneOutput: "UMLS:C0028193"           ## Nitroprusside aka CHEBI:7596
+        - qInput: "UniProtKB:O43526"           ## KCNQ2 aka NCBIGene:3785
+          oneOutput: "UMLS:C0078792"           ## pyrithione zinc aka CHEBI:32076
     drugcentral-bioactivity-agonist:
     ## AGONIST 609 records: https://mychem.info/v1/query?q=%20_exists_:%22drugcentral.bioactivity.uniprot.uniprot_id%22%20AND%20_exists_:%22drugcentral.xrefs.umlscui%22%20AND%20drugcentral.bioactivity.action_type:%22AGONIST%22&fields=drugcentral
     ## PARTIAL AGONIST 16 records: https://mychem.info/v1/query?q=%20_exists_:%22drugcentral.bioactivity.uniprot.uniprot_id%22%20AND%20_exists_:%22drugcentral.xrefs.umlscui%22%20AND%20drugcentral.bioactivity.action_type:%22PARTIAL%20AGONIST%22&fields=drugcentral
