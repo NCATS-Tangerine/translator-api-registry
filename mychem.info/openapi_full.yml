@@ -336,6 +336,7 @@ paths:
       - "$ref": "#/components/x-bte-kgs-operations/drugcentral-bioactivity-activator"
       # - "$ref": "#/components/x-bte-kgs-operations/drugcentral-bioactivity-activator-rev"
       - "$ref": "#/components/x-bte-kgs-operations/drugcentral-bioactivity-agonist"
+      # - "$ref": "#/components/x-bte-kgs-operations/drugcentral-bioactivity-agonist-rev"
       - "$ref": "#/components/x-bte-kgs-operations/drugcentral-bioactivity-antagonist"
       - "$ref": "#/components/x-bte-kgs-operations/drugcentral-bioactivity-antibody"
       - "$ref": "#/components/x-bte-kgs-operations/drugcentral-bioactivity-antisense-inhibitor"
@@ -1273,6 +1274,47 @@ components:
       ## for PARTIAL AGONIST
         - qInput: "UMLS:C0031937"           ## pindolol aka CHEBI:8214
           oneOutput: "UniProtKB:P08588"     ## ADRB1 aka NCBIGene:153
+    drugcentral-bioactivity-agonist-rev:
+    - supportBatch: false   ## because of jmespath handling to get the specific chem-gene pair info
+      useTemplating: true
+      inputs:
+      - id: UniProtKB
+        semantic: Gene
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"  ## no prefix
+          scopes: drugcentral.bioactivity.uniprot.uniprot_id
+      outputs:
+      - id: UMLS
+        semantic: SmallMolecule
+      parameters:
+      ## need the whole thing for jmespath to work
+        fields: drugcentral.bioactivity,drugcentral.xrefs.umlscui
+        size: 1000  ## note size limit; added just in case
+        filter: drugcentral.bioactivity.action_type:("AGONIST" OR "PARTIAL AGONIST")
+        ## only show the array elements where action_type is (AGONIST or PARTIAL AGONIST) and uniprot_id value is what we asked for 
+        jmespath: "drugcentral.bioactivity|[?(action_type==`AGONIST` || action_type==`PARTIAL AGONIST`) && length(uniprot[?uniprot_id=='{{ queryInputs }}']) > `0`]"
+        ## needed for jmespath to work: only keep array elements that meet both criteria
+        jmespath_exclude_empty: true  
+        always_list: drugcentral.bioactivity
+      predicate: affected_by
+      qualifiers:
+        qualified_predicate: caused_by
+        subject_aspect_qualifier: activity
+        subject_direction_qualifier: increased
+        causal_mechanism_qualifier: agonism        
+      source: "infores:drugcentral"
+      knowledge_level: knowledge_assertion
+      agent_type: not_provided
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/drugcentral-umls"
+      testExamples:
+      ## for AGONIST
+        - qInput: "UniProtKB:P28223"           ## HTR2A aka NCBIGene:3356
+          oneOutput: "UMLS:C0031937"           ## pindolol aka CHEBI:8214
+      ## for PARTIAL AGONIST
+        - qInput: "UniProtKB:P08588"           ## ADRB1 aka NCBIGene:153
+          oneOutput: "UMLS:C0031937"           ## pindolol aka CHEBI:8214
     drugcentral-bioactivity-antagonist:
     ## ANTAGONIST 420 records: https://mychem.info/v1/query?q=%20_exists_:%22drugcentral.bioactivity.uniprot.uniprot_id%22%20AND%20_exists_:%22drugcentral.xrefs.umlscui%22%20AND%20drugcentral.bioactivity.action_type:%22ANTAGONIST%22&fields=drugcentral
     ## ALLOSTERIC ANTAGONIST 1 record: https://mychem.info/v1/query?q=%20_exists_:%22drugcentral.bioactivity.uniprot.uniprot_id%22%20AND%20_exists_:%22drugcentral.xrefs.umlscui%22%20AND%20drugcentral.bioactivity.action_type:%22ALLOSTERIC%20ANTAGONIST%22&fields=drugcentral
