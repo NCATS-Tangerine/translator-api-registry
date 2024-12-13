@@ -1210,12 +1210,11 @@ components:
         ## only want records where at <=1 array element has action_type ACTIVATOR
         filter: drugcentral.bioactivity.action_type:ACTIVATOR
         ## only show the array elements where action_type is ACTIVATOR and uniprot_id value is what we asked for 
-        jmespath: "drugcentral.bioactivity|[?action_type==`ACTIVATOR`]|[].{action_type:action_type, uniprot:uniprot[?uniprot_id=='{{ queryInputs }}']}"
+        jmespath: "drugcentral.bioactivity|[?action_type==`ACTIVATOR` && length(uniprot[?uniprot_id=='{{ queryInputs }}']) > `0`]"
         ## needed for jmespath to work: only keep array elements that meet both criteria
         jmespath_exclude_empty: true  
         ## needed for jmespath to work, because sometimes the value of this field is an object and sometimes an array of objects
         always_list: drugcentral.bioactivity
-      ## using same predicate/qualifiers as dgidb activator
       predicate: affected_by
       qualifiers:
         qualified_predicate: caused_by
