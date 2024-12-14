@@ -338,8 +338,11 @@ paths:
       - "$ref": "#/components/x-bte-kgs-operations/drugcentral-bioactivity-agonist"
       # - "$ref": "#/components/x-bte-kgs-operations/drugcentral-bioactivity-agonist-rev"
       - "$ref": "#/components/x-bte-kgs-operations/drugcentral-bioactivity-antagonist"
+      # - "$ref": "#/components/x-bte-kgs-operations/drugcentral-bioactivity-antagonist-rev"
       - "$ref": "#/components/x-bte-kgs-operations/drugcentral-bioactivity-antibody"
+      # - "$ref": "#/components/x-bte-kgs-operations/drugcentral-bioactivity-antibody-rev"
       - "$ref": "#/components/x-bte-kgs-operations/drugcentral-bioactivity-antisense-inhibitor"
+      # - "$ref": "#/components/x-bte-kgs-operations/drugcentral-bioactivity-antisense-inhibitor-rev"
       - "$ref": "#/components/x-bte-kgs-operations/drugcentral-bioactivity-binding-agent"
       - "$ref": "#/components/x-bte-kgs-operations/drugcentral-bioactivity-inhibitor"
       - "$ref": "#/components/x-bte-kgs-operations/drugcentral-bioactivity-inverse-agonist"
@@ -1282,7 +1285,7 @@ components:
         semantic: Gene
       requestBody:
         body:
-          q: "{{ queryInputs }}"  ## no prefix
+          q: "{{ queryInputs }}"
           scopes: drugcentral.bioactivity.uniprot.uniprot_id
       outputs:
       - id: UMLS
@@ -1355,6 +1358,47 @@ components:
       ## for ALLOSTERIC ANTAGONIST
         - qInput: "UMLS:C0016293"           ## flumazenil aka CHEBI:5103
           oneOutput: "UniProtKB:Q16445"     ## GABRA6 aka NCBIGene:2559
+    drugcentral-bioactivity-antagonist-rev:
+    - supportBatch: false   ## because of jmespath handling to get the specific chem-gene pair info
+      useTemplating: true
+      inputs:
+      - id: UniProtKB
+        semantic: Gene
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"
+          scopes: drugcentral.bioactivity.uniprot.uniprot_id
+      outputs:
+      - id: UMLS
+        semantic: SmallMolecule
+      parameters:
+      ## need the whole thing for jmespath to work
+        fields: drugcentral.bioactivity,drugcentral.xrefs.umlscui
+        size: 1000  ## note size limit; added just in case
+        filter: drugcentral.bioactivity.action_type:("ANTAGONIST" OR "ALLOSTERIC ANTAGONIST")
+        ## only show the array elements where action_type is (ANTAGONIST or ALLOSTERIC ANTAGONIST) and uniprot_id value is what we asked for 
+        jmespath: "drugcentral.bioactivity|[?(action_type==`ANTAGONIST` || action_type==`ALLOSTERIC ANTAGONIST`) && length(uniprot[?uniprot_id=='{{ queryInputs }}']) > `0`]"
+        ## needed for jmespath to work: only keep array elements that meet both criteria
+        jmespath_exclude_empty: true  
+        always_list: drugcentral.bioactivity
+      predicate: affected_by
+      qualifiers:
+        qualified_predicate: caused_by
+        subject_aspect_qualifier: activity
+        subject_direction_qualifier: decreased
+        causal_mechanism_qualifier: antagonism        
+      source: "infores:drugcentral"
+      knowledge_level: knowledge_assertion
+      agent_type: not_provided
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/drugcentral-umls"
+      testExamples:
+      ## for ANTAGONIST
+        - qInput: "UniProtKB:P41595"           ## HTR2B aka NCBIGene:3357
+          oneOutput: "UMLS:C0724441"           ## yohimbine aka CHEBI:10093
+      ## for PARTIAL AGONIST
+        - qInput: "UniProtKB:Q16445"           ## GABRA6 aka NCBIGene:2559
+          oneOutput: "UMLS:C0016293"           ## flumazenil aka CHEBI:5103
     drugcentral-bioactivity-antibody:
     ## 249 records: https://mychem.info/v1/query?q=%20_exists_:%22drugcentral.bioactivity.uniprot.uniprot_id%22%20AND%20_exists_:%22drugcentral.xrefs.umlscui%22%20AND%20drugcentral.bioactivity.action_type:%22ANTIBODY%20BINDING%22&fields=drugcentral
     - supportBatch: true
@@ -1390,6 +1434,40 @@ components:
       testExamples:
         - qInput: "UMLS:C1172734"           ## natalizumab aka UNII:3JB47N2Q2P
           oneOutput: "UniProtKB:P05556"     ## ITGA4 aka NCBIGene:3688
+    drugcentral-bioactivity-antibody-rev:
+    - supportBatch: false   ## because of jmespath handling to get the specific chem-gene pair info
+      useTemplating: true
+      inputs:
+      - id: UniProtKB
+        semantic: Gene
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"
+          scopes: drugcentral.bioactivity.uniprot.uniprot_id
+      outputs:
+      - id: UMLS
+        semantic: SmallMolecule
+      parameters:
+      ## need the whole thing for jmespath to work
+        fields: drugcentral.bioactivity,drugcentral.xrefs.umlscui
+        size: 1000  ## note size limit; added just in case
+        filter: drugcentral.bioactivity.action_type:("ANTIBODY BINDING")
+        ## only show the array elements where action_type is "ANTIBODY BINDING" and uniprot_id value is what we asked for 
+        jmespath: "drugcentral.bioactivity|[?action_type==`ANTIBODY BINDING` && length(uniprot[?uniprot_id=='{{ queryInputs }}']) > `0`]"
+        ## needed for jmespath to work: only keep array elements that meet both criteria
+        jmespath_exclude_empty: true  
+        always_list: drugcentral.bioactivity
+      predicate: physically_interacts_with
+      qualifiers:
+        causal_mechanism_qualifier: antibody_inhibition     
+      source: "infores:drugcentral"
+      knowledge_level: knowledge_assertion
+      agent_type: not_provided
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/drugcentral-umls"
+      testExamples:
+        - qInput: "UniProtKB:P05556"           ## ITGB1 aka NCBIGene:3688
+          oneOutput: "UMLS:C1172734"           ## natalizumab aka UNII:3JB47N2Q2P
     drugcentral-bioactivity-antisense-inhibitor:
     ## 33 records: https://mychem.info/v1/query?q=%20_exists_:%22drugcentral.bioactivity.uniprot.uniprot_id%22%20AND%20_exists_:%22drugcentral.xrefs.umlscui%22%20AND%20drugcentral.bioactivity.action_type:%22ANTISENSE%20INHIBITOR%22&fields=drugcentral
     - supportBatch: true
@@ -1425,6 +1503,43 @@ components:
       testExamples:
         - qInput: "UMLS:C4726970"           ## volanesorsen aka UNII:2O4BE0K238
           oneOutput: "UniProtKB:P02656"     ## APOC3 aka NCBIGene:345
+    drugcentral-bioactivity-antisense-inhibitor-rev:
+    - supportBatch: false   ## because of jmespath handling to get the specific chem-gene pair info
+      useTemplating: true
+      inputs:
+      - id: UniProtKB
+        semantic: Gene
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"
+          scopes: drugcentral.bioactivity.uniprot.uniprot_id
+      outputs:
+      - id: UMLS
+        semantic: SmallMolecule
+      parameters:
+      ## need the whole thing for jmespath to work
+        fields: drugcentral.bioactivity,drugcentral.xrefs.umlscui
+        size: 1000  ## note size limit; added just in case
+        filter: drugcentral.bioactivity.action_type:("ANTISENSE INHIBITOR")
+        ## only show the array elements where action_type is "ANTISENSE INHIBITOR" and uniprot_id value is what we asked for 
+        jmespath: "drugcentral.bioactivity|[?action_type==`ANTISENSE INHIBITOR` && length(uniprot[?uniprot_id=='{{ queryInputs }}']) > `0`]"
+        ## needed for jmespath to work: only keep array elements that meet both criteria
+        jmespath_exclude_empty: true  
+        always_list: drugcentral.bioactivity
+      predicate: affected_by
+      qualifiers:
+        qualified_predicate: caused_by
+        subject_aspect_qualifier: synthesis
+        subject_direction_qualifier: decreased
+        causal_mechanism_qualifier: inhibition     
+      source: "infores:drugcentral"
+      knowledge_level: knowledge_assertion
+      agent_type: not_provided
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/drugcentral-umls"
+      testExamples:
+        - qInput: "UniProtKB:P02656"           ## APOC3 aka NCBIGene:345
+          oneOutput: "UMLS:C4726970"           ## volanesorsen aka UNII:2O4BE0K238
     drugcentral-bioactivity-binding-agent:
     ## 91 records: https://mychem.info/v1/query?q=%20_exists_:%22drugcentral.bioactivity.uniprot.uniprot_id%22%20AND%20_exists_:%22drugcentral.xrefs.umlscui%22%20AND%20drugcentral.bioactivity.action_type:%22BINDING%20AGENT%22&fields=drugcentral
     - supportBatch: true
