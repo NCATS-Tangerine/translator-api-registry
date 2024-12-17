@@ -313,12 +313,10 @@ paths:
       # summary: Make batch gene queries and return matching gene hits
       tags:
       - query
-      ## 4 operations (2 sets)
+      ## 2 operations (1 set)
       x-bte-kgs-operations:
       - $ref: '#/components/x-bte-kgs-operations/drug-disease-approved'
       - $ref: '#/components/x-bte-kgs-operations/disease-drug-approved'
-      - $ref: '#/components/x-bte-kgs-operations/drug-disease-not-approved'
-      - $ref: '#/components/x-bte-kgs-operations/disease-drug-not-approved'
 components:
   parameters:
     callback:
@@ -580,9 +578,10 @@ components:
   #     - type: string
   x-bte-kgs-operations:
   ## NOTES
+  ## - not annotating non-approved drug info: this is from parsing/cleaning clinicaltrials.gov data.
+  ##   Translator wants us to use Multiomics Clinical Trials KP (CTKP) instead
   ## - knowledge_level / agent_type: based on paper https://www.nature.com/articles/sdata201729
   ##   - approved drug info from downloading drugcentral / drugbank
-  ##   - non-approved drug info from data parsing/cleaning clinicaltrials.gov data 
   ## - possible edge-attributes:
   ##   - 2185 / 10602 records have detailed status (free-text): https://biothings.ncats.io/repodb/query?q=_exists_:trials.detailed_status
   ##   - status: all records have this, but the values need to be mapped to biolink-model ClinicalApprovalStatusEnum
@@ -648,103 +647,12 @@ components:
         testExamples:
           - qInput: "UMLS:C0032797"          ## Postpartum Hemorrhage / HP:0011891 Post-partum hemorrhage
             oneOutput: "DRUGBANK:DB00107"    ## Oxytocin / PUBCHEM.COMPOUND:439302
-    drug-disease-not-approved:
-    ## 2583 records (going off of existence of trials.phase which doesn't seem to exist in approved entries)
-    ## biothings.ncats.io/repodb/query?q=_exists_:trials.phase
-    ## phase values are either Phase 1, Phase 2, Phase 3 (so all went through clinical trials)
-    ## status values are either terminated, withdrawn, suspended
-      - supportBatch: true
-        useTemplating: true ## flag to say templating is being used below
-        inputs:
-          - id: DRUGBANK
-            semantic: SmallMolecule
-        requestBody:
-          body: 
-            q: "{{ queryInputs | rmPrefix() }}"
-            scopes: drug.drugbank
-        outputs:
-          - id: UMLS
-            semantic: Disease
-        parameters:
-        ## include clinical trial field since some will have it
-          fields: >-
-            indication.umls,
-            drug.name,
-            indication.name,
-            trials.id,
-            trials.status
-          size: 1000
-          filter: _exists_:trials.phase
-        predicate: in_clinical_trials_for
-        source: "infores:repodb"
-        knowledge_level: observation
-        agent_type: automated_agent
-        response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/disease-clinicaltrial"
-        testExamples:
-        ## for Terminated
-          - qInput: "DRUGBANK:DB00043"    ## Omalizumab / UNII:2P471X1Z11
-            oneOutput: "UMLS:C0004096"    ## Asthma / MONDO:0004979
-        ## for Withdrawn
-          - qInput: "DRUGBANK:DB14482"    ## Sodium ascorbate / PUBCHEM.COMPOUND:23667548
-            oneOutput: "UMLS:C0004238"    ## Atrial Fibrillation / MONDO:0004981
-        ## for Suspended
-          - qInput: "DRUGBANK:DB00104"    ## Octreotide / PUBCHEM.COMPOUND:448601
-            oneOutput: "UMLS:C0001206"    ## Acromegaly / MONDO:0019933
-    disease-drug-not-approved:
-      - supportBatch: true
-        useTemplating: true
-        inputs:
-          - id: UMLS
-            semantic: Disease
-        requestBody:
-          body: 
-            q: "{{ queryInputs | rmPrefix() }}"
-            scopes: indication.umls
-        outputs:
-          - id: DRUGBANK
-            semantic: SmallMolecule
-        parameters:
-          fields: >-
-            drug.drugbank,
-            drug.name,
-            indication.name,
-            trials.id,
-            trials.status
-          size: 1000
-          filter: _exists_:trials.phase
-        predicate: tested_by_clinical_trials_of
-        source: "infores:repodb"
-        knowledge_level: observation
-        agent_type: automated_agent
-        response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/drug-clinicaltrial"
-        testExamples:
-        ## for Terminated
-          - qInput: "UMLS:C0184567"          ## Acute onset pain / NCIT:C27003
-            oneOutput: "DRUGBANK:DB14123"    ## Menthol / PUBCHEM.COMPOUND:1254
-        ## for Withdrawn
-          - qInput: "UMLS:C0022104"          ## Irritable Bowel Syndrome / MONDO:0005052
-            oneOutput: "DRUGBANK:DB14005"    ## Dimethicone 410 / PUBCHEM.COMPOUND:131740050 Bis(tert-butylsilyloxy)-dimethylsilane
-        ## for Suspended
-          - qInput: "UMLS:C0406317"          ## Chronic small plaque psoriasis
-            oneOutput: "DRUGBANK:DB14006"    ## Choline salicylate / PUBCHEM.COMPOUND:54686350
   x-bte-response-mapping:
     disease-only:
       UMLS: indication.umls
       input_name: drug.name
       output_name: indication.name
-    disease-clinicaltrial:
-      UMLS: indication.umls
-      input_name: drug.name
-      output_name: indication.name
-      ref_clinicaltrials: trials.id  ## no prefix
     drug-only:
       DRUGBANK: drug.drugbank
       input_name: indication.name
       output_name: drug.name
-    drug-clinicaltrial:
-      DRUGBANK: drug.drugbank
-      input_name: indication.name
-      output_name: drug.name
-      ref_clinicaltrials: trials.id  ## no prefix
