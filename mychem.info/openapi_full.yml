@@ -344,8 +344,11 @@ paths:
       - "$ref": "#/components/x-bte-kgs-operations/drugcentral-bioactivity-antisense-inhibitor"
       # - "$ref": "#/components/x-bte-kgs-operations/drugcentral-bioactivity-antisense-inhibitor-rev"
       - "$ref": "#/components/x-bte-kgs-operations/drugcentral-bioactivity-binding-agent"
+      # - "$ref": "#/components/x-bte-kgs-operations/drugcentral-bioactivity-binding-agent-rev"
       - "$ref": "#/components/x-bte-kgs-operations/drugcentral-bioactivity-inhibitor"
+      # - "$ref": "#/components/x-bte-kgs-operations/drugcentral-bioactivity-inhibitor-rev"
       - "$ref": "#/components/x-bte-kgs-operations/drugcentral-bioactivity-inverse-agonist"
+      # - "$ref": "#/components/x-bte-kgs-operations/drugcentral-bioactivity-inverse-agonist-rev"
       - "$ref": "#/components/x-bte-kgs-operations/drugcentral-bioactivity-modulator"
       - "$ref": "#/components/x-bte-kgs-operations/drugcentral-bioactivity-negative-modulator"
       - "$ref": "#/components/x-bte-kgs-operations/drugcentral-bioactivity-opener"
@@ -1559,6 +1562,35 @@ components:
       testExamples:
         - qInput: "UMLS:C5139904"           ## mirikizumab aka UNII:Z7HVY03PHP
           oneOutput: "UniProtKB:Q9NPF7"     ## IL23A aka NCBIGene:51561
+    drugcentral-bioactivity-binding-agent-rev:
+    - supportBatch: false   ## because of jmespath handling to get the specific chem-gene pair info
+      useTemplating: true
+      inputs:
+      - id: UniProtKB
+        semantic: Gene
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"
+          scopes: drugcentral.bioactivity.uniprot.uniprot_id
+      outputs:
+      - id: UMLS
+        semantic: SmallMolecule
+      parameters:
+        fields: drugcentral.bioactivity,drugcentral.xrefs.umlscui
+        size: 1000
+        filter: drugcentral.bioactivity.action_type:("BINDING AGENT")
+        jmespath: "drugcentral.bioactivity|[?action_type==`BINDING AGENT` && length(uniprot[?uniprot_id=='{{ queryInputs }}']) > `0`]"
+        jmespath_exclude_empty: true  
+        always_list: drugcentral.bioactivity
+      predicate: physically_interacts_with 
+      source: "infores:drugcentral"
+      knowledge_level: knowledge_assertion
+      agent_type: not_provided
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/drugcentral-umls"
+      testExamples:
+        - qInput: "UniProtKB:Q9NPF7"           ## IL23A aka NCBIGene:51561
+          oneOutput: "UMLS:C5139904"           ## mirikizumab aka UNII:Z7HVY03PHP
     drugcentral-bioactivity-inhibitor:
     ## INHIBITOR 853 records: https://mychem.info/v1/query?q=%20_exists_:%22drugcentral.bioactivity.uniprot.uniprot_id%22%20AND%20_exists_:%22drugcentral.xrefs.umlscui%22%20AND%20drugcentral.bioactivity.action_type:%22INHIBITOR%22&fields=drugcentral
     ## "GATING INHIBITOR" 29 records: https://mychem.info/v1/query?q=%20_exists_:%22drugcentral.bioactivity.uniprot.uniprot_id%22%20AND%20_exists_:%22drugcentral.xrefs.umlscui%22%20AND%20drugcentral.bioactivity.action_type:%22GATING%20INHIBITOR%22&fields=drugcentral
@@ -1609,6 +1641,47 @@ components:
       # for BLOCKER
         - qInput: "UMLS:C0023660"           ## lidocaine aka CHEBI:6456
           oneOutput: "UniProtKB:Q99250"     ## SCN2A aka NCBIGene:6326
+    drugcentral-bioactivity-inhibitor-rev:
+    - supportBatch: false   ## because of jmespath handling to get the specific chem-gene pair info
+      useTemplating: true
+      inputs:
+      - id: UniProtKB
+        semantic: Gene
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"
+          scopes: drugcentral.bioactivity.uniprot.uniprot_id
+      outputs:
+      - id: UMLS
+        semantic: SmallMolecule
+      parameters:
+        fields: drugcentral.bioactivity,drugcentral.xrefs.umlscui
+        size: 1000
+        filter: drugcentral.bioactivity.action_type:("INHIBITOR" OR "GATING INHIBITOR" OR "BLOCKER")
+        jmespath: "drugcentral.bioactivity|[?(action_type==`INHIBITOR` || action_type==`GATING INHIBITOR` || action_type==`BLOCKER`) && length(uniprot[?uniprot_id=='{{ queryInputs }}']) > `0`]"
+        jmespath_exclude_empty: true  
+        always_list: drugcentral.bioactivity
+      predicate: affected_by
+      qualifiers:
+        qualified_predicate: caused_by
+        subject_aspect_qualifier: activity_or_abundance
+        subject_direction_qualifier: decreased
+        causal_mechanism_qualifier: inhibition        
+      source: "infores:drugcentral"
+      knowledge_level: knowledge_assertion
+      agent_type: not_provided
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/drugcentral-umls"
+      testExamples:
+      ## for INHIBITOR
+        - qInput: "UniProtKB:Q9H6Z9"           ## EGLN3 aka NCBIGene:112399
+          oneOutput: "UMLS:C4519188"           ## daprodustat aka CHEBI:229223
+      ## for GATING INHIBITOR
+        - qInput: "UniProtKB:Q01668"           ## CACNA1D aka NCBIGene:776
+          oneOutput: "UMLS:C0071304"           ## Isradipine aka CHEBI:6073
+      ## for BLOCKER
+        - qInput: "UniProtKB:Q99250"           ## SCN2A aka NCBIGene:6326
+          oneOutput: "UMLS:C0023660"           ## lidocaine aka CHEBI:6456
     drugcentral-bioactivity-inverse-agonist:
     ## 8 records: https://mychem.info/v1/query?q=%20_exists_:%22drugcentral.bioactivity.uniprot.uniprot_id%22%20AND%20_exists_:%22drugcentral.xrefs.umlscui%22%20AND%20drugcentral.bioactivity.action_type:%22INVERSE%20AGONIST%22&fields=drugcentral
     ## Definition: https://en.wikipedia.org/wiki/Inverse_agonist
@@ -1644,6 +1717,40 @@ components:
       testExamples:
         - qInput: "UMLS:C1722267"           ## pimavanserin tartrate aka CHEBI:133014
           oneOutput: "UniProtKB:P28335"     ## HTR2C aka NCBIGene:3358
+    drugcentral-bioactivity-inverse-agonist-rev:
+    - supportBatch: false   ## because of jmespath handling to get the specific chem-gene pair info
+      useTemplating: true
+      inputs:
+      - id: UniProtKB
+        semantic: Gene
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"
+          scopes: drugcentral.bioactivity.uniprot.uniprot_id
+      outputs:
+      - id: UMLS
+        semantic: SmallMolecule
+      parameters:
+        fields: drugcentral.bioactivity,drugcentral.xrefs.umlscui
+        size: 1000
+        filter: drugcentral.bioactivity.action_type:("INVERSE AGONIST")
+        jmespath: "drugcentral.bioactivity|[?action_type==`INVERSE AGONIST` && length(uniprot[?uniprot_id=='{{ queryInputs }}']) > `0`]"
+        jmespath_exclude_empty: true  
+        always_list: drugcentral.bioactivity
+      predicate: affected_by
+      qualifiers:
+        qualified_predicate: caused_by
+        subject_aspect_qualifier: activity
+        subject_direction_qualifier: decreased
+        causal_mechanism_qualifier: inverse_agonism   
+      source: "infores:drugcentral"
+      knowledge_level: knowledge_assertion
+      agent_type: not_provided
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/drugcentral-umls"
+      testExamples:
+        - qInput: "UniProtKB:P28335"           ## HTR2C aka NCBIGene:3358
+          oneOutput: "UMLS:C1722267"           ## pimavanserin tartrate aka CHEBI:133014
     drugcentral-bioactivity-modulator:
     ## ALLOSTERIC MODULATOR 20 records: https://mychem.info/v1/query?q=%20_exists_:%22drugcentral.bioactivity.uniprot.uniprot_id%22%20AND%20_exists_:%22drugcentral.xrefs.umlscui%22%20AND%20drugcentral.bioactivity.action_type:%22ALLOSTERIC%20MODULATOR%22&fields=drugcentral.bioactivity,drugcentral.xrefs
     ## MODULATOR 27 records: https://mychem.info/v1/query?q=%20_exists_:%22drugcentral.bioactivity.uniprot.uniprot_id%22%20AND%20_exists_:%22drugcentral.xrefs.umlscui%22%20AND%20drugcentral.bioactivity.action_type:%22MODULATOR%22&fields=drugcentral.bioactivity,drugcentral.xrefs
