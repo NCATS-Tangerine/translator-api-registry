@@ -767,11 +767,12 @@ components:
           - qInput: "UMLS:C0023264"     ## Leigh Disease
             oneOutput: "DBSNP:rs1161932777"
   ## for hpo-annotation-based operations:
-  ## - currently, the mydisease parser for hpo maps the resources' IDs (OMIM or orphanet) to MONDO. 
-  ##   If two IDs (ex: OMIM:218340 and orphanet:1777 for Temtamy syndrome) map to the same MONDO ID, it looks like only the OMIM data was kept.
-  ##   However, then data is missing: in the raw data, those two IDs have different sets of annotated phenotypes...
-  ## - there is DECIPHER-ID-based disease-pheno info that isn't captured by BTE right now.
-  ##   however, this is not much info (~22 diseases) and we don't have mappings from SRI-based ID resolver
+  ## 10421 diseases/records have hpo.phenotype_related_to_disease.hpo_id field https://mydisease.info/v1/query?q=_exists_:hpo.phenotype_related_to_disease.hpo_id
+  ## Disease ID field: use hpo.omim, orphanet, decipher. Every record has <=1 of those fields https://mydisease.info/v1/query?q=_exists_:hpo.phenotype_related_to_disease.hpo_id%20AND%20(_exists_:hpo.omim%20OR%20_exists_:hpo.orphanet%20OR%20_exists_:hpo.decipher)
+  ## - VS 73 records don't have mondo.mondo (mapping): all decipher records, a few omim, a few orphanet
+  ## - 2099 records have hpo.omim and hpo.orphanet fields: https://mydisease.info/v1/query?q=_exists_:hpo.phenotype_related_to_disease.hpo_id%20AND%20%20_exists_:hpo.omim%20AND%20_exists_:hpo.orphanet
+  ##   Because when hpo.omim and hpo.orphanet map to same mondo ID, their data is merged into same record
+  ## - no operations for DECIPHER right now: no support in SRI NodeNorm 
     disease-phenotype:
       - supportBatch: true
         useTemplating: true
@@ -878,12 +879,16 @@ components:
           - qInput: "orphanet:881"    ## Turner Syndrome
             oneOutput: "HP:0000137"   ## Abnormality of the ovary
   ## for ctd-based operations:
+  ## Disease <-> chemical: 3356 diseases/records 
   ## - knowledge_level / agent_type: parser removes all inferred annotations for disease-chemical
-  ## - when the mydisease parser maps the resources' IDs to MONDO, are there situations where a MESH and a OMIM ID map to the same MONDO? 
-  ##   If so, 1) Is only one of them kept?, 
-  ##          2) Do those IDs have different data linked to them? (so data is missing with the current behavior)
-  ##   From what I can tell, CTD does their own entity resolution. 
-  ##   If a disease has MESH and OMIM IDs, the raw data has its info under the MESH ID only. The OMIM ID is only used as the main disease ID if there isn't a matching MESH ID
+  ## - Disease ID field: use ctd.mesh, ctd.omim. Every record either has one or the other https://mydisease.info/v1/query?q=_exists_:ctd.chemical_related_to_disease%20AND(%20_exists_:ctd.mesh%20OR%20_exists_:ctd.omim)
+  ##   - 1106 records don't have the mondo field (mapping): https://mydisease.info/v1/query?q=_exists_:ctd.chemical_related_to_disease%20AND%20NOT%20_exists_:mondo.mondo
+  ## - parser has a step where resource IDs (MESH, OMIM) are mapped to MONDO. 
+  ##   If multiple IDs map to the same MONDO, it's possible data is being overwritten https://github.com/biothings/mydisease.info/issues/59
+  ## - From what I can tell, CTD does their own entity resolution. 
+  ##   If a disease has MESH and OMIM IDs, the raw data has its info under the MESH ID only. 
+  ##   The OMIM ID is only used as the main disease ID if there isn't a matching MESH ID
+  ## Others:
   ## - we wanted to add CTD direct disease-gene data, operations
   ## - we removed CTD disease-pathway data because that info is all indirect
     disease-chemical:
