@@ -356,6 +356,7 @@ paths:
       - "$ref": "#/components/x-bte-kgs-operations/drugcentral-bioactivity-opener"
       # - "$ref": "#/components/x-bte-kgs-operations/drugcentral-bioactivity-opener-rev"
       - "$ref": "#/components/x-bte-kgs-operations/drugcentral-bioactivity-positive-modulator"
+      # - "$ref": "#/components/x-bte-kgs-operations/drugcentral-bioactivity-positive-modulator-rev"
       - "$ref": "#/components/x-bte-kgs-operations/drugcentral-bioactivity-rev"
       - "$ref": "#/components/x-bte-kgs-operations/drugcentral-contraindication"
       - "$ref": "#/components/x-bte-kgs-operations/drugcentral-contraindication-rev"
@@ -2012,6 +2013,43 @@ components:
       # for POSITIVE MODULATOR
         - qInput: "UMLS:C0014277"           ## enflurane aka CHEBI:4792
           oneOutput: "UniProtKB:P23415"     ## GLRA1 aka NCBIGene:2741
+    drugcentral-bioactivity-positive-modulator-rev:
+    - supportBatch: false   ## because of jmespath handling to get the specific chem-gene pair info
+      useTemplating: true
+      inputs:
+      - id: UniProtKB
+        semantic: Gene
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"
+          scopes: drugcentral.bioactivity.uniprot.uniprot_id
+      outputs:
+      - id: UMLS
+        semantic: SmallMolecule
+      parameters:
+        fields: drugcentral.bioactivity,drugcentral.xrefs.umlscui
+        size: 1000
+        filter: drugcentral.bioactivity.action_type:("POSITIVE ALLOSTERIC MODULATOR" OR "POSITIVE MODULATOR")
+        jmespath: "drugcentral.bioactivity|[?(action_type==`POSITIVE ALLOSTERIC MODULATOR` || action_type==`POSITIVE MODULATOR`) && length(uniprot[?uniprot_id=='{{ queryInputs }}']) > `0`]"
+        jmespath_exclude_empty: true  
+        always_list: drugcentral.bioactivity
+      predicate: affected_by
+      qualifiers:
+        qualified_predicate: caused_by
+        subject_aspect_qualifier: activity_or_abundance
+        subject_direction_qualifier: increased
+      source: "infores:drugcentral"
+      knowledge_level: knowledge_assertion
+      agent_type: not_provided
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/drugcentral-umls"
+      testExamples:
+      ## for POSITIVE ALLOSTERIC MODULATOR
+        - qInput: "UniProtKB:P47869"           ## GABRA2 aka NCBIGene:2555
+          oneOutput: "UMLS:C0072828"           ## quazepam aka CHEBI:8694
+      ## for POSITIVE MODULATOR
+        - qInput: "UniProtKB:P23415"           ## GLRA1 aka NCBIGene:2741
+          oneOutput: "UMLS:C0014277"           ## enflurane aka CHEBI:4792
     drugcentral-bioactivity-rev:
     - supportBatch: true
       useTemplating: true
