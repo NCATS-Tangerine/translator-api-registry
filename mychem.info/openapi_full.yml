@@ -1972,43 +1972,10 @@ components:
           oneOutput: "UMLS:C3265565"           ## sevoflurane aka CHEBI:9130
         - qInput: "UniProtKB:Q8NER1"           ## TRPV1 aka NCBIGene:7442
           oneOutput: "UMLS:C0006931"           ## capsaicin aka CHEBI:3374
-    drugcentral-bioactivity-positive-allosteric-modulator:
-    ## 44 records: https://mychem.info/v1/query?q=%20_exists_:%22drugcentral.bioactivity.uniprot.uniprot_id%22%20AND%20_exists_:%22drugcentral.xrefs.umlscui%22%20AND%20drugcentral.bioactivity.action_type:%22POSITIVE%20ALLOSTERIC%20MODULATOR%22&fields=drugcentral
-    - supportBatch: true
-      useTemplating: true
-      inputs:
-      - id: UMLS
-        semantic: SmallMolecule
-      requestBody:
-        body:
-          q: "{{ queryInputs }}"  ## no prefix
-          scopes: drugcentral.xrefs.umlscui
-      outputs:
-      - id: UniProtKB
-        semantic: Gene
-      parameters:
-        fields: drugcentral.bioactivity
-        size: 1000
-        filter: drugcentral.bioactivity.action_type:"POSITIVE ALLOSTERIC MODULATOR"
-        jmespath: "drugcentral.bioactivity|[?action_type==`POSITIVE ALLOSTERIC MODULATOR`]"
-        always_list: drugcentral.bioactivity
-      ## differs from dgidb's "positive modulator": no definition here means we use activity_or_abundance. Also we can use the causal mechanism term 
-      predicate: affects
-      qualifiers:
-        qualified_predicate: causes
-        object_aspect_qualifier: activity_or_abundance
-        object_direction_qualifier: increased
-        causal_mechanism_qualifier: positive_allosteric_modulation
-      source: "infores:drugcentral"
-      knowledge_level: knowledge_assertion
-      agent_type: not_provided
-      response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/drugcentral-bioactivity"
-      testExamples:
-        - qInput: "UMLS:C0072828"           ## quazepam aka CHEBI:8694
-          oneOutput: "UniProtKB:P18505"     ## GABRA3 aka NCBIGene:2560
     drugcentral-bioactivity-positive-modulator:
-    ## 14 records: https://mychem.info/v1/query?q=%20_exists_:%22drugcentral.bioactivity.uniprot.uniprot_id%22%20AND%20_exists_:%22drugcentral.xrefs.umlscui%22%20AND%20drugcentral.bioactivity.action_type:%22POSITIVE%20MODULATOR%22&fields=drugcentral
+    ## put together to match negative modulator operation
+    ## POSITIVE ALLOSTERIC MODULATOR 44 records: https://mychem.info/v1/query?q=%20_exists_:%22drugcentral.bioactivity.uniprot.uniprot_id%22%20AND%20_exists_:%22drugcentral.xrefs.umlscui%22%20AND%20drugcentral.bioactivity.action_type:%22POSITIVE%20ALLOSTERIC%20MODULATOR%22&fields=drugcentral
+    ## POSITIVE MODULATOR 14 records: https://mychem.info/v1/query?q=%20_exists_:%22drugcentral.bioactivity.uniprot.uniprot_id%22%20AND%20_exists_:%22drugcentral.xrefs.umlscui%22%20AND%20drugcentral.bioactivity.action_type:%22POSITIVE%20MODULATOR%22&fields=drugcentral
     - supportBatch: true
       useTemplating: true
       inputs:
@@ -2024,11 +1991,11 @@ components:
       parameters:
         fields: drugcentral.bioactivity
         size: 1000
-        filter: drugcentral.bioactivity.action_type:"POSITIVE MODULATOR"
-        jmespath: "drugcentral.bioactivity|[?action_type==`POSITIVE MODULATOR`]"
+        filter: drugcentral.bioactivity.action_type:("POSITIVE ALLOSTERIC MODULATOR" OR "POSITIVE MODULATOR")
+        jmespath: "drugcentral.bioactivity|[?action_type==`POSITIVE ALLOSTERIC MODULATOR` || action_type==`POSITIVE MODULATOR`]"
         always_list: drugcentral.bioactivity
-      ## differs from dgidb's "positive modulator": no definition here means we use activity_or_abundance 
-      ## not using causal mech qualifier "positive_allosteric_modulation" since it's not clear that it's allosteric
+      ## differs from dgidb's "positive modulator": no definition here means we use activity_or_abundance
+      ## not using causal mech qualifier "positive_allosteric_modulation" because I'm including POSITIVE MODULATOR (not allosteric)
       predicate: affects
       qualifiers:
         qualified_predicate: causes
@@ -2040,8 +2007,12 @@ components:
       response_mapping:
         "$ref": "#/components/x-bte-response-mapping/drugcentral-bioactivity"
       testExamples:
+      # for POSITIVE ALLOSTERIC MODULATOR
+        - qInput: "UMLS:C0072828"           ## quazepam aka CHEBI:8694
+          oneOutput: "UniProtKB:P47869"     ## GABRA2 aka NCBIGene:2555
+      # for POSITIVE MODULATOR
         - qInput: "UMLS:C0014277"           ## enflurane aka CHEBI:4792
-          oneOutput: "UniProtKB:P23415"     ## GLRA1 aka NCBIGene:2741   
+          oneOutput: "UniProtKB:P23415"     ## GLRA1 aka NCBIGene:2741
     drugcentral-bioactivity-rev:
     - supportBatch: true
       useTemplating: true
