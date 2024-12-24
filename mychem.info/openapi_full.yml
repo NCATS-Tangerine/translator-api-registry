@@ -355,6 +355,8 @@ paths:
       - "$ref": "#/components/x-bte-kgs-operations/drugcentral-bioactivity-opener-rev"
       - "$ref": "#/components/x-bte-kgs-operations/drugcentral-bioactivity-positive-modulator"
       - "$ref": "#/components/x-bte-kgs-operations/drugcentral-bioactivity-positive-modulator-rev"
+      - "$ref": "#/components/x-bte-kgs-operations/drugcentral-bioactivity-no-action-type"
+      - "$ref": "#/components/x-bte-kgs-operations/drugcentral-bioactivity-no-action-type-rev"
       - "$ref": "#/components/x-bte-kgs-operations/drugcentral-contraindication"
       - "$ref": "#/components/x-bte-kgs-operations/drugcentral-contraindication-rev"
       - "$ref": "#/components/x-bte-kgs-operations/drugcentral-indication"
@@ -1969,6 +1971,75 @@ components:
       ## for POSITIVE MODULATOR
         - qInput: "UniProtKB:P23415"           ## GLRA1 aka NCBIGene:2741
           oneOutput: "UMLS:C0014277"           ## enflurane aka CHEBI:4792
+    drugcentral-bioactivity-no-action-type:
+    ## 763 chem/records have no action_type in any bioactivity object: https://mychem.info/v1/query?q=NOT%20_exists_:drugcentral.bioactivity.action_type%20AND%20_exists_:drugcentral.xrefs.umlscui%20AND%20_exists_:drugcentral.bioactivity.uniprot.uniprot_id&fields=drugcentral
+    ## but there are more chem/records where >= 1 bioactivity object has no action_type
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: UMLS
+        semantic: SmallMolecule
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"
+          scopes: drugcentral.xrefs.umlscui
+      outputs:
+      - id: UniProtKB
+        semantic: Gene
+      parameters:
+        fields: drugcentral.bioactivity
+        size: 1000
+        ## only keep bioactivity objects that lack the action_type field
+        jmespath: "drugcentral.bioactivity|[?!action_type]"
+        ## remove hits if they don't have any bioactivity objects that pass jmespath critieria 
+        jmespath_exclude_empty: true
+        always_list: drugcentral.bioactivity
+      ## pharmacodynamics: chem has to interact with target-gene's protein to create an effect/response that's measured/recorded
+      ##   I don't want to use "affects" because the data given is sometimes Kd (binding constant)
+      ##   aka the chem specifically binds the protein - so it's not clear if there's an effect 
+      predicate: interacts_with
+      source: "infores:drugcentral"
+      knowledge_level: knowledge_assertion
+      agent_type: not_provided
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/drugcentral-bioactivity"
+      testExamples:
+      ## all bioactivity objects lack action_type
+        - qInput: "UMLS:C0007839"           ## Cerulenin aka CHEBI:171741
+          oneOutput: "UniProtKB:Q72874"     ## Q72874_9HIV1 Pol polyprotein (Fragment) (trembl)
+      ## retrieve only the bioactivity objects that lack action_type 
+        - qInput: "UMLS:C0028193"           ## Nitroprusside aka CHEBI:7596
+          oneOutput: "UniProtKB:P16066"     ## NPR1 aka NCBIGene:4881
+    drugcentral-bioactivity-no-action-type-rev:
+    - supportBatch: false   ## because of jmespath handling to get the specific chem-gene pair info
+      useTemplating: true
+      inputs:
+      - id: UniProtKB
+        semantic: Gene
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"
+          scopes: drugcentral.bioactivity.uniprot.uniprot_id
+      outputs:
+      - id: UMLS
+        semantic: SmallMolecule
+      parameters:
+        fields: drugcentral.bioactivity,drugcentral.xrefs.umlscui
+        size: 1000
+        jmespath: "drugcentral.bioactivity|[?!action_type && length(uniprot[?uniprot_id=='{{ queryInputs }}']) > `0`]"
+        jmespath_exclude_empty: true  
+        always_list: drugcentral.bioactivity
+      predicate: interacts_with
+      source: "infores:drugcentral"
+      knowledge_level: knowledge_assertion
+      agent_type: not_provided
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/drugcentral-umls"
+      testExamples:
+        - qInput: "UniProtKB:P0DTD1"           ## ORF1ab / SARS-CoV-2 Replicase Polyprotein 1ab aka NCBIGene:43740578
+          oneOutput: "UMLS:C1876229"           ## Telaprevir aka CHEBI:68595
+        - qInput: "UniProtKB:P05164"           ## MPO aka NCBIGene:4353
+          oneOutput: "UMLS:C0020223"           ## hydralazine aka CHEBI:5775
     drugcentral-contraindication:
     - supportBatch: true
       useTemplating: true
