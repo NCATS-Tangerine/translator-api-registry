@@ -2074,10 +2074,10 @@ components:
         ## remove hits if they don't have any bioactivity objects that pass jmespath critieria 
         jmespath_exclude_empty: true
         always_list: drugcentral.bioactivity
-      ## assuming "bioactivity" involves measuring an effect/response, aka the chem "affects" the gene's product/protein somehow
-      ##   I'm not sure exactly what it affects, so not including any qualifiers
-      ## could also be interacts_with (chem interacts with protein to create an effect/response)
-      predicate: affects
+      ## pharmacodynamics: chem has to interact with target-gene's protein to create an effect/response that's measured/recorded
+      ##   I don't want to use "affects" because the data given is sometimes Kd (binding constant)
+      ##   aka the chem specifically binds the protein - so it's not clear if there's an effect 
+      predicate: interacts_with
       source: "infores:drugcentral"
       knowledge_level: knowledge_assertion
       agent_type: not_provided
@@ -2109,7 +2109,7 @@ components:
         jmespath: "drugcentral.bioactivity|[?!action_type && length(uniprot[?uniprot_id=='{{ queryInputs }}']) > `0`]"
         jmespath_exclude_empty: true  
         always_list: drugcentral.bioactivity
-      predicate: affected_by
+      predicate: interacts_with
       source: "infores:drugcentral"
       knowledge_level: knowledge_assertion
       agent_type: not_provided
