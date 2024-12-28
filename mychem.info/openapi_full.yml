@@ -321,8 +321,6 @@ paths:
       tags:
       - query
       x-bte-kgs-operations:
-      - "$ref": "#/components/x-bte-kgs-operations/aeolusTreats"
-      - "$ref": "#/components/x-bte-kgs-operations/aeolusTreats-rev"
       - "$ref": "#/components/x-bte-kgs-operations/chebiToReactome"
       - "$ref": "#/components/x-bte-kgs-operations/chebiToReactome-rev"
       - "$ref": "#/components/x-bte-kgs-operations/chebiToRhea"
@@ -627,12 +625,6 @@ components:
   #       type: array
   #     - type: string
   x-bte-response-mapping:
-    aeolusIndication-meddra:
-      MEDDRA: aeolus.indications.meddra_code
-      "biolink:evidence_count": aeolus.indications.count
-    aeolusIndication-unii:
-      UNII: aeolus.unii
-      "biolink:evidence_count": aeolus.indications.count
     chebiXrefs-reactome:
       REACT: chebi.xrefs.reactome
     chebi:
@@ -715,73 +707,15 @@ components:
     fdaOrphanDrug-pubchemCompound:
       "PUBCHEM.COMPOUND": fda_orphan_drug.pubchem_cid  ## no prefix
   x-bte-kgs-operations:
-  ## deciding not to annotate aeolus.outcomes since this list of side effects can be very long
+  ## AEOLUS:
+  ## - not annotating indications because Translator CQS/Matt Brush team asked us not to;
+  ##   asked us to use Multiomics Drug Approvals instead
+  ## - deciding not to annotate aeolus.outcomes since this list of side effects can be very long
   ##   this says mychem truncates it to 5000...https://docs.mychem.info/en/latest/doc/data_source.html
-  ## deciding not to annotate sider since it's not clear how the records are structured (is meddra ID for the side effect?)
+  ## SIDER: deciding not to annotate since it's not clear how the records are structured (is meddra ID for the side effect?)
   ##   it is also long...https://docs.mychem.info/en/latest/doc/data_source.html
-    aeolusTreats:
-    ## - chose to map to Disease semantic type since I saw SRI map some MEDDRA IDs to Disease...
-    ##   https://nodenormalization-sri.renci.org/1.2/get_normalized_nodes?curie=MEDDRA%3A10021639&conflate=true
-    ##   But some seem like PhenotypicFeatures...
-    - supportBatch: true
-      useTemplating: true
-      inputs:
-      - id: UNII
-        semantic: SmallMolecule
-      requestBody:
-        body:
-          q: "{{ queryInputs }}"  ## no prefix
-          scopes: aeolus.unii
-          ## all 1551 records have unii and rxcui (another option), only 1016 have inchikey 
-      outputs:
-      - id: MEDDRA
-        semantic: Disease
-      parameters:
-        filter: _exists_:aeolus.indications   ## need the field to exist for jmespath to work
-        fields: aeolus.indications     ## need the whole thing for jmespath to work
-        jmespath: aeolus.indications|[?count>`20`]
-        ## don't need always_list because aeolus.indications can be a single-element array
-        size: 1000  ## note size limit; added just in case
-      ## seem to come from the drug adverse event self-reporting
-      predicate: applied_to_treat
-      source: "infores:aeolus"
-      knowledge_level: observation
-      agent_type: manual_agent
-      response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/aeolusIndication-meddra"
-      testExamples:
-        - qInput: "UNII:90347YTW5F"     ## alfuzosin aka PUBCHEM.COMPOUND:2092
-          oneOutput: "MEDDRA:10004446"  ## Benign prostatic hyperplasia aka MONDO:0010811
-    aeolusTreats-rev:
-    - supportBatch: false
-      useTemplating: true
-      inputs:
-      - id: MEDDRA
-        semantic: Disease
-      requestBody:
-        body:
-          q: "{{ queryInputs }}"  ## no prefix
-          scopes: aeolus.indications.meddra_code
-      outputs:
-      - id: UNII
-        semantic: SmallMolecule
-      parameters:
-        filter: _exists_:aeolus.indications   ## need the field to exist for jmespath to work
-      ## need the whole thing for jmespath to work
-        fields: aeolus.unii,aeolus.indications  ## no prefix
-        size: 1000  ## note size limit
-        jmespath: "aeolus.indications|[?count>`20` && meddra_code=='{{ queryInputs }}']"
-        jmespath_exclude_empty: true
-      predicate: treatment_applications_from
-      source: "infores:aeolus"
-      knowledge_level: observation
-      agent_type: manual_agent
-      response_mapping:
-        "$ref": "#/components/x-bte-response-mapping/aeolusIndication-unii"
-      testExamples:
-        - qInput: "MEDDRA:10012378"        ## Depression aka MONDO:0002050
-          oneOutput: "UNII:82VFR53I78"     ## Aripiprazole aka PUBCHEM.COMPOUND:60795
-  ## chebi xrefs actually include relationships to other bioentities...
+  ## CHEBI:
+  ## - chebi xrefs actually include relationships to other bioentities...
   ## - note that truncation was done by MyChem for rhea...
   ##   see https://docs.mychem.info/en/latest/doc/data_source.html
   ## - not including chebi.xrefs.uniprot because:
