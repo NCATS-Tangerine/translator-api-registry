@@ -683,22 +683,20 @@ components:
       MONDO: mondo.disease_arises_from_feature.mondo    ## HAS PREFIX (MONDO)
   x-bte-kgs-operations:
   ## NOTES:
-  ## - there isn't more distinct operations because we can't retrieve subsets of the data under a disease / data_source. 
-  ##   for example, https://mydisease.info/v1/query?q=%20disgenet.variants_related_to_disease.source:CLINVAR 
-  ##    will NOT restrict the info under the variants_related_to_disease to only records with source == CLINVAR
-  ##   instead, it will retrieve ALL the info for diseases where AT LEAST 1 variants_related_to_disease record exists that matches that restriction
-  ## - the disgenet data files also lack more specific relationship terms...
+  ## - could use jmespath to create more specific operations based on disgenet's `source` field values 
+  ##   this could include more specific source, KL/AT, maybe predicate/qualifier 
+  ## - we used disgenet data files that don't have the specific relationship terms mentioned in the resource's documentation
     disease-gene:
-    ## 22942 / 27762 disgenet.genes_related_to_disease records have disgenet.xrefs.umls
+    ## 22499 / 27312 disgenet.genes_related_to_disease records have disgenet.xrefs.umls
+    ## https://mydisease.info/v1/query?q=_exists_:disgenet.genes_related_to_disease%20AND%20_exists_:disgenet.xrefs.umls
       - supportBatch: true
-        useTemplating: true ## flag to say templating is being used below
+        useTemplating: true
         inputs:
         - id: UMLS
           semantic: Disease
         requestBody:
           body:
             ## currently, BTE already strips prefix...
-            # q: "{{ queryInputs | rmPrefix }}"
             q: "{{ queryInputs }}"  ## no prefix
             scopes: disgenet.xrefs.umls
         outputs:
@@ -717,7 +715,6 @@ components:
           #   disgenet.genes_related_to_disease.EI,
           #   disgenet.genes_related_to_disease.score
           fields: disgenet.genes_related_to_disease.gene_id,disgenet.genes_related_to_disease.pubmed
-        ## can't be more specific because we can't restrict (see note above)
         predicate: condition_associated_with_gene 
         source: "infores:disgenet"
         knowledge_level: knowledge_assertion
@@ -728,7 +725,8 @@ components:
           - qInput: "UMLS:C0023264"     ## Leigh Disease
             oneOutput: "NCBIGene:4694"  ## NDUFA1
     disease-variant:
-    ## 11200 / 12605 disgenet.variants_related_to_disease records have disgenet.xrefs.umls
+    ## 10939 / 12343 disgenet.variants_related_to_disease records have disgenet.xrefs.umls
+    ## https://mydisease.info/v1/query?q=_exists_:disgenet.variants_related_to_disease%20AND%20_exists_:disgenet.xrefs.umls
       - supportBatch: true
         useTemplating: true
         inputs:
@@ -736,8 +734,6 @@ components:
           semantic: Disease
         requestBody:
           body:
-            ## currently, BTE already strips prefix...
-            # q: "{{ queryInputs | rmPrefix }}"
             q: "{{ queryInputs }}"  ## no prefix
             scopes: disgenet.xrefs.umls
         outputs:
@@ -756,7 +752,6 @@ components:
           #   disgenet.variants_related_to_disease.EI,
           #   disgenet.variants_related_to_disease.score
           fields: disgenet.variants_related_to_disease.rsid,disgenet.variants_related_to_disease.pubmed
-        ## can't be more specific because we can't restrict (see note above)
         predicate: related_to
         source: "infores:disgenet"
         knowledge_level: knowledge_assertion
@@ -963,8 +958,8 @@ components:
           - qInput: "OMIM:613290"       ## hearing loss, cisplatin-induced, susceptibility to
             oneOutput: "MESH:D002945"   ## Cisplatin
 ##########################################################################
-## with "reverse" querying, we will pull up ALL info under the disease, rather than under a specific record...
-##   so we can't retrieve the subset of data for the specific gene / variant / etc's record 
+## with "reverse" querying, non-batch querying with jmespath/jmespath_exclude_empty 
+## is needed to retrieve only the queried ID's data subset within the disease's record
     gene-disease:
       - supportBatch: true
         useTemplating: true
@@ -974,7 +969,6 @@ components:
         requestBody:
           body:
             ## currently, BTE already strips prefix...
-            # q: "{{ queryInputs | rmPrefix }}"
             q: "{{ queryInputs }}"   ## no prefix
             scopes: disgenet.genes_related_to_disease.gene_id
         outputs:
@@ -1001,7 +995,6 @@ components:
         requestBody:
           body:
             ## currently, BTE already strips prefix...
-            # q: "{{ queryInputs | rmPrefix }}"
             q: "{{ queryInputs }}"   ## no prefix
             scopes: disgenet.variants_related_to_disease.rsid
         outputs:
