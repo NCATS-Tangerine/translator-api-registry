@@ -653,8 +653,12 @@ components:
       # # name: ctd.chemical_related_to_disease.chemical_name
       # ## direct_evidence has two values, 'marker/mechanism' or 'therapeutic'
       # ctd_evidence_type: ctd.chemical_related_to_disease.direct_evidence
-    umls:
+    gene-disease:
       UMLS: disgenet.xrefs.umls     ## no prefix
+      ref_pmid: disgenet.genes_related_to_disease.pubmed     ## no prefix
+    variant-disease:
+      UMLS: disgenet.xrefs.umls     ## no prefix
+      ref_pmid: disgenet.variants_related_to_disease.pubmed     ## no prefix
     omim:
       OMIM: hpo.omim  ## no prefix
     orphanet:
@@ -689,6 +693,8 @@ components:
     disease-gene:
     ## 22499 / 27312 disgenet.genes_related_to_disease records have disgenet.xrefs.umls
     ## https://mydisease.info/v1/query?q=_exists_:disgenet.genes_related_to_disease%20AND%20_exists_:disgenet.xrefs.umls
+    ## 9051 / 22499 diseases have a gene with score >=0.3 
+    ## https://mydisease.info/v1/query?q=disgenet.genes_related_to_disease.score:%3E=0.3%20AND%20_exists_:disgenet.xrefs.umls&fields=disgenet
       - supportBatch: true
         useTemplating: true
         inputs:
@@ -714,7 +720,12 @@ components:
           #   disgenet.genes_related_to_disease.DSI,
           #   disgenet.genes_related_to_disease.EI,
           #   disgenet.genes_related_to_disease.score
-          fields: disgenet.genes_related_to_disease.gene_id,disgenet.genes_related_to_disease.pubmed
+          fields: disgenet.genes_related_to_disease   ## need the whole thing for jmespath to work
+          ## only want records where at <=1 array element has score >= 0.3
+          filter: disgenet.genes_related_to_disease.score:>=0.3
+          jmespath: disgenet.genes_related_to_disease|[?score>=`0.3`]
+          ## just in case: I haven't come across a document with 1 object to see if it's in a single-element array or not
+          always_list: disgenet.genes_related_to_disease
         predicate: condition_associated_with_gene 
         source: "infores:disgenet"
         knowledge_level: knowledge_assertion
@@ -722,11 +733,16 @@ components:
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/disease-gene"
         testExamples:
-          - qInput: "UMLS:C0023264"     ## Leigh Disease
-            oneOutput: "NCBIGene:4694"  ## NDUFA1
+        ## score >= 0.3
+          - qInput: "UMLS:C0014805"       ## Primary Erythermalgia / MONDO:0007571 
+            oneOutput: "NCBIGene:6336"    ## SCN10A
+          - qInput: "UMLS:C0157743"       ## Vibratory urticaria / MONDO:0006618
+            oneOutput: "NCBIGene:30817"   ## ADGRE2
     disease-variant:
     ## 10939 / 12343 disgenet.variants_related_to_disease records have disgenet.xrefs.umls
     ## https://mydisease.info/v1/query?q=_exists_:disgenet.variants_related_to_disease%20AND%20_exists_:disgenet.xrefs.umls
+    ## 8407 / 10939 diseases have a variant with score >=0.3 
+    ## https://mydisease.info/v1/query?q=disgenet.variants_related_to_disease.score:%3E=0.3%20AND%20_exists_:disgenet.xrefs.umls&fields=disgenet
       - supportBatch: true
         useTemplating: true
         inputs:
@@ -751,7 +767,11 @@ components:
           #   disgenet.variants_related_to_disease.DSI,
           #   disgenet.variants_related_to_disease.EI,
           #   disgenet.variants_related_to_disease.score
-          fields: disgenet.variants_related_to_disease.rsid,disgenet.variants_related_to_disease.pubmed
+          fields: disgenet.variants_related_to_disease
+          filter: disgenet.variants_related_to_disease.score:>=0.3
+          jmespath: disgenet.variants_related_to_disease|[?score>=`0.3`]
+          ## needed for jmespath to work, because sometimes the value of this field is an object and sometimes an array of objects
+          always_list: disgenet.variants_related_to_disease
         predicate: related_to
         source: "infores:disgenet"
         knowledge_level: knowledge_assertion
@@ -759,8 +779,10 @@ components:
         response_mapping:
           "$ref": "#/components/x-bte-response-mapping/disease-variant"
         testExamples:
-          - qInput: "UMLS:C0023264"     ## Leigh Disease
-            oneOutput: "DBSNP:rs1161932777"
+          - qInput: "UMLS:C0263912"             ## Rotator cuff syndrome / MONDO:0007028
+            oneOutput: "DBSNP:rs12527089"    
+          - qInput: "UMLS:C0346072"             ## Blue rubber bleb nevus syndrome / OMIM:112200
+            oneOutput: "DBSNP:rs1557497881"     
   ## for hpo-annotation-based operations:
   ## 10421 diseases/records have hpo.phenotype_related_to_disease.hpo_id field https://mydisease.info/v1/query?q=_exists_:hpo.phenotype_related_to_disease.hpo_id
   ## Disease ID field: use hpo.omim, orphanet, decipher. Every record has <=1 of those fields https://mydisease.info/v1/query?q=_exists_:hpo.phenotype_related_to_disease.hpo_id%20AND%20(_exists_:hpo.omim%20OR%20_exists_:hpo.orphanet%20OR%20_exists_:hpo.decipher)
@@ -961,7 +983,11 @@ components:
 ## with "reverse" querying, non-batch querying with jmespath/jmespath_exclude_empty 
 ## is needed to retrieve only the queried ID's data subset within the disease's record
     gene-disease:
-      - supportBatch: true
+    ## 22499 / 27312 disgenet.genes_related_to_disease records have disgenet.xrefs.umls
+    ## https://mydisease.info/v1/query?q=_exists_:disgenet.genes_related_to_disease%20AND%20_exists_:disgenet.xrefs.umls
+    ## 9051 / 22499 diseases have a gene with score >=0.3 
+    ## https://mydisease.info/v1/query?q=disgenet.genes_related_to_disease.score:%3E=0.3%20AND%20_exists_:disgenet.xrefs.umls&fields=disgenet
+      - supportBatch: false
         useTemplating: true
         inputs:
         - id: NCBIGene
@@ -975,19 +1001,34 @@ components:
         - id: UMLS
           semantic: Disease
         parameters:
-          fields: disgenet.xrefs.umls
+          ## need the whole thing for jmespath to work
+          fields: disgenet.xrefs.umls,disgenet.genes_related_to_disease 
           size: 1000  ## note the size limit
+          ## only want records where at <=1 array element has score >= 0.3 and output ID field exists
+          filter: disgenet.genes_related_to_disease.score:>=0.3 AND _exists_:disgenet.xrefs.umls
+          ## only keep the data that matches the gene_id value: use `` because ID is a number
+          jmespath: "disgenet.genes_related_to_disease|[?score>=`0.3` && gene_id==`{{ queryInputs }}`]"
+          ## needed for jmespath to work: only keep array elements that meet both criteria
+          jmespath_exclude_empty: true  
+          ## just in case: I haven't come across a document with 1 object to see if it's in a single-element array or not
+          always_list: disgenet.genes_related_to_disease
         predicate: gene_associated_with_condition
         source: "infores:disgenet"
         knowledge_level: knowledge_assertion
         agent_type: automated_agent
         response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/umls"
+          "$ref": "#/components/x-bte-response-mapping/gene-disease"
         testExamples:
-          - qInput: "NCBIGene:1629"       ## DBT
-            oneOutput: "UMLS:C3658290"    ## Drug-Induced Acute Liver Injury
+          - qInput: "NCBIGene:1260"       ## CNGA2
+            oneOutput: "UMLS:C0393778"    ## Congenital anosmia / MONDO:0007137 isolated congenital anosmia
+          - qInput: "NCBIGene:161582"     ## DNAAF4
+            oneOutput: "UMLS:C0476254"    ## Dyslexia / MONDO:0001697
     variant-disease:
-      - supportBatch: true
+    ## 10939 / 12343 disgenet.variants_related_to_disease records have disgenet.xrefs.umls
+    ## https://mydisease.info/v1/query?q=_exists_:disgenet.variants_related_to_disease%20AND%20_exists_:disgenet.xrefs.umls
+    ## 8407 / 10939 diseases have a variant with score >=0.3 
+    ## https://mydisease.info/v1/query?q=disgenet.variants_related_to_disease.score:%3E=0.3%20AND%20_exists_:disgenet.xrefs.umls&fields=disgenet
+      - supportBatch: false
         useTemplating: true
         inputs:
         - id: DBSNP
@@ -1001,17 +1042,27 @@ components:
         - id: UMLS
           semantic: Disease
         parameters:
-          fields: disgenet.xrefs.umls
+          fields: disgenet.xrefs.umls,disgenet.variants_related_to_disease 
           size: 1000  ## note the size limit
+          ## only want records where at <=1 array element has score >= 0.3 and output ID field exists
+          filter: disgenet.variants_related_to_disease.score:>=0.3 AND _exists_:disgenet.xrefs.umls
+          ## only keep the data that matches the rsid value
+          jmespath: "disgenet.variants_related_to_disease|[?score>=`0.3` && rsid=='{{ queryInputs }}']"
+          ## needed for jmespath to work: only keep array elements that meet both criteria
+          jmespath_exclude_empty: true  
+          ## needed for jmespath to work, because sometimes the value of this field is an object and sometimes an array of objects
+          always_list: disgenet.variants_related_to_disease
         predicate: related_to
         source: "infores:disgenet"
         knowledge_level: knowledge_assertion
         agent_type: automated_agent
         response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/umls"
+          "$ref": "#/components/x-bte-response-mapping/variant-disease"
         testExamples:
           - qInput: "DBSNP:rs78655421"
-            oneOutput: "UMLS:C4021107"    ## Non-obstructive azoospermia
+            oneOutput: "UMLS:C0010674"    ## Cystic Fibrosis / MONDO:0009061
+          - qInput: "DBSNP:rs1032507"
+            oneOutput: "UMLS:C1863416"    ## Achoo syndrome MONDO:0007038 (Autosomal dominant compelling helio ophthalmic outburst syndrome)
     phenotype-disease:
       - supportBatch: true
         useTemplating: true
