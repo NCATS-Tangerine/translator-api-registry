@@ -25,6 +25,7 @@ tags:
 - name: annotation
 - name: query
 - name: translator
+- name: x-bte
 - name: biothings
 paths:
   "/disease/{id}":
@@ -312,33 +313,6 @@ paths:
       # description: Make batch gene queries and return matching gene hits
       tags:
       - query
-      x-bte-kgs-operations:
-      - "$ref": "#/components/x-bte-kgs-operations/disease-gene"
-      - "$ref": "#/components/x-bte-kgs-operations/disease-variant"
-      - "$ref": "#/components/x-bte-kgs-operations/disease-phenotype"
-      - "$ref": "#/components/x-bte-kgs-operations/disease-phenotype2"
-      - "$ref": "#/components/x-bte-kgs-operations/disease-chemical"
-      - "$ref": "#/components/x-bte-kgs-operations/disease-chemical2"
-      - "$ref": "#/components/x-bte-kgs-operations/gene-disease"
-      - "$ref": "#/components/x-bte-kgs-operations/variant-disease"
-      - "$ref": "#/components/x-bte-kgs-operations/phenotype-disease"
-      - "$ref": "#/components/x-bte-kgs-operations/phenotype-disease2"
-      - "$ref": "#/components/x-bte-kgs-operations/chemical-disease"
-      - "$ref": "#/components/x-bte-kgs-operations/chemical-disease2"
-      - "$ref": "#/components/x-bte-kgs-operations/has_subclass"
-      - "$ref": "#/components/x-bte-kgs-operations/subclass_of"
-      - "$ref": "#/components/x-bte-kgs-operations/predisposes_towards"
-      - "$ref": "#/components/x-bte-kgs-operations/predisposes_towards-rev"
-      - "$ref": "#/components/x-bte-kgs-operations/disease_shares_features_of"
-      - "$ref": "#/components/x-bte-kgs-operations/disease_shares_features_of-rev"
-      - "$ref": "#/components/x-bte-kgs-operations/disease_has_major_feature"
-      - "$ref": "#/components/x-bte-kgs-operations/disease_has_major_feature-rev"
-      - "$ref": "#/components/x-bte-kgs-operations/disease_has_feature"
-      - "$ref": "#/components/x-bte-kgs-operations/disease_has_feature-rev"
-      - "$ref": "#/components/x-bte-kgs-operations/disease_causes_feature"
-      - "$ref": "#/components/x-bte-kgs-operations/disease_causes_feature-rev"
-      - "$ref": "#/components/x-bte-kgs-operations/disease_arises_from_feature"
-      - "$ref": "#/components/x-bte-kgs-operations/disease_arises_from_feature-rev"
 components:
   parameters:
     callback:
@@ -598,191 +572,178 @@ components:
   #         type: string
   #       type: array
   #     - type: string
-  x-bte-response-mapping:
-    ## not including "name" field since BTE isn't ingesting / using it to annotate nodes...
-    disease-gene:
-      NCBIGene: disgenet.genes_related_to_disease.gene_id  ## no prefix
-      ref_pmid: disgenet.genes_related_to_disease.pubmed     ## no prefix
-      ## commenting out because data-processing / biolink-modeling issues
-      # disgenet_source: disgenet.genes_related_to_disease.source
-      # ## could remove "disgenet-" prefix from the key
-      # ##  if the key becomes the TRAPI attribute "original_attribute_name"
-      # disgenet-DPI: disgenet.genes_related_to_disease.DPI
-      # disgenet-DSI: disgenet.genes_related_to_disease.DSI
-      # disgenet-EI: disgenet.genes_related_to_disease.EI
-      # disgenet-score: disgenet.genes_related_to_disease.score
-    disease-variant:
-      DBSNP: disgenet.variants_related_to_disease.rsid       ## no prefix
-      ref_pmid: disgenet.variants_related_to_disease.pubmed    ## no prefix
-      ## commenting out because data-processing / biolink-modeling issues
-      # disgenet_source: disgenet.variants_related_to_disease.source
-      # ## could remove "disgenet-" prefix from the key
-      # ##  if the key becomes the TRAPI attribute "original_attribute_name"
-      # disgenet-DPI: disgenet.variants_related_to_disease.DPI
-      # disgenet-DSI: disgenet.variants_related_to_disease.DSI
-      # disgenet-EI: disgenet.variants_related_to_disease.EI
-      # disgenet-score: disgenet.variants_related_to_disease.score
-    disease-phenotype:
-      HP: hpo.phenotype_related_to_disease.hpo_id                                   ## HAS PREFIX (HP)
-      ref_pmid: hpo.phenotype_related_to_disease.pmid_refs                          ## HAS PREFIX (PMID)
-      ref_isbn: hpo.phenotype_related_to_disease.isbn_refs                          ## HAS PREFIX (ISBN)
-      ref_url: hpo.phenotype_related_to_disease.website_refs
-      ## note: there are 4 frequency-related fields (parser created based on different data types)
-      "biolink:has_quotient": hpo.phenotype_related_to_disease.numeric_freq         ## decimal freq
-      "biolink:frequency_qualifier": hpo.phenotype_related_to_disease.hp_freq       ## HP ontology freq term
-      "biolink:has_count": hpo.phenotype_related_to_disease.freq_numerator          ## frequency as a fraction (numerator)
-      "biolink:has_total": hpo.phenotype_related_to_disease.freq_denominator        ## frequency as a fraction (denominator)
-      ## commenting out because data-processing / biolink-modeling issues
-      # ## note: there are 6 reference-related fields (parser created based on ID namespace)
-      # decipher_refs: hpo.phenotype_related_to_disease.decipher_refs                 ## HAS PREFIX (DECIPHER)
-      # omim_refs: hpo.phenotype_related_to_disease.omim_refs                         ## HAS PREFIX (OMIM)
-      # orphanet_refs: hpo.phenotype_related_to_disease.orphanet_refs                 ## HAS PREFIX (ORPHANET)
-      # ## value of this field is evidence codes (IEA, TAS, PCS)
-      # evidence_code: hpo.phenotype_related_to_disease.evidence
-      # ## could split into more specific operations using list_filter and these fields' values?
-      # ## supposed to provide context (only present in some records)
-      # ## - modifier/onset fields are HP terms w/ prefix
-      # ## - sex will be "male" or "female"
-      # hp_modifier: hpo.phenotype_related_to_disease.modifier
-      # hp_onset": hpo.phenotype_related_to_disease.onset
-      # hp_sex: hpo.phenotype_related_to_disease.sex
-    disease-chemical:
-      MESH: ctd.chemical_related_to_disease.mesh_chemical_id    ## no prefix
-      ref_pmid: ctd.chemical_related_to_disease.pubmed     ## no prefix
-      ## commenting out because data-processing / biolink-modeling issues
-      # # name: ctd.chemical_related_to_disease.chemical_name
-      # ## direct_evidence has two values, 'marker/mechanism' or 'therapeutic'
-      # ctd_evidence_type: ctd.chemical_related_to_disease.direct_evidence
-    gene-disease:
-      UMLS: disgenet.xrefs.umls     ## no prefix
-      ref_pmid: disgenet.genes_related_to_disease.pubmed     ## no prefix
-    variant-disease:
-      UMLS: disgenet.xrefs.umls     ## no prefix
-      ref_pmid: disgenet.variants_related_to_disease.pubmed     ## no prefix
-    omim:
-      OMIM: hpo.omim  ## no prefix
-    orphanet:
-      orphanet: hpo.orphanet  ## no prefix
-    mondo:  ## added for a bunch of operations
-      MONDO: mondo.mondo  ## HAS PREFIX (MONDO)
-    ctd-mesh-disease:  ## added for chemical-disease operation
-      MESH: ctd.mesh  ## no prefix
-    ctd-omim-disease:  ## added for chemical-disease2 operation
-      OMIM: ctd.omim  ## no prefix
-    has_subclass:
-      MONDO: mondo.children    ## HAS PREFIX (MONDO)
-    subclass_of:
-      MONDO: mondo.parents    ## HAS PREFIX (MONDO)
-    predisposes_towards:
-      MONDO: mondo.predisposes_towards.mondo    ## HAS PREFIX (MONDO)
-    disease_shares_features_of:
-      MONDO: mondo.disease_shares_features_of.mondo    ## HAS PREFIX (MONDO)
-    disease_has_major_feature:
-      MONDO: mondo.disease_has_major_feature.mondo    ## HAS PREFIX (MONDO)
-    disease_has_feature:
-      MONDO: mondo.disease_has_feature.mondo    ## HAS PREFIX (MONDO)
-    disease_causes_feature:
-      MONDO: mondo.disease_causes_feature.mondo    ## HAS PREFIX (MONDO)
-    disease_arises_from_feature:
-      MONDO: mondo.disease_arises_from_feature.mondo    ## HAS PREFIX (MONDO)
-  x-bte-kgs-operations:
-  ## NOTES:
-  ## - could use jmespath to create more specific operations based on disgenet's `source` field values 
-  ##   this could include more specific source, KL/AT, maybe predicate/qualifier 
-  ## - we used disgenet data files that don't have the specific relationship terms mentioned in the resource's documentation
-    disease-gene:
-    ## 22499 / 27312 disgenet.genes_related_to_disease records have disgenet.xrefs.umls
-    ## https://mydisease.info/v1/query?q=_exists_:disgenet.genes_related_to_disease%20AND%20_exists_:disgenet.xrefs.umls
-    ## 9051 / 22499 diseases have a gene with score >=0.3 
-    ## https://mydisease.info/v1/query?q=disgenet.genes_related_to_disease.score:%3E=0.3%20AND%20_exists_:disgenet.xrefs.umls&fields=disgenet
-      - supportBatch: true
-        useTemplating: true
-        inputs:
-        - id: UMLS
-          semantic: Disease
-        requestBody:
-          body:
-            ## currently, BTE already strips prefix...
-            q: "{{ queryInputs }}"  ## no prefix
-            scopes: disgenet.xrefs.umls
-        outputs:
-        - id: NCBIGene
-          semantic: Gene
-        parameters:
-        ## see https://www.disgenet.org/dbinfo#section44
-        ## not including YearFinal, YearInitial, gene_name 
-        ## commenting out because data-processing / biolink-modeling issues
-          # fields: >- 
-          #   disgenet.genes_related_to_disease.gene_id,
-          #   disgenet.genes_related_to_disease.pubmed,
-          #   disgenet.genes_related_to_disease.source,
-          #   disgenet.genes_related_to_disease.DPI,
-          #   disgenet.genes_related_to_disease.DSI,
-          #   disgenet.genes_related_to_disease.EI,
-          #   disgenet.genes_related_to_disease.score
-          fields: disgenet.genes_related_to_disease   ## need the whole thing for jmespath to work
-          ## only want records where at <=1 array element has score >= 0.3
-          filter: disgenet.genes_related_to_disease.score:>=0.3
-          jmespath: disgenet.genes_related_to_disease|[?score>=`0.3`]
-          ## just in case: I haven't come across a document with 1 object to see if it's in a single-element array or not
-          always_list: disgenet.genes_related_to_disease
-        predicate: condition_associated_with_gene 
-        source: "infores:disgenet"
-        knowledge_level: knowledge_assertion
-        agent_type: automated_agent
-        response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/disease-gene"
-        testExamples:
-        ## score >= 0.3
-          - qInput: "UMLS:C0014805"       ## Primary Erythermalgia / MONDO:0007571 
-            oneOutput: "NCBIGene:6336"    ## SCN10A
-          - qInput: "UMLS:C0157743"       ## Vibratory urticaria / MONDO:0006618
-            oneOutput: "NCBIGene:30817"   ## ADGRE2
-    disease-variant:
-    ## 10939 / 12343 disgenet.variants_related_to_disease records have disgenet.xrefs.umls
-    ## https://mydisease.info/v1/query?q=_exists_:disgenet.variants_related_to_disease%20AND%20_exists_:disgenet.xrefs.umls
-    ## 8407 / 10939 diseases have a variant with score >=0.3 
-    ## https://mydisease.info/v1/query?q=disgenet.variants_related_to_disease.score:%3E=0.3%20AND%20_exists_:disgenet.xrefs.umls&fields=disgenet
-      - supportBatch: true
-        useTemplating: true
-        inputs:
-        - id: UMLS
-          semantic: Disease
-        requestBody:
-          body:
-            q: "{{ queryInputs }}"  ## no prefix
-            scopes: disgenet.xrefs.umls
-        outputs:
-        - id: DBSNP
-          semantic: SequenceVariant
-        parameters:
-        ## see https://www.disgenet.org/dbinfo#section45
-        ## not including YearFinal, YearInitial, chrom, pos 
-        ## commenting out because data-processing / biolink-modeling issues
-          # fields: >- 
-          #   disgenet.variants_related_to_disease.rsid,
-          #   disgenet.variants_related_to_disease.pubmed,
-          #   disgenet.variants_related_to_disease.source,
-          #   disgenet.variants_related_to_disease.DPI,
-          #   disgenet.variants_related_to_disease.DSI,
-          #   disgenet.variants_related_to_disease.EI,
-          #   disgenet.variants_related_to_disease.score
-          fields: disgenet.variants_related_to_disease
-          filter: disgenet.variants_related_to_disease.score:>=0.3
-          jmespath: disgenet.variants_related_to_disease|[?score>=`0.3`]
-          ## needed for jmespath to work, because sometimes the value of this field is an object and sometimes an array of objects
-          always_list: disgenet.variants_related_to_disease
-        predicate: related_to
-        source: "infores:disgenet"
-        knowledge_level: knowledge_assertion
-        agent_type: automated_agent
-        response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/disease-variant"
-        testExamples:
-          - qInput: "UMLS:C0263912"             ## Rotator cuff syndrome / MONDO:0007028
-            oneOutput: "DBSNP:rs12527089"    
-          - qInput: "UMLS:C0346072"             ## Blue rubber bleb nevus syndrome / OMIM:112200
-            oneOutput: "DBSNP:rs1557497881"     
+#   x-bte-response-mapping:
+#     ## not including "name" field since BTE isn't ingesting / using it to annotate nodes...
+#     disease-gene:
+#       NCBIGene: disgenet.genes_related_to_disease.gene_id  ## no prefix
+#       ref_pmid: disgenet.genes_related_to_disease.pubmed     ## no prefix
+#       ## commenting out because data-processing / biolink-modeling issues
+#       # disgenet_source: disgenet.genes_related_to_disease.source
+#       # ## could remove "disgenet-" prefix from the key
+#       # ##  if the key becomes the TRAPI attribute "original_attribute_name"
+#       # disgenet-DPI: disgenet.genes_related_to_disease.DPI
+#       # disgenet-DSI: disgenet.genes_related_to_disease.DSI
+#       # disgenet-EI: disgenet.genes_related_to_disease.EI
+#       # disgenet-score: disgenet.genes_related_to_disease.score
+#     disease-variant:
+#       DBSNP: disgenet.variants_related_to_disease.rsid       ## no prefix
+#       ref_pmid: disgenet.variants_related_to_disease.pubmed    ## no prefix
+#       ## commenting out because data-processing / biolink-modeling issues
+#       # disgenet_source: disgenet.variants_related_to_disease.source
+#       # ## could remove "disgenet-" prefix from the key
+#       # ##  if the key becomes the TRAPI attribute "original_attribute_name"
+#       # disgenet-DPI: disgenet.variants_related_to_disease.DPI
+#       # disgenet-DSI: disgenet.variants_related_to_disease.DSI
+#       # disgenet-EI: disgenet.variants_related_to_disease.EI
+#       # disgenet-score: disgenet.variants_related_to_disease.score
+#     disease-chemical:
+#       MESH: ctd.chemical_related_to_disease.mesh_chemical_id    ## no prefix
+#       ref_pmid: ctd.chemical_related_to_disease.pubmed     ## no prefix
+#       ## commenting out because data-processing / biolink-modeling issues
+#       # # name: ctd.chemical_related_to_disease.chemical_name
+#       # ## direct_evidence has two values, 'marker/mechanism' or 'therapeutic'
+#       # ctd_evidence_type: ctd.chemical_related_to_disease.direct_evidence
+#     gene-disease:
+#       UMLS: disgenet.xrefs.umls     ## no prefix
+#       ref_pmid: disgenet.genes_related_to_disease.pubmed     ## no prefix
+#     variant-disease:
+#       UMLS: disgenet.xrefs.umls     ## no prefix
+#       ref_pmid: disgenet.variants_related_to_disease.pubmed     ## no prefix
+#     omim:
+#       OMIM: hpo.omim  ## no prefix
+#     orphanet:
+#       orphanet: hpo.orphanet  ## no prefix
+#     mondo:  ## added for a bunch of operations
+#       MONDO: mondo.mondo  ## HAS PREFIX (MONDO)
+#     ctd-mesh-disease:  ## added for chemical-disease operation
+#       MESH: ctd.mesh  ## no prefix
+#     ctd-omim-disease:  ## added for chemical-disease2 operation
+#       OMIM: ctd.omim  ## no prefix
+#     has_subclass:
+#       MONDO: mondo.children    ## HAS PREFIX (MONDO)
+#     subclass_of:
+#       MONDO: mondo.parents    ## HAS PREFIX (MONDO)
+#     predisposes_towards:
+#       MONDO: mondo.predisposes_towards.mondo    ## HAS PREFIX (MONDO)
+#     disease_shares_features_of:
+#       MONDO: mondo.disease_shares_features_of.mondo    ## HAS PREFIX (MONDO)
+#     disease_has_major_feature:
+#       MONDO: mondo.disease_has_major_feature.mondo    ## HAS PREFIX (MONDO)
+#     disease_has_feature:
+#       MONDO: mondo.disease_has_feature.mondo    ## HAS PREFIX (MONDO)
+#     disease_causes_feature:
+#       MONDO: mondo.disease_causes_feature.mondo    ## HAS PREFIX (MONDO)
+#     disease_arises_from_feature:
+#       MONDO: mondo.disease_arises_from_feature.mondo    ## HAS PREFIX (MONDO)
+  x-bte-defs:
+    hpo-parameters:
+      fields: >-
+        hpo.phenotype_related_to_disease.pmid_refs,
+        hpo.phenotype_related_to_disease.isbn_refs,
+        hpo.phenotype_related_to_disease.website_refs,
+        hpo.phenotype_related_to_disease.numeric_freq,
+        hpo.phenotype_related_to_disease.hp_freq,
+        hpo.phenotype_related_to_disease.freq_numerator,
+        hpo.phenotype_related_to_disease.freq_denominator
+      size: 100      ## should be fine, shouldn't get 1 disease ID -> 100 disease documents
+  x-bte-operations:
+#   ## NOTES:
+#   ## - could use jmespath to create more specific operations based on disgenet's `source` field values 
+#   ##   this could include more specific source, KL/AT, maybe predicate/qualifier 
+#   ## - we used disgenet data files that don't have the specific relationship terms mentioned in the resource's documentation
+#     disease-gene:
+#     ## 22499 / 27312 disgenet.genes_related_to_disease records have disgenet.xrefs.umls
+#     ## https://mydisease.info/v1/query?q=_exists_:disgenet.genes_related_to_disease%20AND%20_exists_:disgenet.xrefs.umls
+#     ## 9051 / 22499 diseases have a gene with score >=0.3 
+#     ## https://mydisease.info/v1/query?q=disgenet.genes_related_to_disease.score:%3E=0.3%20AND%20_exists_:disgenet.xrefs.umls&fields=disgenet
+#       - supportBatch: true
+#         useTemplating: true
+#         inputs:
+#         - id: UMLS
+#           semantic: Disease
+#         requestBody:
+#           body:
+#             ## currently, BTE already strips prefix...
+#             q: "{{ queryInputs }}"  ## no prefix
+#             scopes: disgenet.xrefs.umls
+#         outputs:
+#         - id: NCBIGene
+#           semantic: Gene
+#         parameters:
+#         ## see https://www.disgenet.org/dbinfo#section44
+#         ## not including YearFinal, YearInitial, gene_name 
+#         ## commenting out because data-processing / biolink-modeling issues
+#           # fields: >- 
+#           #   disgenet.genes_related_to_disease.gene_id,
+#           #   disgenet.genes_related_to_disease.pubmed,
+#           #   disgenet.genes_related_to_disease.source,
+#           #   disgenet.genes_related_to_disease.DPI,
+#           #   disgenet.genes_related_to_disease.DSI,
+#           #   disgenet.genes_related_to_disease.EI,
+#           #   disgenet.genes_related_to_disease.score
+#           fields: disgenet.genes_related_to_disease   ## need the whole thing for jmespath to work
+#           ## only want records where at <=1 array element has score >= 0.3
+#           filter: disgenet.genes_related_to_disease.score:>=0.3
+#           jmespath: disgenet.genes_related_to_disease|[?score>=`0.3`]
+#           ## just in case: I haven't come across a document with 1 object to see if it's in a single-element array or not
+#           always_list: disgenet.genes_related_to_disease
+#         predicate: condition_associated_with_gene 
+#         source: "infores:disgenet"
+#         knowledge_level: knowledge_assertion
+#         agent_type: automated_agent
+#         response_mapping:
+#           "$ref": "#/components/x-bte-response-mapping/disease-gene"
+#         testExamples:
+#         ## score >= 0.3
+#           - qInput: "UMLS:C0014805"       ## Primary Erythermalgia / MONDO:0007571 
+#             oneOutput: "NCBIGene:6336"    ## SCN10A
+#           - qInput: "UMLS:C0157743"       ## Vibratory urticaria / MONDO:0006618
+#             oneOutput: "NCBIGene:30817"   ## ADGRE2
+#     disease-variant:
+#     ## 10939 / 12343 disgenet.variants_related_to_disease records have disgenet.xrefs.umls
+#     ## https://mydisease.info/v1/query?q=_exists_:disgenet.variants_related_to_disease%20AND%20_exists_:disgenet.xrefs.umls
+#     ## 8407 / 10939 diseases have a variant with score >=0.3 
+#     ## https://mydisease.info/v1/query?q=disgenet.variants_related_to_disease.score:%3E=0.3%20AND%20_exists_:disgenet.xrefs.umls&fields=disgenet
+#       - supportBatch: true
+#         useTemplating: true
+#         inputs:
+#         - id: UMLS
+#           semantic: Disease
+#         requestBody:
+#           body:
+#             q: "{{ queryInputs }}"  ## no prefix
+#             scopes: disgenet.xrefs.umls
+#         outputs:
+#         - id: DBSNP
+#           semantic: SequenceVariant
+#         parameters:
+#         ## see https://www.disgenet.org/dbinfo#section45
+#         ## not including YearFinal, YearInitial, chrom, pos 
+#         ## commenting out because data-processing / biolink-modeling issues
+#           # fields: >- 
+#           #   disgenet.variants_related_to_disease.rsid,
+#           #   disgenet.variants_related_to_disease.pubmed,
+#           #   disgenet.variants_related_to_disease.source,
+#           #   disgenet.variants_related_to_disease.DPI,
+#           #   disgenet.variants_related_to_disease.DSI,
+#           #   disgenet.variants_related_to_disease.EI,
+#           #   disgenet.variants_related_to_disease.score
+#           fields: disgenet.variants_related_to_disease
+#           filter: disgenet.variants_related_to_disease.score:>=0.3
+#           jmespath: disgenet.variants_related_to_disease|[?score>=`0.3`]
+#           ## needed for jmespath to work, because sometimes the value of this field is an object and sometimes an array of objects
+#           always_list: disgenet.variants_related_to_disease
+#         predicate: related_to
+#         source: "infores:disgenet"
+#         knowledge_level: knowledge_assertion
+#         agent_type: automated_agent
+#         response_mapping:
+#           "$ref": "#/components/x-bte-response-mapping/disease-variant"
+#         testExamples:
+#           - qInput: "UMLS:C0263912"             ## Rotator cuff syndrome / MONDO:0007028
+#             oneOutput: "DBSNP:rs12527089"    
+#           - qInput: "UMLS:C0346072"             ## Blue rubber bleb nevus syndrome / OMIM:112200
+#             oneOutput: "DBSNP:rs1557497881"     
   ## for hpo-annotation-based operations:
   ## 10450 diseases/records have hpo.phenotype_related_to_disease.hpo_id field https://mydisease.info/v1/query?q=_exists_:hpo.phenotype_related_to_disease.hpo_id
   ## hpo.phenotype_related_to_disease includes annotations with aspect == "P"
@@ -794,773 +755,730 @@ components:
   ##   Because when hpo.omim and hpo.orphanet map to same mondo ID, their data is merged into same record
   ## - no operations for DECIPHER right now: no support in SRI NodeNorm 
     disease-phenotype:
-      - supportBatch: true
-        useTemplating: true
-        inputs:
-        - id: OMIM
-          semantic: Disease
-        requestBody:
-          body:
-            ## currently, BTE already strips prefix...
-            # q: "{{ queryInputs | rmPrefix }}"
-            q: "{{ queryInputs }}"  ## no prefix
-            scopes: hpo.omim
-        outputs:
-        - id: HP
-          semantic: PhenotypicFeature
-        parameters:
-        ## not including biocuration field
-        ## commenting out because data-processing / biolink-modeling issues
-          # fields: >-
-          #   hpo.phenotype_related_to_disease.hpo_id,
-          #   hpo.phenotype_related_to_disease.pmid_refs,
-          #   hpo.phenotype_related_to_disease.isbn_refs,
-          #   hpo.phenotype_related_to_disease.website_refs,
-          #   hpo.phenotype_related_to_disease.decipher_refs,
-          #   hpo.phenotype_related_to_disease.omim_refs,
-          #   hpo.phenotype_related_to_disease.orphanet_refs,
-          #   hpo.phenotype_related_to_disease.numeric_freq,
-          #   hpo.phenotype_related_to_disease.hp_freq,
-          #   hpo.phenotype_related_to_disease.freq_numerator,
-          #   hpo.phenotype_related_to_disease.freq_denominator,
-          #   hpo.phenotype_related_to_disease.evidence,
-          #   hpo.phenotype_related_to_disease.modifier,
-          #   hpo.phenotype_related_to_disease.onset,
-          #   hpo.phenotype_related_to_disease.sex
-          fields: >-
-            hpo.phenotype_related_to_disease.hpo_id,
-            hpo.phenotype_related_to_disease.pmid_refs,
-            hpo.phenotype_related_to_disease.isbn_refs,
-            hpo.phenotype_related_to_disease.website_refs,
-            hpo.phenotype_related_to_disease.numeric_freq,
-            hpo.phenotype_related_to_disease.hp_freq,
-            hpo.phenotype_related_to_disease.freq_numerator,
-            hpo.phenotype_related_to_disease.freq_denominator
-        predicate: has_phenotype
-        source: "infores:hpo-annotations"
+    ## NO PAGINATION: 1 disease won't match >~1000 disease documents
+      support_batch: true
+      inputs:
+        category: Disease
+        ## will do default behavior: for each entity, only use IDs from 1 namespace (the first one in list it has IDs for)
+        ## data from synonymous OMIM/orphanet IDs have already been merged, so either ID can be used to retrieve the data 
+        namespaces: 
+        ## namespaces are ordered from most to least preferred (more documents have omim field)
+        ## don't need name fields since SRI NodeNorm should be able to provide them
+          - prefix: OMIM
+          - prefix: orphanet
+      predicate: has_phenotype
+      outputs:
+        category: PhenotypicFeature
+        namespaces: 
+          - prefix: HP
+            id_field: hpo.phenotype_related_to_disease.hpo_id   ## single ID, has prefix
+      request_info:
+        path: "/query"   ## use same format that paths section does
+        method: post     ## use same format that paths section does (lower case)
+        ## must have separate requests for OMIM and orphanet IDs because their field's values have the same format (numeric ID only, no prefix)
+        by_input_namespace:
+          OMIM:
+            request_body:
+              q: "{{ array_of_IDs_without_prefix }}"
+              scopes: hpo.omim
+            ## using $ref to make less repetitive
+            parameters:
+              "$ref": "#/components/x-bte-defs/hpo-parameters"
+          orphanet:
+            request_body:
+              q: "{{ array_of_IDs_without_prefix }}"
+              scopes: hpo.orphanet
+            parameters:
+              "$ref": "#/components/x-bte-defs/hpo-parameters"
+      provenance:   ## static format
+      ## - hard to break into OMIM vs orphanet source because no field whose value is keyword specifying source 
+      ## - hpo.phenotypes_related_to_disease.evidence values -> diff KL/AT values? But would need to know all possible values...
         knowledge_level: knowledge_assertion
         agent_type: manual_agent
-        response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/disease-phenotype"
-        testExamples:
-          - qInput: "OMIM:246900"     ## Dihydrolipoamide Dehydrogenase Deficiency
-            oneOutput: "HP:0001254"   ## Lethargy
-    disease-phenotype2:
-      - supportBatch: true
-        useTemplating: true
-        inputs:
-        - id: orphanet
-          semantic: Disease
-        requestBody:
-          body:
-            ## currently, BTE already strips prefix...
-            # q: "{{ queryInputs | rmPrefix }}"
-            q: "{{ queryInputs }}"  ## no prefix
-            scopes: hpo.orphanet
-        outputs:
-        - id: HP
-          semantic: PhenotypicFeature
-        parameters:
-        ## commenting out because data-processing / biolink-modeling issues
-          # fields: >-
-          #   hpo.phenotype_related_to_disease.hpo_id,
-          #   hpo.phenotype_related_to_disease.pmid_refs,
-          #   hpo.phenotype_related_to_disease.isbn_refs,
-          #   hpo.phenotype_related_to_disease.website_refs,
-          #   hpo.phenotype_related_to_disease.decipher_refs,
-          #   hpo.phenotype_related_to_disease.omim_refs,
-          #   hpo.phenotype_related_to_disease.orphanet_refs,
-          #   hpo.phenotype_related_to_disease.numeric_freq,
-          #   hpo.phenotype_related_to_disease.hp_freq,
-          #   hpo.phenotype_related_to_disease.freq_numerator,
-          #   hpo.phenotype_related_to_disease.freq_denominator,
-          #   hpo.phenotype_related_to_disease.evidence,
-          #   hpo.phenotype_related_to_disease.modifier,
-          #   hpo.phenotype_related_to_disease.onset,
-          #   hpo.phenotype_related_to_disease.sex
-          fields: >-
-            hpo.phenotype_related_to_disease.hpo_id,
-            hpo.phenotype_related_to_disease.pmid_refs,
-            hpo.phenotype_related_to_disease.isbn_refs,
-            hpo.phenotype_related_to_disease.website_refs,
-            hpo.phenotype_related_to_disease.numeric_freq,
-            hpo.phenotype_related_to_disease.hp_freq,
-            hpo.phenotype_related_to_disease.freq_numerator,
-            hpo.phenotype_related_to_disease.freq_denominator
-        predicate: has_phenotype
-        source: "infores:hpo-annotations"
-        knowledge_level: knowledge_assertion
-        agent_type: manual_agent
-        response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/disease-phenotype"
-        testExamples:
-          - qInput: "orphanet:881"    ## Turner Syndrome
-            oneOutput: "HP:0000137"   ## Abnormality of the ovary
-  ## for ctd-based operations:
-  ## Disease <-> chemical: 3356 diseases/records 
-  ## - knowledge_level / agent_type: parser removes all inferred annotations for disease-chemical
-  ## - Disease ID field: use ctd.mesh, ctd.omim. Every record either has one or the other https://mydisease.info/v1/query?q=_exists_:ctd.chemical_related_to_disease%20AND(%20_exists_:ctd.mesh%20OR%20_exists_:ctd.omim)
-  ##   - 1106 records don't have the mondo field (mapping): https://mydisease.info/v1/query?q=_exists_:ctd.chemical_related_to_disease%20AND%20NOT%20_exists_:mondo.mondo
-  ## - parser has a step where resource IDs (MESH, OMIM) are mapped to MONDO. 
-  ##   If multiple IDs map to the same MONDO, it's possible data is being overwritten https://github.com/biothings/mydisease.info/issues/59
-  ## - From what I can tell, CTD does their own entity resolution. 
-  ##   If a disease has MESH and OMIM IDs, the raw data has its info under the MESH ID only. 
-  ##   The OMIM ID is only used as the main disease ID if there isn't a matching MESH ID
-  ## Others:
-  ## - we wanted to add CTD direct disease-gene data, operations
-  ## - we removed CTD disease-pathway data because that info is all indirect
-    disease-chemical:
-      - supportBatch: true
-        useTemplating: true
-        inputs:
-        - id: MESH
-          semantic: Disease
-        requestBody:
-          body:
-            ## currently, BTE already strips prefix...
-            # q: "{{ queryInputs | rmPrefix }}"
-            q: "{{ queryInputs }}"  ## no prefix
-            scopes: ctd.mesh
-        outputs:
-        - id: MESH
-          semantic: SmallMolecule
-          ## note that 3085 / 3253 have cas_registry_number field that can be used as well
-        parameters:
-        ## not including: cas_registry_number, source, name
-        ## BTE currently isn't ingesting name correctly
-        ## commenting out because data-processing / biolink-modeling issues
-          # fields: >-
-          #   ctd.chemical_related_to_disease.mesh_chemical_id,
-          #   ctd.chemical_related_to_disease.direct_evidence,
-          #   ctd.chemical_related_to_disease.pubmed
-          fields: >-
-            ctd.chemical_related_to_disease.mesh_chemical_id,
-            ctd.chemical_related_to_disease.pubmed
-        predicate: related_to
-        ## direct_evidence is kinda like a relation....
-        ##   can have value "marker/mechanism" or "therapeutic").
-        source: "infores:ctd"
-        knowledge_level: knowledge_assertion
-        agent_type: manual_agent
-        response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/disease-chemical"
-        testExamples:
-          - qInput: "MESH:D009102"    ## Multiple Organ Failure
-            oneOutput: "MESH:C448659"   ## Geldanamycin, monohydrochloride
-    disease-chemical2:
-      - supportBatch: true
-        useTemplating: true
-        inputs:
-        - id: OMIM
-          semantic: Disease
-        requestBody:
-          body:
-            ## currently, BTE already strips prefix...
-            # q: "{{ queryInputs | rmPrefix }}"
-            q: "{{ queryInputs }}"  ## no prefix
-            scopes: ctd.omim
-        outputs:
-        - id: MESH
-          semantic: SmallMolecule
-        parameters:
-        ## commenting out because data-processing / biolink-modeling issues
-          # fields: >-
-          #   ctd.chemical_related_to_disease.mesh_chemical_id,
-          #   ctd.chemical_related_to_disease.direct_evidence,
-          #   ctd.chemical_related_to_disease.pubmed
-          fields: >-
-            ctd.chemical_related_to_disease.mesh_chemical_id,
-            ctd.chemical_related_to_disease.pubmed
-        predicate: related_to
-        source: "infores:ctd"
-        knowledge_level: knowledge_assertion
-        agent_type: manual_agent
-        response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/disease-chemical"
-        testExamples:
-          - qInput: "OMIM:613290"       ## hearing loss, cisplatin-induced, susceptibility to
-            oneOutput: "MESH:D002945"   ## Cisplatin
-##########################################################################
-## with "reverse" querying, non-batch querying with jmespath/jmespath_exclude_empty 
-## is needed to retrieve only the queried ID's data subset within the disease's record
-    gene-disease:
-    ## 22499 / 27312 disgenet.genes_related_to_disease records have disgenet.xrefs.umls
-    ## https://mydisease.info/v1/query?q=_exists_:disgenet.genes_related_to_disease%20AND%20_exists_:disgenet.xrefs.umls
-    ## 9051 / 22499 diseases have a gene with score >=0.3 
-    ## https://mydisease.info/v1/query?q=disgenet.genes_related_to_disease.score:%3E=0.3%20AND%20_exists_:disgenet.xrefs.umls&fields=disgenet
-      - supportBatch: false
-        useTemplating: true
-        inputs:
-        - id: NCBIGene
-          semantic: Gene
-        requestBody:
-          body:
-            ## currently, BTE already strips prefix...
-            q: "{{ queryInputs }}"   ## no prefix
-            scopes: disgenet.genes_related_to_disease.gene_id
-        outputs:
-        - id: UMLS
-          semantic: Disease
-        parameters:
-          ## need the whole thing for jmespath to work
-          fields: disgenet.xrefs.umls,disgenet.genes_related_to_disease 
-          size: 1000  ## note the size limit
-          ## only want records where at <=1 array element has score >= 0.3 and output ID field exists
-          filter: disgenet.genes_related_to_disease.score:>=0.3 AND _exists_:disgenet.xrefs.umls
-          ## only keep the data that matches the gene_id value: use `` because ID is a number
-          jmespath: "disgenet.genes_related_to_disease|[?score>=`0.3` && gene_id==`{{ queryInputs }}`]"
-          ## needed for jmespath to work: only keep array elements that meet both criteria
-          jmespath_exclude_empty: true  
-          ## just in case: I haven't come across a document with 1 object to see if it's in a single-element array or not
-          always_list: disgenet.genes_related_to_disease
-        predicate: gene_associated_with_condition
-        source: "infores:disgenet"
-        knowledge_level: knowledge_assertion
-        agent_type: automated_agent
-        response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/gene-disease"
-        testExamples:
-          - qInput: "NCBIGene:1260"       ## CNGA2
-            oneOutput: "UMLS:C0393778"    ## Congenital anosmia / MONDO:0007137 isolated congenital anosmia
-          - qInput: "NCBIGene:161582"     ## DNAAF4
-            oneOutput: "UMLS:C0476254"    ## Dyslexia / MONDO:0001697
-    variant-disease:
-    ## 10939 / 12343 disgenet.variants_related_to_disease records have disgenet.xrefs.umls
-    ## https://mydisease.info/v1/query?q=_exists_:disgenet.variants_related_to_disease%20AND%20_exists_:disgenet.xrefs.umls
-    ## 8407 / 10939 diseases have a variant with score >=0.3 
-    ## https://mydisease.info/v1/query?q=disgenet.variants_related_to_disease.score:%3E=0.3%20AND%20_exists_:disgenet.xrefs.umls&fields=disgenet
-      - supportBatch: false
-        useTemplating: true
-        inputs:
-        - id: DBSNP
-          semantic: SequenceVariant
-        requestBody:
-          body:
-            ## currently, BTE already strips prefix...
-            q: "{{ queryInputs }}"   ## no prefix
-            scopes: disgenet.variants_related_to_disease.rsid
-        outputs:
-        - id: UMLS
-          semantic: Disease
-        parameters:
-          fields: disgenet.xrefs.umls,disgenet.variants_related_to_disease 
-          size: 1000  ## note the size limit
-          ## only want records where at <=1 array element has score >= 0.3 and output ID field exists
-          filter: disgenet.variants_related_to_disease.score:>=0.3 AND _exists_:disgenet.xrefs.umls
-          ## only keep the data that matches the rsid value
-          jmespath: "disgenet.variants_related_to_disease|[?score>=`0.3` && rsid=='{{ queryInputs }}']"
-          ## needed for jmespath to work: only keep array elements that meet both criteria
-          jmespath_exclude_empty: true  
-          ## needed for jmespath to work, because sometimes the value of this field is an object and sometimes an array of objects
-          always_list: disgenet.variants_related_to_disease
-        predicate: related_to
-        source: "infores:disgenet"
-        knowledge_level: knowledge_assertion
-        agent_type: automated_agent
-        response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/variant-disease"
-        testExamples:
-          - qInput: "DBSNP:rs78655421"
-            oneOutput: "UMLS:C0010674"    ## Cystic Fibrosis / MONDO:0009061
-          - qInput: "DBSNP:rs1032507"
-            oneOutput: "UMLS:C1863416"    ## Achoo syndrome MONDO:0007038 (Autosomal dominant compelling helio ophthalmic outburst syndrome)
-    phenotype-disease:
-      - supportBatch: true
-        useTemplating: true
-        inputs:
-        - id: HP
-          semantic: PhenotypicFeature
-        requestBody:
-          body:
-            ## HAS PREFIX (HP): currently a bit redundant to do this (BTE handles it)
-            # q: "{{ queryInputs | replPrefix('HP', ':') }}"
-            q: "{{ queryInputs }}"
-            scopes: hpo.phenotype_related_to_disease.hpo_id
-        outputs:
-        - id: OMIM
-          semantic: Disease
-        parameters:
-          fields: hpo.omim
-          size: 1000  ## note the size limit
-        predicate: phenotype_of
-        source: "infores:hpo-annotations"
-        knowledge_level: knowledge_assertion
-        agent_type: manual_agent
-        response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/omim"
-        testExamples:
-          - qInput: "HP:0000224"       ## Hypogeusia
-            oneOutput: "OMIM:201300"   ## Neuropathy, hereditary sensory and autonomic, type II
-    phenotype-disease2:
-      - supportBatch: true
-        useTemplating: true
-        inputs:
-        - id: HP
-          semantic: PhenotypicFeature
-        requestBody:
-          body:
-            ## HAS PREFIX (HP): currently a bit redundant to do this (BTE handles it)
-            # q: "{{ queryInputs | replPrefix('HP', ':') }}"
-            q: "{{ queryInputs }}"
-            scopes: hpo.phenotype_related_to_disease.hpo_id
-        outputs:
-        - id: orphanet
-          semantic: Disease
-        parameters:
-          fields: hpo.orphanet
-          size: 1000  ## note the size limit
-        predicate: phenotype_of
-        source: "infores:hpo-annotations"
-        knowledge_level: knowledge_assertion
-        agent_type: manual_agent
-        response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/orphanet"
-        testExamples:
-          - qInput: "HP:0000224"          ## Hypogeusia
-            oneOutput: "orphanet:99857"   ## Secondary Syringomyelia
-    chemical-disease:
-      - supportBatch: true
-        useTemplating: true
-        inputs:
-        - id: MESH
-          semantic: SmallMolecule
-        requestBody:
-          body:
-            ## currently, BTE already strips prefix...
-            # q: "{{ queryInputs | rmPrefix }}"
-            q: "{{ queryInputs }}"  ## no prefix
-            scopes: ctd.chemical_related_to_disease.mesh_chemical_id
-        outputs:
-        - id: MESH
-          semantic: Disease
-        parameters:
-          fields: ctd.mesh
-          size: 1000  ## note the size limit
-        predicate: related_to
-        source: "infores:ctd"
-        knowledge_level: knowledge_assertion
-        agent_type: manual_agent
-        response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/ctd-mesh-disease"
-        testExamples:
-          - qInput: "MESH:D000655"      ## Amodiaquine
-            oneOutput: "MESH:D008288"   ## Malaria (maps to MONDO:0005136)
-    chemical-disease2:
-      - supportBatch: true
-        useTemplating: true
-        inputs:
-        - id: MESH
-          semantic: SmallMolecule
-        requestBody:
-          body:
-            ## currently, BTE already strips prefix...
-            # q: "{{ queryInputs | rmPrefix }}"
-            q: "{{ queryInputs }}"    ## no prefix
-            scopes: ctd.chemical_related_to_disease.mesh_chemical_id
-        outputs:
-        - id: OMIM
-          semantic: Disease
-        parameters:
-          fields: ctd.omim
-          size: 1000  ## note the size limit
-        predicate: related_to
-        source: "infores:ctd"
-        knowledge_level: knowledge_assertion
-        agent_type: manual_agent
-        response_mapping: 
-          "$ref": "#/components/x-bte-response-mapping/ctd-omim-disease"  
-        testExamples:
-          - qInput: "MESH:D000655"     ## Amodiaquine
-            oneOutput: "OMIM:248310"   ## PLASMODIUM FALCIPARUM BLOOD INFECTION LEVEL (maps to MONDO:0009553)
-############################################################################
-    ## - there's also disease_ontology info (ancestors, children, descendants, parents)
-    ## - there's also mondo info (ancestors, descendants)
-    ## - mondo info we're not including:
-    ##     - do we want to keep or remove parent/children relationships?
-    ##     - part_of_progression_of_disease (only 2 disease-disease relationships)
-    ##     - has_modifier (something is off here, shouldn't be mondo prefix...)
-    ##     - excluded_subClassOf (something is off here, I'm not sure what that means)
-    ##     - disjoint from (this is a negation / NOT relationship)
-    has_subclass:
-      - supportBatch: true
-        useTemplating: true
-        inputs:
-        - id: MONDO
-          semantic: Disease
-        requestBody:
-          body:
-            ## HAS PREFIX (MONDO): currently a bit redundant to do this (BTE handles it)
-            # q: "{{ queryInputs | replPrefix('MONDO', ':') }}"
-            q: "{{ queryInputs }}"
-            scopes: mondo.mondo
-        outputs:
-        - id: MONDO
-          semantic: Disease
-        parameters:
-          fields: mondo.children
-          size: 1000  ## note the size limit
-        predicate: superclass_of  ## this is the inverse of subclass_of right now
-        ## relation: "has children"?
-        source: "infores:mondo"
-        knowledge_level: knowledge_assertion
-        agent_type: manual_agent
-        response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/has_subclass"
-        testExamples:
-          - qInput: "MONDO:0002494"      ## substance-related disorder
-            oneOutput: "MONDO:0021698"   ## alcohol-related disorders          
-    subclass_of:
-      - supportBatch: true
-        useTemplating: true
-        inputs:
-        - id: MONDO
-          semantic: Disease
-        requestBody:
-          body:
-            ## HAS PREFIX (MONDO): currently a bit redundant to do this (BTE handles it)
-            # q: "{{ queryInputs | replPrefix('MONDO', ':') }}"
-            q: "{{ queryInputs }}"
-            scopes: mondo.mondo
-        outputs:
-        - id: MONDO
-          semantic: Disease
-        parameters:
-          fields: mondo.parents
-          size: 1000  ## note the size limit
-        predicate: subclass_of
-        ## relation: "has parents"?
-        source: "infores:mondo"
-        knowledge_level: knowledge_assertion
-        agent_type: manual_agent
-        response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/subclass_of"
-        testExamples:
-          - qInput: "MONDO:0002494"      ## substance-related disorder
-            oneOutput: "MONDO:0002025"   ## psychiatric disorder
-    predisposes_towards:
-      - supportBatch: true
-        useTemplating: true
-        inputs:
-        - id: MONDO
-          semantic: Disease
-        requestBody:
-          body:
-            ## HAS PREFIX (MONDO): currently a bit redundant to do this (BTE handles it)
-            # q: "{{ queryInputs | replPrefix('MONDO', ':') }}"
-            q: "{{ queryInputs }}"
-            scopes: mondo.mondo
-        outputs:
-        - id: MONDO
-          semantic: Disease
-        parameters:
-          fields: mondo.predisposes_towards.mondo
-          size: 1000  ## note the size limit
-        predicate: contributes_to  ## maps to "MONDO:predisposes_towards"
-        source: "infores:mondo"
-        knowledge_level: knowledge_assertion
-        agent_type: manual_agent
-        response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/predisposes_towards"
-        testExamples:
-          - qInput: "MONDO:0010940"      ## inherited susceptibility to asthma
-            oneOutput: "MONDO:0004979"   ## asthma
-    predisposes_towards-rev:
-      - supportBatch: true
-        useTemplating: true
-        inputs:
-        - id: MONDO
-          semantic: Disease
-        requestBody:
-          body:
-            ## HAS PREFIX (MONDO): currently a bit redundant to do this (BTE handles it)
-            # q: "{{ queryInputs | replPrefix('MONDO', ':') }}"
-            q: "{{ queryInputs }}"
-            scopes: mondo.predisposes_towards.mondo
-        outputs:
-        - id: MONDO
-          semantic: Disease
-        parameters:
-          fields: mondo.mondo
-          size: 1000  ## note the size limit
-        predicate: contribution_from
-        ## inverse of contributes_to, which is mapped to "MONDO:predisposes_towards"
-        ## no relation then...
-        source: "infores:mondo"
-        knowledge_level: knowledge_assertion
-        agent_type: manual_agent
-        response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/mondo"
-        testExamples:
-          - qInput: "MONDO:0004979"      ## asthma
-            oneOutput: "MONDO:0010940"   ## inherited susceptibility to asthma
-    disease_shares_features_of:
-      - supportBatch: true
-        useTemplating: true
-        inputs:
-        - id: MONDO
-          semantic: Disease
-        requestBody:
-          body:
-            ## HAS PREFIX (MONDO): currently a bit redundant to do this (BTE handles it)
-            # q: "{{ queryInputs | replPrefix('MONDO', ':') }}"
-            q: "{{ queryInputs }}"
-            scopes: mondo.mondo
-        outputs:
-        - id: MONDO
-          semantic: Disease
-        parameters:
-          fields: mondo.disease_shares_features_of.mondo
-          size: 1000  ## note the size limit
-        predicate: similar_to  ## could biolink have a more specific predicate?
-        ##   note that relation maps to biolink:related_to right now...
-        source: "infores:mondo"
-        knowledge_level: knowledge_assertion
-        agent_type: manual_agent
-        response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/disease_shares_features_of"
-        testExamples:
-          - qInput: "MONDO:0008711"      ## Goodman syndrome
-            oneOutput: "MONDO:0019012"   ## Carpenter syndrome
-    disease_shares_features_of-rev:
-    ## checked and inverse relationship doesn't exist already in the data
-    ##   for example, the record for Carpenter syndrome doesn't have disease_shares_features_of
-      - supportBatch: true
-        useTemplating: true
-        inputs:
-        - id: MONDO
-          semantic: Disease
-        requestBody:
-          body:
-            ## HAS PREFIX (MONDO): currently a bit redundant to do this (BTE handles it)
-            # q: "{{ queryInputs | replPrefix('MONDO', ':') }}"
-            q: "{{ queryInputs }}"
-            scopes: mondo.disease_shares_features_of.mondo
-        outputs:
-        - id: MONDO
-          semantic: Disease
-        parameters:
-          fields: mondo.mondo
-          size: 1000  ## note the size limit
-        predicate: similar_to  ## could biolink have a more specific predicate?
-        source: "infores:mondo"
-        knowledge_level: knowledge_assertion
-        agent_type: manual_agent
-        response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/mondo"
-        testExamples:
-          - qInput: "MONDO:0019012"      ## Carpenter syndrome
-            oneOutput: "MONDO:0008711"   ## Goodman syndrome
-    disease_has_major_feature:
-      - supportBatch: true
-        useTemplating: true
-        inputs:
-        - id: MONDO
-          semantic: Disease
-        requestBody:
-          body:
-            ## HAS PREFIX (MONDO): currently a bit redundant to do this (BTE handles it)
-            # q: "{{ queryInputs | replPrefix('MONDO', ':') }}"
-            q: "{{ queryInputs }}"
-            scopes: mondo.mondo
-        outputs:
-        - id: MONDO
-          semantic: Disease
-        parameters:
-          fields: mondo.disease_has_major_feature.mondo
-          size: 1000  ## note the size limit
-        predicate: has_part  ## maps to "MONDO:disease_has_major_feature"
-        source: "infores:mondo"
-        knowledge_level: knowledge_assertion
-        agent_type: manual_agent
-        response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/disease_has_major_feature"
-        testExamples:
-          - qInput: "MONDO:0015140"      ## early-onset autosomal dominant Alzheimer disease
-            oneOutput: "MONDO:0001627"   ## dementia (disease)
-    disease_has_major_feature-rev:
-      - supportBatch: true
-        useTemplating: true
-        inputs:
-        - id: MONDO
-          semantic: Disease
-        requestBody:
-          body:
-            ## HAS PREFIX (MONDO): currently a bit redundant to do this (BTE handles it)
-            # q: "{{ queryInputs | replPrefix('MONDO', ':') }}"
-            q: "{{ queryInputs }}"
-            scopes: mondo.disease_has_major_feature.mondo
-        outputs:
-        - id: MONDO
-          semantic: Disease
-        parameters:
-          fields: mondo.mondo
-          size: 1000  ## note the size limit
-        predicate: part_of  ## could biolink have a more specific predicate?
-        source: "infores:mondo"
-        knowledge_level: knowledge_assertion
-        agent_type: manual_agent
-        response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/mondo"
-        testExamples:
-          - qInput: "MONDO:0001627"      ## dementia (disease)
-            oneOutput: "MONDO:0015140"   ## early-onset autosomal dominant Alzheimer disease
-    disease_has_feature:
-      - supportBatch: true
-        useTemplating: true
-        inputs:
-        - id: MONDO
-          semantic: Disease
-        requestBody:
-          body:
-            ## HAS PREFIX (MONDO): currently a bit redundant to do this (BTE handles it)
-            # q: "{{ queryInputs | replPrefix('MONDO', ':') }}"
-            q: "{{ queryInputs }}"
-            scopes: mondo.mondo
-        outputs:
-        - id: MONDO
-          semantic: Disease
-        parameters:
-          fields: mondo.disease_has_feature.mondo
-          size: 1000  ## note the size limit
-        predicate: has_part  ## no biolink mapping...
-        source: "infores:mondo"
-        knowledge_level: knowledge_assertion
-        agent_type: manual_agent
-        response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/disease_has_feature"
-        testExamples:
-          - qInput: "MONDO:0005796"      ## HIV enteropathy
-            oneOutput: "MONDO:0005020"   ## intestinal disease
-    disease_has_feature-rev:
-      - supportBatch: true
-        useTemplating: true
-        inputs:
-        - id: MONDO
-          semantic: Disease
-        requestBody:
-          body:
-            ## HAS PREFIX (MONDO): currently a bit redundant to do this (BTE handles it)
-            # q: "{{ queryInputs | replPrefix('MONDO', ':') }}"
-            q: "{{ queryInputs }}"
-            scopes: mondo.disease_has_feature.mondo
-        outputs:
-        - id: MONDO
-          semantic: Disease
-        parameters:
-          fields: mondo.mondo
-          size: 1000  ## note the size limit
-        predicate: part_of
-        source: "infores:mondo"
-        knowledge_level: knowledge_assertion
-        agent_type: manual_agent
-        response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/mondo"
-        testExamples:
-          - qInput: "MONDO:0005020"      ## intestinal disease
-            oneOutput: "MONDO:0005796"   ## HIV enteropathy
-    disease_causes_feature:
-      - supportBatch: true
-        useTemplating: true
-        inputs:
-        - id: MONDO
-          semantic: Disease
-        requestBody:
-          body:
-            ## HAS PREFIX (MONDO): currently a bit redundant to do this (BTE handles it)
-            # q: "{{ queryInputs | replPrefix('MONDO', ':') }}"
-            q: "{{ queryInputs }}"
-            scopes: mondo.mondo
-        outputs:
-        - id: MONDO
-          semantic: Disease
-        parameters:
-          fields: mondo.disease_causes_feature.mondo
-          size: 1000  ## note the size limit
-        predicate: causes  ## maps to "MONDO:disease_causes_feature"
-        source: "infores:mondo"
-        knowledge_level: knowledge_assertion
-        agent_type: manual_agent
-        response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/disease_causes_feature"
-        testExamples:
-          - qInput: "MONDO:0000490"      ## glomerulosclerosis
-            oneOutput: "MONDO:0001106"   ## kidney failure
-    disease_causes_feature-rev:
-      - supportBatch: true
-        useTemplating: true
-        inputs:
-        - id: MONDO
-          semantic: Disease
-        requestBody:
-          body:
-            ## HAS PREFIX (MONDO): currently a bit redundant to do this (BTE handles it)
-            # q: "{{ queryInputs | replPrefix('MONDO', ':') }}"
-            q: "{{ queryInputs }}"
-            scopes: mondo.disease_causes_feature.mondo
-        outputs:
-        - id: MONDO
-          semantic: Disease
-        parameters:
-          fields: mondo.mondo
-          size: 1000  ## note the size limit
-        predicate: caused_by
-        source: "infores:mondo"
-        knowledge_level: knowledge_assertion
-        agent_type: manual_agent
-        response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/mondo"
-        testExamples:
-          - qInput: "MONDO:0001106"      ## kidney failure
-            oneOutput: "MONDO:0000490"   ## glomerulosclerosis
-    disease_arises_from_feature:
-      - supportBatch: true
-        useTemplating: true
-        inputs:
-        - id: MONDO
-          semantic: Disease
-        requestBody:
-          body:
-            ## HAS PREFIX (MONDO): currently a bit redundant to do this (BTE handles it)
-            # q: "{{ queryInputs | replPrefix('MONDO', ':') }}"
-            q: "{{ queryInputs }}"
-            scopes: mondo.mondo
-        outputs:
-        - id: MONDO
-          semantic: Disease
-        parameters:
-          fields: mondo.disease_arises_from_feature.mondo
-          size: 1000  ## note the size limit
-        predicate: caused_by
-        source: "infores:mondo"
-        knowledge_level: knowledge_assertion
-        agent_type: manual_agent
-        response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/disease_arises_from_feature"
-        testExamples:
-          - qInput: "MONDO:0009346"      ## histidinuria due to a renal tubular defect
-            oneOutput: "MONDO:0021568"   ## renal tubule disease
-    disease_arises_from_feature-rev:
-      - supportBatch: true
-        useTemplating: true
-        inputs:
-        - id: MONDO
-          semantic: Disease
-        requestBody:
-          body:
-            q: "{{ queryInputs }}"   ## HAS PREFIX (MONDO)
-            scopes: mondo.disease_arises_from_feature.mondo
-        outputs:
-        - id: MONDO
-          semantic: Disease
-        parameters:
-          fields: mondo.mondo
-          size: 1000  ## note the size limit
-        predicate: causes
-        source: "infores:mondo"
-        knowledge_level: knowledge_assertion
-        agent_type: manual_agent
-        response_mapping:
-          "$ref": "#/components/x-bte-response-mapping/mondo"
-        testExamples:
-          - qInput: "MONDO:0021568"      ## renal tubule disease
-            oneOutput: "MONDO:0009346"   ## histidinuria due to a renal tubular defect
+        sources:
+          - id: "infores:hpo-annotations"
+            role: primary_knowledge_source
+      response_mapping:
+        ## has prefix 
+        ref_pmid: hits.hpo.phenotype_related_to_disease.pmid_refs    ## HAS PREFIX (PMID)
+        ref_isbn: hits.hpo.phenotype_related_to_disease.isbn_refs    ## HAS PREFIX (ISBN)
+        ref_url: hits.hpo.phenotype_related_to_disease.website_refs
+        ## Translator validator sometimes complains about these attribute_type_ids
+        ## needs debugging later
+        "biolink:has_quotient": hits.hpo.phenotype_related_to_disease.numeric_freq     ## decimal freq
+        "biolink:frequency_qualifier": hits.hpo.phenotype_related_to_disease.hp_freq   ## HP ontology freq term
+        "biolink:has_count": hits.hpo.phenotype_related_to_disease.freq_numerator      ## frequency as a fraction (numerator)
+        "biolink:has_total": hits.hpo.phenotype_related_to_disease.freq_denominator    ## frequency as a fraction (denominator)
+      test_examples:
+        - input_id: "OMIM:246900"     ## Dihydrolipoamide Dehydrogenase Deficiency
+          output_id: "HP:0001254"     ## Lethargy
+        - input_id: "orphanet:881"    ## Turner Syndrome
+          output_id: "HP:0000137"     ## Abnormality of the ovary
+#   ## for ctd-based operations:
+#   ## Disease <-> chemical: 3356 diseases/records 
+#   ## - knowledge_level / agent_type: parser removes all inferred annotations for disease-chemical
+#   ## - Disease ID field: use ctd.mesh, ctd.omim. Every record either has one or the other https://mydisease.info/v1/query?q=_exists_:ctd.chemical_related_to_disease%20AND(%20_exists_:ctd.mesh%20OR%20_exists_:ctd.omim)
+#   ##   - 1106 records don't have the mondo field (mapping): https://mydisease.info/v1/query?q=_exists_:ctd.chemical_related_to_disease%20AND%20NOT%20_exists_:mondo.mondo
+#   ## - parser has a step where resource IDs (MESH, OMIM) are mapped to MONDO. 
+#   ##   If multiple IDs map to the same MONDO, it's possible data is being overwritten https://github.com/biothings/mydisease.info/issues/59
+#   ## - From what I can tell, CTD does their own entity resolution. 
+#   ##   If a disease has MESH and OMIM IDs, the raw data has its info under the MESH ID only. 
+#   ##   The OMIM ID is only used as the main disease ID if there isn't a matching MESH ID
+#   ## Others:
+#   ## - we wanted to add CTD direct disease-gene data, operations
+#   ## - we removed CTD disease-pathway data because that info is all indirect
+#     disease-chemical:
+#       - supportBatch: true
+#         useTemplating: true
+#         inputs:
+#         - id: MESH
+#           semantic: Disease
+#         requestBody:
+#           body:
+#             ## currently, BTE already strips prefix...
+#             # q: "{{ queryInputs | rmPrefix }}"
+#             q: "{{ queryInputs }}"  ## no prefix
+#             scopes: ctd.mesh
+#         outputs:
+#         - id: MESH
+#           semantic: SmallMolecule
+#           ## note that 3085 / 3253 have cas_registry_number field that can be used as well
+#         parameters:
+#         ## not including: cas_registry_number, source, name
+#         ## BTE currently isn't ingesting name correctly
+#         ## commenting out because data-processing / biolink-modeling issues
+#           # fields: >-
+#           #   ctd.chemical_related_to_disease.mesh_chemical_id,
+#           #   ctd.chemical_related_to_disease.direct_evidence,
+#           #   ctd.chemical_related_to_disease.pubmed
+#           fields: >-
+#             ctd.chemical_related_to_disease.mesh_chemical_id,
+#             ctd.chemical_related_to_disease.pubmed
+#         predicate: related_to
+#         ## direct_evidence is kinda like a relation....
+#         ##   can have value "marker/mechanism" or "therapeutic").
+#         source: "infores:ctd"
+#         knowledge_level: knowledge_assertion
+#         agent_type: manual_agent
+#         response_mapping:
+#           "$ref": "#/components/x-bte-response-mapping/disease-chemical"
+#         testExamples:
+#           - qInput: "MESH:D009102"    ## Multiple Organ Failure
+#             oneOutput: "MESH:C448659"   ## Geldanamycin, monohydrochloride
+#     disease-chemical2:
+#       - supportBatch: true
+#         useTemplating: true
+#         inputs:
+#         - id: OMIM
+#           semantic: Disease
+#         requestBody:
+#           body:
+#             ## currently, BTE already strips prefix...
+#             # q: "{{ queryInputs | rmPrefix }}"
+#             q: "{{ queryInputs }}"  ## no prefix
+#             scopes: ctd.omim
+#         outputs:
+#         - id: MESH
+#           semantic: SmallMolecule
+#         parameters:
+#         ## commenting out because data-processing / biolink-modeling issues
+#           # fields: >-
+#           #   ctd.chemical_related_to_disease.mesh_chemical_id,
+#           #   ctd.chemical_related_to_disease.direct_evidence,
+#           #   ctd.chemical_related_to_disease.pubmed
+#           fields: >-
+#             ctd.chemical_related_to_disease.mesh_chemical_id,
+#             ctd.chemical_related_to_disease.pubmed
+#         predicate: related_to
+#         source: "infores:ctd"
+#         knowledge_level: knowledge_assertion
+#         agent_type: manual_agent
+#         response_mapping:
+#           "$ref": "#/components/x-bte-response-mapping/disease-chemical"
+#         testExamples:
+#           - qInput: "OMIM:613290"       ## hearing loss, cisplatin-induced, susceptibility to
+#             oneOutput: "MESH:D002945"   ## Cisplatin
+# ##########################################################################
+# ## with "reverse" querying, non-batch querying with jmespath/jmespath_exclude_empty 
+# ## is needed to retrieve only the queried ID's data subset within the disease's record
+#     gene-disease:
+#     ## 22499 / 27312 disgenet.genes_related_to_disease records have disgenet.xrefs.umls
+#     ## https://mydisease.info/v1/query?q=_exists_:disgenet.genes_related_to_disease%20AND%20_exists_:disgenet.xrefs.umls
+#     ## 9051 / 22499 diseases have a gene with score >=0.3 
+#     ## https://mydisease.info/v1/query?q=disgenet.genes_related_to_disease.score:%3E=0.3%20AND%20_exists_:disgenet.xrefs.umls&fields=disgenet
+#       - supportBatch: false
+#         useTemplating: true
+#         inputs:
+#         - id: NCBIGene
+#           semantic: Gene
+#         requestBody:
+#           body:
+#             ## currently, BTE already strips prefix...
+#             q: "{{ queryInputs }}"   ## no prefix
+#             scopes: disgenet.genes_related_to_disease.gene_id
+#         outputs:
+#         - id: UMLS
+#           semantic: Disease
+#         parameters:
+#           ## need the whole thing for jmespath to work
+#           fields: disgenet.xrefs.umls,disgenet.genes_related_to_disease 
+#           size: 1000  ## note the size limit
+#           ## only want records where at <=1 array element has score >= 0.3 and output ID field exists
+#           filter: disgenet.genes_related_to_disease.score:>=0.3 AND _exists_:disgenet.xrefs.umls
+#           ## only keep the data that matches the gene_id value: use `` because ID is a number
+#           jmespath: "disgenet.genes_related_to_disease|[?score>=`0.3` && gene_id==`{{ queryInputs }}`]"
+#           ## needed for jmespath to work: only keep array elements that meet both criteria
+#           jmespath_exclude_empty: true  
+#           ## just in case: I haven't come across a document with 1 object to see if it's in a single-element array or not
+#           always_list: disgenet.genes_related_to_disease
+#         predicate: gene_associated_with_condition
+#         source: "infores:disgenet"
+#         knowledge_level: knowledge_assertion
+#         agent_type: automated_agent
+#         response_mapping:
+#           "$ref": "#/components/x-bte-response-mapping/gene-disease"
+#         testExamples:
+#           - qInput: "NCBIGene:1260"       ## CNGA2
+#             oneOutput: "UMLS:C0393778"    ## Congenital anosmia / MONDO:0007137 isolated congenital anosmia
+#           - qInput: "NCBIGene:161582"     ## DNAAF4
+#             oneOutput: "UMLS:C0476254"    ## Dyslexia / MONDO:0001697
+#     variant-disease:
+#     ## 10939 / 12343 disgenet.variants_related_to_disease records have disgenet.xrefs.umls
+#     ## https://mydisease.info/v1/query?q=_exists_:disgenet.variants_related_to_disease%20AND%20_exists_:disgenet.xrefs.umls
+#     ## 8407 / 10939 diseases have a variant with score >=0.3 
+#     ## https://mydisease.info/v1/query?q=disgenet.variants_related_to_disease.score:%3E=0.3%20AND%20_exists_:disgenet.xrefs.umls&fields=disgenet
+#       - supportBatch: false
+#         useTemplating: true
+#         inputs:
+#         - id: DBSNP
+#           semantic: SequenceVariant
+#         requestBody:
+#           body:
+#             ## currently, BTE already strips prefix...
+#             q: "{{ queryInputs }}"   ## no prefix
+#             scopes: disgenet.variants_related_to_disease.rsid
+#         outputs:
+#         - id: UMLS
+#           semantic: Disease
+#         parameters:
+#           fields: disgenet.xrefs.umls,disgenet.variants_related_to_disease 
+#           size: 1000  ## note the size limit
+#           ## only want records where at <=1 array element has score >= 0.3 and output ID field exists
+#           filter: disgenet.variants_related_to_disease.score:>=0.3 AND _exists_:disgenet.xrefs.umls
+#           ## only keep the data that matches the rsid value
+#           jmespath: "disgenet.variants_related_to_disease|[?score>=`0.3` && rsid=='{{ queryInputs }}']"
+#           ## needed for jmespath to work: only keep array elements that meet both criteria
+#           jmespath_exclude_empty: true  
+#           ## needed for jmespath to work, because sometimes the value of this field is an object and sometimes an array of objects
+#           always_list: disgenet.variants_related_to_disease
+#         predicate: related_to
+#         source: "infores:disgenet"
+#         knowledge_level: knowledge_assertion
+#         agent_type: automated_agent
+#         response_mapping:
+#           "$ref": "#/components/x-bte-response-mapping/variant-disease"
+#         testExamples:
+#           - qInput: "DBSNP:rs78655421"
+#             oneOutput: "UMLS:C0010674"    ## Cystic Fibrosis / MONDO:0009061
+#           - qInput: "DBSNP:rs1032507"
+#             oneOutput: "UMLS:C1863416"    ## Achoo syndrome MONDO:0007038 (Autosomal dominant compelling helio ophthalmic outburst syndrome)
+#     phenotype-disease:
+#       - supportBatch: true
+#         useTemplating: true
+#         inputs:
+#         - id: HP
+#           semantic: PhenotypicFeature
+#         requestBody:
+#           body:
+#             ## HAS PREFIX (HP): currently a bit redundant to do this (BTE handles it)
+#             # q: "{{ queryInputs | replPrefix('HP', ':') }}"
+#             q: "{{ queryInputs }}"
+#             scopes: hpo.phenotype_related_to_disease.hpo_id
+#         outputs:
+#         - id: OMIM
+#           semantic: Disease
+#         parameters:
+#           fields: hpo.omim
+#           size: 1000  ## note the size limit
+#         predicate: phenotype_of
+#         source: "infores:hpo-annotations"
+#         knowledge_level: knowledge_assertion
+#         agent_type: manual_agent
+#         response_mapping:
+#           "$ref": "#/components/x-bte-response-mapping/omim"
+#         testExamples:
+#           - qInput: "HP:0000224"       ## Hypogeusia
+#             oneOutput: "OMIM:201300"   ## Neuropathy, hereditary sensory and autonomic, type II
+#     phenotype-disease2:
+#       - supportBatch: true
+#         useTemplating: true
+#         inputs:
+#         - id: HP
+#           semantic: PhenotypicFeature
+#         requestBody:
+#           body:
+#             ## HAS PREFIX (HP): currently a bit redundant to do this (BTE handles it)
+#             # q: "{{ queryInputs | replPrefix('HP', ':') }}"
+#             q: "{{ queryInputs }}"
+#             scopes: hpo.phenotype_related_to_disease.hpo_id
+#         outputs:
+#         - id: orphanet
+#           semantic: Disease
+#         parameters:
+#           fields: hpo.orphanet
+#           size: 1000  ## note the size limit
+#         predicate: phenotype_of
+#         source: "infores:hpo-annotations"
+#         knowledge_level: knowledge_assertion
+#         agent_type: manual_agent
+#         response_mapping:
+#           "$ref": "#/components/x-bte-response-mapping/orphanet"
+#         testExamples:
+#           - qInput: "HP:0000224"          ## Hypogeusia
+#             oneOutput: "orphanet:99857"   ## Secondary Syringomyelia
+#     chemical-disease:
+#       - supportBatch: true
+#         useTemplating: true
+#         inputs:
+#         - id: MESH
+#           semantic: SmallMolecule
+#         requestBody:
+#           body:
+#             ## currently, BTE already strips prefix...
+#             # q: "{{ queryInputs | rmPrefix }}"
+#             q: "{{ queryInputs }}"  ## no prefix
+#             scopes: ctd.chemical_related_to_disease.mesh_chemical_id
+#         outputs:
+#         - id: MESH
+#           semantic: Disease
+#         parameters:
+#           fields: ctd.mesh
+#           size: 1000  ## note the size limit
+#         predicate: related_to
+#         source: "infores:ctd"
+#         knowledge_level: knowledge_assertion
+#         agent_type: manual_agent
+#         response_mapping:
+#           "$ref": "#/components/x-bte-response-mapping/ctd-mesh-disease"
+#         testExamples:
+#           - qInput: "MESH:D000655"      ## Amodiaquine
+#             oneOutput: "MESH:D008288"   ## Malaria (maps to MONDO:0005136)
+#     chemical-disease2:
+#       - supportBatch: true
+#         useTemplating: true
+#         inputs:
+#         - id: MESH
+#           semantic: SmallMolecule
+#         requestBody:
+#           body:
+#             ## currently, BTE already strips prefix...
+#             # q: "{{ queryInputs | rmPrefix }}"
+#             q: "{{ queryInputs }}"    ## no prefix
+#             scopes: ctd.chemical_related_to_disease.mesh_chemical_id
+#         outputs:
+#         - id: OMIM
+#           semantic: Disease
+#         parameters:
+#           fields: ctd.omim
+#           size: 1000  ## note the size limit
+#         predicate: related_to
+#         source: "infores:ctd"
+#         knowledge_level: knowledge_assertion
+#         agent_type: manual_agent
+#         response_mapping: 
+#           "$ref": "#/components/x-bte-response-mapping/ctd-omim-disease"  
+#         testExamples:
+#           - qInput: "MESH:D000655"     ## Amodiaquine
+#             oneOutput: "OMIM:248310"   ## PLASMODIUM FALCIPARUM BLOOD INFECTION LEVEL (maps to MONDO:0009553)
+# ############################################################################
+#     ## - there's also disease_ontology info (ancestors, children, descendants, parents)
+#     ## - there's also mondo info (ancestors, descendants)
+#     ## - mondo info we're not including:
+#     ##     - do we want to keep or remove parent/children relationships?
+#     ##     - part_of_progression_of_disease (only 2 disease-disease relationships)
+#     ##     - has_modifier (something is off here, shouldn't be mondo prefix...)
+#     ##     - excluded_subClassOf (something is off here, I'm not sure what that means)
+#     ##     - disjoint from (this is a negation / NOT relationship)
+#     has_subclass:
+#       - supportBatch: true
+#         useTemplating: true
+#         inputs:
+#         - id: MONDO
+#           semantic: Disease
+#         requestBody:
+#           body:
+#             ## HAS PREFIX (MONDO): currently a bit redundant to do this (BTE handles it)
+#             # q: "{{ queryInputs | replPrefix('MONDO', ':') }}"
+#             q: "{{ queryInputs }}"
+#             scopes: mondo.mondo
+#         outputs:
+#         - id: MONDO
+#           semantic: Disease
+#         parameters:
+#           fields: mondo.children
+#           size: 1000  ## note the size limit
+#         predicate: superclass_of  ## this is the inverse of subclass_of right now
+#         ## relation: "has children"?
+#         source: "infores:mondo"
+#         knowledge_level: knowledge_assertion
+#         agent_type: manual_agent
+#         response_mapping:
+#           "$ref": "#/components/x-bte-response-mapping/has_subclass"
+#         testExamples:
+#           - qInput: "MONDO:0002494"      ## substance-related disorder
+#             oneOutput: "MONDO:0021698"   ## alcohol-related disorders          
+#     subclass_of:
+#       - supportBatch: true
+#         useTemplating: true
+#         inputs:
+#         - id: MONDO
+#           semantic: Disease
+#         requestBody:
+#           body:
+#             ## HAS PREFIX (MONDO): currently a bit redundant to do this (BTE handles it)
+#             # q: "{{ queryInputs | replPrefix('MONDO', ':') }}"
+#             q: "{{ queryInputs }}"
+#             scopes: mondo.mondo
+#         outputs:
+#         - id: MONDO
+#           semantic: Disease
+#         parameters:
+#           fields: mondo.parents
+#           size: 1000  ## note the size limit
+#         predicate: subclass_of
+#         ## relation: "has parents"?
+#         source: "infores:mondo"
+#         knowledge_level: knowledge_assertion
+#         agent_type: manual_agent
+#         response_mapping:
+#           "$ref": "#/components/x-bte-response-mapping/subclass_of"
+#         testExamples:
+#           - qInput: "MONDO:0002494"      ## substance-related disorder
+#             oneOutput: "MONDO:0002025"   ## psychiatric disorder
+#     predisposes_towards:
+#       - supportBatch: true
+#         useTemplating: true
+#         inputs:
+#         - id: MONDO
+#           semantic: Disease
+#         requestBody:
+#           body:
+#             ## HAS PREFIX (MONDO): currently a bit redundant to do this (BTE handles it)
+#             # q: "{{ queryInputs | replPrefix('MONDO', ':') }}"
+#             q: "{{ queryInputs }}"
+#             scopes: mondo.mondo
+#         outputs:
+#         - id: MONDO
+#           semantic: Disease
+#         parameters:
+#           fields: mondo.predisposes_towards.mondo
+#           size: 1000  ## note the size limit
+#         predicate: contributes_to  ## maps to "MONDO:predisposes_towards"
+#         source: "infores:mondo"
+#         knowledge_level: knowledge_assertion
+#         agent_type: manual_agent
+#         response_mapping:
+#           "$ref": "#/components/x-bte-response-mapping/predisposes_towards"
+#         testExamples:
+#           - qInput: "MONDO:0010940"      ## inherited susceptibility to asthma
+#             oneOutput: "MONDO:0004979"   ## asthma
+#     predisposes_towards-rev:
+#       - supportBatch: true
+#         useTemplating: true
+#         inputs:
+#         - id: MONDO
+#           semantic: Disease
+#         requestBody:
+#           body:
+#             ## HAS PREFIX (MONDO): currently a bit redundant to do this (BTE handles it)
+#             # q: "{{ queryInputs | replPrefix('MONDO', ':') }}"
+#             q: "{{ queryInputs }}"
+#             scopes: mondo.predisposes_towards.mondo
+#         outputs:
+#         - id: MONDO
+#           semantic: Disease
+#         parameters:
+#           fields: mondo.mondo
+#           size: 1000  ## note the size limit
+#         predicate: contribution_from
+#         ## inverse of contributes_to, which is mapped to "MONDO:predisposes_towards"
+#         ## no relation then...
+#         source: "infores:mondo"
+#         knowledge_level: knowledge_assertion
+#         agent_type: manual_agent
+#         response_mapping:
+#           "$ref": "#/components/x-bte-response-mapping/mondo"
+#         testExamples:
+#           - qInput: "MONDO:0004979"      ## asthma
+#             oneOutput: "MONDO:0010940"   ## inherited susceptibility to asthma
+#     disease_shares_features_of:
+#       - supportBatch: true
+#         useTemplating: true
+#         inputs:
+#         - id: MONDO
+#           semantic: Disease
+#         requestBody:
+#           body:
+#             ## HAS PREFIX (MONDO): currently a bit redundant to do this (BTE handles it)
+#             # q: "{{ queryInputs | replPrefix('MONDO', ':') }}"
+#             q: "{{ queryInputs }}"
+#             scopes: mondo.mondo
+#         outputs:
+#         - id: MONDO
+#           semantic: Disease
+#         parameters:
+#           fields: mondo.disease_shares_features_of.mondo
+#           size: 1000  ## note the size limit
+#         predicate: similar_to  ## could biolink have a more specific predicate?
+#         ##   note that relation maps to biolink:related_to right now...
+#         source: "infores:mondo"
+#         knowledge_level: knowledge_assertion
+#         agent_type: manual_agent
+#         response_mapping:
+#           "$ref": "#/components/x-bte-response-mapping/disease_shares_features_of"
+#         testExamples:
+#           - qInput: "MONDO:0008711"      ## Goodman syndrome
+#             oneOutput: "MONDO:0019012"   ## Carpenter syndrome
+#     disease_shares_features_of-rev:
+#     ## checked and inverse relationship doesn't exist already in the data
+#     ##   for example, the record for Carpenter syndrome doesn't have disease_shares_features_of
+#       - supportBatch: true
+#         useTemplating: true
+#         inputs:
+#         - id: MONDO
+#           semantic: Disease
+#         requestBody:
+#           body:
+#             ## HAS PREFIX (MONDO): currently a bit redundant to do this (BTE handles it)
+#             # q: "{{ queryInputs | replPrefix('MONDO', ':') }}"
+#             q: "{{ queryInputs }}"
+#             scopes: mondo.disease_shares_features_of.mondo
+#         outputs:
+#         - id: MONDO
+#           semantic: Disease
+#         parameters:
+#           fields: mondo.mondo
+#           size: 1000  ## note the size limit
+#         predicate: similar_to  ## could biolink have a more specific predicate?
+#         source: "infores:mondo"
+#         knowledge_level: knowledge_assertion
+#         agent_type: manual_agent
+#         response_mapping:
+#           "$ref": "#/components/x-bte-response-mapping/mondo"
+#         testExamples:
+#           - qInput: "MONDO:0019012"      ## Carpenter syndrome
+#             oneOutput: "MONDO:0008711"   ## Goodman syndrome
+#     disease_has_major_feature:
+#       - supportBatch: true
+#         useTemplating: true
+#         inputs:
+#         - id: MONDO
+#           semantic: Disease
+#         requestBody:
+#           body:
+#             ## HAS PREFIX (MONDO): currently a bit redundant to do this (BTE handles it)
+#             # q: "{{ queryInputs | replPrefix('MONDO', ':') }}"
+#             q: "{{ queryInputs }}"
+#             scopes: mondo.mondo
+#         outputs:
+#         - id: MONDO
+#           semantic: Disease
+#         parameters:
+#           fields: mondo.disease_has_major_feature.mondo
+#           size: 1000  ## note the size limit
+#         predicate: has_part  ## maps to "MONDO:disease_has_major_feature"
+#         source: "infores:mondo"
+#         knowledge_level: knowledge_assertion
+#         agent_type: manual_agent
+#         response_mapping:
+#           "$ref": "#/components/x-bte-response-mapping/disease_has_major_feature"
+#         testExamples:
+#           - qInput: "MONDO:0015140"      ## early-onset autosomal dominant Alzheimer disease
+#             oneOutput: "MONDO:0001627"   ## dementia (disease)
+#     disease_has_major_feature-rev:
+#       - supportBatch: true
+#         useTemplating: true
+#         inputs:
+#         - id: MONDO
+#           semantic: Disease
+#         requestBody:
+#           body:
+#             ## HAS PREFIX (MONDO): currently a bit redundant to do this (BTE handles it)
+#             # q: "{{ queryInputs | replPrefix('MONDO', ':') }}"
+#             q: "{{ queryInputs }}"
+#             scopes: mondo.disease_has_major_feature.mondo
+#         outputs:
+#         - id: MONDO
+#           semantic: Disease
+#         parameters:
+#           fields: mondo.mondo
+#           size: 1000  ## note the size limit
+#         predicate: part_of  ## could biolink have a more specific predicate?
+#         source: "infores:mondo"
+#         knowledge_level: knowledge_assertion
+#         agent_type: manual_agent
+#         response_mapping:
+#           "$ref": "#/components/x-bte-response-mapping/mondo"
+#         testExamples:
+#           - qInput: "MONDO:0001627"      ## dementia (disease)
+#             oneOutput: "MONDO:0015140"   ## early-onset autosomal dominant Alzheimer disease
+#     disease_has_feature:
+#       - supportBatch: true
+#         useTemplating: true
+#         inputs:
+#         - id: MONDO
+#           semantic: Disease
+#         requestBody:
+#           body:
+#             ## HAS PREFIX (MONDO): currently a bit redundant to do this (BTE handles it)
+#             # q: "{{ queryInputs | replPrefix('MONDO', ':') }}"
+#             q: "{{ queryInputs }}"
+#             scopes: mondo.mondo
+#         outputs:
+#         - id: MONDO
+#           semantic: Disease
+#         parameters:
+#           fields: mondo.disease_has_feature.mondo
+#           size: 1000  ## note the size limit
+#         predicate: has_part  ## no biolink mapping...
+#         source: "infores:mondo"
+#         knowledge_level: knowledge_assertion
+#         agent_type: manual_agent
+#         response_mapping:
+#           "$ref": "#/components/x-bte-response-mapping/disease_has_feature"
+#         testExamples:
+#           - qInput: "MONDO:0005796"      ## HIV enteropathy
+#             oneOutput: "MONDO:0005020"   ## intestinal disease
+#     disease_has_feature-rev:
+#       - supportBatch: true
+#         useTemplating: true
+#         inputs:
+#         - id: MONDO
+#           semantic: Disease
+#         requestBody:
+#           body:
+#             ## HAS PREFIX (MONDO): currently a bit redundant to do this (BTE handles it)
+#             # q: "{{ queryInputs | replPrefix('MONDO', ':') }}"
+#             q: "{{ queryInputs }}"
+#             scopes: mondo.disease_has_feature.mondo
+#         outputs:
+#         - id: MONDO
+#           semantic: Disease
+#         parameters:
+#           fields: mondo.mondo
+#           size: 1000  ## note the size limit
+#         predicate: part_of
+#         source: "infores:mondo"
+#         knowledge_level: knowledge_assertion
+#         agent_type: manual_agent
+#         response_mapping:
+#           "$ref": "#/components/x-bte-response-mapping/mondo"
+#         testExamples:
+#           - qInput: "MONDO:0005020"      ## intestinal disease
+#             oneOutput: "MONDO:0005796"   ## HIV enteropathy
+#     disease_causes_feature:
+#       - supportBatch: true
+#         useTemplating: true
+#         inputs:
+#         - id: MONDO
+#           semantic: Disease
+#         requestBody:
+#           body:
+#             ## HAS PREFIX (MONDO): currently a bit redundant to do this (BTE handles it)
+#             # q: "{{ queryInputs | replPrefix('MONDO', ':') }}"
+#             q: "{{ queryInputs }}"
+#             scopes: mondo.mondo
+#         outputs:
+#         - id: MONDO
+#           semantic: Disease
+#         parameters:
+#           fields: mondo.disease_causes_feature.mondo
+#           size: 1000  ## note the size limit
+#         predicate: causes  ## maps to "MONDO:disease_causes_feature"
+#         source: "infores:mondo"
+#         knowledge_level: knowledge_assertion
+#         agent_type: manual_agent
+#         response_mapping:
+#           "$ref": "#/components/x-bte-response-mapping/disease_causes_feature"
+#         testExamples:
+#           - qInput: "MONDO:0000490"      ## glomerulosclerosis
+#             oneOutput: "MONDO:0001106"   ## kidney failure
+#     disease_causes_feature-rev:
+#       - supportBatch: true
+#         useTemplating: true
+#         inputs:
+#         - id: MONDO
+#           semantic: Disease
+#         requestBody:
+#           body:
+#             ## HAS PREFIX (MONDO): currently a bit redundant to do this (BTE handles it)
+#             # q: "{{ queryInputs | replPrefix('MONDO', ':') }}"
+#             q: "{{ queryInputs }}"
+#             scopes: mondo.disease_causes_feature.mondo
+#         outputs:
+#         - id: MONDO
+#           semantic: Disease
+#         parameters:
+#           fields: mondo.mondo
+#           size: 1000  ## note the size limit
+#         predicate: caused_by
+#         source: "infores:mondo"
+#         knowledge_level: knowledge_assertion
+#         agent_type: manual_agent
+#         response_mapping:
+#           "$ref": "#/components/x-bte-response-mapping/mondo"
+#         testExamples:
+#           - qInput: "MONDO:0001106"      ## kidney failure
+#             oneOutput: "MONDO:0000490"   ## glomerulosclerosis
+#     disease_arises_from_feature:
+#       - supportBatch: true
+#         useTemplating: true
+#         inputs:
+#         - id: MONDO
+#           semantic: Disease
+#         requestBody:
+#           body:
+#             ## HAS PREFIX (MONDO): currently a bit redundant to do this (BTE handles it)
+#             # q: "{{ queryInputs | replPrefix('MONDO', ':') }}"
+#             q: "{{ queryInputs }}"
+#             scopes: mondo.mondo
+#         outputs:
+#         - id: MONDO
+#           semantic: Disease
+#         parameters:
+#           fields: mondo.disease_arises_from_feature.mondo
+#           size: 1000  ## note the size limit
+#         predicate: caused_by
+#         source: "infores:mondo"
+#         knowledge_level: knowledge_assertion
+#         agent_type: manual_agent
+#         response_mapping:
+#           "$ref": "#/components/x-bte-response-mapping/disease_arises_from_feature"
+#         testExamples:
+#           - qInput: "MONDO:0009346"      ## histidinuria due to a renal tubular defect
+#             oneOutput: "MONDO:0021568"   ## renal tubule disease
+#     disease_arises_from_feature-rev:
+#       - supportBatch: true
+#         useTemplating: true
+#         inputs:
+#         - id: MONDO
+#           semantic: Disease
+#         requestBody:
+#           body:
+#             q: "{{ queryInputs }}"   ## HAS PREFIX (MONDO)
+#             scopes: mondo.disease_arises_from_feature.mondo
+#         outputs:
+#         - id: MONDO
+#           semantic: Disease
+#         parameters:
+#           fields: mondo.mondo
+#           size: 1000  ## note the size limit
+#         predicate: causes
+#         source: "infores:mondo"
+#         knowledge_level: knowledge_assertion
+#         agent_type: manual_agent
+#         response_mapping:
+#           "$ref": "#/components/x-bte-response-mapping/mondo"
+#         testExamples:
+#           - qInput: "MONDO:0021568"      ## renal tubule disease
+#             oneOutput: "MONDO:0009346"   ## histidinuria due to a renal tubular defect
