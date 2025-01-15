@@ -24,6 +24,7 @@ tags:
   - name: annotation
   - name: query
   - name: translator
+  - name: x-bte
   - name: biothings
 paths:
   "/gene/{id}":
@@ -349,26 +350,6 @@ paths:
       # description: Make batch gene queries and return matching gene hits
       tags:
       - query
-      ## 18 operations (9 sets)
-      x-bte-kgs-operations: 
-        - $ref: "#/components/x-bte-kgs-operations/PathwayHasGene1"
-        - $ref: "#/components/x-bte-kgs-operations/PathwayHasGene2"
-        - $ref: "#/components/x-bte-kgs-operations/PathwayHasGene3"
-        - $ref: "#/components/x-bte-kgs-operations/PathwayHasGene4"
-        - $ref: "#/components/x-bte-kgs-operations/involvedInPathway1"
-        - $ref: "#/components/x-bte-kgs-operations/involvedInPathway2"
-        - $ref: "#/components/x-bte-kgs-operations/involvedInPathway3"
-        - $ref: "#/components/x-bte-kgs-operations/involvedInPathway4"
-        - $ref: "#/components/x-bte-kgs-operations/involvedInBP"
-        - $ref: "#/components/x-bte-kgs-operations/BPToGene"
-        - $ref: "#/components/x-bte-kgs-operations/enablesMF"
-        - $ref: "#/components/x-bte-kgs-operations/MFToGene"
-        - $ref: "#/components/x-bte-kgs-operations/involvedInCC"
-        - $ref: "#/components/x-bte-kgs-operations/CCToGene"
-        - $ref: "#/components/x-bte-kgs-operations/geneToDisease"
-        - $ref: "#/components/x-bte-kgs-operations/diseaseToGene"
-        - $ref: "#/components/x-bte-kgs-operations/hasHomolog-MGI"
-        - $ref: "#/components/x-bte-kgs-operations/hasHomolog-MGI-rev"
 components: 
   parameters: 
     ## these are specific to MyGene
@@ -705,7 +686,7 @@ components:
   #         type: string
   #       type: array
   #     - type: string
-  x-bte-kgs-operations: 
+  x-bte-operations: 
   ## Not including Gene <-> Transcript <-> Protein or Gene <-> Protein due to conflation, lack of use in Translator right now
   ## Pathway <-> Gene data notes:
   ## - for ConsensusPathDB, look at "content information" tab at http://cpdb.molgen.mpg.de/CPDB to see versions of the pathway databases they used
@@ -718,596 +699,566 @@ components:
   ##   - kegg pathway: manually drawn https://www.genome.jp/kegg/pathway.html
   ##   - wikipathways: manually curated by community https://www.wikipathways.org/about.html
   ##   - biocarta: curated, assuming manually https://maayanlab.cloud/Harmonizome/dataset/Biocarta%20Pathways
-    PathwayHasGene1:    ## using Reactome, KEGG, Wikipathways, Biocarta
-      - supportBatch: true
-        useTemplating: true
-        inputs: 
-          - id: REACT
-            semantic: Pathway
-        requestBody: 
-          body: 
-            q: "{{ queryInputs }}"  ## no prefix
-            scopes: pathway.reactome.id
-        outputs: 
-          - id: NCBIGene
-            semantic: Gene
-        parameters: 
-          ## all records with pathway.reactome.id field also have entrezgene field
-          fields: entrezgene
-          species: human
-          size: 1000  ## note the size limit
-        predicate: has_participant
-        source: "infores:reactome"
-        knowledge_level: knowledge_assertion
-        agent_type: manual_agent
-        response_mapping: 
-          $ref: "#/components/x-bte-response-mapping/entrezgene"
-        testExamples:
-          - qInput: "REACT:R-HSA-70895"  ## Branched-chain amino acid catabolism
-            oneOutput: "NCBIGene:10295"  ## BCKDK
-    PathwayHasGene2:
-      - supportBatch: true
-        useTemplating: true
-        inputs: 
-          - id: "KEGG.PATHWAY"
-            semantic: Pathway
-        requestBody: 
-          body: 
-            q: "{{ queryInputs }}"  ## no prefix
-            scopes: pathway.kegg.id
-        outputs: 
-          - id: NCBIGene
-            semantic: Gene
-        parameters: 
-          ## all records with pathway.kegg field also have entrezgene field
-          fields: entrezgene,pathway.kegg.name
-          species: human
-          size: 1000  ## note the size limit
-        predicate: has_participant
-        source: "infores:cpdb"   ## ConsensusPathDB
-        knowledge_level: knowledge_assertion
-        agent_type: manual_agent
-        response_mapping: 
-          $ref: "#/components/x-bte-response-mapping/entrezgene-keggname"
-        testExamples:
-          - qInput: "KEGG.PATHWAY:hsa00120"  ## Primary bile acid biosynthesis - Homo sapiens (human)
-            oneOutput: "NCBIGene:8309"  ## ACOX2
-    PathwayHasGene3:
-      - supportBatch: true
-        useTemplating: true
-        inputs: 
-          - id: WIKIPATHWAYS
-            semantic: Pathway
-        requestBody: 
-          body: 
-            q: "{{ queryInputs }}"  ## no prefix
-            scopes: pathway.wikipathways.id
-        outputs: 
-          - id: NCBIGene
-            semantic: Gene
-        parameters: 
-          ## all records with pathway.wikipathways field also have entrezgene field
-          fields: entrezgene,pathway.wikipathways.name
-          species: human
-          size: 1000  ## note the size limit
-        predicate: has_participant
-        source: "infores:cpdb"   ## ConsensusPathDB
-        knowledge_level: knowledge_assertion
-        agent_type: manual_agent
-        response_mapping: 
-          $ref: "#/components/x-bte-response-mapping/entrezgene-wikiname"
-        testExamples:
-          - qInput: "WIKIPATHWAYS:WP2034"  ## Leptin signaling pathway
-            oneOutput: "NCBIGene:3953"  ## LEPR
-    PathwayHasGene4:
-      - supportBatch: true
-        useTemplating: true
-        inputs: 
-          - id: BIOCARTA
-            semantic: Pathway
-        requestBody: 
-          body: 
-            q: "{{ queryInputs }}"  ## no prefix
-            scopes: pathway.biocarta.id
-        outputs: 
-          - id: NCBIGene
-            semantic: Gene
-        parameters: 
-          ## all records with pathway.biocarta field also have entrezgene field
-          fields: entrezgene,pathway.biocarta.name
-          species: human
-          size: 1000  ## note the size limit
-        predicate: has_participant
-        source: "infores:cpdb"   ## ConsensusPathDB
-        knowledge_level: knowledge_assertion
-        agent_type: manual_agent
-        response_mapping: 
-          $ref: "#/components/x-bte-response-mapping/entrezgene-biocartaname"
-        testExamples:
-          - qInput: "BIOCARTA:raspathway"
-            oneOutput: "NCBIGene:3265"  ## HRAS
-    involvedInPathway1:    ## using Reactome, KEGG, Wikipathways, Biocarta
-      - supportBatch: true
-        useTemplating: true
-        inputs: 
-          - id: NCBIGene
-            semantic: Gene
-        requestBody: 
-          body: 
-            q: "{{ queryInputs }}"  ## no prefix
-            scopes: entrezgene
-        outputs: 
-          - id: REACT
-            semantic: Pathway
-        parameters: 
-        ## not including name since BTE isn't ingesting properly right now
-          fields: >-
-            pathway.reactome.id
-          species: human
+    PathwayHasGene:
+    ## - this is a reverse operation
+    ## - Currently only including Reactome, KEGG.PATHWAY, Wikipathways, Biocarta
+    ##   these all have diff ID formats, so their IDs can be put together in the same request
+    ##   (ex: won't accidentally retrieve matches from the wrong namespace)
+    ## - just in case, use pagination (very general, root-level pathways can have >1000 genes listed)
+      support_batch: true
+      response_field_root: hits
+      inputs: 
+        category: Pathway
+        ## data has no "merging" for synonymous pathway IDs from diff namespaces
+        ## but we probably won't encounter any input IDs w/ >1 pathway ID. Because right now, 
+        ##   SRI node-norm doesn't find synonymous pathway IDs either (no entity-resolving) 
+        use_all_namespaces: true
+        namespaces:
+          - prefix: REACT
+            name_field: pathway.reactome.name
+          - prefix: KEGG.PATHWAY
+            name_field: pathway.kegg.name
+          - prefix: WIKIPATHWAYS
+            name_field: pathway.wikipathways.name
+          - prefix: BIOCARTA
+            name_field: pathway.biocarta.name
+      predicate: has_participant
+      outputs: 
+        category: Gene
+        namespaces:
+          - prefix: NCBIGene
+            id_field: entrezgene   ## single ID, no prefix
+      request_info:
+        path: "/query"   ## use same format that paths section does
+        method: post     ## use same format that paths section does (lower case)
+        use_pagination: true
+        request_body:
+          ## single ID, no prefix
+          q: "{{ array_of_IDs_without_prefix }}"
+          scopes: pathway.reactome.id,pathway.kegg.id,pathway.wikipathways.id,pathway.biocarta.id
+        parameters:
+          fields: entrezgene,pathway.kegg.name,pathway.wikipathways.name,pathway.biocarta.name
           size: 1000
-        predicate: participates_in
-        source: "infores:reactome"
-        knowledge_level: knowledge_assertion
-        agent_type: manual_agent
-        response_mapping: 
-          $ref: "#/components/x-bte-response-mapping/reactomePathway"
-        testExamples:
-          - qInput: "NCBIGene:1629"         ## DBT
-            oneOutput: "REACT:R-HSA-70895"  ## Branched-chain amino acid catabolism
-    involvedInPathway2:
-      - supportBatch: true
-        useTemplating: true
-        inputs: 
-          - id: NCBIGene
-            semantic: Gene
-        requestBody: 
-          body: 
-            q: "{{ queryInputs }}"  ## no prefix
-            scopes: entrezgene
-        outputs: 
-          - id: "KEGG.PATHWAY"
-            semantic: Pathway
-        parameters: 
-        ## not including name since BTE isn't ingesting properly right now
-          fields: >-
-            pathway.kegg.id,pathway.kegg.name
-          species: human
-          size: 1000
-        predicate: participates_in
-        source: "infores:cpdb"   ## ConsensusPathDB
-        knowledge_level: knowledge_assertion
-        agent_type: manual_agent
-        response_mapping: 
-          $ref: "#/components/x-bte-response-mapping/keggPathway"
-        testExamples:
-          - qInput: "NCBIGene:1629"         ## DBT
-            oneOutput: "KEGG.PATHWAY:hsa00280"  ## Valine, leucine and isoleucine degradation - Homo sapiens (human)
-    involvedInPathway3:
-      - supportBatch: true
-        useTemplating: true
-        inputs: 
-          - id: NCBIGene
-            semantic: Gene
-        requestBody: 
-          body: 
-            q: "{{ queryInputs }}"  ## no prefix
-            scopes: entrezgene
-        outputs: 
-          - id: WIKIPATHWAYS
-            semantic: Pathway
-        parameters: 
-        ## not including name since BTE isn't ingesting properly right now
-          fields: >-
-            pathway.wikipathways.id,pathway.wikipathways.name
-          species: human
-          size: 1000
-        predicate: participates_in
-        source: "infores:cpdb"   ## ConsensusPathDB
-        knowledge_level: knowledge_assertion
-        agent_type: manual_agent
-        response_mapping: 
-          $ref: "#/components/x-bte-response-mapping/wikipathway"
-        testExamples:
-          - qInput: "NCBIGene:8309"         ## ACOX2
-            oneOutput: "WIKIPATHWAYS:WP3942"  ## PPAR signaling pathway
-    involvedInPathway4:
-      - supportBatch: true
-        useTemplating: true
-        inputs: 
-          - id: NCBIGene
-            semantic: Gene
-        requestBody: 
-          body: 
-            q: "{{ queryInputs }}"  ## no prefix
-            scopes: entrezgene
-        outputs: 
-          - id: BIOCARTA
-            semantic: Pathway
-        parameters: 
-        ## not including name since BTE isn't ingesting properly right now
-          fields: >-
-            pathway.biocarta.id,pathway.biocarta.name
-          species: human
-          size: 1000
-        predicate: participates_in
-        source: "infores:cpdb"   ## ConsensusPathDB
-        knowledge_level: knowledge_assertion
-        agent_type: manual_agent
-        response_mapping: 
-          $ref: "#/components/x-bte-response-mapping/biocarta"
-        testExamples:
-          - qInput: "NCBIGene:5608"         ## MAP2K6
-            oneOutput: "BIOCARTA:p38mapkpathway"  ## p38 mapk signaling pathway
-  ## knowledge_level / agent_type for ncbi-gene: need separation by evidence code for more-specific settings
-  ## has info on how it gets go-annotation data https://www.ncbi.nlm.nih.gov/books/NBK3840/#genefaq.GO_terms
-    involvedInBP:
-      - supportBatch: true
-        useTemplating: true
-        inputs: 
-          - id: NCBIGene
-            semantic: Gene
-        requestBody: 
-          body: 
-            q: "{{ queryInputs }}"  ## no prefix
-            scopes: entrezgene
-        outputs: 
-          - id: GO
-            semantic: BiologicalProcess
-        parameters: 
-          ## all records with go.BP field also have entrezgene field
-          ## not including: name, category/gocategory (not needed)
-        ## commenting out because data-processing / biolink-modeling issues
-          # fields: >-
-          #   go.BP.id,
-          #   go.BP.evidence,
-          #   go.BP.pubmed,
-          #   go.BP.qualifier
-          fields: go.BP.id,go.BP.pubmed
-          species: human
-          size: 1000
-        predicate: participates_in
-        source: "infores:ncbi-gene"   ## which got from GO Annotations...
-        knowledge_level: knowledge_assertion
-        agent_type: not_provided
-        response_mapping: 
-          $ref: "#/components/x-bte-response-mapping/biologicalProcess"
-        testExamples:
-          - qInput: "NCBIGene:632"    ## BGLAP
-            oneOutput: "GO:0001501"   ## skeletal system development
-    BPToGene: 
-      - supportBatch: true
-        useTemplating: true
-        inputs: 
-          - id: GO
-            semantic: BiologicalProcess
-        requestBody: 
-          body: 
-            q: "{{ queryInputs | replPrefix('GO') }}"      ## HAS PREFIX (GO)
-            scopes: go.BP.id
-        outputs: 
-          - id: NCBIGene
-            semantic: Gene
-        parameters: 
-          ## all records with go.BP field also have entrezgene field
-          fields: entrezgene
-          species: human
-          size: 1000  ## note size limit
-        predicate: has_participant
-        source: "infores:ncbi-gene"   ## which got from GO Annotations...
-        knowledge_level: knowledge_assertion
-        agent_type: not_provided
-        response_mapping: 
-          $ref: "#/components/x-bte-response-mapping/entrezgene"
-        testExamples:
-          - qInput: "GO:0001501"         ## skeletal system development
-            oneOutput: "NCBIGene:5741"   ## PTH
-    enablesMF:
-      - supportBatch: true
-        useTemplating: true
-        inputs: 
-          - id: NCBIGene
-            semantic: Gene
-        requestBody: 
-          body: 
-            q: "{{ queryInputs }}"  ## no prefix
-            ## all records with go.MF field also have entrezgene field
-            scopes: entrezgene
-        outputs: 
-          - id: GO
-            semantic: MolecularActivity
-        parameters: 
-          ## not including: name, category/gocategory (not needed)
-        ## commenting out because data-processing / biolink-modeling issues\
-          # fields: >-
-          #   go.MF.id,
-          #   go.MF.evidence,
-          #   go.MF.pubmed,
-          #   go.MF.qualifier
-          fields: go.MF.id,go.MF.pubmed
-          species: human
-          size: 1000
-        predicate: enables
-        source: "infores:ncbi-gene"   ## which got from GO Annotations...
-        knowledge_level: knowledge_assertion
-        agent_type: not_provided
-        response_mapping: 
-          $ref: "#/components/x-bte-response-mapping/molecularFunction"
-        testExamples:
-          - qInput: "NCBIGene:1629"   ## DBT
-            oneOutput: "GO:0031405"   ## lipoic acid binding
-    MFToGene:
-      - supportBatch: true
-        useTemplating: true
-        inputs: 
-          - id: GO
-            semantic: MolecularActivity
-        requestBody: 
-          body: 
-            q: "{{ queryInputs | replPrefix('GO') }}"      ## HAS PREFIX (GO)
-            scopes: go.MF.id
-        outputs: 
-          - id: NCBIGene
-            semantic: Gene
-        parameters: 
-          ## all records with go.MF field also have entrezgene field
-          fields: entrezgene
-          species: human
-          size: 1000  ## note size limit
-        predicate: enabled_by
-        source: "infores:ncbi-gene"   ## which got from GO Annotations...
-        knowledge_level: knowledge_assertion
-        agent_type: not_provided
-        response_mapping: 
-          $ref: "#/components/x-bte-response-mapping/entrezgene"
-        testExamples:
-          - qInput: "GO:0008147"   ## structural constituent of bone
-            oneOutput: "NCBIGene:632"   ## BGLAP
-    involvedInCC: 
-      - supportBatch: true
-        useTemplating: true
-        inputs: 
-          - id: NCBIGene
-            semantic: Gene
-        requestBody: 
-          body: 
-            q: "{{ queryInputs }}"  ## no prefix
-            scopes: entrezgene
-        outputs: 
-          - id: GO
-            semantic: CellularComponent
-        parameters: 
-          ## all records with go.CC field also have entrezgene field
-          ## not including: name, category/gocategory (not needed)
-        ## commenting out because data-processing / biolink-modeling issues
-          # fields:  >-
-          #   go.CC.id,
-          #   go.CC.evidence,
-          #   go.CC.pubmed,
-          #   go.CC.qualifier
-          fields: go.CC.id,go.CC.pubmed
-          species: human
-          size: 1000
-        predicate: active_in
-        source: "infores:ncbi-gene"   ## which got from GO Annotations...
-        knowledge_level: knowledge_assertion
-        agent_type: not_provided
-        response_mapping: 
-          $ref: "#/components/x-bte-response-mapping/cellularComponent"
-        testExamples:
-          - qInput: "NCBIGene:5741"   ## PTH
-            oneOutput: "GO:0005576"   ## extracellular region
-    CCToGene: 
-      - supportBatch: true
-        useTemplating: true
-        inputs: 
-          - id: GO
-            semantic: CellularComponent
-        requestBody: 
-          body: 
-            q: "{{ queryInputs | replPrefix('GO') }}"      ## HAS PREFIX (GO)
-            scopes: go.CC.id
-        outputs: 
-          - id: NCBIGene
-            semantic: Gene
-        parameters: 
-          ## all records with go.CC field also have entrezgene field
-          fields: entrezgene
-          species: human
-          size: 1000  ## note size limit
-        predicate: has_active_component
-        source: "infores:ncbi-gene"   ## which got from GO Annotations...
-        knowledge_level: knowledge_assertion
-        agent_type: not_provided
-        response_mapping: 
-          $ref: "#/components/x-bte-response-mapping/entrezgene"
-        testExamples:
-          - qInput: "GO:0033268"         ## node of Ranvier
-            oneOutput: "NCBIGene:6326"   ## SCN2A
-  ## knowledge_level / agent_type: clingen
-  ##   seems to be heavily manually curated  https://www.clinicalgenome.org/start/
-    geneToDisease:
-      - supportBatch: true
-        useTemplating: true
-        inputs: 
-          - id: NCBIGene
-            semantic: Gene
-        requestBody: 
-          body: 
-            q: "{{ queryInputs }}"  ## no prefix
-            scopes: entrezgene
-        outputs: 
-          - id: MONDO
-            semantic: Disease
-        parameters: 
-          ## all records with clingen field have entrezgene, mondo fields
-          ## not including: sop, disease_label
-        ## commenting out because data-processing / biolink-modeling issues
-          # fields: >-
-          #   clingen.clinical_validity.mondo,
-          #   clingen.clinical_validity.classification,
-          #   clingen.clinical_validity.online_report
-          fields: clingen.clinical_validity.mondo,clingen.clinical_validity.online_report
-          species: human
-          size: 1000
-        ## using related_to because....
-        ## - the strength of the assertion being made (is this gene related to disease)
-        ##   is specified by the clingen.clinical_validity.classification field (see response-mapping)
-        ## - reference: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5473734/
-        ## - possible values: definitive, moderate, limited, disputed, refuted (!!!), no known disease relationship (!!!)
-        ##     can be a list if there were multiple assertions/clinical_validity objects
-        predicate: related_to
-        source: "infores:clingen"
-        knowledge_level: knowledge_assertion
-        agent_type: manual_agent
-        response_mapping: 
-          $ref: "#/components/x-bte-response-mapping/clingen"
-        testExamples:
-          - qInput: "NCBIGene:23126"     ## POGZ
-            oneOutput: "MONDO:0014606"   ## intellectual disability-microcephaly-strabismus-behavioral abnormalities syndrome
-    diseaseToGene:
-      - supportBatch: true
-        useTemplating: true
-        inputs: 
-          - id: MONDO
-            semantic: Disease
-        requestBody: 
-          body: 
-            q: "{{ queryInputs | replPrefix('MONDO') }}"  ## HAS PREFIX (MONDO)
-            scopes: clingen.clinical_validity.mondo
-        outputs: 
-          - id: NCBIGene
-            semantic: Gene
-        parameters: 
-          ## all records with clingen field have entrezgene, mondo fields
-          fields: entrezgene
-          species: human
-          size: 1000
-        predicate: related_to
-        source: "infores:clingen"
-        knowledge_level: knowledge_assertion
-        agent_type: manual_agent
-        response_mapping: 
-          $ref: "#/components/x-bte-response-mapping/entrezgene"
-        testExamples:
-          - qInput: "MONDO:0014606"       ## intellectual disability-microcephaly-strabismus-behavioral abnormalities syndrome
-            oneOutput: "NCBIGene:23126"   ## POGZ
-    ## pantherdb gives orthologs and paralogs, which are both homologs. Hence we use homolog
-    ## update 2024: can use less namespaces I think. Can ask what fields are always there
-    ## - entrezgene or pantherdb.uniprot_kb as input for forward direction
-    ## - pantherdb.ortholog.uniprot_kb as output for forward direction
-    ## currently written: MGI 
-    ## Also have Ensembl (for specific non-human species) and UniprotKB (for all orthologs)
-    ## - knowledge_level / agent_type: 
-    ##   Paper Figure 4 seems to show that automated pipeline creates orthologs, not really any manual-curation.
-    ##   https://onlinelibrary.wiley.com/doi/10.1002/pro.4218
-    hasHomolog-MGI: 
-      - supportBatch: true
-        useTemplating: true
-        inputs: 
-          - id: HGNC
-            semantic: Gene
-        requestBody: 
-          body: 
-            q: "{{ queryInputs }}"  ## no prefix
-            scopes: pantherdb.HGNC
-        outputs: 
-          - id: MGI
-            semantic: Gene
-        parameters: 
-          ## almost all records with pantherdb.ortholog fields also have the entrezgene field
-          ##   > 145,000 records have both fields, vs ~ 3600 records don't have the entrezgene field
-        ## commenting out because data-processing / biolink-modeling issues
-          # fields: >-
-          #   pantherdb.ortholog.MGI,
-          #   pantherdb.ortholog.taxid
-          fields: pantherdb.ortholog.MGI
-          size: 1000
-        predicate: homologous_to
-        source: "infores:panther"
-        knowledge_level: knowledge_assertion
-        agent_type: computational_model
-        response_mapping: 
-          $ref: "#/components/x-bte-response-mapping/pantherMGI"
-        testExamples:
-          - qInput: "HGNC:20589"       ## KCMF1
-            oneOutput: "MGI:1921537"   ## Kcmf1
-    hasHomolog-MGI-rev: 
-      - supportBatch: true
-        useTemplating: true
-        inputs: 
-          - id: MGI
-            semantic: Gene
-        requestBody: 
-          body: 
-            q: "{{ queryInputs | rmPrefix | join(',') }}"  ## no prefix
-            scopes: pantherdb.ortholog.MGI
-        outputs:
-          - id: HGNC
-            semantic: Gene
-        parameters: 
-          ## almost all records with pantherdb.ortholog fields also have the entrezgene field
-          ##   > 145,000 records have both fields, vs ~ 3600 records don't have the entrezgene field
-          fields: pantherdb.HGNC
-          size: 1000
-        predicate: homologous_to
-        source: "infores:panther"
-        knowledge_level: knowledge_assertion
-        agent_type: computational_model
-        response_mapping: 
-          $ref: "#/components/x-bte-response-mapping/pantherHGNC"
-        testExamples:
-          - qInput: "MGI:1916384"     ## Fam25c
-            oneOutput: "HGNC:23586"   ## FAM25C
-  x-bte-response-mapping:
-    entrezgene: 
-      NCBIGene: entrezgene   ## no prefix
-    entrezgene-keggname: 
-      NCBIGene: entrezgene   ## no prefix
-      input_name: pathway.kegg.name
-    entrezgene-wikiname: 
-      NCBIGene: entrezgene   ## no prefix
-      input_name: pathway.wikipathways.name
-    entrezgene-biocartaname: 
-      NCBIGene: entrezgene   ## no prefix
-      input_name: pathway.biocarta.name
-    reactomePathway: 
-      REACT: pathway.reactome.id   ## no prefix
-    keggPathway: 
-      "KEGG.PATHWAY": pathway.kegg.id   ## no prefix
-      output_name: pathway.kegg.name
-    wikipathway: 
-      WIKIPATHWAYS: pathway.wikipathways.id   ## no prefix
-      output_name: pathway.wikipathways.name
-    biocarta: 
-      BIOCARTA: pathway.biocarta.id   ## no prefix
-      output_name: pathway.biocarta.name
-    biologicalProcess: 
-      GO: go.BP.id  ## HAS PREFIX (GO)
-      ref_pmid: go.BP.pubmed
-      ## commenting out because data-processing / biolink-modeling issues
-      # evidence: go.BP.evidence  ## categorical variable?
-      # go_qualifier: go.BP.qualifier  ## seems to be like a relation
-    molecularFunction: 
-      GO: go.MF.id  ## HAS PREFIX (GO)
-      ref_pmid: go.MF.pubmed
-      ## commenting out because data-processing / biolink-modeling issues
-      # evidence: go.MF.evidence  ## categorical variable?
-      # go_qualifier: go.MF.qualifier  ## seems to be like a relation
-    cellularComponent: 
-      GO: go.CC.id  ## HAS PREFIX (GO)
-      ref_pmid: go.CC.pubmed
-      ## commenting out because data-processing / biolink-modeling issues
-      # evidence: go.CC.evidence  ## categorical variable?
-      # go_qualifier: go.CC.qualifier  ## seems to be like a relation
-    clingen: 
-      MONDO: clingen.clinical_validity.mondo  ## HAS PREFIX (MONDO)
-      source_url: clingen.clinical_validity.online_report
-      ## commenting out because data-processing / biolink-modeling issues
-      # ## possible values for classification: definitive, moderate, limited, disputed, refuted (!!!), no known disease relationship (!!!)
-      # clingen_clinical_validity_classification: clingen.clinical_validity.classification  
-    pantherMGI: 
-      MGI: pantherdb.ortholog.MGI  ## no prefix
-      ## commenting out because data-processing / biolink-modeling issues
-      # inTaxon: pantherdb.ortholog.taxid
-    pantherHGNC: 
-      HGNC: pantherdb.HGNC  ## no prefix
+          with_total: true  ## for pagination
+      provenance:
+        - namespace_pair: [ REACT, NCBIGene ]
+          knowledge_level: knowledge_assertion
+          agent_type: manual_agent
+          sources:
+          ## MyGene gets this info directly from Reactome
+            - id: "infores:reactome"
+              role: primary_knowledge_source
+        - namespace_pair: [ KEGG.PATHWAY, NCBIGene ]
+          knowledge_level: knowledge_assertion
+          agent_type: manual_agent
+          sources:
+            - id: "infores:kegg"
+              role: primary_knowledge_source
+            - id: "infores:cpdb"
+              role: aggregator_knowledge_source
+              upstream: "infores:kegg"
+        - namespace_pair: [ WIKIPATHWAYS, NCBIGene ]
+          knowledge_level: knowledge_assertion
+          agent_type: manual_agent
+          sources:
+            - id: "infores:wikipathways"
+              role: primary_knowledge_source
+            - id: "infores:cpdb"
+              role: aggregator_knowledge_source
+              upstream: "infores:wikipathways"
+        - namespace_pair: [ BIOCARTA, NCBIGene ]
+          knowledge_level: knowledge_assertion
+          agent_type: manual_agent
+          sources:
+          ## infores ID doesn't exist yet! Need to add to infores catalog
+            - id: "infores:biocarta"
+              role: primary_knowledge_source
+            - id: "infores:cpdb"
+              role: aggregator_knowledge_source
+              upstream: "infores:biocarta"
+      ## NO RESPONSE MAPPING: no edge-attributes
+      test_examples:
+        - input_id: "REACT:R-HSA-70895"         ## Branched-chain amino acid catabolism
+          output_id: "NCBIGene:10295"           ## BCKDK
+        - input_id: "KEGG.PATHWAY:hsa00120"     ## Primary bile acid biosynthesis - Homo sapiens (human)
+          output_id: "NCBIGene:8309"            ## ACOX2
+        - input_id: "WIKIPATHWAYS:WP2034"       ## Leptin signaling pathway
+          output_id: "NCBIGene:3953"            ## LEPR
+        - input_id: "BIOCARTA:raspathway"
+          output_id: "NCBIGene:3265"            ## HRAS
+  #   involvedInPathway1:    ## using Reactome, KEGG, Wikipathways, Biocarta
+  #     - supportBatch: true
+  #       useTemplating: true
+  #       inputs: 
+  #         - id: NCBIGene
+  #           semantic: Gene
+  #       requestBody: 
+  #         body: 
+  #           q: "{{ queryInputs }}"  ## no prefix
+  #           scopes: entrezgene
+  #       outputs: 
+  #         - id: REACT
+  #           semantic: Pathway
+  #       parameters: 
+  #       ## not including name since BTE isn't ingesting properly right now
+  #         fields: >-
+  #           pathway.reactome.id
+  #         species: human
+  #         size: 1000
+  #       predicate: participates_in
+  #       source: "infores:reactome"
+  #       knowledge_level: knowledge_assertion
+  #       agent_type: manual_agent
+  #       response_mapping: 
+  #         $ref: "#/components/x-bte-response-mapping/reactomePathway"
+  #       testExamples:
+  #         - qInput: "NCBIGene:1629"         ## DBT
+  #           oneOutput: "REACT:R-HSA-70895"  ## Branched-chain amino acid catabolism
+  #   involvedInPathway2:
+  #     - supportBatch: true
+  #       useTemplating: true
+  #       inputs: 
+  #         - id: NCBIGene
+  #           semantic: Gene
+  #       requestBody: 
+  #         body: 
+  #           q: "{{ queryInputs }}"  ## no prefix
+  #           scopes: entrezgene
+  #       outputs: 
+  #         - id: "KEGG.PATHWAY"
+  #           semantic: Pathway
+  #       parameters: 
+  #       ## not including name since BTE isn't ingesting properly right now
+  #         fields: >-
+  #           pathway.kegg.id,pathway.kegg.name
+  #         species: human
+  #         size: 1000
+  #       predicate: participates_in
+  #       source: "infores:cpdb"   ## ConsensusPathDB
+  #       knowledge_level: knowledge_assertion
+  #       agent_type: manual_agent
+  #       response_mapping: 
+  #         $ref: "#/components/x-bte-response-mapping/keggPathway"
+  #       testExamples:
+  #         - qInput: "NCBIGene:1629"         ## DBT
+  #           oneOutput: "KEGG.PATHWAY:hsa00280"  ## Valine, leucine and isoleucine degradation - Homo sapiens (human)
+  #   involvedInPathway3:
+  #     - supportBatch: true
+  #       useTemplating: true
+  #       inputs: 
+  #         - id: NCBIGene
+  #           semantic: Gene
+  #       requestBody: 
+  #         body: 
+  #           q: "{{ queryInputs }}"  ## no prefix
+  #           scopes: entrezgene
+  #       outputs: 
+  #         - id: WIKIPATHWAYS
+  #           semantic: Pathway
+  #       parameters: 
+  #       ## not including name since BTE isn't ingesting properly right now
+  #         fields: >-
+  #           pathway.wikipathways.id,pathway.wikipathways.name
+  #         species: human
+  #         size: 1000
+  #       predicate: participates_in
+  #       source: "infores:cpdb"   ## ConsensusPathDB
+  #       knowledge_level: knowledge_assertion
+  #       agent_type: manual_agent
+  #       response_mapping: 
+  #         $ref: "#/components/x-bte-response-mapping/wikipathway"
+  #       testExamples:
+  #         - qInput: "NCBIGene:8309"         ## ACOX2
+  #           oneOutput: "WIKIPATHWAYS:WP3942"  ## PPAR signaling pathway
+  #   involvedInPathway4:
+  #     - supportBatch: true
+  #       useTemplating: true
+  #       inputs: 
+  #         - id: NCBIGene
+  #           semantic: Gene
+  #       requestBody: 
+  #         body: 
+  #           q: "{{ queryInputs }}"  ## no prefix
+  #           scopes: entrezgene
+  #       outputs: 
+  #         - id: BIOCARTA
+  #           semantic: Pathway
+  #       parameters: 
+  #       ## not including name since BTE isn't ingesting properly right now
+  #         fields: >-
+  #           pathway.biocarta.id,pathway.biocarta.name
+  #         species: human
+  #         size: 1000
+  #       predicate: participates_in
+  #       source: "infores:cpdb"   ## ConsensusPathDB
+  #       knowledge_level: knowledge_assertion
+  #       agent_type: manual_agent
+  #       response_mapping: 
+  #         $ref: "#/components/x-bte-response-mapping/biocarta"
+  #       testExamples:
+  #         - qInput: "NCBIGene:5608"         ## MAP2K6
+  #           oneOutput: "BIOCARTA:p38mapkpathway"  ## p38 mapk signaling pathway
+  # ## knowledge_level / agent_type for ncbi-gene: need separation by evidence code for more-specific settings
+  # ## has info on how it gets go-annotation data https://www.ncbi.nlm.nih.gov/books/NBK3840/#genefaq.GO_terms
+  #   involvedInBP:
+  #     - supportBatch: true
+  #       useTemplating: true
+  #       inputs: 
+  #         - id: NCBIGene
+  #           semantic: Gene
+  #       requestBody: 
+  #         body: 
+  #           q: "{{ queryInputs }}"  ## no prefix
+  #           scopes: entrezgene
+  #       outputs: 
+  #         - id: GO
+  #           semantic: BiologicalProcess
+  #       parameters: 
+  #         ## all records with go.BP field also have entrezgene field
+  #         ## not including: name, category/gocategory (not needed)
+  #       ## commenting out because data-processing / biolink-modeling issues
+  #         # fields: >-
+  #         #   go.BP.id,
+  #         #   go.BP.evidence,
+  #         #   go.BP.pubmed,
+  #         #   go.BP.qualifier
+  #         fields: go.BP.id,go.BP.pubmed
+  #         species: human
+  #         size: 1000
+  #       predicate: participates_in
+  #       source: "infores:ncbi-gene"   ## which got from GO Annotations...
+  #       knowledge_level: knowledge_assertion
+  #       agent_type: not_provided
+  #       response_mapping: 
+  #         $ref: "#/components/x-bte-response-mapping/biologicalProcess"
+  #       testExamples:
+  #         - qInput: "NCBIGene:632"    ## BGLAP
+  #           oneOutput: "GO:0001501"   ## skeletal system development
+  #   BPToGene: 
+  #     - supportBatch: true
+  #       useTemplating: true
+  #       inputs: 
+  #         - id: GO
+  #           semantic: BiologicalProcess
+  #       requestBody: 
+  #         body: 
+  #           q: "{{ queryInputs | replPrefix('GO') }}"      ## HAS PREFIX (GO)
+  #           scopes: go.BP.id
+  #       outputs: 
+  #         - id: NCBIGene
+  #           semantic: Gene
+  #       parameters: 
+  #         ## all records with go.BP field also have entrezgene field
+  #         fields: entrezgene
+  #         species: human
+  #         size: 1000  ## note size limit
+  #       predicate: has_participant
+  #       source: "infores:ncbi-gene"   ## which got from GO Annotations...
+  #       knowledge_level: knowledge_assertion
+  #       agent_type: not_provided
+  #       response_mapping: 
+  #         $ref: "#/components/x-bte-response-mapping/entrezgene"
+  #       testExamples:
+  #         - qInput: "GO:0001501"         ## skeletal system development
+  #           oneOutput: "NCBIGene:5741"   ## PTH
+  #   enablesMF:
+  #     - supportBatch: true
+  #       useTemplating: true
+  #       inputs: 
+  #         - id: NCBIGene
+  #           semantic: Gene
+  #       requestBody: 
+  #         body: 
+  #           q: "{{ queryInputs }}"  ## no prefix
+  #           ## all records with go.MF field also have entrezgene field
+  #           scopes: entrezgene
+  #       outputs: 
+  #         - id: GO
+  #           semantic: MolecularActivity
+  #       parameters: 
+  #         ## not including: name, category/gocategory (not needed)
+  #       ## commenting out because data-processing / biolink-modeling issues\
+  #         # fields: >-
+  #         #   go.MF.id,
+  #         #   go.MF.evidence,
+  #         #   go.MF.pubmed,
+  #         #   go.MF.qualifier
+  #         fields: go.MF.id,go.MF.pubmed
+  #         species: human
+  #         size: 1000
+  #       predicate: enables
+  #       source: "infores:ncbi-gene"   ## which got from GO Annotations...
+  #       knowledge_level: knowledge_assertion
+  #       agent_type: not_provided
+  #       response_mapping: 
+  #         $ref: "#/components/x-bte-response-mapping/molecularFunction"
+  #       testExamples:
+  #         - qInput: "NCBIGene:1629"   ## DBT
+  #           oneOutput: "GO:0031405"   ## lipoic acid binding
+  #   MFToGene:
+  #     - supportBatch: true
+  #       useTemplating: true
+  #       inputs: 
+  #         - id: GO
+  #           semantic: MolecularActivity
+  #       requestBody: 
+  #         body: 
+  #           q: "{{ queryInputs | replPrefix('GO') }}"      ## HAS PREFIX (GO)
+  #           scopes: go.MF.id
+  #       outputs: 
+  #         - id: NCBIGene
+  #           semantic: Gene
+  #       parameters: 
+  #         ## all records with go.MF field also have entrezgene field
+  #         fields: entrezgene
+  #         species: human
+  #         size: 1000  ## note size limit
+  #       predicate: enabled_by
+  #       source: "infores:ncbi-gene"   ## which got from GO Annotations...
+  #       knowledge_level: knowledge_assertion
+  #       agent_type: not_provided
+  #       response_mapping: 
+  #         $ref: "#/components/x-bte-response-mapping/entrezgene"
+  #       testExamples:
+  #         - qInput: "GO:0008147"   ## structural constituent of bone
+  #           oneOutput: "NCBIGene:632"   ## BGLAP
+  #   involvedInCC: 
+  #     - supportBatch: true
+  #       useTemplating: true
+  #       inputs: 
+  #         - id: NCBIGene
+  #           semantic: Gene
+  #       requestBody: 
+  #         body: 
+  #           q: "{{ queryInputs }}"  ## no prefix
+  #           scopes: entrezgene
+  #       outputs: 
+  #         - id: GO
+  #           semantic: CellularComponent
+  #       parameters: 
+  #         ## all records with go.CC field also have entrezgene field
+  #         ## not including: name, category/gocategory (not needed)
+  #       ## commenting out because data-processing / biolink-modeling issues
+  #         # fields:  >-
+  #         #   go.CC.id,
+  #         #   go.CC.evidence,
+  #         #   go.CC.pubmed,
+  #         #   go.CC.qualifier
+  #         fields: go.CC.id,go.CC.pubmed
+  #         species: human
+  #         size: 1000
+  #       predicate: active_in
+  #       source: "infores:ncbi-gene"   ## which got from GO Annotations...
+  #       knowledge_level: knowledge_assertion
+  #       agent_type: not_provided
+  #       response_mapping: 
+  #         $ref: "#/components/x-bte-response-mapping/cellularComponent"
+  #       testExamples:
+  #         - qInput: "NCBIGene:5741"   ## PTH
+  #           oneOutput: "GO:0005576"   ## extracellular region
+  #   CCToGene: 
+  #     - supportBatch: true
+  #       useTemplating: true
+  #       inputs: 
+  #         - id: GO
+  #           semantic: CellularComponent
+  #       requestBody: 
+  #         body: 
+  #           q: "{{ queryInputs | replPrefix('GO') }}"      ## HAS PREFIX (GO)
+  #           scopes: go.CC.id
+  #       outputs: 
+  #         - id: NCBIGene
+  #           semantic: Gene
+  #       parameters: 
+  #         ## all records with go.CC field also have entrezgene field
+  #         fields: entrezgene
+  #         species: human
+  #         size: 1000  ## note size limit
+  #       predicate: has_active_component
+  #       source: "infores:ncbi-gene"   ## which got from GO Annotations...
+  #       knowledge_level: knowledge_assertion
+  #       agent_type: not_provided
+  #       response_mapping: 
+  #         $ref: "#/components/x-bte-response-mapping/entrezgene"
+  #       testExamples:
+  #         - qInput: "GO:0033268"         ## node of Ranvier
+  #           oneOutput: "NCBIGene:6326"   ## SCN2A
+  # ## knowledge_level / agent_type: clingen
+  # ##   seems to be heavily manually curated  https://www.clinicalgenome.org/start/
+  #   geneToDisease:
+  #     - supportBatch: true
+  #       useTemplating: true
+  #       inputs: 
+  #         - id: NCBIGene
+  #           semantic: Gene
+  #       requestBody: 
+  #         body: 
+  #           q: "{{ queryInputs }}"  ## no prefix
+  #           scopes: entrezgene
+  #       outputs: 
+  #         - id: MONDO
+  #           semantic: Disease
+  #       parameters: 
+  #         ## all records with clingen field have entrezgene, mondo fields
+  #         ## not including: sop, disease_label
+  #       ## commenting out because data-processing / biolink-modeling issues
+  #         # fields: >-
+  #         #   clingen.clinical_validity.mondo,
+  #         #   clingen.clinical_validity.classification,
+  #         #   clingen.clinical_validity.online_report
+  #         fields: clingen.clinical_validity.mondo,clingen.clinical_validity.online_report
+  #         species: human
+  #         size: 1000
+  #       ## using related_to because....
+  #       ## - the strength of the assertion being made (is this gene related to disease)
+  #       ##   is specified by the clingen.clinical_validity.classification field (see response-mapping)
+  #       ## - reference: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5473734/
+  #       ## - possible values: definitive, moderate, limited, disputed, refuted (!!!), no known disease relationship (!!!)
+  #       ##     can be a list if there were multiple assertions/clinical_validity objects
+  #       predicate: related_to
+  #       source: "infores:clingen"
+  #       knowledge_level: knowledge_assertion
+  #       agent_type: manual_agent
+  #       response_mapping: 
+  #         $ref: "#/components/x-bte-response-mapping/clingen"
+  #       testExamples:
+  #         - qInput: "NCBIGene:23126"     ## POGZ
+  #           oneOutput: "MONDO:0014606"   ## intellectual disability-microcephaly-strabismus-behavioral abnormalities syndrome
+  #   diseaseToGene:
+  #     - supportBatch: true
+  #       useTemplating: true
+  #       inputs: 
+  #         - id: MONDO
+  #           semantic: Disease
+  #       requestBody: 
+  #         body: 
+  #           q: "{{ queryInputs | replPrefix('MONDO') }}"  ## HAS PREFIX (MONDO)
+  #           scopes: clingen.clinical_validity.mondo
+  #       outputs: 
+  #         - id: NCBIGene
+  #           semantic: Gene
+  #       parameters: 
+  #         ## all records with clingen field have entrezgene, mondo fields
+  #         fields: entrezgene
+  #         species: human
+  #         size: 1000
+  #       predicate: related_to
+  #       source: "infores:clingen"
+  #       knowledge_level: knowledge_assertion
+  #       agent_type: manual_agent
+  #       response_mapping: 
+  #         $ref: "#/components/x-bte-response-mapping/entrezgene"
+  #       testExamples:
+  #         - qInput: "MONDO:0014606"       ## intellectual disability-microcephaly-strabismus-behavioral abnormalities syndrome
+  #           oneOutput: "NCBIGene:23126"   ## POGZ
+  #   ## pantherdb gives orthologs and paralogs, which are both homologs. Hence we use homolog
+  #   ## update 2024: can use less namespaces I think. Can ask what fields are always there
+  #   ## - entrezgene or pantherdb.uniprot_kb as input for forward direction
+  #   ## - pantherdb.ortholog.uniprot_kb as output for forward direction
+  #   ## currently written: MGI 
+  #   ## Also have Ensembl (for specific non-human species) and UniprotKB (for all orthologs)
+  #   ## - knowledge_level / agent_type: 
+  #   ##   Paper Figure 4 seems to show that automated pipeline creates orthologs, not really any manual-curation.
+  #   ##   https://onlinelibrary.wiley.com/doi/10.1002/pro.4218
+  #   hasHomolog-MGI: 
+  #     - supportBatch: true
+  #       useTemplating: true
+  #       inputs: 
+  #         - id: HGNC
+  #           semantic: Gene
+  #       requestBody: 
+  #         body: 
+  #           q: "{{ queryInputs }}"  ## no prefix
+  #           scopes: pantherdb.HGNC
+  #       outputs: 
+  #         - id: MGI
+  #           semantic: Gene
+  #       parameters: 
+  #         ## almost all records with pantherdb.ortholog fields also have the entrezgene field
+  #         ##   > 145,000 records have both fields, vs ~ 3600 records don't have the entrezgene field
+  #       ## commenting out because data-processing / biolink-modeling issues
+  #         # fields: >-
+  #         #   pantherdb.ortholog.MGI,
+  #         #   pantherdb.ortholog.taxid
+  #         fields: pantherdb.ortholog.MGI
+  #         size: 1000
+  #       predicate: homologous_to
+  #       source: "infores:panther"
+  #       knowledge_level: knowledge_assertion
+  #       agent_type: computational_model
+  #       response_mapping: 
+  #         $ref: "#/components/x-bte-response-mapping/pantherMGI"
+  #       testExamples:
+  #         - qInput: "HGNC:20589"       ## KCMF1
+  #           oneOutput: "MGI:1921537"   ## Kcmf1
+  #   hasHomolog-MGI-rev: 
+  #     - supportBatch: true
+  #       useTemplating: true
+  #       inputs: 
+  #         - id: MGI
+  #           semantic: Gene
+  #       requestBody: 
+  #         body: 
+  #           q: "{{ queryInputs | rmPrefix | join(',') }}"  ## no prefix
+  #           scopes: pantherdb.ortholog.MGI
+  #       outputs:
+  #         - id: HGNC
+  #           semantic: Gene
+  #       parameters: 
+  #         ## almost all records with pantherdb.ortholog fields also have the entrezgene field
+  #         ##   > 145,000 records have both fields, vs ~ 3600 records don't have the entrezgene field
+  #         fields: pantherdb.HGNC
+  #         size: 1000
+  #       predicate: homologous_to
+  #       source: "infores:panther"
+  #       knowledge_level: knowledge_assertion
+  #       agent_type: computational_model
+  #       response_mapping: 
+  #         $ref: "#/components/x-bte-response-mapping/pantherHGNC"
+  #       testExamples:
+  #         - qInput: "MGI:1916384"     ## Fam25c
+  #           oneOutput: "HGNC:23586"   ## FAM25C
+  # x-bte-response-mapping:
+  #   entrezgene: 
+  #     NCBIGene: entrezgene   ## no prefix
+  #   reactomePathway: 
+  #     REACT: pathway.reactome.id   ## no prefix
+  #   keggPathway: 
+  #     "KEGG.PATHWAY": pathway.kegg.id   ## no prefix
+  #     output_name: pathway.kegg.name
+  #   wikipathway: 
+  #     WIKIPATHWAYS: pathway.wikipathways.id   ## no prefix
+  #     output_name: pathway.wikipathways.name
+  #   biocarta: 
+  #     BIOCARTA: pathway.biocarta.id   ## no prefix
+  #     output_name: pathway.biocarta.name
+  #   biologicalProcess: 
+  #     GO: go.BP.id  ## HAS PREFIX (GO)
+  #     ref_pmid: go.BP.pubmed
+  #     ## commenting out because data-processing / biolink-modeling issues
+  #     # evidence: go.BP.evidence  ## categorical variable?
+  #     # go_qualifier: go.BP.qualifier  ## seems to be like a relation
+  #   molecularFunction: 
+  #     GO: go.MF.id  ## HAS PREFIX (GO)
+  #     ref_pmid: go.MF.pubmed
+  #     ## commenting out because data-processing / biolink-modeling issues
+  #     # evidence: go.MF.evidence  ## categorical variable?
+  #     # go_qualifier: go.MF.qualifier  ## seems to be like a relation
+  #   cellularComponent: 
+  #     GO: go.CC.id  ## HAS PREFIX (GO)
+  #     ref_pmid: go.CC.pubmed
+  #     ## commenting out because data-processing / biolink-modeling issues
+  #     # evidence: go.CC.evidence  ## categorical variable?
+  #     # go_qualifier: go.CC.qualifier  ## seems to be like a relation
+  #   clingen: 
+  #     MONDO: clingen.clinical_validity.mondo  ## HAS PREFIX (MONDO)
+  #     source_url: clingen.clinical_validity.online_report
+  #     ## commenting out because data-processing / biolink-modeling issues
+  #     # ## possible values for classification: definitive, moderate, limited, disputed, refuted (!!!), no known disease relationship (!!!)
+  #     # clingen_clinical_validity_classification: clingen.clinical_validity.classification  
+  #   pantherMGI: 
+  #     MGI: pantherdb.ortholog.MGI  ## no prefix
+  #     ## commenting out because data-processing / biolink-modeling issues
+  #     # inTaxon: pantherdb.ortholog.taxid
+  #   pantherHGNC: 
+  #     HGNC: pantherdb.HGNC  ## no prefix
