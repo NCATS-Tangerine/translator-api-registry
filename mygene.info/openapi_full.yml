@@ -791,118 +791,89 @@ components:
           output_id: "NCBIGene:3953"            ## LEPR
         - input_id: "BIOCARTA:raspathway"
           output_id: "NCBIGene:3265"            ## HRAS
-  #   involvedInPathway1:    ## using Reactome, KEGG, Wikipathways, Biocarta
-  #     - supportBatch: true
-  #       useTemplating: true
-  #       inputs: 
-  #         - id: NCBIGene
-  #           semantic: Gene
-  #       requestBody: 
-  #         body: 
-  #           q: "{{ queryInputs }}"  ## no prefix
-  #           scopes: entrezgene
-  #       outputs: 
-  #         - id: REACT
-  #           semantic: Pathway
-  #       parameters: 
-  #       ## not including name since BTE isn't ingesting properly right now
-  #         fields: >-
-  #           pathway.reactome.id
-  #         species: human
-  #         size: 1000
-  #       predicate: participates_in
-  #       source: "infores:reactome"
-  #       knowledge_level: knowledge_assertion
-  #       agent_type: manual_agent
-  #       response_mapping: 
-  #         $ref: "#/components/x-bte-response-mapping/reactomePathway"
-  #       testExamples:
-  #         - qInput: "NCBIGene:1629"         ## DBT
-  #           oneOutput: "REACT:R-HSA-70895"  ## Branched-chain amino acid catabolism
-  #   involvedInPathway2:
-  #     - supportBatch: true
-  #       useTemplating: true
-  #       inputs: 
-  #         - id: NCBIGene
-  #           semantic: Gene
-  #       requestBody: 
-  #         body: 
-  #           q: "{{ queryInputs }}"  ## no prefix
-  #           scopes: entrezgene
-  #       outputs: 
-  #         - id: "KEGG.PATHWAY"
-  #           semantic: Pathway
-  #       parameters: 
-  #       ## not including name since BTE isn't ingesting properly right now
-  #         fields: >-
-  #           pathway.kegg.id,pathway.kegg.name
-  #         species: human
-  #         size: 1000
-  #       predicate: participates_in
-  #       source: "infores:cpdb"   ## ConsensusPathDB
-  #       knowledge_level: knowledge_assertion
-  #       agent_type: manual_agent
-  #       response_mapping: 
-  #         $ref: "#/components/x-bte-response-mapping/keggPathway"
-  #       testExamples:
-  #         - qInput: "NCBIGene:1629"         ## DBT
-  #           oneOutput: "KEGG.PATHWAY:hsa00280"  ## Valine, leucine and isoleucine degradation - Homo sapiens (human)
-  #   involvedInPathway3:
-  #     - supportBatch: true
-  #       useTemplating: true
-  #       inputs: 
-  #         - id: NCBIGene
-  #           semantic: Gene
-  #       requestBody: 
-  #         body: 
-  #           q: "{{ queryInputs }}"  ## no prefix
-  #           scopes: entrezgene
-  #       outputs: 
-  #         - id: WIKIPATHWAYS
-  #           semantic: Pathway
-  #       parameters: 
-  #       ## not including name since BTE isn't ingesting properly right now
-  #         fields: >-
-  #           pathway.wikipathways.id,pathway.wikipathways.name
-  #         species: human
-  #         size: 1000
-  #       predicate: participates_in
-  #       source: "infores:cpdb"   ## ConsensusPathDB
-  #       knowledge_level: knowledge_assertion
-  #       agent_type: manual_agent
-  #       response_mapping: 
-  #         $ref: "#/components/x-bte-response-mapping/wikipathway"
-  #       testExamples:
-  #         - qInput: "NCBIGene:8309"         ## ACOX2
-  #           oneOutput: "WIKIPATHWAYS:WP3942"  ## PPAR signaling pathway
-  #   involvedInPathway4:
-  #     - supportBatch: true
-  #       useTemplating: true
-  #       inputs: 
-  #         - id: NCBIGene
-  #           semantic: Gene
-  #       requestBody: 
-  #         body: 
-  #           q: "{{ queryInputs }}"  ## no prefix
-  #           scopes: entrezgene
-  #       outputs: 
-  #         - id: BIOCARTA
-  #           semantic: Pathway
-  #       parameters: 
-  #       ## not including name since BTE isn't ingesting properly right now
-  #         fields: >-
-  #           pathway.biocarta.id,pathway.biocarta.name
-  #         species: human
-  #         size: 1000
-  #       predicate: participates_in
-  #       source: "infores:cpdb"   ## ConsensusPathDB
-  #       knowledge_level: knowledge_assertion
-  #       agent_type: manual_agent
-  #       response_mapping: 
-  #         $ref: "#/components/x-bte-response-mapping/biocarta"
-  #       testExamples:
-  #         - qInput: "NCBIGene:5608"         ## MAP2K6
-  #           oneOutput: "BIOCARTA:p38mapkpathway"  ## p38 mapk signaling pathway
+    GeneInPathway:
+    ## NO PAGINATION: 1 gene won't match >~1000 gene documents
+      support_batch: true
+      inputs:
+        category: Gene
+        namespaces:
+          - prefix: NCBIGene
+      predicate: participates_in
+      outputs:
+        category: Pathway
+        ## each nested pathway-object has only 1 ID from 1 namespace. So default behavior to pick "only one namespace" is fine. 
+        ## id_field values are single ID only, no prefixes
+        namespaces:
+        ## old comments say BTE had buggy behavior with handing names...but I'm not sure since operations included them
+          - prefix: "REACT"
+            id_field: pathway.reactome.id
+            name_field: pathway.reactome.name
+          - prefix: "KEGG.PATHWAY"
+            id_field: pathway.kegg.id
+            name_field: pathway.kegg.name
+          - prefix: WIKIPATHWAYS
+            id_field: pathway.wikipathways.id
+            name_field: pathway.wikipathways.name
+          - prefix: BIOCARTA
+            id_field: pathway.biocarta.id
+            name_field: pathway.biocarta.name
+      request_info:
+        path: "/query"
+        method: post
+        request_body:
+          q: "{{ array_of_IDs_without_prefix }}"
+          scopes: entrezgene
+        parameters:
+          fields: >-
+            pathway.reactome.id,pathway.reactome.name,
+            pathway.kegg.id,pathway.kegg.name,
+            pathway.wikipathways.id,pathway.wikipathways.name,
+            pathway.biocarta.id,pathway.biocarta.name
+          size: 100      ## should be overestimate, shouldn't get 1 gene ID -> 100 gene documents
+      provenance:
+        - namespace_pair: [ NCBIGene, REACT ]
+          knowledge_level: knowledge_assertion
+          agent_type: manual_agent
+          sources:
+            - id: "infores:reactome"
+              role: primary_knowledge_source
+        - namespace_pair: [ NCBIGene, KEGG.PATHWAY ]
+          knowledge_level: knowledge_assertion
+          agent_type: manual_agent
+          sources:
+            - id: "infores:kegg"
+              role: primary_knowledge_source
+            - id: "infores:cpdb"
+              role: aggregator_knowledge_source
+              upstream: "infores:kegg"
+        - namespace_pair: [ NCBIGene, WIKIPATHWAYS ]
+          knowledge_level: knowledge_assertion
+          agent_type: manual_agent
+          sources:
+            - id: "infores:wikipathways"
+              role: primary_knowledge_source
+            - id: "infores:cpdb"
+              role: aggregator_knowledge_source
+              upstream: "infores:wikipathways"
+        - namespace_pair: [ NCBIGene, BIOCARTA ]
+          knowledge_level: knowledge_assertion
+          agent_type: manual_agent
+          sources:
+            - id: "infores:biocarta"
+              role: primary_knowledge_source
+            - id: "infores:cpdb"
+              role: aggregator_knowledge_source
+              upstream: "infores:biocarta"
+      ## NO RESPONSE MAPPING: no edge-attributes
+      test_examples:
+        - input_id: "NCBIGene:1629"         ## DBT
+          output_id: "REACT:R-HSA-70895"  ## Branched-chain amino acid catabolism
+        - input_id: "NCBIGene:1629"         ## DBT
+          output_id: "KEGG.PATHWAY:hsa00280"  ## Valine, leucine and isoleucine degradation - Homo sapiens (human)
+        - input_id: "NCBIGene:8309"         ## ACOX2
+          output_id: "WIKIPATHWAYS:WP3942"  ## PPAR signaling pathway
+        - input_id: "NCBIGene:5608"         ## MAP2K6
+          output_id: "BIOCARTA:p38mapkpathway"  ## p38 mapk signaling pathway
   # ## knowledge_level / agent_type for ncbi-gene: need separation by evidence code for more-specific settings
   # ## has info on how it gets go-annotation data https://www.ncbi.nlm.nih.gov/books/NBK3840/#genefaq.GO_terms
   #   involvedInBP:
@@ -1226,17 +1197,6 @@ components:
   # x-bte-response-mapping:
   #   entrezgene: 
   #     NCBIGene: entrezgene   ## no prefix
-  #   reactomePathway: 
-  #     REACT: pathway.reactome.id   ## no prefix
-  #   keggPathway: 
-  #     "KEGG.PATHWAY": pathway.kegg.id   ## no prefix
-  #     output_name: pathway.kegg.name
-  #   wikipathway: 
-  #     WIKIPATHWAYS: pathway.wikipathways.id   ## no prefix
-  #     output_name: pathway.wikipathways.name
-  #   biocarta: 
-  #     BIOCARTA: pathway.biocarta.id   ## no prefix
-  #     output_name: pathway.biocarta.name
   #   biologicalProcess: 
   #     GO: go.BP.id  ## HAS PREFIX (GO)
   #     ref_pmid: go.BP.pubmed
