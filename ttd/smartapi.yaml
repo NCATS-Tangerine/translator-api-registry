@@ -2195,21 +2195,25 @@ components:
         namespaces: 
           - prefix: PUBCHEM.COMPOUND
             ## not including name field because SRI Node-Norm can find names for these IDs
+            match_field: query
           - prefix: TTD.DRUG
             name_field: subject.name
-            replace_prefix: "ttd_drug_id:"    ## data uses non-standard prefix
+            request_prefix: "ttd_drug_id:"    ## data uses non-standard prefix
+            match_field: query
       predicate: interacts_with
       outputs:
         category: Gene
-        ## id_field always has 1 ID, UniProtKB is preferred. If there wasn't a UniProtKB mapping, used TTD.TARGET ID
         namespaces: 
+        ## UniProtKB is preferred over TTD.TARGET 
+        ## object.id: 1 ID only, UniProtKB or TTD.TARGET
+        ## could also use namespace-specific fields (values are ID only): object.uniprotkb, object.ttd_target_id
           - prefix: UniProtKB
             id_field: object.id
             ## not including name field because SRI Node-Norm can find names for these IDs
           - prefix: TTD.TARGET
-            id_field: object.id
+            ## data uses non-standard prefix: use JSONata
+            id_field: object.id.$replace("ttd_target_id", "TTD.TARGET")
             name_field: object.name
-            replace_prefix: "ttd_target_id:"   ## data uses non-standard prefix
       request_info:
         path: "/query"   ## use same format that paths section does
         method: post     ## use same format that paths section does (lower case)
