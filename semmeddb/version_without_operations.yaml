@@ -14,6 +14,9 @@ info:
   termsOfService: https://biothings.io/about
   title: BioThings SEMMEDDB API
   version: '43'
+  x-bte:
+    batch_size_limit: 50
+    request_rate_limit: 5000
   x-translator:
     infores: "infores:biothings-semmeddb"
     component: KP
@@ -39,6 +42,7 @@ tags:
 - name: association
 - name: query
 - name: translator
+- name: x-bte
 - name: biothings
 - name: ngd
 paths:
@@ -630,48 +634,66 @@ components:
   #         type: string
   #       type: array
   #     - type: string
-  x-bte-response-mapping:
-    umls-obj:
-      UMLS: object.umls              ## no prefix
-      ref_pmid: predication.pmid     ## no prefix
-      "biolink:supporting_text": predication.sentence
-      input_name: subject.name
-      output_name: object.name
-      ## commenting out because data-processing / biolink-modeling issues
-      # publication_count: pmid_count
-      # semmeddb_predication_count: predication_count
-      # "biolink:original_predicate": predicate
-    umls-subj:
-      UMLS: subject.umls             ## no prefix
-      ref_pmid: predication.pmid     ## no prefix
-      "biolink:supporting_text": predication.sentence
-      output_name: subject.name
-      input_name: object.name
-      ## commenting out because data-processing / biolink-modeling issues
-      # publication_count: pmid_count
-      # semmeddb_predication_count: predication_count
-      # "biolink:original_predicate": predicate
-    ncbigene-obj:
-      NCBIGene: object.ncbigene      ## no prefix
-      ref_pmid: predication.pmid     ## no prefix
-      "biolink:supporting_text": predication.sentence
-      input_name: subject.name
-      output_name: object.name
-      ## commenting out because data-processing / biolink-modeling issues
-      # publication_count: pmid_count
-      # semmeddb_predication_count: predication_count
-      # "biolink:original_predicate": predicate
-    ncbigene-subj:
-      NCBIGene: subject.ncbigene     ## no prefix
-      ref_pmid: predication.pmid     ## no prefix
-      "biolink:supporting_text": predication.sentence
-      output_name: subject.name
-      input_name: object.name
-      ## commenting out because data-processing / biolink-modeling issues
-      # publication_count: pmid_count
-      # semmeddb_predication_count: predication_count
-      # "biolink:original_predicate": predicate
-## FUTURE: currently, BTE already strips prefix.... In the future, need to add rmPrefix before wrap
-## currently we can't use OR (to map multiple SEMMED semantic types to 1 biolink semantic type)
-## joinSafe is only needed if the delimiter isn't a comma
   ## operations go here!!! 1 level of indent
+  x-bte-annotations:
+  ## this is a handwritten example of how it'd work with the x-bte annotation refactor. 
+  ## another possible example is aapp-INTERACTS_WITH-aapp. Has the same combo of namespaces (all except umls,umls)
+    aapp_umls-STIMULATES-gngm_ncbigene:
+    ## just in case, use pagination
+      response_field_root: hits
+      inputs:
+        category: Polypeptide
+        ## no cases where node has both umls and ncbigene fields: https://biothings.ci.transltr.io/semmeddb/query?q=_exists_subject.umls%20AND%20_exists_subject.ncbigene
+        namespaces: 
+          - prefix: NCBIGene
+            ## not including name field because SRI Node-Norm can find names for these IDs
+            match_field: query
+          - prefix: UMLS
+            ## including name field just in case data has outdated UMLS IDs
+            name_field: subject.name
+            match_field: query
+      predicate: affects
+      qualifiers:
+        qualified_predicate: causes
+        object_aspect_qualifier: activity_or_abundance
+        object_direction_qualifier: increased
+      outputs:
+        category: Gene
+        namespaces: 
+          - prefix: NCBIGene
+            id_field: object.ncbigene    ## single-namespace field, values aren't prefixed
+          - prefix: UMLS
+            ## including name field just in case data has outdated UMLS IDs
+            name_field: object.name
+            id_field: object.umls    ## single-namespace field, values aren't prefixed
+      exclude_namespace_combos:
+      - [UMLS, UMLS]
+      request_info:
+        path: "/query"   ## use same format that paths section does
+        method: post     ## use same format that paths section does (lower case)
+        support_batch: true
+        use_pagination: true    ## PLACEHOLDER: will add more required pagination info later
+        request_body:
+          q: "{{ input_ids }}"
+          scopes: subject.umls,subject.ncbigene
+        parameters:
+          fields: object.ncbigene,object.umls,predication.pmid,predication.sentence,subject.name,object.name
+          size: 1000
+          filter: predicate:STIMULATES AND object.semantic_type_abbreviation:gngm AND pmid_count:>3
+          with_total: true
+      provenance:   ## static format
+        knowledge_level: not_provided
+        agent_type: text_mining_agent
+        sources:
+          - id: "infores:semmeddb"
+            role: primary_knowledge_source
+      response_mapping:
+        ref_pmid: predication.pmid     ## no prefix
+        "biolink:supporting_text": predication.sentence
+      test_examples:
+        - input_curie: "NCBIGene:29984"    ## RHOD
+          output_curie: "NCBIGene:207"     ## AKT1
+        - input_curie: "NCBIGene:5744"     ## PTHLH
+          output_curie: "UMLS:C0001492"    ## Adenylate Cyclase
+        - input_curie: "UMLS:C0669372"     ## NOS2A protein, human
+          output_curie: "NCBIGene:7965"    ## AIMP2
