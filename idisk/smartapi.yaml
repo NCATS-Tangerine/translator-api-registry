@@ -11,6 +11,9 @@ info:
   termsOfService: https://biothings.io/about
   title: BioThings IDISK API
   version: '2020-02-14'
+  x-bte:
+    batch_size_limit: 1000
+    request_rate_limit: 5000
   x-translator:
     infores: "infores:biothings-idisk"
     component: KP
@@ -34,6 +37,7 @@ tags:
 - name: phenotype
 - name: query
 - name: translator
+- name: x-bte
 - name: biothings
 paths:
   "/umls/{id}":
@@ -312,15 +316,6 @@ paths:
       # summary: Make batch gene queries and return matching gene hits
       tags:
       - query
-      x-bte-kgs-operations:
-      - $ref: '#/components/x-bte-kgs-operations/has_adverse_effect_on'
-      - $ref: '#/components/x-bte-kgs-operations/has_adverse_effect_on-rev'
-      - $ref: '#/components/x-bte-kgs-operations/has_adverse_reaction'
-      - $ref: '#/components/x-bte-kgs-operations/has_adverse_reaction-rev'
-      - $ref: '#/components/x-bte-kgs-operations/interacts_with'
-      - $ref: '#/components/x-bte-kgs-operations/interacts_with-rev'
-      - $ref: '#/components/x-bte-kgs-operations/is_effective_for'
-      - $ref: '#/components/x-bte-kgs-operations/is_effective_for-rev'
 components:
   parameters:
     callback:
@@ -580,281 +575,304 @@ components:
   #         type: string
   #       type: array
   #     - type: string
-  x-bte-kgs-operations:
+  x-bte-annotations:
   ## SRI-ID-Resolver has issues with the UMLS chemical IDs.
   ##   some are thought to be Protein/Polypeptides...
   ##   many aren't resolved at all...
   ## reference for data: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7075538/
   ## knowledge_level / agent_type: seems like data-cleaning/mapping/merging - with only a small subset manually-evaluated later
   ##   based on my understanding of "Phase 3: creation of iDISK" https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7075538/
-    has_adverse_effect_on:
-    ## there are 626 records with the has_adverse_effect_on field
-    ## the dietary supplement has an adverse effect (that can be categorized into this class of diseases)
-    - supportBatch: true
-      useTemplating: true ## flag to say templating is being used below
-      inputs:
-      - id: UMLS
-        semantic: SmallMolecule
-      requestBody:
-        body:
-          ## API data has no prefix
-          ## joinSafe is only needed if the delimiter isn't a comma
-          q: "{{ queryInputs }}"
-          scopes: umls
-      outputs:
-      - id: MEDDRA
-        semantic: Disease
-      parameters:
-      ## commenting out because data-processing / biolink-modeling issues
-        ## no prefix on output id
-        # fields: has_adverse_effect_on.meddra,has_adverse_effect_on.source.name
-        fields: has_adverse_effect_on.meddra
-        size: 1000  ## size limit; just in case
-      ## biolink 2.4.8: used causes_adverse_event
-      predicate: has_adverse_event
-      ## iDISK got all these relations from NMCD: Natural Medicines Comprehensive Database 
-      ## ref:  Table 3 of the linked publication, or by comparing number of records total with 
-      ##   the number of records from https://biothings.ncats.io/idisk/query?q=has_adverse_effect_on.source.name:%22NMCD%22
-      source: "infores:idisk"
-      knowledge_level: knowledge_assertion
-      agent_type: not_provided
-      response_mapping:
-        $ref: '#/components/x-bte-response-mapping/has_adverse_effect_on'
-      testExamples:
-        - qInput: "UMLS:C0000392"       ## beta-Alanine
-          oneOutput: "MEDDRA:10017947"  ## gastrointestinal disorders
-    has_adverse_effect_on-rev:
-    - supportBatch: true
-      useTemplating: true ## flag to say templating is being used below
-      inputs:
-      - id: MEDDRA
-        semantic: Disease
-      requestBody:
-        body:
-          ## API data has no prefix
-          ## joinSafe is only needed if the delimiter isn't a comma
-          q: "{{ queryInputs }}"
-          scopes: has_adverse_effect_on.meddra
-      outputs:
-      - id: UMLS
-        semantic: SmallMolecule
-      parameters:
-        fields: umls  ## no prefix
-        size: 1000    ## note size limit
-      predicate: adverse_event_of
-      source: "infores:idisk"
-      knowledge_level: knowledge_assertion
-      agent_type: not_provided
-      response_mapping:
-        $ref: '#/components/x-bte-response-mapping/rev'
-      testExamples:
-        - qInput: "MEDDRA:10017947"     ## gastrointestinal disorders 
-          oneOutput: "UMLS:C0000392"    ## beta-Alanine
-    has_adverse_reaction:
-    ## there are 204 records with the has_adverse_reaction field
-    ## the dietary supplement has an adverse effect/reaction (specific sign/symptom)
-    - supportBatch: true
-      useTemplating: true ## flag to say templating is being used below
-      inputs:
-      - id: UMLS
-        semantic: SmallMolecule
-      requestBody:
-        body:
-          ## API data has no prefix
-          ## joinSafe is only needed if the delimiter isn't a comma
-          q: "{{ queryInputs }}"
-          scopes: umls
-      outputs:
-      - id: UMLS
-        semantic: PhenotypicFeature  ## use this or Disease?
-        ## SRI-ID-resolver is resolving these to PhenotypicFeature
-        ##   example: https://nodenormalization-sri.renci.org/1.2/get_normalized_nodes?curie=UMLS%3AC0027497&conflate=true
-        ## don't create two operations or records will duplicate for DiseaseOrPhenotypicFeature query
-      parameters:
-      ## commenting out because data-processing / biolink-modeling issues
-        ## no prefix on output id
-        # fields: has_adverse_reaction.umls,has_adverse_reaction.source.name
-        fields: has_adverse_reaction.umls
-        size: 1000  ## size limit; just in case
-      ## biolink 2.4.8: used causes_adverse_event
-      predicate: has_adverse_event
-      ## iDISK got all these relations from MSKCC: “About Herbs” page on the Memorial Sloan Kettering Cancer Center (MSKCC) website 
-      ## ref:  Table 3 of the linked publication, or by comparing number of records total with 
-      ##   the number of records from https://biothings.ncats.io/idisk/query?q=has_adverse_reaction.source.name:%22MSKCC%22
-      source: "infores:idisk"
-      knowledge_level: knowledge_assertion
-      agent_type: not_provided
-      response_mapping:
-        $ref: '#/components/x-bte-response-mapping/has_adverse_reaction'
-      testExamples:
-        - qInput: "UMLS:C0000578"     ## 5-Hydroxytryptophan
-          oneOutput: "UMLS:C0027497"  ## nausea
-    has_adverse_reaction-rev:
-    - supportBatch: true
-      useTemplating: true ## flag to say templating is being used below
-      inputs:
-      - id: UMLS
-        semantic: PhenotypicFeature
-      requestBody:
-        body:
-          ## API data has no prefix
-          ## joinSafe is only needed if the delimiter isn't a comma
-          q: "{{ queryInputs }}"
-          scopes: has_adverse_reaction.umls
-      outputs:
-      - id: UMLS
-        semantic: SmallMolecule
-      parameters:
-        fields: umls  ## no prefix
-        size: 1000    ## note size limit
-      predicate: adverse_event_of
-      source: "infores:idisk"
-      knowledge_level: knowledge_assertion
-      agent_type: not_provided
-      response_mapping:
-        $ref: '#/components/x-bte-response-mapping/rev'
-      testExamples:
-        - qInput: "UMLS:C0027497"       ## nausea 
-          oneOutput: "UMLS:C0000578"    ## 5-Hydroxytryptophan
+  #   has_adverse_effect_on:
+  #   ## there are 626 records with the has_adverse_effect_on field
+  #   ## the dietary supplement has an adverse effect (that can be categorized into this class of diseases)
+  #   - supportBatch: true
+  #     useTemplating: true ## flag to say templating is being used below
+  #     inputs:
+  #     - id: UMLS
+  #       semantic: SmallMolecule
+  #     requestBody:
+  #       body:
+  #         ## API data has no prefix
+  #         ## joinSafe is only needed if the delimiter isn't a comma
+  #         q: "{{ queryInputs }}"
+  #         scopes: umls
+  #     outputs:
+  #     - id: MEDDRA
+  #       semantic: Disease
+  #     parameters:
+  #     ## commenting out because data-processing / biolink-modeling issues
+  #       ## no prefix on output id
+  #       # fields: has_adverse_effect_on.meddra,has_adverse_effect_on.source.name
+  #       fields: has_adverse_effect_on.meddra
+  #       size: 1000  ## size limit; just in case
+  #     ## biolink 2.4.8: used causes_adverse_event
+  #     predicate: has_adverse_event
+  #     ## iDISK got all these relations from NMCD: Natural Medicines Comprehensive Database 
+  #     ## ref:  Table 3 of the linked publication, or by comparing number of records total with 
+  #     ##   the number of records from https://biothings.ncats.io/idisk/query?q=has_adverse_effect_on.source.name:%22NMCD%22
+  #     source: "infores:idisk"
+  #     knowledge_level: knowledge_assertion
+  #     agent_type: not_provided
+  #     response_mapping:
+  #       $ref: '#/components/x-bte-response-mapping/has_adverse_effect_on'
+  #     testExamples:
+  #       - qInput: "UMLS:C0000392"       ## beta-Alanine
+  #         oneOutput: "MEDDRA:10017947"  ## gastrointestinal disorders
+  #   has_adverse_effect_on-rev:
+  #   - supportBatch: true
+  #     useTemplating: true ## flag to say templating is being used below
+  #     inputs:
+  #     - id: MEDDRA
+  #       semantic: Disease
+  #     requestBody:
+  #       body:
+  #         ## API data has no prefix
+  #         ## joinSafe is only needed if the delimiter isn't a comma
+  #         q: "{{ queryInputs }}"
+  #         scopes: has_adverse_effect_on.meddra
+  #     outputs:
+  #     - id: UMLS
+  #       semantic: SmallMolecule
+  #     parameters:
+  #       fields: umls  ## no prefix
+  #       size: 1000    ## note size limit
+  #     predicate: adverse_event_of
+  #     source: "infores:idisk"
+  #     knowledge_level: knowledge_assertion
+  #     agent_type: not_provided
+  #     response_mapping:
+  #       $ref: '#/components/x-bte-response-mapping/rev'
+  #     testExamples:
+  #       - qInput: "MEDDRA:10017947"     ## gastrointestinal disorders 
+  #         oneOutput: "UMLS:C0000392"    ## beta-Alanine
+  #   has_adverse_reaction:
+  #   ## there are 204 records with the has_adverse_reaction field
+  #   ## the dietary supplement has an adverse effect/reaction (specific sign/symptom)
+  #   - supportBatch: true
+  #     useTemplating: true ## flag to say templating is being used below
+  #     inputs:
+  #     - id: UMLS
+  #       semantic: SmallMolecule
+  #     requestBody:
+  #       body:
+  #         ## API data has no prefix
+  #         ## joinSafe is only needed if the delimiter isn't a comma
+  #         q: "{{ queryInputs }}"
+  #         scopes: umls
+  #     outputs:
+  #     - id: UMLS
+  #       semantic: PhenotypicFeature  ## use this or Disease?
+  #       ## SRI-ID-resolver is resolving these to PhenotypicFeature
+  #       ##   example: https://nodenormalization-sri.renci.org/1.2/get_normalized_nodes?curie=UMLS%3AC0027497&conflate=true
+  #       ## don't create two operations or records will duplicate for DiseaseOrPhenotypicFeature query
+  #     parameters:
+  #     ## commenting out because data-processing / biolink-modeling issues
+  #       ## no prefix on output id
+  #       # fields: has_adverse_reaction.umls,has_adverse_reaction.source.name
+  #       fields: has_adverse_reaction.umls
+  #       size: 1000  ## size limit; just in case
+  #     ## biolink 2.4.8: used causes_adverse_event
+  #     predicate: has_adverse_event
+  #     ## iDISK got all these relations from MSKCC: “About Herbs” page on the Memorial Sloan Kettering Cancer Center (MSKCC) website 
+  #     ## ref:  Table 3 of the linked publication, or by comparing number of records total with 
+  #     ##   the number of records from https://biothings.ncats.io/idisk/query?q=has_adverse_reaction.source.name:%22MSKCC%22
+  #     source: "infores:idisk"
+  #     knowledge_level: knowledge_assertion
+  #     agent_type: not_provided
+  #     response_mapping:
+  #       $ref: '#/components/x-bte-response-mapping/has_adverse_reaction'
+  #     testExamples:
+  #       - qInput: "UMLS:C0000578"     ## 5-Hydroxytryptophan
+  #         oneOutput: "UMLS:C0027497"  ## nausea
+  #   has_adverse_reaction-rev:
+  #   - supportBatch: true
+  #     useTemplating: true ## flag to say templating is being used below
+  #     inputs:
+  #     - id: UMLS
+  #       semantic: PhenotypicFeature
+  #     requestBody:
+  #       body:
+  #         ## API data has no prefix
+  #         ## joinSafe is only needed if the delimiter isn't a comma
+  #         q: "{{ queryInputs }}"
+  #         scopes: has_adverse_reaction.umls
+  #     outputs:
+  #     - id: UMLS
+  #       semantic: SmallMolecule
+  #     parameters:
+  #       fields: umls  ## no prefix
+  #       size: 1000    ## note size limit
+  #     predicate: adverse_event_of
+  #     source: "infores:idisk"
+  #     knowledge_level: knowledge_assertion
+  #     agent_type: not_provided
+  #     response_mapping:
+  #       $ref: '#/components/x-bte-response-mapping/rev'
+  #     testExamples:
+  #       - qInput: "UMLS:C0027497"       ## nausea 
+  #         oneOutput: "UMLS:C0000578"    ## 5-Hydroxytryptophan
     interacts_with:
-    ## there are 673 records with the interacts_with field 
-    ##   most use NMCD (604), but some use MSKCC (178). Some records must have both?
+    ## 673 records/supplements
     ## the dietary supplement interacts with a pharmaceutical drug
-    - supportBatch: true
-      useTemplating: true ## flag to say templating is being used below
+    ## NO PAGINATION: 1 entity won't match >1000 different supplements/records
       inputs:
-      - id: UMLS
-        semantic: SmallMolecule
-      requestBody:
-        body:
-          ## API data has no prefix
-          ## joinSafe is only needed if the delimiter isn't a comma
-          q: "{{ queryInputs }}"
-          scopes: umls
-      outputs:
-      - id: UMLS
-        semantic: SmallMolecule  
-      parameters:
-      ## commenting out because data-processing / biolink-modeling issues
-        ## no prefix on output id
-        # fields: interacts_with.umls,interacts_with.source.name
-        fields: interacts_with.umls
-        size: 1000  ## size limit; just in case
+        category: SmallMolecule
+        namespaces:
+          - prefix: UMLS
+            name_field: name
+            match_field: query
       predicate: interacts_with  ## closest biolink predicate?
-      source: "infores:idisk"
-      knowledge_level: knowledge_assertion
-      agent_type: not_provided
-      response_mapping:
-        $ref: '#/components/x-bte-response-mapping/interacts_with'
-      testExamples:
-        - qInput: "UMLS:C0000473"     ## 4-Aminobenzoic Acid
-          oneOutput: "UMLS:C0010137"  ## Cortisone
-    interacts_with-rev:
-    - supportBatch: true
-      useTemplating: true ## flag to say templating is being used below
-      inputs:
-      - id: UMLS
-        semantic: SmallMolecule
-      requestBody:
-        body:
-          ## API data has no prefix
-          ## joinSafe is only needed if the delimiter isn't a comma
-          q: "{{ queryInputs }}"
-          scopes: interacts_with.umls
       outputs:
-      - id: UMLS
-        semantic: SmallMolecule
-      parameters:
-        fields: umls
-        size: 1000  ## note size limit
-      predicate: interacts_with
-      source: "infores:idisk"
-      knowledge_level: knowledge_assertion
-      agent_type: not_provided
-      response_mapping:
-        $ref: '#/components/x-bte-response-mapping/rev'
-      testExamples:
-        - qInput: "UMLS:C0010137"      ## Cortisone 
-          oneOutput: "UMLS:C0000473"   ## 4-Aminobenzoic Acid
-    is_effective_for:
-    ## there are 654 records with the is_effective_for field 
-    ##   most use NMCD (552), but some use MSKCC (238). Some records must have both?
-    - supportBatch: true
-      useTemplating: true ## flag to say templating is being used below
-      inputs:
-      - id: UMLS
-        semantic: SmallMolecule
-      requestBody:
-        body:
-          ## API data has no prefix
-          ## joinSafe is only needed if the delimiter isn't a comma
-          q: "{{ queryInputs }}"
+        category: SmallMolecule
+        ## id_field values are single ID only, no prefixes
+        namespaces:
+          - prefix: UMLS
+            id_field: interacts_with.umls
+            name_field: interacts_with.name
+      request_info:
+        path: "/query"
+        method: post
+        support_batch: true
+        request_body:
+          q: "{{ input_ids }}"
           scopes: umls
-      outputs:
-      - id: UMLS
-        semantic: Disease    ## use this or PhenotypicFeature?
-        ## this example is a Disease: https://nodenormalization-sri.renci.org/1.2/get_normalized_nodes?curie=UMLS%3AC0016053&conflate=true
-        ## don't create two operations or records will duplicate for DiseaseOrPhenotypicFeature query
-      parameters:
-      ## commenting out because data-processing / biolink-modeling issues
-        # fields: is_effective_for.umls,is_effective_for.source.name
-        fields: is_effective_for.umls
-        size: 1000  ## size limit; just in case
-      ## the dietary supplement is said to treat disease/condition or may be used for it...
-      predicate: applied_to_treat
-      source: "infores:idisk"
-      knowledge_level: knowledge_assertion
-      agent_type: not_provided
-      response_mapping:
-        $ref: '#/components/x-bte-response-mapping/is_effective_for'
-      testExamples:
-        - qInput: "UMLS:C0000503"      ## gamma hydroxybutyrate / oxybate
-          oneOutput: "UMLS:C0016053"   ## Fibromyalgias aka MONDO:0005546
-    is_effective_for-rev:
-    - supportBatch: true
-      useTemplating: true ## flag to say templating is being used below
-      inputs:
-      - id: UMLS
-        semantic: Disease
-      requestBody:
-        body:
-          ## API data has no prefix
-          ## joinSafe is only needed if the delimiter isn't a comma
-          q: "{{ queryInputs }}"
-          scopes: is_effective_for.umls
-      outputs:
-      - id: UMLS
-        semantic: SmallMolecule
-      parameters:
-        fields: umls
-        size: 1000  ## note size limit
-      predicate: treatment_applications_from
-      source: "infores:idisk"
-      knowledge_level: knowledge_assertion
-      agent_type: not_provided
-      response_mapping:
-        $ref: '#/components/x-bte-response-mapping/rev'
-      testExamples:
-        - qInput: "UMLS:C0016053"         ## Fibromyalgias aka MONDO:0005546
-          oneOutput: "UMLS:C0000503"      ## gamma hydroxybutyrate / oxybate
-  x-bte-response-mapping:
-  ## name not included since BTE doesn't ingest it right now...
-    has_adverse_effect_on:
-      MEDDRA: has_adverse_effect_on.meddra
-      ## commenting out because data-processing / biolink-modeling issues
-      # idisk_source: has_adverse_effect_on.source.name
-    rev:
-      ## could also include the name field (as "original subject name"?)
-      UMLS: umls
-    has_adverse_reaction:
-      UMLS: has_adverse_reaction.umls
-      ## commenting out because data-processing / biolink-modeling issues
-      # idisk_source: has_adverse_reaction.source.name
-    interacts_with:
-      UMLS: interacts_with.umls
-      ## commenting out because data-processing / biolink-modeling issues
-      # idisk_source: interacts_with.source.name
-    is_effective_for:
-      UMLS: is_effective_for.umls
-      ## commenting out because data-processing / biolink-modeling issues
-      # idisk_source: is_effective_for.source.name
+        parameters:
+          fields: >-
+            name,interacts_with.umls,interacts_with.name,interacts_with.source
+          size: 100      ## should be huge overestimate, shouldn't get 1 supplement ID -> 100 supplement documents
+      provenance:
+        ## take the 2nd element only
+        source_field: interacts_with.source[1].name
+        mapping:
+        ## Not sure, but I think there's two possible values
+          NMCD:   ## Natural Medicines Comprehensive Database
+            knowledge_level: knowledge_assertion
+            agent_type: not_provided
+            sources:
+              - id: "infores:nmcd"     ## infores doesn't exist yet
+                role: primary_knowledge_source
+              - id: "infores:idisk"
+                role: aggregator_knowledge_source
+                upstream: ["infores:nmcd"]
+          MSKCC:   ## “About Herbs” page on the Memorial Sloan Kettering Cancer Center (MSKCC) website 
+            knowledge_level: knowledge_assertion
+            agent_type: not_provided
+            sources:
+              - id: "infores:mskcc-about-herbs"     ## infores doesn't exist yet
+                role: primary_knowledge_source
+              - id: "infores:idisk"
+                role: aggregator_knowledge_source
+                upstream: ["infores:mskcc-about-herbs"]
+      ## NO RESPONSE MAPPING: no edge-attributes
+      test_examples:
+        ## NMCD
+        - input_curie: "UMLS:C0000578"     ## 5-Hydroxytryptophan
+          output_curie: "UMLS:C0040610"    ## Tramadol
+        ## MSKCC
+        - input_curie: "UMLS:C0000578"     ## 5-Hydroxytryptophan
+          output_curie: "UMLS:C0006982"    ## Carbidopa
+  #   interacts_with-rev:
+  #   - supportBatch: true
+  #     useTemplating: true ## flag to say templating is being used below
+  #     inputs:
+  #     - id: UMLS
+  #       semantic: SmallMolecule
+  #     requestBody:
+  #       body:
+  #         ## API data has no prefix
+  #         ## joinSafe is only needed if the delimiter isn't a comma
+  #         q: "{{ queryInputs }}"
+  #         scopes: interacts_with.umls
+  #     outputs:
+  #     - id: UMLS
+  #       semantic: SmallMolecule
+  #     parameters:
+  #       fields: umls
+  #       size: 1000  ## note size limit
+  #     predicate: interacts_with
+  #     source: "infores:idisk"
+  #     knowledge_level: knowledge_assertion
+  #     agent_type: not_provided
+  #     response_mapping:
+  #       $ref: '#/components/x-bte-response-mapping/rev'
+  #     testExamples:
+  #       - qInput: "UMLS:C0010137"      ## Cortisone 
+  #         oneOutput: "UMLS:C0000473"   ## 4-Aminobenzoic Acid
+  #   is_effective_for:
+  #   ## there are 654 records with the is_effective_for field 
+  #   ##   most use NMCD (552), but some use MSKCC (238). Some records must have both?
+  #   - supportBatch: true
+  #     useTemplating: true ## flag to say templating is being used below
+  #     inputs:
+  #     - id: UMLS
+  #       semantic: SmallMolecule
+  #     requestBody:
+  #       body:
+  #         ## API data has no prefix
+  #         ## joinSafe is only needed if the delimiter isn't a comma
+  #         q: "{{ queryInputs }}"
+  #         scopes: umls
+  #     outputs:
+  #     - id: UMLS
+  #       semantic: Disease    ## use this or PhenotypicFeature?
+  #       ## this example is a Disease: https://nodenormalization-sri.renci.org/1.2/get_normalized_nodes?curie=UMLS%3AC0016053&conflate=true
+  #       ## don't create two operations or records will duplicate for DiseaseOrPhenotypicFeature query
+  #     parameters:
+  #     ## commenting out because data-processing / biolink-modeling issues
+  #       # fields: is_effective_for.umls,is_effective_for.source.name
+  #       fields: is_effective_for.umls
+  #       size: 1000  ## size limit; just in case
+  #     ## the dietary supplement is said to treat disease/condition or may be used for it...
+  #     predicate: applied_to_treat
+  #     source: "infores:idisk"
+  #     knowledge_level: knowledge_assertion
+  #     agent_type: not_provided
+  #     response_mapping:
+  #       $ref: '#/components/x-bte-response-mapping/is_effective_for'
+  #     testExamples:
+  #       - qInput: "UMLS:C0000503"      ## gamma hydroxybutyrate / oxybate
+  #         oneOutput: "UMLS:C0016053"   ## Fibromyalgias aka MONDO:0005546
+  #   is_effective_for-rev:
+  #   - supportBatch: true
+  #     useTemplating: true ## flag to say templating is being used below
+  #     inputs:
+  #     - id: UMLS
+  #       semantic: Disease
+  #     requestBody:
+  #       body:
+  #         ## API data has no prefix
+  #         ## joinSafe is only needed if the delimiter isn't a comma
+  #         q: "{{ queryInputs }}"
+  #         scopes: is_effective_for.umls
+  #     outputs:
+  #     - id: UMLS
+  #       semantic: SmallMolecule
+  #     parameters:
+  #       fields: umls
+  #       size: 1000  ## note size limit
+  #     predicate: treatment_applications_from
+  #     source: "infores:idisk"
+  #     knowledge_level: knowledge_assertion
+  #     agent_type: not_provided
+  #     response_mapping:
+  #       $ref: '#/components/x-bte-response-mapping/rev'
+  #     testExamples:
+  #       - qInput: "UMLS:C0016053"         ## Fibromyalgias aka MONDO:0005546
+  #         oneOutput: "UMLS:C0000503"      ## gamma hydroxybutyrate / oxybate
+  # x-bte-response-mapping:
+  # ## name not included since BTE doesn't ingest it right now...
+  #   has_adverse_effect_on:
+  #     MEDDRA: has_adverse_effect_on.meddra
+  #     ## commenting out because data-processing / biolink-modeling issues
+  #     # idisk_source: has_adverse_effect_on.source.name
+  #   rev:
+  #     ## could also include the name field (as "original subject name"?)
+  #     UMLS: umls
+  #   has_adverse_reaction:
+  #     UMLS: has_adverse_reaction.umls
+  #     ## commenting out because data-processing / biolink-modeling issues
+  #     # idisk_source: has_adverse_reaction.source.name
+  #   is_effective_for:
+  #     UMLS: is_effective_for.umls
+  #     ## commenting out because data-processing / biolink-modeling issues
+  #     # idisk_source: is_effective_for.source.name
