@@ -1,0 +1,1660 @@
+servers:
+  - url: 'https://rampdb.nih.gov'
+  - url: 'https://ramp-api-alpha.ncats.io'
+  # - url: 'http://127.0.0.1:5762/'
+openapi: 3.0.3
+info:
+  description: Relational Database of Metabolic Pathways (RaMP) API
+  title: RaMP API v1.0.1
+  version: 1.0.1
+  contact:
+    name: RaMP
+    x-role: responsible developer
+    email: NCATSRaMP@nih.gov
+    x-id: 'https://github.com/ncats'
+  termsOfService: https://rampdb.nih.gov
+  ## api yaml downloaded 2024-03-10
+  ## changes: commented 'required: false' lines because SmartAPI Editor flagged as not OpenAPI standard
+  x-bte:
+    ## would need to ask RaMP developers 
+    batch_size_limit: 20
+    request_rate_limit: 10
+  x-translator:
+    infores: "infores:rampdb"
+    biolink-version: "4.2.2"
+    component: KP
+    team:
+      - Service Provider
+tags:
+  - name: translator
+  - name: x-bte
+  - name: NCATS-API
+paths:
+  /api/source-versions:
+    get:
+      summary: Return source version information. Includes RaMP version number, source database versions, and other metadata
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: string
+        default:
+          description: Default response.
+          content:
+            application/json:
+              schema:
+                type: object
+      parameters: []
+  /api/id-types:
+    get:
+      summary: Return valid RaMP-DB database prefixes for genes and metabolites (e.g. 'hmdb:', 'kegg:')
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: string
+        default:
+          description: Default response.
+          content:
+            application/json:
+              schema:
+                type: object
+      parameters: []
+  /api/entity-counts:
+    get:
+      summary: Return association counts for different RaMP-DB data types, broken down by source database (chemical properties, pathway associations, gene/metabolite/pathway counts)
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: string
+        default:
+          description: Default response.
+          content:
+            application/json:
+              schema:
+                type: object
+      parameters: []
+  /api/analyte-intersects:
+    get:
+      summary: Return redundancy of source databases. Lists counts of identical analytes pulled from source databases.
+      responses:
+        '200':
+          description: OK
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: string
+        default:
+          description: Default response.
+      parameters:
+        - name: analytetype
+          description: specifies type of analyte intersects to return, 'metabolites' or 'genes'
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: query_scope
+          description: specifies 'global' or 'mapped-to-pathway'
+          in: query
+          required: true
+          schema:
+            type: string
+          example:
+            analytetype: 'metabolites'
+            query_scope: 'mapped-to-pathway'
+  /api/ontology-types:
+    get:
+      summary: Return all metabolite ontologies present in RaMP-DB, including ontology category (e.g. 'Health condition', 'Biofluid and excreta', etc.)
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: string
+        default:
+          description: Default response.
+          content:
+            application/json:
+              schema:
+                type: object
+      parameters: []
+  /api/chemical-class-type:
+    get:
+      summary: Return chemical class levels present in RaMP-DB (e.g. sub-class, super-class)
+      responses:
+        '200':
+          description: OK
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: string
+        default:
+          description: Default response.
+      parameters:
+        - name: classtype
+          in: query
+          # required: false
+          schema:
+            type: string
+  /api/pathways-from-analytes:
+    post:
+      summary: Return chemical class levels present in RaMP-DB (e.g. sub-class, super-class)
+      responses:
+        '200':
+          description: OK
+        '500':
+          description: Internal Server Error
+      requestBody:
+        description: Retrieve pathway(s) for a given analyte(s). IDs should be prepended by ID source (e.g. **hmdb**:C00412).
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                analytes:
+                  type: array
+                  items:
+                    type: string
+              example: # Sample object
+                analytes:
+                  [
+                    'ensembl:ENSG00000135679',
+                    'hmdb:HMDB0000064',
+                    'hmdb:HMDB0000148',
+                    'ensembl:ENSG00000141510',
+                  ]
+  /api/analytes-from-pathways:
+    post:
+      summary: Return analytes from given list of pathways as either json or a tsv
+      responses:
+        '200':
+          description: OK
+        '500':
+          description: Internal Server Error
+      requestBody:
+        description: Enter exact pathway name(s). `analyte_type` should be `"gene"`, `"metabolite"`, or `"both"` *(default)*
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pathway:
+                  type: array
+                  items:
+                    type: string
+                analyte_type:
+                  type: string
+                  enum: ['gene', 'metabolite', 'both']
+                  # required: false
+                match:
+                  type: string
+                  enum: ['exact', 'fuzzy']
+                  # required: false
+                names_or_ids:
+                  type: string
+                  enum: ['names', 'ids']
+                  # required: false
+              example:
+                pathway:
+                  [
+                    'De Novo Triacylglycerol Biosynthesis',
+                    'sphingolipid metabolism',
+                  ]
+                analyte_type: 'both'
+                match: 'exact'
+  /api/ontologies-from-metabolites:
+    post:
+      summary: Return ontology mappings from list of metabolites
+      responses:
+        '200':
+          description: OK
+        '500':
+          description: Internal Server Error
+      requestBody:
+        description: Enter a list of metabolites. IDs should be prepended by ID source (e.g. **kegg**:C00412).
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                metabolite:
+                  type: array
+                  items:
+                    type: string
+                namesOrIds:
+                  type: string
+                  enum: ['name', 'ids']
+                  # required: false
+              example:
+                metabolite:
+                  [
+                    'ensembl:ENSG00000135679',
+                    'hmdb:HMDB0000064',
+                    'hmdb:HMDB0000148',
+                    'ensembl:ENSG00000141510',
+                  ]
+                namesOrIds: 'ids'
+  /api/metabolites-from-ontologies:
+    post:
+      summary: Return metabolites associated with input ontology
+      responses:
+        '200':
+          description: OK
+        '500':
+          description: Internal Server Error
+      requestBody:
+        description: Enter ontology(ies) and retrieve corresponding analytes (metabolites).
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                ontology:
+                  type: array
+                  items:
+                    type: string
+                format:
+                  type: string
+                  enum: ['json', 'tsv']
+                  # required: false
+              example:
+                ontology: ['Colon', 'Liver', 'Lung']
+                format: 'json'
+  /api/chemical-classes:
+    post:
+      summary: Return available chemical classes of given metabolites in RaMP-DB
+      responses:
+        '200':
+          description: OK
+        '500':
+          description: Internal Server Error
+      requestBody:
+        description: Retrieve chemical class information (from ClassyFire and LIPID MAPS) for input metabolite IDs. IDs should be prepended by ID source (e.g. **hmdb**:C00412).
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                metabolites:
+                  type: array
+                  items:
+                    type: string
+                biospecimen:
+                  type: string
+                  enum:
+                    [
+                      'Blood',
+                      'Adipose',
+                      'Heart',
+                      'Urine',
+                      'Brain',
+                      'Liver',
+                      'Kidney',
+                      'Saliva',
+                      'Feces',
+                    ]
+                  # required: false
+              example:
+                metabolites:
+                  [
+                    'hmdb:HMDB0000056',
+                    'hmdb:HMDB0000439',
+                    'hmdb:HMDB0000479',
+                    'hmdb:HMDB0000532',
+                    'hmdb:HMDB0001015',
+                    'hmdb:HMDB0001138',
+                    'hmdb:HMDB0029159',
+                    'hmdb:HMDB0029412',
+                    'hmdb:HMDB0034365',
+                    'hmdb:HMDB0035227',
+                    'hmdb:HMDB0007973',
+                    'hmdb:HMDB0008057',
+                    'hmdb:HMDB0011211',
+                  ]
+  /api/chemical-properties:
+    post:
+      summary: Return chemical properties of given metabolites regarding structure
+      responses:
+        '200':
+          description: OK
+        '500':
+          description: Internal Server Error
+      requestBody:
+        description: Retrieve chemical properties (smiles, inchi_key, inchi_key_prefix, inchi, mw, monoisotop_mass, formula, common_name) from input metabolites. IDs should be prepended by ID source (e.g. **hmdb**:C00412).
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                metabolites:
+                  type: array
+                  items:
+                    type: string
+              example:
+                metabolites:
+                  [
+                    'hmdb:HMDB0000056',
+                    'hmdb:HMDB0000439',
+                    'hmdb:HMDB0000479',
+                    'hmdb:HMDB0000532',
+                    'hmdb:HMDB0001015',
+                    'hmdb:HMDB0001138',
+                    'hmdb:HMDB0029159',
+                    'hmdb:HMDB0029412',
+                    'hmdb:HMDB0034365',
+                    'hmdb:HMDB0035227',
+                    'hmdb:HMDB0007973',
+                    'hmdb:HMDB0008057',
+                    'hmdb:HMDB0011211',
+                  ]
+  /api/common-reaction-analytes:
+    post:
+      summary: Return analytes involved in same reaction as given list of analytes
+      responses:
+        '200':
+          description: OK
+        '500':
+          description: Internal Server Error
+      requestBody:
+        description: Retrieve Analytes Involved in the Same Reaction. IDs should be prepended by ID source (e.g. **hmdb**:C00412).
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                analytes:
+                  type: array
+                  items:
+                    type: string
+                NamesOrIds:
+                  type: string
+                  enum: ['name', 'ids']
+                  # required: false
+              example:
+                analyte:
+                  [
+                    'ensembl:ENSG00000135679',
+                    'hmdb:HMDB0000064',
+                    'hmdb:HMDB0000148',
+                    'ensembl:ENSG00000141510',
+                  ]
+  /api/reactions-from-analytes:
+    post:
+      summary: Return reactions from a given list of analytes
+      responses:
+        '200':
+          description: OK
+        '500':
+          description: Internal Server Error
+      requestBody:
+        description: Retrieve reactions from a list of analytes. IDs should be prepended by ID source (e.g. **hmdb**:C00412).
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                analytes:
+                  type: array
+                  items:
+                    type: string
+                namesOrIds:
+                  type: string
+                  enum: ['name', 'ids']
+                  # required: false
+                multiRxnParticipantCount:
+                  type: number
+                  # required: false
+                humanProtein:
+                  type: boolean
+                  # required: false
+                concatResults:
+                  type: boolean
+                  # required: false
+              example:
+                analytes:
+                  [
+                    'hmdb:HMDB0000033',
+                    'hmdb:HMDB0000052',
+                    'hmdb:HMDB0000094',
+                    'hmdb:HMDBP00789',
+                    'hmdb:HMDBP00283',
+                    'hmdb:HMDBP00284'
+                  ]
+
+  /api/reaction-classes-from-analytes:
+    post:
+      summary: Return reaction classes from a given list of analytes
+      responses:
+        '200':
+          description: OK
+        '500':
+          description: Internal Server Error
+      requestBody:
+        description: Retrieve reaction classes from a list of analytes. IDs should be prepended by ID source (e.g. **hmdb**:C00412).
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                analytes:
+                  type: array
+                  items:
+                    type: string
+                namesOrIds:
+                  type: string
+                  enum: ['name', 'ids']
+                  # required: false
+                onlyHumanMets:
+                  type: boolean
+                  # required: false
+                humanProtein:
+                  type: boolean
+                  # required: false
+                includeTransportRxns:
+                  type: boolean
+                  # required: false
+                rxnDirs:
+                  type: string
+                  enum: ['UN']
+                  # required: false
+              example:
+                analytes:
+                  [
+                    'hmdb:HMDB0000033',
+                    'hmdb:HMDB0000052',
+                    'hmdb:HMDB0000094',
+                    'hmdb:HMDBP00789',
+                    'hmdb:HMDBP00283',
+                    'hmdb:HMDBP00284'
+                  ]
+  /api/combined-fisher-test:
+    post:
+      summary: Return combined Fisher's test results from given list of analytes query results
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+        '500':
+          description: Internal Server Error
+      requestBody:
+        description: Perform Pathway Enrichment. IDs should be prepended by ID source (e.g. **hmdb**:C00412). Input analyte IDs can be a mix of genes/proteins or metabolites.
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                analytes:
+                  type: array
+                  items:
+                    type: string
+                biospecimen:
+                  type: string
+                  enum:
+                    [
+                      'Blood',
+                      'Adipose',
+                      'Heart',
+                      'Urine',
+                      'Brain',
+                      'Liver',
+                      'Kidney',
+                      'Saliva',
+                      'Feces',
+                    ]
+                  # required: false
+              example: # Sample object
+                analytes:
+                  [
+                    'hmdb:HMDB0000033',
+                    'hmdb:HMDB0000052',
+                    'hmdb:HMDB0000094',
+                    'hmdb:HMDB0000161',
+                    'hmdb:HMDB0000168',
+                    'hmdb:HMDB0000191',
+                    'hmdb:HMDB0000201',
+                    'chemspider:10026',
+                    'hmdb:HMDB0006059',
+                    'Chemspider:6405',
+                    'CAS:5657-19-2',
+                    'hmdb:HMDB0002511',
+                    'chemspider:20171375',
+                    'CAS:133-32-4',
+                    'CAS:5746-90-7',
+                    'CAS:477251-67-5',
+                    'hmdb:HMDB0000695',
+                    'chebi:15934',
+                    'CAS:838-07-3',
+                    'hmdb:HMDBP00789',
+                    'hmdb:HMDBP00283',
+                    'hmdb:HMDBP00284',
+                    'hmdb:HMDBP00850',
+                  ]
+  /api/filter-fisher-test-results:
+    post:
+      summary: >-
+        Return filtered Fisher's test results from given list of Fisher's test
+        results
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+        '500':
+          description: Internal Server Error
+      requestBody:
+        description: Filter Pathway Enrichment. This is primarily used after running `combined-fisher-test` as the required input is the output from that call. Only pathway below a specified p value threshold will be returned.
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                fishers_results:
+                  type: array
+                  items:
+                    type: object
+                pval_type:
+                  type: string
+                  enum: ['fdr', 'holm', 'pval']
+                  # required: false
+                pval_cutoff:
+                  type: number
+                  # required: false
+              example: # Sample object
+                fishers_results:
+                  analyte_type: ['both']
+                  result_type: ['pathway_enrichment']
+                  fishresults:
+                    [
+                      {
+                        'pathwayName': 'beta-Alanine metabolism',
+                        'pathwayId': 'map00410',
+                        'pathwaySource': 'kegg',
+                        'Pval_Metab': 0.032104,
+                        'Num_In_Path_Metab': 2,
+                        'Total_In_Path_Metab': 29,
+                        'Pval_combined': 0.032104,
+                        'Pval_combined_FDR': 0.059322,
+                        'Pval_combined_Holm': 1,
+                        'analytes': 'CARN; Carnosine;L-Aspartic acid',
+                      },
+                      {
+                        'pathwayName': 'Methionine Metabolism',
+                        'pathwayId': 'map00270',
+                        'pathwaySource': 'kegg',
+                        'Pval_Gene': 0.000044,
+                        'Num_In_Path_Gene': 2,
+                        'Total_In_Path_Gene': 55,
+                        'Pval_combined': 0.000044,
+                        'Pval_combined_FDR': 0.000164,
+                        'Pval_combined_Holm': 0.002797,
+                        'analytes': 'GOT1;GOT2',
+                      },
+                      {
+                        'pathwayName': 'Tyrosine metabolism',
+                        'pathwayId': 'map00350',
+                        'pathwaySource': 'kegg',
+                        'Pval_Metab': 0.518364,
+                        'Num_In_Path_Metab': 1,
+                        'Total_In_Path_Metab': 69,
+                        'Pval_Gene': 0.00003,
+                        'Num_In_Path_Gene': 2,
+                        'Total_In_Path_Gene': 45,
+                        'Pval_combined': 0.000015,
+                        'Pval_combined_FDR': 0.000065,
+                        'Pval_combined_Holm': 0.001013,
+                        'analytes': 'L-Aspartic acid;GOT1;GOT2',
+                      },
+                      {
+                        'pathwayName': 'Arginine and proline metabolism',
+                        'pathwayId': 'map00330',
+                        'pathwaySource': 'kegg',
+                        'Pval_Metab': 0.011701,
+                        'Num_In_Path_Metab': 3,
+                        'Total_In_Path_Metab': 51,
+                        'Pval_Gene': 1.132259e-7,
+                        'Num_In_Path_Gene': 3,
+                        'Total_In_Path_Gene': 62,
+                        'Pval_combined': 1.324894e-9,
+                        'Pval_combined_FDR': 2.8154e-8,
+                        'Pval_combined_Holm': 1.086413e-7,
+                        'analytes': 'Argininosuccinic acid;L-Alanine;L-Aspartic acid;GOT1;GOT2;GPT',
+                      },
+                      {
+                        'pathwayName': 'Phenylalanine and Tyrosine Metabolism',
+                        'pathwayId': 'map00360',
+                        'pathwaySource': 'kegg',
+                        'Pval_Gene': 0.000011,
+                        'Num_In_Path_Gene': 2,
+                        'Total_In_Path_Gene': 27,
+                        'Pval_combined': 0.000011,
+                        'Pval_combined_FDR': 0.000056,
+                        'Pval_combined_Holm': 0.000757,
+                        'analytes': 'GOT1;GOT2',
+                      },
+                      {
+                        'pathwayName': 'Alanine, aspartate and glutamate metabolism',
+                        'pathwayId': 'map00250',
+                        'pathwaySource': 'kegg',
+                        'Pval_Metab': 0.001954,
+                        'Num_In_Path_Metab': 4,
+                        'Total_In_Path_Metab': 61,
+                        'Pval_Gene': 5.11736e-11,
+                        'Num_In_Path_Gene': 4,
+                        'Total_In_Path_Gene': 55,
+                        'Pval_combined': 9.99901e-14,
+                        'Pval_combined_FDR': 4.249579e-12,
+                        'Pval_combined_Holm': 8.399168e-12,
+                        'analytes': 'Argininosuccinic acid;L-Alanine;L-Asparagine;L-Aspartic acid;GOT1;GOT2;AGXT;GPT',
+                      },
+                      {
+                        'pathwayName': 'Nitrogen metabolism',
+                        'pathwayId': 'map00910',
+                        'pathwaySource': 'kegg',
+                        'Pval_Metab': 0.02611,
+                        'Num_In_Path_Metab': 2,
+                        'Total_In_Path_Metab': 26,
+                        'Pval_combined': 0.02611,
+                        'Pval_combined_FDR': 0.05044,
+                        'Pval_combined_Holm': 1,
+                        'analytes': 'L-Asparagine;L-Aspartic acid',
+                      },
+                      {
+                        'pathwayName': '2-Oxocarboxylic acid metabolism',
+                        'pathwayId': 'map01210',
+                        'pathwaySource': 'kegg',
+                        'Pval_Gene': 0.000003147428,
+                        'Num_In_Path_Gene': 2,
+                        'Total_In_Path_Gene': 15,
+                        'Pval_combined': 0.000003147428,
+                        'Pval_combined_FDR': 0.000024,
+                        'Pval_combined_Holm': 0.000236,
+                        'analytes': 'GOT1;GOT2',
+                      },
+                      {
+                        'pathwayName': 'Phenylalanine, tyrosine and tryptophan biosynthesis',
+                        'pathwayId': 'map00400',
+                        'pathwaySource': 'kegg',
+                        'Pval_Gene': 0.000005693446,
+                        'Num_In_Path_Gene': 2,
+                        'Total_In_Path_Gene': 20,
+                        'Pval_combined': 0.000005693446,
+                        'Pval_combined_FDR': 0.00004,
+                        'Pval_combined_Holm': 0.000421,
+                        'analytes': 'GOT1;GOT2',
+                      },
+                      {
+                        'pathwayName': 'Glyoxylate metabolism and glycine degradation',
+                        'pathwayId': 'R-HSA-389661',
+                        'pathwaySource': 'reactome',
+                        'Pval_Gene': 0.000014,
+                        'Num_In_Path_Gene': 2,
+                        'Total_In_Path_Gene': 31,
+                        'Pval_combined': 0.000014,
+                        'Pval_combined_FDR': 0.000062,
+                        'Pval_combined_Holm': 0.000947,
+                        'analytes': 'GOT2;AGXT',
+                      },
+                      {
+                        'pathwayName': 'Sulfur amino acid metabolism',
+                        'pathwayId': 'R-HSA-1614635',
+                        'pathwaySource': 'reactome',
+                        'Pval_Gene': 0.000011,
+                        'Num_In_Path_Gene': 2,
+                        'Total_In_Path_Gene': 27,
+                        'Pval_combined': 0.000011,
+                        'Pval_combined_FDR': 0.000056,
+                        'Pval_combined_Holm': 0.000757,
+                        'analytes': 'GOT1;GOT2',
+                      },
+                      {
+                        'pathwayName': 'Gluconeogenesis',
+                        'pathwayId': 'R-HSA-70263',
+                        'pathwaySource': 'reactome',
+                        'Pval_Metab': 0.122185,
+                        'Num_In_Path_Metab': 1,
+                        'Total_In_Path_Metab': 32,
+                        'Pval_Gene': 0.000017,
+                        'Num_In_Path_Gene': 2,
+                        'Total_In_Path_Gene': 34,
+                        'Pval_combined': 0.000002052088,
+                        'Pval_combined_FDR': 0.000017,
+                        'Pval_combined_Holm': 0.000156,
+                        'analytes': 'Citric acid;GOT1;GOT2',
+                      },
+                      {
+                        'pathwayName': 'Glucose metabolism',
+                        'pathwayId': 'R-HSA-70326',
+                        'pathwaySource': 'reactome',
+                        'Pval_Metab': 0.157544,
+                        'Num_In_Path_Metab': 1,
+                        'Total_In_Path_Metab': 42,
+                        'Pval_Gene': 0.000125,
+                        'Num_In_Path_Gene': 2,
+                        'Total_In_Path_Gene': 92,
+                        'Pval_combined': 0.00002,
+                        'Pval_combined_FDR': 0.00008,
+                        'Pval_combined_Holm': 0.001278,
+                        'analytes': 'Citric acid;GOT1;GOT2',
+                      },
+                      {
+                        'pathwayName': 'Aspartate and asparagine metabolism',
+                        'pathwayId': 'R-HSA-8963693',
+                        'pathwaySource': 'reactome',
+                        'Pval_Gene': 0.000001649093,
+                        'Num_In_Path_Gene': 2,
+                        'Total_In_Path_Gene': 11,
+                        'Pval_combined': 0.000001649093,
+                        'Pval_combined_FDR': 0.000017,
+                        'Pval_combined_Holm': 0.00013,
+                        'analytes': 'GOT1;GOT2',
+                      },
+                      {
+                        'pathwayName': 'Amino acid metabolism pathway excerpt: histidine catabolism extension',
+                        'pathwayId': 'WP4661',
+                        'pathwaySource': 'wiki',
+                        'Pval_Metab': 0.00079,
+                        'Num_In_Path_Metab': 2,
+                        'Total_In_Path_Metab': 17,
+                        'Pval_combined': 0.00079,
+                        'Pval_combined_FDR': 0.002684,
+                        'Pval_combined_Holm': 0.04816,
+                        'analytes': 'Citric acid;L-Alanine',
+                      },
+                      {
+                        'pathwayName': 'Sulfur amino acid metabolism',
+                        'pathwayId': 'WP3574',
+                        'pathwaySource': 'wiki',
+                        'Pval_Gene': 0.000011,
+                        'Num_In_Path_Gene': 2,
+                        'Total_In_Path_Gene': 27,
+                        'Pval_combined': 0.000011,
+                        'Pval_combined_FDR': 0.000056,
+                        'Pval_combined_Holm': 0.000757,
+                        'analytes': 'GOT1;GOT2',
+                      },
+                      {
+                        'pathwayName': 'Glycolysis and gluconeogenesis',
+                        'pathwayId': 'WP534',
+                        'pathwaySource': 'wiki',
+                        'Pval_Metab': 0.045562,
+                        'Num_In_Path_Metab': 1,
+                        'Total_In_Path_Metab': 18,
+                        'Pval_Gene': 0.000031,
+                        'Num_In_Path_Gene': 2,
+                        'Total_In_Path_Gene': 46,
+                        'Pval_combined': 0.000001410614,
+                        'Pval_combined_FDR': 0.000017,
+                        'Pval_combined_Holm': 0.000113,
+                        'analytes': 'L-Aspartic acid;GOT1;GOT2',
+                      },
+                      {
+                        'pathwayName': 'Amino acid metabolism',
+                        'pathwayId': 'WP3925',
+                        'pathwaySource': 'wiki',
+                        'Pval_Metab': 0.000003106941,
+                        'Num_In_Path_Metab': 5,
+                        'Total_In_Path_Metab': 109,
+                        'Pval_Gene': 0.00013,
+                        'Num_In_Path_Gene': 2,
+                        'Total_In_Path_Gene': 94,
+                        'Pval_combined': 4.049386e-10,
+                        'Pval_combined_FDR': 1.147326e-8,
+                        'Pval_combined_Holm': 3.360991e-8,
+                        'analytes': 'Argininosuccinic acid;Citric acid;L-Alanine;L-Asparagine;L-Aspartic acid;GOT1;GOT2',
+                      },
+                      {
+                        'pathwayName': 'Biomarkers for urea cycle disorders',
+                        'pathwayId': 'WP4583',
+                        'pathwaySource': 'wiki',
+                        'Pval_Gene': 0.000001978779,
+                        'Num_In_Path_Gene': 2,
+                        'Total_In_Path_Gene': 12,
+                        'Pval_combined': 0.000001978779,
+                        'Pval_combined_FDR': 0.000017,
+                        'Pval_combined_Holm': 0.000152,
+                        'analytes': 'GOT1;GPT',
+                      },
+                      {
+                        'pathwayName': 'Urea cycle and metabolism of amino groups',
+                        'pathwayId': 'WP497',
+                        'pathwaySource': 'wiki',
+                        'Pval_Metab': 0.002822,
+                        'Num_In_Path_Metab': 2,
+                        'Total_In_Path_Metab': 32,
+                        'Pval_combined': 0.002822,
+                        'Pval_combined_FDR': 0.007055,
+                        'Pval_combined_Holm': 0.15385,
+                        'analytes': 'Argininosuccinic acid;L-Aspartic acid',
+                      },
+                      {
+                        'pathwayName': 'Glucose metabolism',
+                        'pathwayId': 'WP4093',
+                        'pathwaySource': 'wiki',
+                        'Pval_Metab': 0.103437,
+                        'Num_In_Path_Metab': 1,
+                        'Total_In_Path_Metab': 42,
+                        'Pval_Gene': 0.000125,
+                        'Num_In_Path_Gene': 2,
+                        'Total_In_Path_Gene': 92,
+                        'Pval_combined': 0.000013,
+                        'Pval_combined_FDR': 0.000062,
+                        'Pval_combined_Holm': 0.000891,
+                        'analytes': 'Citric acid;GOT1;GOT2',
+                      },
+                      {
+                        'pathwayName': 'Metabolic reprogramming in colon cancer',
+                        'pathwayId': 'WP4290',
+                        'pathwaySource': 'wiki',
+                        'Pval_Metab': 0.004177,
+                        'Num_In_Path_Metab': 2,
+                        'Total_In_Path_Metab': 39,
+                        'Pval_Gene': 0.008374,
+                        'Num_In_Path_Gene': 1,
+                        'Total_In_Path_Gene': 42,
+                        'Pval_combined': 0.000035,
+                        'Pval_combined_FDR': 0.000135,
+                        'Pval_combined_Holm': 0.002238,
+                        'analytes': 'Citric acid;L-Asparagine;GOT2',
+                      },
+                      {
+                        'pathwayName': 'Aspartate and asparagine metabolism',
+                        'pathwayId': 'WP4979',
+                        'pathwaySource': 'wiki',
+                        'Pval_Gene': 0.000001649093,
+                        'Num_In_Path_Gene': 2,
+                        'Total_In_Path_Gene': 11,
+                        'Pval_combined': 0.000001649093,
+                        'Pval_combined_FDR': 0.000017,
+                        'Pval_combined_Holm': 0.00013,
+                        'analytes': 'GOT1;GOT2',
+                      },
+                      {
+                        'pathwayName': 'Urea cycle and associated pathways',
+                        'pathwayId': 'WP4595',
+                        'pathwaySource': 'wiki',
+                        'Pval_Gene': 6.068128e-9,
+                        'Num_In_Path_Gene': 3,
+                        'Total_In_Path_Gene': 24,
+                        'Pval_combined': 6.068128e-9,
+                        'Pval_combined_FDR': 1.031582e-7,
+                        'Pval_combined_Holm': 4.915183e-7,
+                        'analytes': 'GOT1;GOT2;GPT',
+                      },
+                      {
+                        'pathwayName': 'NAD metabolism in oncogene-induced senescence and mitochondrial dysfunction-associated senescence',
+                        'pathwayId': 'WP5046',
+                        'pathwaySource': 'wiki',
+                        'Pval_Gene': 0.000009734892,
+                        'Num_In_Path_Gene': 2,
+                        'Total_In_Path_Gene': 26,
+                        'Pval_combined': 0.000009734892,
+                        'Pval_combined_FDR': 0.000056,
+                        'Pval_combined_Holm': 0.000711,
+                        'analytes': 'GOT1;GOT2',
+                      },
+                      {
+                        'pathwayName': 'Metabolism overview',
+                        'pathwayId': 'WP3602',
+                        'pathwaySource': 'wiki',
+                        'Pval_Metab': 0.002603,
+                        'Num_In_Path_Metab': 3,
+                        'Total_In_Path_Metab': 116,
+                        'Pval_combined': 0.002603,
+                        'Pval_combined_FDR': 0.007055,
+                        'Pval_combined_Holm': 0.145751,
+                        'analytes': 'Argininosuccinic acid;Citric acid;L-Aspartic acid',
+                      },
+                      {
+                        'pathwayName': 'Glyoxylate metabolism and glycine degradation',
+                        'pathwayId': 'WP3562',
+                        'pathwaySource': 'wiki',
+                        'Pval_Gene': 0.000014,
+                        'Num_In_Path_Gene': 2,
+                        'Total_In_Path_Gene': 31,
+                        'Pval_combined': 0.000014,
+                        'Pval_combined_FDR': 0.000062,
+                        'Pval_combined_Holm': 0.000947,
+                        'analytes': 'GOT2;AGXT',
+                      },
+                      {
+                        'pathwayName': 'Alanine and aspartate metabolism',
+                        'pathwayId': 'WP106',
+                        'pathwaySource': 'wiki',
+                        'Pval_Metab': 7.081563e-15,
+                        'Num_In_Path_Metab': 7,
+                        'Total_In_Path_Metab': 23,
+                        'Pval_Gene': 1.371261e-11,
+                        'Num_In_Path_Gene': 4,
+                        'Total_In_Path_Gene': 40,
+                        'Pval_combined': 9.710673e-26,
+                        'Pval_combined_FDR': 8.254072e-24,
+                        'Pval_combined_Holm': 8.254072e-24,
+                        'analytes': 'CARN; Carnosine;Argininosuccinic acid;Citric acid;L-Alanine;L-Asparagine;L-Aspartic acid;(3R)-3-acetyloxy-4-(trimethylazaniumyl)butanoate; L-Acetylcarnitine; O-Acetylcarnitine;GOT1;GOT2;AGXT;GPT',
+                      },
+                      {
+                        'pathwayName': 'mRNA, protein, and metabolite inducation pathway by cyclosporin A',
+                        'pathwayId': 'WP3953',
+                        'pathwaySource': 'wiki',
+                        'Pval_Metab': 0.00053,
+                        'Num_In_Path_Metab': 2,
+                        'Total_In_Path_Metab': 14,
+                        'Pval_combined': 0.00053,
+                        'Pval_combined_FDR': 0.001879,
+                        'Pval_combined_Holm': 0.032885,
+                        'analytes': 'L-Alanine;L-Asparagine',
+                      },
+                    ]
+  /api/cluster-fisher-test-results:
+    post:
+      summary: >-
+        Return clustered Fisher's test results from given list of Fisher's test
+        results
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+        '500':
+          description: Internal Server Error
+      requestBody:
+        description: Cluster Pathway Enrichment. This is primarily used after running `combined-fisher-test` or `filter-fisher-test` as the required input is the output from that call. Uses the findCluster agglomerative clustering method from the R package (see documentation for more details).
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                min_pathway_tocluster:
+                  type: number
+                  # required: false
+                perc_analyte_overlap:
+                  type: number
+                  # required: false
+                perc_pathway_overlap:
+                  type: number
+                  # required: false
+                fishers_results:
+                  type: array
+                  items:
+                    type: object
+                pval_type:
+                  type: string
+                  enum: ['fdr', 'holm', 'pval']
+                  # required: false
+                pval_cutoff:
+                  type: number
+                  # required: false
+              example: # Sample object
+                min_pathway_tocluster: 2
+                perc_analyte_overlap: 0.2
+                perc_pathway_overlap: 0.2
+                fishers_results:
+                  analyte_type: ['both']
+                  result_type: ['pathway_enrichment']
+                  fishresults:
+                    [
+                      {
+                        'pathwayName': 'beta-Alanine metabolism',
+                        'pathwayId': 'map00410',
+                        'pathwaySource': 'kegg',
+                        'Pval_Metab': 0.032104,
+                        'Num_In_Path_Metab': 2,
+                        'Total_In_Path_Metab': 29,
+                        'Pval_combined': 0.032104,
+                        'Pval_combined_FDR': 0.059322,
+                        'Pval_combined_Holm': 1,
+                        'analytes': 'CARN; Carnosine;L-Aspartic acid',
+                      },
+                      {
+                        'pathwayName': 'Methionine Metabolism',
+                        'pathwayId': 'map00270',
+                        'pathwaySource': 'kegg',
+                        'Pval_Gene': 0.000044,
+                        'Num_In_Path_Gene': 2,
+                        'Total_In_Path_Gene': 55,
+                        'Pval_combined': 0.000044,
+                        'Pval_combined_FDR': 0.000164,
+                        'Pval_combined_Holm': 0.002797,
+                        'analytes': 'GOT1;GOT2',
+                      },
+                      {
+                        'pathwayName': 'Tyrosine metabolism',
+                        'pathwayId': 'map00350',
+                        'pathwaySource': 'kegg',
+                        'Pval_Metab': 0.518364,
+                        'Num_In_Path_Metab': 1,
+                        'Total_In_Path_Metab': 69,
+                        'Pval_Gene': 0.00003,
+                        'Num_In_Path_Gene': 2,
+                        'Total_In_Path_Gene': 45,
+                        'Pval_combined': 0.000015,
+                        'Pval_combined_FDR': 0.000065,
+                        'Pval_combined_Holm': 0.001013,
+                        'analytes': 'L-Aspartic acid;GOT1;GOT2',
+                      },
+                      {
+                        'pathwayName': 'Arginine and proline metabolism',
+                        'pathwayId': 'map00330',
+                        'pathwaySource': 'kegg',
+                        'Pval_Metab': 0.011701,
+                        'Num_In_Path_Metab': 3,
+                        'Total_In_Path_Metab': 51,
+                        'Pval_Gene': 1.132259e-7,
+                        'Num_In_Path_Gene': 3,
+                        'Total_In_Path_Gene': 62,
+                        'Pval_combined': 1.324894e-9,
+                        'Pval_combined_FDR': 2.8154e-8,
+                        'Pval_combined_Holm': 1.086413e-7,
+                        'analytes': 'Argininosuccinic acid;L-Alanine;L-Aspartic acid;GOT1;GOT2;GPT',
+                      },
+                      {
+                        'pathwayName': 'Phenylalanine and Tyrosine Metabolism',
+                        'pathwayId': 'map00360',
+                        'pathwaySource': 'kegg',
+                        'Pval_Gene': 0.000011,
+                        'Num_In_Path_Gene': 2,
+                        'Total_In_Path_Gene': 27,
+                        'Pval_combined': 0.000011,
+                        'Pval_combined_FDR': 0.000056,
+                        'Pval_combined_Holm': 0.000757,
+                        'analytes': 'GOT1;GOT2',
+                      },
+                      {
+                        'pathwayName': 'Alanine, aspartate and glutamate metabolism',
+                        'pathwayId': 'map00250',
+                        'pathwaySource': 'kegg',
+                        'Pval_Metab': 0.001954,
+                        'Num_In_Path_Metab': 4,
+                        'Total_In_Path_Metab': 61,
+                        'Pval_Gene': 5.11736e-11,
+                        'Num_In_Path_Gene': 4,
+                        'Total_In_Path_Gene': 55,
+                        'Pval_combined': 9.99901e-14,
+                        'Pval_combined_FDR': 4.249579e-12,
+                        'Pval_combined_Holm': 8.399168e-12,
+                        'analytes': 'Argininosuccinic acid;L-Alanine;L-Asparagine;L-Aspartic acid;GOT1;GOT2;AGXT;GPT',
+                      },
+                      {
+                        'pathwayName': 'Nitrogen metabolism',
+                        'pathwayId': 'map00910',
+                        'pathwaySource': 'kegg',
+                        'Pval_Metab': 0.02611,
+                        'Num_In_Path_Metab': 2,
+                        'Total_In_Path_Metab': 26,
+                        'Pval_combined': 0.02611,
+                        'Pval_combined_FDR': 0.05044,
+                        'Pval_combined_Holm': 1,
+                        'analytes': 'L-Asparagine;L-Aspartic acid',
+                      },
+                      {
+                        'pathwayName': '2-Oxocarboxylic acid metabolism',
+                        'pathwayId': 'map01210',
+                        'pathwaySource': 'kegg',
+                        'Pval_Gene': 0.000003147428,
+                        'Num_In_Path_Gene': 2,
+                        'Total_In_Path_Gene': 15,
+                        'Pval_combined': 0.000003147428,
+                        'Pval_combined_FDR': 0.000024,
+                        'Pval_combined_Holm': 0.000236,
+                        'analytes': 'GOT1;GOT2',
+                      },
+                      {
+                        'pathwayName': 'Phenylalanine, tyrosine and tryptophan biosynthesis',
+                        'pathwayId': 'map00400',
+                        'pathwaySource': 'kegg',
+                        'Pval_Gene': 0.000005693446,
+                        'Num_In_Path_Gene': 2,
+                        'Total_In_Path_Gene': 20,
+                        'Pval_combined': 0.000005693446,
+                        'Pval_combined_FDR': 0.00004,
+                        'Pval_combined_Holm': 0.000421,
+                        'analytes': 'GOT1;GOT2',
+                      },
+                      {
+                        'pathwayName': 'Glyoxylate metabolism and glycine degradation',
+                        'pathwayId': 'R-HSA-389661',
+                        'pathwaySource': 'reactome',
+                        'Pval_Gene': 0.000014,
+                        'Num_In_Path_Gene': 2,
+                        'Total_In_Path_Gene': 31,
+                        'Pval_combined': 0.000014,
+                        'Pval_combined_FDR': 0.000062,
+                        'Pval_combined_Holm': 0.000947,
+                        'analytes': 'GOT2;AGXT',
+                      },
+                      {
+                        'pathwayName': 'Sulfur amino acid metabolism',
+                        'pathwayId': 'R-HSA-1614635',
+                        'pathwaySource': 'reactome',
+                        'Pval_Gene': 0.000011,
+                        'Num_In_Path_Gene': 2,
+                        'Total_In_Path_Gene': 27,
+                        'Pval_combined': 0.000011,
+                        'Pval_combined_FDR': 0.000056,
+                        'Pval_combined_Holm': 0.000757,
+                        'analytes': 'GOT1;GOT2',
+                      },
+                      {
+                        'pathwayName': 'Gluconeogenesis',
+                        'pathwayId': 'R-HSA-70263',
+                        'pathwaySource': 'reactome',
+                        'Pval_Metab': 0.122185,
+                        'Num_In_Path_Metab': 1,
+                        'Total_In_Path_Metab': 32,
+                        'Pval_Gene': 0.000017,
+                        'Num_In_Path_Gene': 2,
+                        'Total_In_Path_Gene': 34,
+                        'Pval_combined': 0.000002052088,
+                        'Pval_combined_FDR': 0.000017,
+                        'Pval_combined_Holm': 0.000156,
+                        'analytes': 'Citric acid;GOT1;GOT2',
+                      },
+                      {
+                        'pathwayName': 'Glucose metabolism',
+                        'pathwayId': 'R-HSA-70326',
+                        'pathwaySource': 'reactome',
+                        'Pval_Metab': 0.157544,
+                        'Num_In_Path_Metab': 1,
+                        'Total_In_Path_Metab': 42,
+                        'Pval_Gene': 0.000125,
+                        'Num_In_Path_Gene': 2,
+                        'Total_In_Path_Gene': 92,
+                        'Pval_combined': 0.00002,
+                        'Pval_combined_FDR': 0.00008,
+                        'Pval_combined_Holm': 0.001278,
+                        'analytes': 'Citric acid;GOT1;GOT2',
+                      },
+                      {
+                        'pathwayName': 'Aspartate and asparagine metabolism',
+                        'pathwayId': 'R-HSA-8963693',
+                        'pathwaySource': 'reactome',
+                        'Pval_Gene': 0.000001649093,
+                        'Num_In_Path_Gene': 2,
+                        'Total_In_Path_Gene': 11,
+                        'Pval_combined': 0.000001649093,
+                        'Pval_combined_FDR': 0.000017,
+                        'Pval_combined_Holm': 0.00013,
+                        'analytes': 'GOT1;GOT2',
+                      },
+                      {
+                        'pathwayName': 'Amino acid metabolism pathway excerpt: histidine catabolism extension',
+                        'pathwayId': 'WP4661',
+                        'pathwaySource': 'wiki',
+                        'Pval_Metab': 0.00079,
+                        'Num_In_Path_Metab': 2,
+                        'Total_In_Path_Metab': 17,
+                        'Pval_combined': 0.00079,
+                        'Pval_combined_FDR': 0.002684,
+                        'Pval_combined_Holm': 0.04816,
+                        'analytes': 'Citric acid;L-Alanine',
+                      },
+                      {
+                        'pathwayName': 'Sulfur amino acid metabolism',
+                        'pathwayId': 'WP3574',
+                        'pathwaySource': 'wiki',
+                        'Pval_Gene': 0.000011,
+                        'Num_In_Path_Gene': 2,
+                        'Total_In_Path_Gene': 27,
+                        'Pval_combined': 0.000011,
+                        'Pval_combined_FDR': 0.000056,
+                        'Pval_combined_Holm': 0.000757,
+                        'analytes': 'GOT1;GOT2',
+                      },
+                      {
+                        'pathwayName': 'Glycolysis and gluconeogenesis',
+                        'pathwayId': 'WP534',
+                        'pathwaySource': 'wiki',
+                        'Pval_Metab': 0.045562,
+                        'Num_In_Path_Metab': 1,
+                        'Total_In_Path_Metab': 18,
+                        'Pval_Gene': 0.000031,
+                        'Num_In_Path_Gene': 2,
+                        'Total_In_Path_Gene': 46,
+                        'Pval_combined': 0.000001410614,
+                        'Pval_combined_FDR': 0.000017,
+                        'Pval_combined_Holm': 0.000113,
+                        'analytes': 'L-Aspartic acid;GOT1;GOT2',
+                      },
+                      {
+                        'pathwayName': 'Amino acid metabolism',
+                        'pathwayId': 'WP3925',
+                        'pathwaySource': 'wiki',
+                        'Pval_Metab': 0.000003106941,
+                        'Num_In_Path_Metab': 5,
+                        'Total_In_Path_Metab': 109,
+                        'Pval_Gene': 0.00013,
+                        'Num_In_Path_Gene': 2,
+                        'Total_In_Path_Gene': 94,
+                        'Pval_combined': 4.049386e-10,
+                        'Pval_combined_FDR': 1.147326e-8,
+                        'Pval_combined_Holm': 3.360991e-8,
+                        'analytes': 'Argininosuccinic acid;Citric acid;L-Alanine;L-Asparagine;L-Aspartic acid;GOT1;GOT2',
+                      },
+                      {
+                        'pathwayName': 'Biomarkers for urea cycle disorders',
+                        'pathwayId': 'WP4583',
+                        'pathwaySource': 'wiki',
+                        'Pval_Gene': 0.000001978779,
+                        'Num_In_Path_Gene': 2,
+                        'Total_In_Path_Gene': 12,
+                        'Pval_combined': 0.000001978779,
+                        'Pval_combined_FDR': 0.000017,
+                        'Pval_combined_Holm': 0.000152,
+                        'analytes': 'GOT1;GPT',
+                      },
+                      {
+                        'pathwayName': 'Urea cycle and metabolism of amino groups',
+                        'pathwayId': 'WP497',
+                        'pathwaySource': 'wiki',
+                        'Pval_Metab': 0.002822,
+                        'Num_In_Path_Metab': 2,
+                        'Total_In_Path_Metab': 32,
+                        'Pval_combined': 0.002822,
+                        'Pval_combined_FDR': 0.007055,
+                        'Pval_combined_Holm': 0.15385,
+                        'analytes': 'Argininosuccinic acid;L-Aspartic acid',
+                      },
+                      {
+                        'pathwayName': 'Glucose metabolism',
+                        'pathwayId': 'WP4093',
+                        'pathwaySource': 'wiki',
+                        'Pval_Metab': 0.103437,
+                        'Num_In_Path_Metab': 1,
+                        'Total_In_Path_Metab': 42,
+                        'Pval_Gene': 0.000125,
+                        'Num_In_Path_Gene': 2,
+                        'Total_In_Path_Gene': 92,
+                        'Pval_combined': 0.000013,
+                        'Pval_combined_FDR': 0.000062,
+                        'Pval_combined_Holm': 0.000891,
+                        'analytes': 'Citric acid;GOT1;GOT2',
+                      },
+                      {
+                        'pathwayName': 'Metabolic reprogramming in colon cancer',
+                        'pathwayId': 'WP4290',
+                        'pathwaySource': 'wiki',
+                        'Pval_Metab': 0.004177,
+                        'Num_In_Path_Metab': 2,
+                        'Total_In_Path_Metab': 39,
+                        'Pval_Gene': 0.008374,
+                        'Num_In_Path_Gene': 1,
+                        'Total_In_Path_Gene': 42,
+                        'Pval_combined': 0.000035,
+                        'Pval_combined_FDR': 0.000135,
+                        'Pval_combined_Holm': 0.002238,
+                        'analytes': 'Citric acid;L-Asparagine;GOT2',
+                      },
+                      {
+                        'pathwayName': 'Aspartate and asparagine metabolism',
+                        'pathwayId': 'WP4979',
+                        'pathwaySource': 'wiki',
+                        'Pval_Gene': 0.000001649093,
+                        'Num_In_Path_Gene': 2,
+                        'Total_In_Path_Gene': 11,
+                        'Pval_combined': 0.000001649093,
+                        'Pval_combined_FDR': 0.000017,
+                        'Pval_combined_Holm': 0.00013,
+                        'analytes': 'GOT1;GOT2',
+                      },
+                      {
+                        'pathwayName': 'Urea cycle and associated pathways',
+                        'pathwayId': 'WP4595',
+                        'pathwaySource': 'wiki',
+                        'Pval_Gene': 6.068128e-9,
+                        'Num_In_Path_Gene': 3,
+                        'Total_In_Path_Gene': 24,
+                        'Pval_combined': 6.068128e-9,
+                        'Pval_combined_FDR': 1.031582e-7,
+                        'Pval_combined_Holm': 4.915183e-7,
+                        'analytes': 'GOT1;GOT2;GPT',
+                      },
+                      {
+                        'pathwayName': 'NAD metabolism in oncogene-induced senescence and mitochondrial dysfunction-associated senescence',
+                        'pathwayId': 'WP5046',
+                        'pathwaySource': 'wiki',
+                        'Pval_Gene': 0.000009734892,
+                        'Num_In_Path_Gene': 2,
+                        'Total_In_Path_Gene': 26,
+                        'Pval_combined': 0.000009734892,
+                        'Pval_combined_FDR': 0.000056,
+                        'Pval_combined_Holm': 0.000711,
+                        'analytes': 'GOT1;GOT2',
+                      },
+                      {
+                        'pathwayName': 'Metabolism overview',
+                        'pathwayId': 'WP3602',
+                        'pathwaySource': 'wiki',
+                        'Pval_Metab': 0.002603,
+                        'Num_In_Path_Metab': 3,
+                        'Total_In_Path_Metab': 116,
+                        'Pval_combined': 0.002603,
+                        'Pval_combined_FDR': 0.007055,
+                        'Pval_combined_Holm': 0.145751,
+                        'analytes': 'Argininosuccinic acid;Citric acid;L-Aspartic acid',
+                      },
+                      {
+                        'pathwayName': 'Glyoxylate metabolism and glycine degradation',
+                        'pathwayId': 'WP3562',
+                        'pathwaySource': 'wiki',
+                        'Pval_Gene': 0.000014,
+                        'Num_In_Path_Gene': 2,
+                        'Total_In_Path_Gene': 31,
+                        'Pval_combined': 0.000014,
+                        'Pval_combined_FDR': 0.000062,
+                        'Pval_combined_Holm': 0.000947,
+                        'analytes': 'GOT2;AGXT',
+                      },
+                      {
+                        'pathwayName': 'Alanine and aspartate metabolism',
+                        'pathwayId': 'WP106',
+                        'pathwaySource': 'wiki',
+                        'Pval_Metab': 7.081563e-15,
+                        'Num_In_Path_Metab': 7,
+                        'Total_In_Path_Metab': 23,
+                        'Pval_Gene': 1.371261e-11,
+                        'Num_In_Path_Gene': 4,
+                        'Total_In_Path_Gene': 40,
+                        'Pval_combined': 9.710673e-26,
+                        'Pval_combined_FDR': 8.254072e-24,
+                        'Pval_combined_Holm': 8.254072e-24,
+                        'analytes': 'CARN; Carnosine;Argininosuccinic acid;Citric acid;L-Alanine;L-Asparagine;L-Aspartic acid;(3R)-3-acetyloxy-4-(trimethylazaniumyl)butanoate; L-Acetylcarnitine; O-Acetylcarnitine;GOT1;GOT2;AGXT;GPT',
+                      },
+                      {
+                        'pathwayName': 'mRNA, protein, and metabolite inducation pathway by cyclosporin A',
+                        'pathwayId': 'WP3953',
+                        'pathwaySource': 'wiki',
+                        'Pval_Metab': 0.00053,
+                        'Num_In_Path_Metab': 2,
+                        'Total_In_Path_Metab': 14,
+                        'Pval_combined': 0.00053,
+                        'Pval_combined_FDR': 0.001879,
+                        'Pval_combined_Holm': 0.032885,
+                        'analytes': 'L-Alanine;L-Asparagine',
+                      },
+                    ]
+  /api/chemical-enrichment:
+    post:
+      summary: Perform chemical class enrichment on given metabolites
+      responses:
+        '200':
+          description: OK
+        '500':
+          description: Internal Server Error
+      requestBody:
+        description: Perform chemical class enrichment on ClassyFire and LIPIDMAPS classes. IDs should be prepended by ID source (e.g. **hmdb**:C00412).
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                metabolites:
+                  type: array
+                  items:
+                    type: string
+                biospecimen:
+                  type: string
+                  enum:
+                    [
+                      'Blood',
+                      'Adipose',
+                      'Heart',
+                      'Urine',
+                      'Brain',
+                      'Liver',
+                      'Kidney',
+                      'Saliva',
+                      'Feces',
+                    ]
+                  # required: false
+              example:
+                metabolites:
+                  [
+                    'hmdb:HMDB0000056',
+                    'hmdb:HMDB0000439',
+                    'hmdb:HMDB0000479',
+                    'hmdb:HMDB0000532',
+                    'hmdb:HMDB0001015',
+                    'hmdb:HMDB0001138',
+                    'hmdb:HMDB0029159',
+                    'hmdb:HMDB0029412',
+                    'hmdb:HMDB0034365',
+                    'hmdb:HMDB0035227',
+                    'hmdb:HMDB0007973',
+                    'hmdb:HMDB0008057',
+                    'hmdb:HMDB0011211',
+                  ]
+components:
+  x-bte-annotations:
+  ## paper with more info: https://doi.org/10.1093/bioinformatics/btac726
+    chemical_to_pathway:
+      response_root: data
+      inputs:
+        category: SmallMolecule
+        ## use default use_all_namespace: false
+        ## because equivalent IDs for 1 entity retrieve the same data
+        ## ex: glutamic acid (pubchem:33032, chebi:16015, hmdb:HMDB0000148, kegg:C00025)
+        namespaces:
+        ## using order from https://rampdb.nih.gov/api/id-types
+        ## not including (because it's not in NodeNorm): chemspider, wikidata, LIPIDMAPS, lipidbank, swisslipids, plantfa, kegg_glycan, rhea-comp, polymer
+        - prefix: HMDB
+          name_field: commonName
+          request_prefix: "hmdb:"
+          match_field: inputId
+        - prefix: CHEBI
+          name_field: commonName
+          request_prefix: "chebi:"
+          match_field: inputId
+        - prefix: "KEGG.COMPOUND"
+          name_field: commonName
+          request_prefix: "kegg:"
+          match_field: inputId
+        - prefix: "PUBCHEM.COMPOUND"
+          name_field: commonName
+          request_prefix: "pubchem:"
+          match_field: inputId
+        - prefix: CAS
+          name_field: commonName
+          match_field: inputId
+      predicate: participates_in
+      outputs:
+        category: Pathway
+        namespaces:
+        ## has two output fields: 1 for namespace, 1 for ID itself
+        ## using JSONata (if contains X-then process) to try to handle this
+        ## not sure if there's other possible prefixes. I couldn't find examples with an "hmdb" prefix (actually SMPDB in Translator)
+        - prefix: WIKIPATHWAYS
+          id_field: '$contains(pathwaySource, "wiki") ? ("WIKIPATHWAYS:" & pathwayId)'
+          name_field: pathwayName
+        - prefix: REACT
+          id_field: '$contains(pathwaySource, "reactome") ? ("REACT:" & pathwayId)'
+          name_field: pathwayName
+        - prefix: "KEGG.PATHWAY"
+          id_field: '$contains(pathwaySource, "kegg") ? ("KEGG.PATHWAY:" & pathwayId)'
+          name_field: pathwayName
+      ## not going to use exclude_namespace_combos: not aware of any combos that don't actually exist
+      request_info:
+        path: "/api/pathways-from-analytes"
+        method: post
+        support_batch: true
+        ## assuming no pagination. There isn't any documentation on this
+        request_body:
+        ## older annotation used requestBodyType: object
+        ## 'analytes' value should be an array of prefixed-ID strings (using request_prefix)
+          analytes: "{{ input_curies }}"
+        ## NO PARAMETERS
+      provenance:
+        source_field: pathwaySource
+        mapping:
+        ## not sure if there's other possible prefixes. I couldn't find examples with an "hmdb" prefix (actually SMPDB in Translator)
+        ## don't include "rampdb" as an aggregator. It's already the API infores
+          wiki:
+            knowledge_level: knowledge_assertion
+            agent_type: manual_agent
+            sources:
+            - id: "infores:wikipathways"
+              role: primary_knowledge_source
+          reactome:
+            knowledge_level: knowledge_assertion
+            agent_type: manual_agent
+            sources:
+            - id: "infores:reactome"
+              role: primary_knowledge_source
+          kegg:
+          ## paper says "KEGG (through HMDB)"
+            knowledge_level: knowledge_assertion
+            agent_type: manual_agent
+            sources:
+            - id: "infores:kegg"
+              role: primary_knowledge_source
+            - id: "infores:hmdb"
+              role: aggregator_knowledge_source
+              upstream: ["infores:kegg"]
+      ## NO RESPONSE MAPPING: no edge-attributes
+      test_examples:
+      ## another possible input is HMDB0000064 (creatine)
+        - input_curie: "HMDB:HMDB0000148"        ## Glutamate; L-Glutamic acid
+          output_curie: "WIKIPATHWAYS:WP4583"    ## Biomarkers for urea cycle disorders
+        - input_curie: "HMDB:HMDB0000148"        ## Glutamate; L-Glutamic acid
+          output_curie: "REACT:R-HSA-9748787"    ## Azathioprine ADME
+        - input_curie: "HMDB:HMDB0000148"           ## Glutamate; L-Glutamic acid
+          output_curie: "KEGG.PATHWAY:map00520"     ## Amino Sugar Metabolism
+    gene_to_pathway:
+      response_root: data
+      inputs:
+        category: Gene
+        ## use default use_all_namespace: false
+        ## because equivalent IDs for 1 entity retrieve the same data
+        ## ex: PGR (ensembl:ENSG00000082175, uniprot:P06401, entrez:5241)
+        namespaces:
+        ## using order from https://rampdb.nih.gov/api/id-types
+        ## not including (because it's not in NodeNorm): gene_symbol, hmdb, wikidata, EN, ncbiprotein, brenda, chebi
+        - prefix: ENSEMBL
+          name_field: commonName
+          request_prefix: "ensembl:"
+          match_field: inputId
+        - prefix: UniProtKB
+          name_field: commonName
+          request_prefix: "uniprot:"
+          match_field: inputId
+        - prefix: NCBIGene
+          name_field: commonName
+          request_prefix: "entrez:"
+          match_field: inputId
+      predicate: participates_in
+      outputs:
+        category: Pathway
+        namespaces:
+        ## has two output fields: 1 for namespace, 1 for ID itself
+        ## using JSONata (if contains X-then process) to try to handle this
+        ## not sure if there's other possible prefixes. I couldn't find examples with an "hmdb" prefix (actually SMPDB in Translator)
+        - prefix: WIKIPATHWAYS
+          id_field: '$contains(pathwaySource, "wiki") ? ("WIKIPATHWAYS:" & pathwayId)'
+          name_field: pathwayName
+        - prefix: REACT
+          id_field: '$contains(pathwaySource, "reactome") ? ("REACT:" & pathwayId)'
+          name_field: pathwayName
+        - prefix: "KEGG.PATHWAY"
+          id_field: '$contains(pathwaySource, "kegg") ? ("KEGG.PATHWAY:" & pathwayId)'
+          name_field: pathwayName
+      ## not going to use exclude_namespace_combos: not aware of any combos that don't actually exist
+      request_info:
+        path: "/api/pathways-from-analytes"
+        method: post
+        support_batch: true
+        ## assuming no pagination. There isn't any documentation on this
+        request_body:
+        ## older annotation used requestBodyType: object
+        ## 'analytes' value should be an array of prefixed-ID strings (using request_prefix)
+          analytes: "{{ input_curies }}"
+        ## NO PARAMETERS
+      provenance:
+        source_field: pathwaySource
+        mapping:
+        ## not sure if there's other possible prefixes. I couldn't find examples with an "hmdb" prefix (actually SMPDB in Translator)
+        ## don't include "rampdb" as an aggregator. It's already the API infores
+          wiki:
+            knowledge_level: knowledge_assertion
+            agent_type: manual_agent
+            sources:
+            - id: "infores:wikipathways"
+              role: primary_knowledge_source
+          reactome:
+            knowledge_level: knowledge_assertion
+            agent_type: manual_agent
+            sources:
+            - id: "infores:reactome"
+              role: primary_knowledge_source
+          kegg:
+          ## paper says "KEGG (through HMDB)"
+            knowledge_level: knowledge_assertion
+            agent_type: manual_agent
+            sources:
+            - id: "infores:kegg"
+              role: primary_knowledge_source
+            - id: "infores:hmdb"
+              role: aggregator_knowledge_source
+              upstream: ["infores:kegg"]
+      ## NO RESPONSE MAPPING: no edge-attributes
+      test_examples:
+      ## another possible input is entrez:8309 (ACOX2)
+        - input_curie: "NCBIGene:1629"           ## DBT
+          output_curie: "WIKIPATHWAYS:WP4686"    ## Leucine, isoleucine and valine metabolism
+        - input_curie: "NCBIGene:1629"           ## DBT
+          output_curie: "REACT:R-HSA-9837999"    ## Mitochondrial protein degradation
+        - input_curie: "NCBIGene:1629"             ## DBT
+          output_curie: "KEGG.PATHWAY:map00280"    ## Valine, leucine and isoleucine degradation
