@@ -2188,7 +2188,8 @@ components:
     chem-interacts-with-gene:
     ## 834616 records: https://biothings.transltr.io/ttd/query?q=subject.type:%22biolink:SmallMolecule%22%20AND%20association.predicate:%22biolink:interacts_with%22%20AND%20object.type:%22biolink:Protein%22
     ## just in case, use pagination
-      response_field_root: hits
+    ## future interesting fields: association.moa, association.trial_status, object.target_type
+      response_root: hits
       inputs:
         category: SmallMolecule
         ## want default behavior: if entity happens to have IDs for both namespaces, use PUBCHEM.COMPOUND only
@@ -2207,6 +2208,8 @@ components:
         ## UniProtKB is preferred over TTD.TARGET 
         ## object.id: 1 ID only, UniProtKB or TTD.TARGET
         ## could also use namespace-specific fields (values are ID only): object.uniprotkb, object.ttd_target_id
+        ## could use JSONata to check prefix, return null if it doesn't match namespace
+        ##   Ex for TTD.TARGET: '$contains(object.id, "ttd_target_id:") ? object.id.$replace("ttd_target_id", "TTD.TARGET")'
           - prefix: UniProtKB
             id_field: object.id
             ## not including name field because SRI Node-Norm can find names for these IDs
@@ -2224,7 +2227,7 @@ components:
           scopes: subject.id
         parameters:
           fields: >-
-            object.id,object.name,subject.name
+            object.id,object.name,subject.name,subject.id
           filter: subject.type:"biolink:SmallMolecule" AND association.predicate:"biolink:interacts_with" AND object.type:"biolink:Protein"
           size: 1000
           with_total: true
