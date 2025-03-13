@@ -738,28 +738,29 @@ components:
   #         oneOutput: "RGD:1303058"     ## Chia
     biomarker-via-orthology_gene_disease: 
     ## NO PAGINATION: 1 gene ID won't match >~1000 gene documents
+      response_root: 'agr.biomarker_via_orthology.{"query": %.%.query, "gene_id": %.%._id, "gene_symbol": %.symbol, "biomarker_via_orthology": $}'
       inputs:
         category: Gene
         namespaces: 
           - prefix: HGNC   ## not including name field because SRI Node-Norm can find names for these IDs
             match_field: query
           - prefix: MGI
-            name_field: agr.symbol
+            name_field: gene_symbol
             match_field: query
           - prefix: RGD
-            name_field: agr.symbol
+            name_field: gene_symbol
             match_field: query
           - prefix: ZFIN
-            name_field: agr.symbol
+            name_field: gene_symbol
             match_field: query
           - prefix: FB
-            name_field: agr.symbol
+            name_field: gene_symbol
             match_field: query
           - prefix: WB
-            name_field: agr.symbol
+            name_field: gene_symbol
             match_field: query
           - prefix: SGD
-            name_field: agr.symbol
+            name_field: gene_symbol
             match_field: query
       ## not sure if this predicate is okay for "via orthology"
       predicate: biomarker_for
@@ -768,7 +769,7 @@ components:
         namespaces: 
           ## not including name field because SRI Node-Norm can find names for these IDs
           - prefix: DOID
-            id_field: agr.biomarker_via_orthology.doid    ## single ID, has prefix (DOID)
+            id_field: biomarker_via_orthology.doid    ## single ID, has prefix (DOID)
       request_info:
         path: "/query"   ## use same format that paths section does
         method: post     ## use same format that paths section does (lower case)
@@ -777,7 +778,8 @@ components:
           q: "{{ input_curies }}"
           scopes: _id
         parameters:
-          fields: agr.biomarker_via_orthology.doid,agr.symbol
+          fields: agr.biomarker_via_orthology,agr.symbol
+          filter: _exists_:agr.biomarker_via_orthology
           size: 100       ## should be overestimate, shouldn't get 1 gene ID -> 100 gene documents
       provenance:   ## static format
       ## see notes above. Has "source" and evidence_code fields - use one of them? Can't use both easily...
@@ -806,37 +808,38 @@ components:
     ## - this is a reverse operation
     ## - use pagination ("DOID:10652" has >1000 genes linked)
     ##   https://biothings.ci.transltr.io/agr/query?q=agr.biomarker_via_orthology.doid:%22DOID:10652%22
-      response_field_root: hits
+      response_root: 'hits.agr.biomarker_via_orthology.{"query": %.%.query, "gene_id": %.%._id, "gene_symbol": %.symbol, "biomarker_via_orthology": $}'
       inputs:
         category: Disease
         namespaces: 
           - prefix: DOID
-            match_field: query
+            ## use the actual edge's disease ID. If it doesn't match the input disease ID, the edge will be dropped (not used)
+            match_field: biomarker_via_orthology.doid
       predicate: has_biomarker
       outputs:
         category: Gene
         ## id_field values are CURIEs with standard prefix, delimiter
         namespaces: 
           - prefix: HGNC
-            id_field: _id
+            id_field: gene_id
           - prefix: MGI
-            id_field: _id
-            name_field: agr.symbol
+            id_field: gene_id
+            name_field: gene_symbol
           - prefix: RGD
-            id_field: _id
-            name_field: agr.symbol
+            id_field: gene_id
+            name_field: gene_symbol
           - prefix: ZFIN
-            id_field: _id
-            name_field: agr.symbol
+            id_field: gene_id
+            name_field: gene_symbol
           - prefix: FB
-            id_field: _id
-            name_field: agr.symbol
+            id_field: gene_id
+            name_field: gene_symbol
           - prefix: WB
-            id_field: _id
-            name_field: agr.symbol
+            id_field: gene_id
+            name_field: gene_symbol
           - prefix: SGD
-            id_field: _id
-            name_field: agr.symbol
+            id_field: gene_id
+            name_field: gene_symbol
       request_info:
         path: "/query"
         method: post
@@ -846,7 +849,8 @@ components:
           q: "{{ input_curies }}"
           scopes: agr.biomarker_via_orthology.doid
         parameters:
-          fields: _id,agr.symbol
+          fields: agr.biomarker_via_orthology,agr.symbol
+          ## don't need filter because we are looking up diseases in biomarker_via_orthology so this section must exist in every document returned
           size: 1000
           with_total: true
       provenance:
