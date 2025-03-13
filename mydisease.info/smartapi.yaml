@@ -642,6 +642,7 @@ components:
     hpo-parameters:
       fields: >-
         hpo.phenotype_related_to_disease.hpo_id,
+        hpo.omim,hpo.orphanet,
         hpo.phenotype_related_to_disease.pmid_refs,
         hpo.phenotype_related_to_disease.isbn_refs,
         hpo.phenotype_related_to_disease.website_refs,
@@ -760,9 +761,10 @@ components:
   ## - no operations for DECIPHER right now: no support in SRI NodeNorm 
     disease-phenotype:
     ## NO PAGINATION: 1 disease won't match >~1000 disease documents
+      response_root: 'hpo.phenotype_related_to_disease.{"query": %.%.query, "disease_omim": %.omim, "disease_orphanet": %.orphanet, "phenotype_related_to_disease": $}'
       inputs:
         category: Disease
-        ## will do default behavior: for each entity, only use IDs from 1 namespace (the first one in list it has IDs for)
+        ## do default `use_all_namespaces: false` behavior: for each entity, only use IDs from 1 namespace (the first one in list it has IDs for)
         ## data from synonymous OMIM/orphanet IDs have already been merged, so either ID can be used to retrieve the data 
         namespaces: 
         ## namespaces are ordered from most to least preferred (more documents have omim field)
@@ -776,7 +778,7 @@ components:
         category: PhenotypicFeature
         namespaces: 
           - prefix: HP
-            id_field: hpo.phenotype_related_to_disease.hpo_id   ## single ID, has prefix
+            id_field: phenotype_related_to_disease.hpo_id   ## single ID, has prefix
       request_info:
         path: "/query"   ## use same format that paths section does
         method: post     ## use same format that paths section does (lower case)
@@ -806,15 +808,15 @@ components:
             role: primary_knowledge_source
       response_mapping:
         ## has prefix 
-        ref_pmid: hits.hpo.phenotype_related_to_disease.pmid_refs    ## HAS PREFIX (PMID)
-        ref_isbn: hits.hpo.phenotype_related_to_disease.isbn_refs    ## HAS PREFIX (ISBN)
-        ref_url: hits.hpo.phenotype_related_to_disease.website_refs
+        ref_pmid: phenotype_related_to_disease.pmid_refs    ## HAS PREFIX (PMID)
+        ref_isbn: phenotype_related_to_disease.isbn_refs    ## HAS PREFIX (ISBN)
+        ref_url: phenotype_related_to_disease.website_refs
         ## Translator validator sometimes complains about these attribute_type_ids
         ## needs debugging later
-        "biolink:has_quotient": hits.hpo.phenotype_related_to_disease.numeric_freq     ## decimal freq
-        "biolink:frequency_qualifier": hits.hpo.phenotype_related_to_disease.hp_freq   ## HP ontology freq term
-        "biolink:has_count": hits.hpo.phenotype_related_to_disease.freq_numerator      ## frequency as a fraction (numerator)
-        "biolink:has_total": hits.hpo.phenotype_related_to_disease.freq_denominator    ## frequency as a fraction (denominator)
+        "biolink:has_quotient": phenotype_related_to_disease.numeric_freq     ## decimal freq
+        "biolink:frequency_qualifier": phenotype_related_to_disease.hp_freq   ## HP ontology freq term
+        "biolink:has_count": phenotype_related_to_disease.freq_numerator      ## frequency as a fraction (numerator)
+        "biolink:has_total": phenotype_related_to_disease.freq_denominator    ## frequency as a fraction (denominator)
       test_examples:
         - input_curie: "OMIM:246900"     ## Dihydrolipoamide Dehydrogenase Deficiency
           output_curie: "HP:0001254"     ## Lethargy
