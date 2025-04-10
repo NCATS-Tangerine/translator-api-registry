@@ -708,7 +708,8 @@ components:
     ##   these all have diff ID formats, so their IDs can be put together in the same request
     ##   (ex: won't accidentally retrieve matches from the wrong namespace)
     ## - just in case, use pagination (very general, root-level pathways can have >1000 genes listed)
-      response_field_root: hits
+      ## right now, JSONata does not include pathway namespace
+      preprocess: 'hits.$#$i.query@$q.entrezgene@$g.*.*@$e.{"query": $q, "pathway_id": $e.id, "pathway_name": $e.name, "gene_id": $g}'
       inputs: 
         category: Pathway
         ## data has no "merging" for synonymous pathway IDs from diff namespaces
@@ -717,23 +718,24 @@ components:
         use_all_namespaces: true
         namespaces:
           - prefix: REACT
-            name_field: pathway.reactome.name
-            match_field: query
+            name_field: pathway_name
+            ## use the actual edge's pathway ID. If it doesn't match the input pathway ID, the edge will be dropped (not used)
+            match_field: pathway_id
           - prefix: KEGG.PATHWAY
-            name_field: pathway.kegg.name
-            match_field: query
+            name_field: pathway_name
+            match_field: pathway_id
           - prefix: WIKIPATHWAYS
-            name_field: pathway.wikipathways.name
-            match_field: query
+            name_field: pathway_name
+            match_field: pathway_id
           - prefix: BIOCARTA
-            name_field: pathway.biocarta.name
-            match_field: query
+            name_field: pathway_name
+            match_field: pathway_id
       predicate: has_participant
       outputs: 
         category: Gene
         namespaces:
           - prefix: NCBIGene
-            id_field: entrezgene   ## single ID, no prefix
+            id_field: gene_id   ## single ID, no prefix
       request_info:
         path: "/query"   ## use same format that paths section does
         method: post     ## use same format that paths section does (lower case)
@@ -744,12 +746,7 @@ components:
           q: "{{ input_ids }}"
           scopes: pathway.reactome.id,pathway.kegg.id,pathway.wikipathways.id,pathway.biocarta.id
         parameters:
-          fields: >-
-            entrezgene,
-            pathway.reactome.name,
-            pathway.kegg.name,
-            pathway.wikipathways.name,
-            pathway.biocarta.name
+          fields: entrezgene,pathway.reactome,pathway.kegg,pathway.wikipathways,pathway.biocarta
           size: 1000
           with_total: true  ## for pagination
       provenance:
@@ -800,6 +797,7 @@ components:
           output_curie: "NCBIGene:3265"            ## HRAS
     GeneInPathway:
     ## NO PAGINATION: 1 gene won't match >~1000 gene documents
+      preprocess: '$#$i.query@$q.*.*@$e.{"query": $q, "pathway_namespace": $keys(%)[$e in $lookup($$[$i].pathway, $)], "pathway_id": $e.id, "pathway_name": $e.name}'
       inputs:
         category: Gene
         namespaces:
@@ -813,17 +811,17 @@ components:
         namespaces:
         ## old comments say BTE had buggy behavior with handing names...but I'm not sure since operations included them
           - prefix: "REACT"
-            id_field: pathway.reactome.id
-            name_field: pathway.reactome.name
+            id_field: '$contains(pathway_namespace, "reactome") ? ("REACT:" & pathway_id)'
+            name_field: pathway_name
           - prefix: "KEGG.PATHWAY"
-            id_field: pathway.kegg.id
-            name_field: pathway.kegg.name
+            id_field: '$contains(pathway_namespace, "kegg") ? ("KEGG.PATHWAY:" & pathway_id)'
+            name_field: pathway_name
           - prefix: WIKIPATHWAYS
-            id_field: pathway.wikipathways.id
-            name_field: pathway.wikipathways.name
+            id_field: '$contains(pathway_namespace, "wikipathways") ? ("WIKIPATHWAYS:" & pathway_id)'
+            name_field: pathway_name
           - prefix: BIOCARTA
-            id_field: pathway.biocarta.id
-            name_field: pathway.biocarta.name
+            id_field: $contains(pathway_namespace, "biocarta") ? ("BIOCARTA:" & pathway_id)
+            name_field: pathway_name
       request_info:
         path: "/query"
         method: post
@@ -832,11 +830,7 @@ components:
           q: "{{ input_ids }}"
           scopes: entrezgene
         parameters:
-          fields: >-
-            pathway.reactome.id,pathway.reactome.name,
-            pathway.kegg.id,pathway.kegg.name,
-            pathway.wikipathways.id,pathway.wikipathways.name,
-            pathway.biocarta.id,pathway.biocarta.name
+          fields: entrezgene,pathway.reactome,pathway.kegg,pathway.wikipathways,pathway.biocarta
           size: 100      ## should be overestimate, shouldn't get 1 gene ID -> 100 gene documents
       provenance:
         - namespace_pair: [ NCBIGene, REACT ]
