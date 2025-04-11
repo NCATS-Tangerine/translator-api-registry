@@ -708,8 +708,14 @@ components:
     ##   these all have diff ID formats, so their IDs can be put together in the same request
     ##   (ex: won't accidentally retrieve matches from the wrong namespace)
     ## - just in case, use pagination (very general, root-level pathways can have >1000 genes listed)
-      ## right now, JSONata does not include pathway namespace
-      preprocess: 'hits.$#$i.query@$q.entrezgene@$g.*.*@$e.{"query": $q, "pathway_id": $e.id, "pathway_name": $e.name, "gene_id": $g}'
+      ## preprocess notes: returns 1 obj per hit, each obj contains info specific to the input ID (here: input name and namespace)
+      preprocess: >-
+        hits.query@$q.{
+          "input_id": $q, 
+          "input_namespace": $keys(pathway) ~> $filter(function ($key) {$q in $lookup(pathway, $key).id}),
+          "input_name": $.*.*[id=$q].name, 
+          "output_id": entrezgene
+        }
       inputs: 
         category: Pathway
         ## data has no "merging" for synonymous pathway IDs from diff namespaces
@@ -717,25 +723,26 @@ components:
         ##   SRI node-norm doesn't find synonymous pathway IDs either (no entity-resolving) 
         use_all_namespaces: true
         namespaces:
+        ## not using input_namespace for now. match_field's values can be just IDs
           - prefix: REACT
-            name_field: pathway_name
-            ## use the actual edge's pathway ID. If it doesn't match the input pathway ID, the edge will be dropped (not used)
-            match_field: pathway_id
+            name_field: input_name
+            match_field: input_id
           - prefix: KEGG.PATHWAY
-            name_field: pathway_name
-            match_field: pathway_id
+            name_field: input_name
+            match_field: input_id
           - prefix: WIKIPATHWAYS
-            name_field: pathway_name
-            match_field: pathway_id
+            name_field: input_name
+            match_field: input_id
           - prefix: BIOCARTA
-            name_field: pathway_name
-            match_field: pathway_id
+            name_field: input_name
+            match_field: input_id
       predicate: has_participant
       outputs: 
         category: Gene
         namespaces:
+        ## okay to have no prefix because there's only 1 namespace
           - prefix: NCBIGene
-            id_field: gene_id   ## single ID, no prefix
+            id_field: output_id   ## single ID, no prefix
       request_info:
         path: "/query"   ## use same format that paths section does
         method: post     ## use same format that paths section does (lower case)
