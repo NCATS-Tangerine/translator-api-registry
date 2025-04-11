@@ -804,7 +804,13 @@ components:
           output_curie: "NCBIGene:3265"            ## HRAS
     GeneInPathway:
     ## NO PAGINATION: 1 gene won't match >~1000 gene documents
-      preprocess: '$#$i.query@$q.*.*@$e.{"query": $q, "pathway_namespace": $keys(%)[$e in $lookup($$[$i].pathway, $)], "pathway_id": $e.id, "pathway_name": $e.name}'
+      preprocess: >-
+        $#$i.query@$q.*.*@$e.{
+          "query": $q, 
+          "output_namespace": $keys(%)[$e in $lookup($$[$i].pathway, $)], 
+          "output_id": $e.id, 
+          "output_name": $e.name
+        }
       inputs:
         category: Gene
         namespaces:
@@ -816,19 +822,18 @@ components:
         ## each nested pathway-object has only 1 ID from 1 namespace. So default behavior to pick "only one namespace" is fine. 
         ## id_field values are single ID only, no prefixes
         namespaces:
-        ## old comments say BTE had buggy behavior with handing names...but I'm not sure since operations included them
           - prefix: "REACT"
-            id_field: '$contains(pathway_namespace, "reactome") ? ("REACT:" & pathway_id)'
-            name_field: pathway_name
+            id_field: '$contains(output_namespace, "reactome") ? ("REACT:" & output_id)'
+            name_field: output_name
           - prefix: "KEGG.PATHWAY"
-            id_field: '$contains(pathway_namespace, "kegg") ? ("KEGG.PATHWAY:" & pathway_id)'
-            name_field: pathway_name
+            id_field: '$contains(output_namespace, "kegg") ? ("KEGG.PATHWAY:" & output_id)'
+            name_field: output_name
           - prefix: WIKIPATHWAYS
-            id_field: '$contains(pathway_namespace, "wikipathways") ? ("WIKIPATHWAYS:" & pathway_id)'
-            name_field: pathway_name
+            id_field: '$contains(output_namespace, "wikipathways") ? ("WIKIPATHWAYS:" & output_id)'
+            name_field: output_name
           - prefix: BIOCARTA
-            id_field: $contains(pathway_namespace, "biocarta") ? ("BIOCARTA:" & pathway_id)
-            name_field: pathway_name
+            id_field: $contains(output_namespace, "biocarta") ? ("BIOCARTA:" & output_id)
+            name_field: output_name
       request_info:
         path: "/query"
         method: post
