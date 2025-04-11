@@ -814,44 +814,44 @@ components:
     ## - this is a reverse operation
     ## - use pagination ("DOID:10652" has >1000 genes linked)
     ##   https://biothings.ci.transltr.io/agr/query?q=agr.biomarker_via_orthology.doid:%22DOID:10652%22
+    ## preprocess notes: returns 1 obj per hit, each obj contains the input ID's specific biomarker_via_orthology obj
       preprocess: >-
-        hits.agr.biomarker_via_orthology.{
-          "query": %.%.query, 
-          "gene_id": %.%._id, 
-          "gene_symbol": %.symbol, 
-          "biomarker_via_orthology": $
+        hits.query@$q.{
+          "input_id": $q, 
+          "output_id": _id,
+          "output_name": agr.symbol,
+          "association": $.agr.biomarker_via_orthology[doid=$q]
         }
       inputs:
         category: Disease
         namespaces: 
           - prefix: DOID
-            ## use the actual edge's disease ID. If it doesn't match the input disease ID, the edge will be dropped (not used)
-            match_field: biomarker_via_orthology.doid
+            match_field: input_id
       predicate: has_biomarker
       outputs:
         category: Gene
         ## id_field values are CURIEs with standard prefix, delimiter
         namespaces: 
           - prefix: HGNC
-            id_field: gene_id
+            id_field: output_id
           - prefix: MGI
-            id_field: gene_id
-            name_field: gene_symbol
+            id_field: output_id
+            name_field: output_name
           - prefix: RGD
-            id_field: gene_id
-            name_field: gene_symbol
+            id_field: output_id
+            name_field: output_name
           - prefix: ZFIN
-            id_field: gene_id
-            name_field: gene_symbol
+            id_field: output_id
+            name_field: output_name
           - prefix: FB
-            id_field: gene_id
-            name_field: gene_symbol
+            id_field: output_id
+            name_field: output_name
           - prefix: WB
-            id_field: gene_id
-            name_field: gene_symbol
+            id_field: output_id
+            name_field: output_name
           - prefix: SGD
-            id_field: gene_id
-            name_field: gene_symbol
+            id_field: output_id
+            name_field: output_name
       request_info:
         path: "/query"
         method: post
