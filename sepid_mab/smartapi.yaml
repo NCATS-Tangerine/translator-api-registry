@@ -1,0 +1,856 @@
+openapi: 3.0.3
+info:
+  contact:
+    email: help@biothings.io
+    name: BioThings Team
+    x-id: https://github.com/biothings
+    x-role: responsible organization
+  description: >-
+    Documentation of the BioThings API for experimental immunology data from collaborator Sepid Mazrouee. mAB = monoclonal antibody
+  termsOfService: https://biothings.io/about
+  title: BioThings mabs API
+  version: '2025-04-18'  ## uses "old" csv data
+  x-translator:
+    infores: "infores:biothings-mabs"  ## not registered in infores registry yet
+    component: KP
+    team:
+      - Service Provider
+    biolink-version: "4.2.2"
+servers:
+## other versions don't exist yet
+# - description: Encrypted Production server
+#   url: https://biothings.ncats.io/mabs
+#   x-maturity: production
+# - url: https://biothings.test.transltr.io/mabs
+#   description: ITRB Test server
+#   x-maturity: testing
+- url: https://biothings.ci.transltr.io/mabs
+  description: ITRB CI server
+  x-maturity: staging
+tags:
+- name: association
+- name: mab
+- name: protein
+- name: virus
+- name: disease
+- name: query
+- name: translator
+- name: biothings
+paths:
+  ## this is an error, should be replaced with "association"
+  "/cell/{id}":
+    get:
+      description: >-
+        By default, this will return the complete association in JSON format. If the input is not valid,
+        404 (NOT FOUND) will be returned.
+        
+
+        Optionally, you can pass a "fields" parameter to return only the annotation you want 
+        (by filtering returned object fields). "fields" accepts any attributes (a.k.a fields) available 
+        from the association. Multiple attributes should be separated by commas. If an attribute is not 
+        available for a specific association, it will be ignored. Note that the attribute names are 
+        case-sensitive.
+
+
+        Just like the query service, you can also pass a "callback" parameter to make a JSONP call.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        example: "anti-ZVNS1-NbF6-UniProtKB:Q32ZE1"
+        schema:
+          type: string
+      - "$ref": "#/components/parameters/fields"
+      - "$ref": "#/components/parameters/callback"
+      - "$ref": "#/components/parameters/email"
+      ## this is useful even when it's not noted in the docs
+      - "$ref": "#/components/parameters/size"
+      ## these are noted in the /spec endpoint; commenting out for now
+      # - "$ref": "#/components/parameters/raw"
+      # - "$ref": "#/components/parameters/rawquery"
+      # - "$ref": "#/components/parameters/dotfield"
+      # - "$ref": "#/components/parameters/_sorted"
+      # - "$ref": "#/components/parameters/always_list"
+      # - "$ref": "#/components/parameters/allow_null"
+      # - "$ref": "#/components/parameters/format"
+      responses:
+        '200':
+          description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
+      ## commenting out schemas and other status codes for now
+      #     content:
+      #       application/json:
+      #         schema:
+      #           $ref: '#/components/schemas/Association'
+      #   '404':
+      #     description: A response indicating an unknown association ID
+      tags:
+      - association
+  "/cell":
+    post:
+      description: >-
+        Although making simple GET requests above to our service is sufficient in most use cases, 
+        there are some times you might find it easier to batch query (e.g., retrieving multiple associations). 
+        Fortunately, you can also make batch queries via POST requests when you need to.
+      parameters:
+      - name: ids
+        description: >-
+          Accepts multiple association ids separated by commas. Note that currently we only take ids up to 
+          1000 maximum, the rest will be omitted.
+
+
+          The request body can also be used to provide these ids.
+        in: query
+        ## setting to false since putting this info in the request body seems to work as well
+        required: false
+        schema:
+          type: string
+      - "$ref": "#/components/parameters/fields"
+      - "$ref": "#/components/parameters/email"
+      ## this is useful even when it's not noted in the docs
+      - "$ref": "#/components/parameters/size"
+      ## these are noted in the /spec endpoint; commenting out for now
+      # - "$ref": "#/components/parameters/raw"
+      # - "$ref": "#/components/parameters/rawquery"
+      # - "$ref": "#/components/parameters/dotfield"
+      # - "$ref": "#/components/parameters/_sorted"
+      # - "$ref": "#/components/parameters/always_list"
+      # - "$ref": "#/components/parameters/allow_null"
+      # - "$ref": "#/components/parameters/format"
+      requestBody:
+        content:
+          application/json:
+            example:
+              ids:
+              - "anti-ZVNS1-NbF6-UniProtKB:Q32ZE1"
+              - "BtNb210-UniProtKB:Q32ZE1"
+            schema:
+              type: object
+              properties:
+                ids:
+                  description: >-
+                    Accepts multiple association ids. Note that currently we only take the input ids 
+                    up to 1000 maximum, the rest will be omitted.
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '200':
+          description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
+      tags:
+      - association
+  "/metadata":
+    get:
+      description: Get metadata about the data available from the API
+      ## these are noted in the https://mychem.info/v1/spec endpoint; commenting out for now
+      # parameters:
+      # - "$ref": "#/components/parameters/format"
+      # - "$ref": "#/components/parameters/raw"
+      responses:
+        '200':
+          description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
+      tags:
+      - metadata
+  "/metadata/fields":
+    get:
+      description: Get metadata about the data fields available from the API
+      ## these are noted in the https://mychem.info/v1/spec endpoint; commenting out for now
+      # parameters:
+      # - "$ref": "#/components/parameters/format"
+      # - "$ref": "#/components/parameters/raw"
+      # - "$ref": "#/components/parameters/search"
+      # - "$ref": "#/components/parameters/prefix"
+      responses:
+        '200':
+          description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
+      tags:
+      - metadata
+  "/query":
+    get:
+      description: >-
+        Query service. In the output, "total" in the output gives the total number 
+        of matching hits, while the actual hits are returned under "hits" field.
+      parameters:
+      - name: q
+        description: >-
+          Required, passing user query. The detailed query syntax for parameter is explained 
+          [here for a core BioThings 
+          API](https://docs.mychem.info/en/latest/doc/chem_query_service.html#query-syntax).
+        in: query
+        required: true
+        example: "subject.id:anti-ZVNS1-NbB8"
+        schema:
+          type: string
+      - "$ref": "#/components/parameters/fields"
+      - "$ref": "#/components/parameters/size"
+      - "$ref": "#/components/parameters/from"
+      - "$ref": "#/components/parameters/fetch_all"
+      - "$ref": "#/components/parameters/scroll_id"
+      - "$ref": "#/components/parameters/sort"
+      - "$ref": "#/components/parameters/facets"
+      - "$ref": "#/components/parameters/facet_size"
+      - "$ref": "#/components/parameters/callback"
+      - "$ref": "#/components/parameters/dotfield"
+      - "$ref": "#/components/parameters/email"
+      ## these are noted in the /spec endpoint; commenting out for now
+      # - "$ref": "#/components/parameters/aggs"
+      # - "$ref": "#/components/parameters/userquery"
+      # - "$ref": "#/components/parameters/explain"
+      # - "$ref": "#/components/parameters/raw"
+      # - "$ref": "#/components/parameters/rawquery"
+      # - "$ref": "#/components/parameters/_sorted"
+      # - "$ref": "#/components/parameters/always_list"
+      # - "$ref": "#/components/parameters/allow_null"
+      # - "$ref": "#/components/parameters/format"
+      responses:
+        '200':
+          description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
+      ## commenting out schemas and other status codes for now
+      #     content:
+      #       application/json:
+      #         schema:
+      #           "$ref": "#/components/schemas/QueryResult"
+      #   '400':
+      #     content:
+      #       application/json:
+      #         schema:
+      #           "$ref": "#/components/schemas/ErrorResult"
+      #     description: A response indicating an improperly formatted query
+      # summary: Make queries and return matching gene hits. Supports JSONP and CORS
+      #   as well.
+      tags:
+      - query
+    post:
+      description: >-
+        Although making simple GET requests above to our query service is sufficient for most use cases, 
+        there are times you might find it more efficient to make batch queries (e.g., retrieving data 
+        for multiple inputs). Fortunately, you can also make batch queries via POST requests when you need to.
+
+
+        The "query” field in the returned object indicates the matching query term. If a query term has no match, 
+        it will return with a “notfound” field with the value “true”.
+      parameters:
+      - name: q
+        description: >-
+          Accepts multiple values separated by commas. Note that currently we only take the input values up to 1000 
+          maximum, the rest will be omitted.
+
+
+          The request body can also be used to provide these ids.
+        in: query
+        ## setting to false since putting this info in the request body seems to work as well
+        required: false
+        schema:
+          type: array
+          items:
+            type: string
+      - name: scopes
+        description: >-
+          Optional, specify one or more fields (separated by commas) to search. Default: _id
+
+
+          The request body can also be used to provide this information.
+        in: query
+        ## setting to false since putting this info in the request body seems to work as well
+        required: false
+        schema:
+          type: string
+      - "$ref": "#/components/parameters/fields"
+      - "$ref": "#/components/parameters/email"
+      ## this is useful even when it's not noted in the docs
+      - "$ref": "#/components/parameters/size"
+      - "$ref": "#/components/parameters/from"
+      - "$ref": "#/components/parameters/fetch_all"
+      - "$ref": "#/components/parameters/scroll_id"
+      ## these are noted in the https://mychem.info/v1/spec endpoint; commenting out for now
+      # - "$ref": "#/components/parameters/sort"
+      # - "$ref": "#/components/parameters/raw"
+      # - "$ref": "#/components/parameters/rawquery"
+      # - "$ref": "#/components/parameters/dotfield"
+      # - "$ref": "#/components/parameters/_sorted"
+      # - "$ref": "#/components/parameters/always_list"
+      # - "$ref": "#/components/parameters/allow_null"
+      # - "$ref": "#/components/parameters/format"
+      requestBody:
+        content:
+          application/json:
+            example:
+              q:
+              - "anti-ZVNS1-NbB8"
+              - "1A1D-2"
+              scopes:
+              - "subject.id"
+            schema:
+              type: object
+              properties:
+                q:
+                  description: >-
+                    Accepts multiple values separated by commas. Note that currently we only take the input values 
+                    up to 1000 maximum, the rest will be omitted.
+                  type: array
+                  items:
+                    type: string
+                scopes:
+                  description: >-
+                    Specify one or more fields (separated by commas) to search. Default: _id
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '200':
+          description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
+      ## commenting out schemas and other status codes for now
+      #     content:
+      #       application/json:
+      #         schema:
+      #           "$ref": "#/components/schemas/QueryPOSTResult"
+      #   '400':
+      #     content:
+      #       application/json:
+      #         schema:
+      #           "$ref": "#/components/schemas/ErrorResult"
+      #     description: A response indicating an improperly formatted query
+      # summary: Make batch gene queries and return matching gene hits
+      tags:
+      - query
+      ## 2 operations
+      x-bte-kgs-operations:
+      - $ref: '#/components/x-bte-kgs-operations/mab-protein'
+      - $ref: '#/components/x-bte-kgs-operations/protein-mab'
+      - $ref: '#/components/x-bte-kgs-operations/protein-virus'
+      - $ref: '#/components/x-bte-kgs-operations/virus-protein'
+      - $ref: '#/components/x-bte-kgs-operations/virus-disease'
+      - $ref: '#/components/x-bte-kgs-operations/disease-virus'
+      - $ref: '#/components/x-bte-kgs-operations/mab-virus'
+      - $ref: '#/components/x-bte-kgs-operations/virus-mab'
+components:
+  parameters:
+    callback:
+      name: callback
+      description: >-
+        Optional, you can pass a "callback" parameter to make a JSONP call.
+      in: query
+      required: false
+      schema:
+        type: string
+    dotfield:
+      name: dotfield
+      description: >-
+        Optional, can be used to control the format of the returned object. 
+        If "dotfield" is true, the returned data object is returned flattened (no nested objects) 
+        using dotfield notation for key names. Default: false.
+      in: query
+      required: false
+      schema:
+        type: boolean
+        default: false
+    email:
+      name: email
+      description: >-
+        Optional, if you are regular users of our services, we encourage you to provide us an email, 
+        so that we can better track the usage or follow up with you.
+      in: query
+      required: false
+      schema:
+        type: string
+    facet_size:
+      name: facet_size
+      description: >-
+        Optional, an integer (1 <= facet_size <= 1000) that specifies how many buckets to return in a 
+        [faceted query](https://docs.mychem.info/en/latest/doc/chem_query_service.html?highlight=from#faceted-queries).
+      in: query
+      required: false
+      schema:
+        type: integer
+        default: 10
+    facets:
+      name: facets
+      description: >-
+        Optional, a single field or comma-separated fields to return facets, can only be used on non-free text fields. 
+        E.g. “facets=chembl.molecule_properties.full_mwt”. See [examples of faceted queries for a core BioThings 
+        API](https://docs.mychem.info/en/latest/doc/chem_query_service.html?highlight=from#faceted-queries).
+      in: query
+      required: false
+      schema:
+        type: array
+        items:
+          type: string
+    fetch_all:
+      name: fetch_all
+      description: >-
+        Optional, a boolean, which when TRUE, allows fast retrieval of all unsorted query hits. 
+        The return object contains a _scroll_id field, which when passed as a parameter to the query endpoint 
+        (see the scroll_id parameter), returns the next 1000 query results. Setting fetch_all = TRUE causes 
+        the results to be inherently unsorted, therefore the sort parameter is ignored. For more information, 
+        see [examples using fetch_all for a core BioThings 
+        API](https://docs.mychem.info/en/latest/doc/chem_query_service.html?highlight=from#scrolling-queries). 
+        Default: FALSE.
+      in: query
+      required: false
+      schema:
+        type: boolean
+        default: false
+    fields:
+      name: fields
+      description: >-
+        Optional, can be a comma-separated list to limit the fields returned from the object. 
+        If "fields=all", all available fields will be returned.
+        
+
+        Note that it supports dot notation as well, e.g., you can pass "chebi.name". 
+        Default: "fields=all". 
+        The parameter "filter" is an alias for this parameter.
+      in: query
+      required: false
+      schema:
+        type: string
+        default: all
+    from:
+      name: from
+      description: >-
+        Optional, the number of matching hits to skip, starting from 0. Default: 0. 
+      in: query
+      required: false
+      schema:
+        type: integer
+        default: 0
+    scroll_id:
+      name: scroll_id
+      description: >-
+        Optional, a string containing the _scroll_id returned from a query request with fetch_all = TRUE. 
+        Supplying a valid scroll_id will return the next 1000 unordered results. If the next results are 
+        not obtained within 1 minute of the previous set of results, the scroll_id becomes stale, and a 
+        new one must be obtained with another query request with fetch_all = TRUE. All other parameters are 
+        ignored when the scroll_id parameter is supplied. For more information see [examples using scroll_id 
+        for a core BioThings 
+        API](https://docs.mychem.info/en/latest/doc/chem_query_service.html?highlight=from#scrolling-queries).
+      in: query
+      required: false
+      schema:
+        type: string
+    size:
+      name: size
+      description: >-
+        Optional, the maximum number of matching hits to return (with a cap of 1000 at the moment). Default: 10.
+        The combination of "size" and "from" parameters can be used to get paging for a large query.
+      in: query
+      required: false
+      schema:
+        type: integer
+        default: 10
+    sort:
+      name: sort
+      description: >-
+        Optional, the comma-separated fields to sort on. Prefix with "-" for descending order, otherwise in ascending order. 
+        Default: sort by matching scores in descending order.
+      in: query
+      required: false
+      schema:
+        type: array
+        items:
+          type: string
+    ## these are noted in the https://mychem.info/v1/spec endpoint; commenting out for now
+    # _sorted:
+    #   name: _sorted
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: boolean
+    #     default: true
+    # aggs:
+    #   name: aggs
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: array
+    #     items:
+    #       type: string
+    # allow_null:
+    #   name: allow_null
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: array
+    #     items:
+    #       type: string
+    # always_list:
+    #   name: always_list
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: array
+    #     items:
+    #       type: string
+    # explain:
+    #   name: explain
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: boolean
+    # format:
+    #   name: format
+    #   description: 'controls output format of server response, currently supports:
+    #     "json", "jsonld", "html". Type: string. Default: json.'
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: string
+    #     default: json
+    # prefix:
+    #   name: prefix
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: string
+    # raw:
+    #   name: raw
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: boolean
+    # rawquery:
+    #   name: rawquery
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: boolean
+    # search:
+    #   name: search
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: string
+    # userquery:
+    #   name: userquery
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: string
+  ## commenting out schemas and other status codes for now
+  # schemas:
+  #   Association:
+  #     properties:
+  #       _id:
+  #         type: string
+  #     required:
+  #     - _id
+  #     type: object
+  #   ErrorResult:
+  #     properties:
+  #       message:
+  #         type: string
+  #       success:
+  #         type: boolean
+  #     type: object
+  #   QueryPOSTResult:
+  #     items:
+  #       allOf:
+  #       - $ref: '#/components/schemas/Association'
+  #       - properties:
+  #           _score:
+  #             format: float
+  #             type: number
+  #           query:
+  #             type: string
+  #         type: object
+  #     type: array
+  #   QueryResult:
+  #     properties:
+  #       hits:
+  #         items:
+  #           $ref: '#/components/schemas/Association'
+  #         type: array
+  #       max_score:
+  #         format: float
+  #         type: number
+  #       took:
+  #         type: integer
+  #       total:
+  #         type: integer
+  #     type: object
+  #   int64_or_array:
+  #     oneOf:
+  #     - items:
+  #         format: int64
+  #         type: integer
+  #       type: array
+  #     - format: int64
+  #       type: integer
+  #   string_or_array:
+  #     oneOf:
+  #     - items:
+  #         type: string
+  #       type: array
+  #     - type: string
+  x-bte-kgs-operations:
+  ## mab: using unique name as ID. Haven't agreed on a standard ID namespace to use - and some data is for lab-specific antibodies that wouldn't exist in a standard database. 
+  ## mAB -> protein -> virus -> disease, plus mAB -> virus since not many proteins in dataset
+    mab-protein:
+    ## 295 associations: https://biothings.ci.transltr.io/mabs/query?q=subject.type:Antibody%20AND%20object.type:Protein
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+            ## made-up namespace: actually using unique name from data as ID
+          - id: sepid_mab
+            ## biolink model: this term has narrow mapping to monoclonal antibody terms from NCIT, SNOMEDCT
+            semantic: ChemicalMixture
+        requestBody:
+          body:
+            q: "{{ queryInputs }}"
+            scopes: subject.id  ## no prefix
+        outputs:
+          - id: UniProtKB
+            semantic: Protein
+        parameters:
+          fields: object.id,subject.id,relation.pubmed
+          size: 100  ## just in case, 1 mab can bind to multiple proteins
+          ## important to retrieve correct type of document
+          filter: subject.type:Antibody AND object.type:Protein
+        ## using same terms as dgidb's antibody, drugcentral's ANTIBODY BINDING
+        predicate: physically_interacts_with
+        qualifiers:
+          causal_mechanism_qualifier: antibody_inhibition
+        source: "infores:sepid_mab"  ## haven't decided on this yet
+        knowledge_level: knowledge_assertion
+        agent_type: manual_agent
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/mab-protein"
+        testExamples:
+        ## when querying with sepid_mab IDs, best to include a category. Then BTE will assign that category to nodes with these IDs; plus other resources will be queried by MetaEdge.
+          - qInput: "sepid_mab:2A10G6"
+            oneOutput: "UniProtKB:Q9Q4T1"  ## Q9Q4T1_9FLAV Genome polyprotein (trembl)
+    protein-mab:
+    ## access data of mab-protein, in reverse direction
+      - supportBatch: true
+        useTemplating: true
+        inputs:
+          - id: UniProtKB
+            semantic: Protein
+        requestBody:
+          body:
+            q: "{{ queryInputs | replPrefix('UniProtKB') }}"
+            scopes: object.id  ## HAS PREFIX
+        outputs:
+          - id: sepid_mab
+            semantic: ChemicalMixture
+        parameters:
+          fields: subject.id,object.id,relation.pubmed
+          size: 1000  ## just in case, 1 protein can be targeted by many antibodies
+          filter: subject.type:Antibody AND object.type:Protein
+        predicate: physically_interacts_with
+        qualifiers:
+          causal_mechanism_qualifier: antibody_inhibition
+        source: "infores:sepid_mab"
+        knowledge_level: knowledge_assertion
+        agent_type: manual_agent
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/protein-mab"
+        testExamples:
+          - qInput: "UniProtKB:P29991"  ## POLG_DEN27 Genome polyprotein (sprot)
+            oneOutput: "sepid_mab:1A1D-2"
+    protein-virus:
+    ## 117 documents: https://biothings.ci.transltr.io/mabs/query?q=subject.type:Protein%20AND%20object.type:Virus
+    ## noticing lots of associations that seem incorrect compare to UniProtKB data on organism taxon. Data issue or parsing issue?
+      - supportBatch: true
+        useTemplating: true
+        inputs:
+          - id: UniProtKB
+            semantic: Protein
+        requestBody:
+          body:
+            q: "{{ queryInputs | replPrefix('UniProtKB') }}"
+            scopes: subject.id  ## HAS PREFIX
+        outputs:
+          - id: NCBITaxon
+            semantic: Virus
+        parameters:
+          fields: object.id,object.name,relation.pubmed
+          size: 100  ## just in case, 1 protein may be in several viral strains
+          filter: subject.type:Protein AND object.type:Virus
+        ## biolink model: in_taxon's aliases include "gene found in organism", so that seems like a good fit
+        ## other ideas: part_of, produced_by
+        predicate: in_taxon
+        source: "infores:sepid_mab"
+        knowledge_level: knowledge_assertion
+        agent_type: manual_agent
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/protein-virus"
+        testExamples:
+          - qInput: "UniProtKB:A0A192GPS0"  ## Genome polyprotein
+            oneOutput: "NCBITaxon:64320"     ## Zika virus (ZIKV)
+    virus-protein:
+    ## access data of protein-virus, in reverse direction
+      - supportBatch: true
+        useTemplating: true
+        inputs:
+          - id: NCBITaxon
+            semantic: Virus
+        requestBody:
+          body:
+            q: "{{ queryInputs }}"
+            scopes: object.id  ## no prefix
+        outputs:
+          - id: UniProtKB
+            semantic: Protein
+        parameters:
+          fields: subject.id,object.name,relation.pubmed
+          size: 100  ## just in case, 1 virus may have multiple proteins
+          filter: subject.type:Protein AND object.type:Virus
+        ## biolink model: reverse of in_taxon (see virus-protein for reasoning)
+        ## other ideas: has_part, produces
+        predicate: taxon_of
+        source: "infores:sepid_mab"
+        knowledge_level: knowledge_assertion
+        agent_type: manual_agent
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/virus-protein"
+        testExamples:
+          - qInput: "NCBITaxon:64320"           ## Zika virus (ZIKV)
+            oneOutput: "UniProtKB:A0A024B7W1"   ## Genome polyprotein
+    virus-disease:
+    ## 4 associations: https://biothings.ci.transltr.io/mabs/query?q=subject.type:Virus%20AND%20object.type:Disease
+      - supportBatch: true
+        useTemplating: true
+        inputs:
+          - id: NCBITaxon
+            semantic: Virus
+        requestBody:
+          body:
+            q: "{{ queryInputs }}"
+            scopes: subject.id  ## no prefix
+        outputs:
+          - id: DOID
+            semantic: Disease
+        parameters:
+          fields: object.id,subject.name,relation.pubmed
+          size: 100  ## just in case, 1 virus can be linked to multiple diseases 
+          filter: subject.type:Virus AND object.type:Disease
+        predicate: causes
+        source: "infores:sepid_mab"
+        knowledge_level: knowledge_assertion
+        agent_type: manual_agent
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/virus-disease"
+        testExamples:
+          - qInput: "NCBITaxon:11070"  ## dengue virus type 4 (DENV4)
+            oneOutput: "DOID:12205"    ## Dengue Fever
+    disease-virus:
+    ## access data of virus-disease, in reverse direction
+      - supportBatch: true
+        useTemplating: true
+        inputs:
+          - id: DOID
+            semantic: Disease
+        requestBody:
+          body:
+            q: "{{ queryInputs  | replPrefix('DOID') }}"
+            scopes: object.id  ## HAS PREFIX
+        outputs:
+          - id: NCBITaxon
+            semantic: Virus
+        parameters:
+          fields: subject.id,subject.name,relation.pubmed
+          size: 100  ## just in case, 1 disease can be linked to multiple viruses (diff strains)
+          filter: subject.type:Virus AND object.type:Disease
+        predicate: caused_by
+        source: "infores:sepid_mab"
+        knowledge_level: knowledge_assertion
+        agent_type: manual_agent
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/disease-virus"
+        testExamples:
+          - qInput: "DOID:12205"          ## Dengue Fever
+            oneOutput: "NCBITaxon:11053"  ## dengue virus type 1 (DENV1)
+    mab-virus:
+    ## 965 associations: https://biothings.ci.transltr.io/mabs/query?q=subject.type:Antibody%20AND%20object.type:Virus
+      - supportBatch: true
+        useTemplating: true
+        inputs:
+          - id: sepid_mab
+            semantic: ChemicalMixture
+        requestBody:
+          body:
+            q: "{{ queryInputs }}"
+            scopes: subject.id  ## no prefix
+        outputs:
+          - id: NCBITaxon
+            semantic: Virus
+        parameters:
+          fields: object.id,subject.id,object.name,relation.pubmed
+          size: 100  ## just in case, 1 mab can bind to multiple viruses
+          filter: subject.type:Antibody AND object.type:Virus
+        predicate: physically_interacts_with
+        ## not sure if this qualifier can be used for a Virus association
+        qualifiers:
+          causal_mechanism_qualifier: antibody_inhibition
+        source: "infores:sepid_mab"
+        knowledge_level: knowledge_assertion
+        agent_type: manual_agent
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/mab-virus"
+        testExamples:
+          - qInput: "sepid_mab:20-783-74014"
+            oneOutput: "NCBITaxon:11069"  ## dengue virus type 3 (DENV3)
+    virus-mab:
+    ## access data of mab-virus, in reverse direction
+      - supportBatch: true
+        useTemplating: true
+        inputs:
+          - id: NCBITaxon
+            semantic: Virus
+        requestBody:
+          body:
+            q: "{{ queryInputs }}"
+            scopes: object.id  ## no prefix
+        outputs:
+          - id: sepid_mab
+            semantic: ChemicalMixture
+        parameters:
+          fields: subject.id,object.name,relation.pubmed
+          size: 1000  ## just in case, 1 virus can be targeted by many antibodies
+          filter: subject.type:Antibody AND object.type:Virus
+        predicate: physically_interacts_with
+        qualifiers:
+          causal_mechanism_qualifier: antibody_inhibition
+        source: "infores:sepid_mab"
+        knowledge_level: knowledge_assertion
+        agent_type: manual_agent
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/virus-mab"
+        testExamples:
+          - qInput: "NCBITaxon:11070"  ## dengue virus type 4 (DENV4)
+            oneOutput: "sepid_mab:1F2"
+  x-bte-response-mapping:
+    mab-protein:
+      UniProtKB: object.id       ## HAS PREFIX
+      input_name: subject.id     ## mab name same as ID right now
+      ref_pmid: relation.pubmed  ## no prefix
+    protein-mab:  ## kinda generic: "reverse_mab_output"
+      sepid_mab: subject.id      ## no prefix
+      output_name: subject.id    ## mab name same as ID right now
+      ref_pmid: relation.pubmed
+    protein-virus:  ## kinda generic: "forward-virus-output"
+      NCBITaxon: object.id       ## no prefix
+      output_name: object.name   ## abbreviation for specific virus
+      ref_pmid: relation.pubmed
+    virus-protein:
+      UniProtKB: subject.id     ## HAS PREFIX
+      input_name: object.name   ## abbreviation for specific virus
+      ref_pmid: relation.pubmed
+    virus-disease:
+      DOID: object.id            ## HAS PREFIX
+      input_name: subject.name   ## abbreviation for specific virus
+      ref_pmid: relation.pubmed
+    disease-virus:  ## kinda generic: "reverse-virus-output"
+      NCBITaxon: subject.id       ## no prefix
+      output_name: subject.name   ## abbreviation for specific virus
+      ref_pmid: relation.pubmed
+    mab-virus:
+      NCBITaxon: object.id       ## no prefix
+      input_name: subject.id     ## mab name same as ID right now
+      output_name: object.name   ## abbreviation for specific virus
+      ref_pmid: relation.pubmed  ## no prefix
+    virus-mab:
+      sepid_mab: subject.id      ## no prefix
+      output_name: subject.id    ## mab name same as ID right now
+      input_name: object.name    ## abbreviation for specific virus
+      ref_pmid: relation.pubmed  ## no prefix
