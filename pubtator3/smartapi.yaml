@@ -1,55 +1,54 @@
 openapi: 3.0.3
+
 info:
   contact:
     email: help@biothings.io
     name: BioThings Team
     x-id: https://github.com/biothings
     x-role: responsible organization
-  description: "Documentation of the BioThings API for [PubTator3](https://www.ncbi.nlm.nih.gov/research/pubtator3/) \ndata.\
-    \ PubTator3 is a web-based tool for accelerating manual literature curation \nthrough advanced text mining techniques.\
-    \ It provides automatic annotations of \nbiomedical entities and their relationships from over 35 million biomedical \n\
-    publications in PubMed. This API offers access to extracted entities including \ngenes, diseases, chemicals, species,\
-    \ and mutations, along with their semantic relationships."
+  description: Documentation of the BioThings API for [PubTator 3.0](https://www.ncbi.nlm.nih.gov/research/pubtator3/) data.
+    PubTator 3.0 provides automated literature annotation with biomedical entities including genes, diseases, chemicals, species,
+    and mutations from PubMed abstracts and PMC full-text articles. This API enables access to literature-based associations
+    between biomedical entities, supporting literature mining, knowledge discovery, and evidence-based biomedical research.
   termsOfService: https://biothings.io/about
-  title: PubTator3
+  title: BioThings PubTator3 API
   version: '2024-05-14'
+  x-implementationLanguage: Python
   x-translator:
-    infores: infores:biothings-pubtator3
     component: KP
     team:
     - Service Provider
-    biolink-version: 4.2.6
+
 servers:
-- description: Production server
-  url: https://biothings.ncats.io/pubtator3
+- url: https://biothings.ncats.io/pubtator3
+  description: Production server
   x-maturity: production
 - url: https://biothings.test.transltr.io/pubtator3
   description: ITRB Test server
   x-maturity: testing
 - url: https://biothings.ci.transltr.io/pubtator3
-  description: ITRB CI server
+  description: ITRB Staging server
   x-maturity: staging
+
 tags:
 - name: association
-- name: literature
-- name: annotation
-- name: pubmed
-- name: text-mining
-- name: curation
 - name: query
 - name: translator
 - name: biothings
+- name: literature
+- name: annotation
+
 paths:
   /association/{id}:
     get:
       description: By default, the full record for each ID is returned in JSON. Invalid input returns a 404 (Not Found). Use
-        the "fields" parameter to return specific attributes (comma-separated, case-sensitive). Unavailable attributes are
-        ignored. You can also use the "callback" parameter for JSONP requests.
+        the 'fields' parameter to return specific attributes (comma-separated, case-sensitive). Unavailable attributes are
+        ignored. You can also use the 'callback' parameter for JSONP requests.
       parameters:
       - name: id
         in: path
         required: true
-        example: "19705617-Chemical|MESH:D008055-CAUSE-Disease|MESH:D009765"
+        example: 'pmid:11869268'
         schema:
           type: string
       - $ref: '#/components/parameters/fields'
@@ -66,11 +65,10 @@ paths:
       description: To fetch multiple items in one request, use a batch query with POST.
       parameters:
       - name: ids
-        description: 'Accepts multiple IDs separated by commas. Note that currently we only take ids up to 1000 maximum, the
-          rest will be omitted.
+        description: |-
+          Accepts multiple IDs separated by commas. Note that currently we only take ids up to 1000 maximum, the rest will be omitted.
 
-
-          The request body can also be used to provide these ids.'
+          The request body can also be used to provide these ids.
         in: query
         required: false
         schema:
@@ -83,8 +81,8 @@ paths:
           application/json:
             example:
               ids:
-              - "19705617-Chemical|MESH:D008055-CAUSE-Disease|MESH:D009765"
-              - "19705617-Chemical|MESH:D008055-CAUSE-Disease|MESH:D009765_2"
+              - '19705617-Chemical|MESH:D008055-CAUSE-Disease|MESH:'
+              - 19705617-Chemical|MESH:D008055-CAUSE-Disease|MESH:_2
             schema:
               type: object
               properties:
@@ -101,7 +99,7 @@ paths:
       - association
   /metadata:
     get:
-      description: Get metadata about the PubTator3 data available from the API
+      description: Get metadata about the BioThings PUBTATOR3 data available from the API
       responses:
         '200':
           description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
@@ -109,7 +107,7 @@ paths:
       - metadata
   /metadata/fields:
     get:
-      description: Get metadata about the PubTator3 data fields available from the API
+      description: Get metadata about the BioThings PUBTATOR3 data fields available from the API
       responses:
         '200':
           description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
@@ -117,14 +115,15 @@ paths:
       - metadata
   /query:
     get:
-      description: Query service for PubTator3. In the output, "total" gives the total number of matching hits, while the
-        actual hits are returned under "hits" field.
+      description: Query service for BioThings PubTator3. In the output, "total" gives the total number of matching hits,
+        while the actual hits are returned under "hits" field.
       parameters:
       - name: q
-        description: Required, passing user query. The detailed query syntax is explained [here for a core BioThings API](https://docs.mychem.info/en/latest/doc/chem_query_service.html#query-syntax).
+        description: 'Required, passing user query. Example: ''Search for literature annotations containing BRCA1''. The detailed
+          query syntax is explained [here for a core BioThings API](https://docs.mychem.info/en/latest/doc/chem_query_service.html#query-syntax).'
         in: query
         required: true
-        example: '*'
+        example: '*BRCA1*'
         schema:
           type: string
       - $ref: '#/components/parameters/fields'
@@ -149,11 +148,10 @@ paths:
         the value "true".
       parameters:
       - name: q
-        description: 'Accepts multiple values separated by commas. Note that currently we only take the input values up to
-          1000 maximum, the rest will be omitted.
+        description: |-
+          Accepts multiple values separated by commas. Note that currently we only take the input values up to 1000 maximum, the rest will be omitted.
 
-
-          The request body can also be used to provide these values.'
+          The request body can also be used to provide these values.
         in: query
         required: false
         schema:
@@ -161,10 +159,10 @@ paths:
           items:
             type: string
       - name: scopes
-        description: 'Optional, specify one or more fields (separated by commas) to search. Default: _id
+        description: |-
+          Optional, specify one or more fields (separated by commas) to search. Default: _id
 
-
-          The request body can also be used to provide this information.'
+          The request body can also be used to provide this information.
         in: query
         required: false
         schema:
@@ -180,8 +178,9 @@ paths:
           application/json:
             example:
               q:
-              - query1
-              - query2
+              - '*BRCA1*'
+              - '*cancer*'
+              - '*mutation*'
               scopes:
               - _id
             schema:
@@ -203,6 +202,7 @@ paths:
           description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
       tags:
       - query
+
 components:
   parameters:
     callback:
