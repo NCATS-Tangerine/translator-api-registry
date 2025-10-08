@@ -6,16 +6,14 @@ info:
     x-id: https://github.com/biothings
     x-role: responsible organization
   description: >-
-    Documentation of the BioThings API for Phewas
+    The BioThings PheWAS API provides access to phenome-wide association study data from the [eMERGE Network](https://emerge-network.org/) and related genomic research consortia. This API enables researchers to query associations between genetic variants and diverse phenotypic traits across large patient populations. The PheWAS approach systematically evaluates genetic associations with hundreds of phenotypes simultaneously, enabling discovery of pleiotropic effects and novel genotype-phenotype relationships. This resource supports precision medicine research, genetic epidemiology studies, and clinical genomics applications by providing comprehensive phenotypic association data for understanding the broader impact of genetic variation on human health and disease.
   termsOfService: https://biothings.io/about
   title: BioThings Phewas API
   version: '1.0'
   x-translator:
-    infores: "infores:biothings-phewas"
     component: KP
     team:
-      - Service Provider
-    biolink-version: "4.2.6"
+    - Service Provider
 servers:
 - description: Production server
   url: https://biothings.ncats.io/phewas
@@ -32,12 +30,12 @@ tags:
 - name: translator
 - name: biothings
 paths:
-  "/variant/{id}":
+  /variant/{id}:
     get:
       description: >-
-        By default, the full record for each ID is returned in JSON. Invalid input returns a 404 (Not Found).
-        Use the "fields" parameter to return specific attributes (comma-separated, case-sensitive). Unavailable attributes are ignored.
-        You can also use the "callback" parameter for JSONP requests.
+        By default, the full record for each ID is returned in JSON. Invalid input returns a 404 (Not Found). Use
+        the "fields" parameter to return specific attributes (comma-separated, case-sensitive). Unavailable attributes are
+        ignored. You can also use the "callback" parameter for JSONP requests.
       parameters:
       - name: id
         in: path
@@ -45,33 +43,30 @@ paths:
         example: "chr9:g.81310680A>C"
         schema:
           type: string
-      - "$ref": "#/components/parameters/fields"
-      - "$ref": "#/components/parameters/callback"
-      - "$ref": "#/components/parameters/email"
-      ## this is useful even when it's not noted in the docs
-      - "$ref": "#/components/parameters/size"
+      - $ref: '#/components/parameters/fields'
+      - $ref: '#/components/parameters/callback'
+      - $ref: '#/components/parameters/email'
+      - $ref: '#/components/parameters/size'
       responses:
         '200':
           description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
       tags:
       - variant
-  "/variant":
+  /variant:
     post:
-      description: >-
-        To fetch multiple items in one request, use a batch query with POST.
+      description: To fetch multiple items in one request, use a batch query with POST.
       parameters:
       - name: ids
         description: >-
-          Accepts up to 1,000 IDs (comma-separated); extra IDs are ignored. IDs can also be sent in the request body.
+          Accepts up to 1,000 IDs (comma-separated); extra IDs are ignored. IDs can also be sent in the request
+          body.
         in: query
-        ## setting to false since putting this info in the request body seems to work as well
         required: false
         schema:
           type: string
-      - "$ref": "#/components/parameters/fields"
-      - "$ref": "#/components/parameters/email"
-      ## this is useful even when it's not noted in the docs
-      - "$ref": "#/components/parameters/size"
+      - $ref: '#/components/parameters/fields'
+      - $ref: '#/components/parameters/email'
+      - $ref: '#/components/parameters/size'
       requestBody:
         content:
           application/json:
@@ -85,8 +80,8 @@ paths:
               properties:
                 ids:
                   description: >-
-                    Accepts multiple association ids. Note that currently we only take the input ids 
-                    up to 1000 maximum, the rest will be omitted.
+                    Accepts multiple association ids. Note that currently we only take the input ids up to 1000
+                    maximum, the rest will be omitted.
                   type: array
                   items:
                     type: string
@@ -95,7 +90,7 @@ paths:
           description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
       tags:
       - variant
-  "/metadata":
+  /metadata:
     get:
       description: Get metadata about the data available from the API
       responses:
@@ -103,7 +98,7 @@ paths:
           description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
       tags:
       - metadata
-  "/metadata/fields":
+  /metadata/fields:
     get:
       description: Get metadata about the data fields available from the API
       responses:
@@ -111,33 +106,32 @@ paths:
           description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
       tags:
       - metadata
-  "/query":
+  /query:
     get:
       description: >-
-        Query service. In the output, "total" in the output gives the total number 
-        of matching hits, while the actual hits are returned under "hits" field.
+        Query service. In the output, "total" in the output gives the total number of matching hits, while the
+        actual hits are returned under "hits" field.
       parameters:
       - name: q
         description: >-
-          Required, passing user query. The detailed query syntax for parameter is explained 
-          [here for a core BioThings 
-          API](https://docs.mychem.info/en/latest/doc/chem_query_service.html#query-syntax).
+          Required, passing user query. The detailed query syntax for parameter is explained [here for a core
+          BioThings API](https://docs.mychem.info/en/latest/doc/chem_query_service.html#query-syntax).
         in: query
         required: true
         example: "phewas.chrom:X"
         schema:
           type: string
-      - "$ref": "#/components/parameters/fields"
-      - "$ref": "#/components/parameters/size"
-      - "$ref": "#/components/parameters/from"
-      - "$ref": "#/components/parameters/fetch_all"
-      - "$ref": "#/components/parameters/scroll_id"
-      - "$ref": "#/components/parameters/sort"
-      - "$ref": "#/components/parameters/facets"
-      - "$ref": "#/components/parameters/facet_size"
-      - "$ref": "#/components/parameters/callback"
-      - "$ref": "#/components/parameters/dotfield"
-      - "$ref": "#/components/parameters/email"
+      - $ref: '#/components/parameters/fields'
+      - $ref: '#/components/parameters/size'
+      - $ref: '#/components/parameters/from'
+      - $ref: '#/components/parameters/fetch_all'
+      - $ref: '#/components/parameters/scroll_id'
+      - $ref: '#/components/parameters/sort'
+      - $ref: '#/components/parameters/facets'
+      - $ref: '#/components/parameters/facet_size'
+      - $ref: '#/components/parameters/callback'
+      - $ref: '#/components/parameters/dotfield'
+      - $ref: '#/components/parameters/email'
       responses:
         '200':
           description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
@@ -145,23 +139,20 @@ paths:
       - query
     post:
       description: >-
-        Although making simple GET requests above to our query service is sufficient for most use cases, 
-        there are times you might find it more efficient to make batch queries (e.g., retrieving data 
-        for multiple inputs). Fortunately, you can also make batch queries via POST requests when you need to.
-
-
-        The "query” field in the returned object indicates the matching query term. If a query term has no match, 
-        it will return with a “notfound” field with the value “true”.
+        Although making simple GET requests above to our query service is sufficient for most use cases, there
+        are times you might find it more efficient to make batch queries (e.g., retrieving data for multiple inputs). Fortunately,
+        you can also make batch queries via POST requests when you need to.
+        
+        The "query" field in the returned object indicates the matching query term. If a query term has no match, it will
+        return with a "notfound" field with the value "true".
       parameters:
       - name: q
         description: >-
-          Accepts multiple values separated by commas. Note that currently we only take the input values up to 1000 
-          maximum, the rest will be omitted.
-
-
+          Accepts multiple values separated by commas. Note that currently we only take the input values up to
+          1000 maximum, the rest will be omitted.
+          
           The request body can also be used to provide these ids.
         in: query
-        ## setting to false since putting this info in the request body seems to work as well
         required: false
         schema:
           type: array
@@ -170,21 +161,18 @@ paths:
       - name: scopes
         description: >-
           Optional, specify one or more fields (separated by commas) to search. Default: _id
-
-
+          
           The request body can also be used to provide this information.
         in: query
-        ## setting to false since putting this info in the request body seems to work as well
         required: false
         schema:
           type: string
-      - "$ref": "#/components/parameters/fields"
-      - "$ref": "#/components/parameters/email"
-      ## this is useful even when it's not noted in the docs
-      - "$ref": "#/components/parameters/size"
-      - "$ref": "#/components/parameters/from"
-      - "$ref": "#/components/parameters/fetch_all"
-      - "$ref": "#/components/parameters/scroll_id"
+      - $ref: '#/components/parameters/fields'
+      - $ref: '#/components/parameters/email'
+      - $ref: '#/components/parameters/size'
+      - $ref: '#/components/parameters/from'
+      - $ref: '#/components/parameters/fetch_all'
+      - $ref: '#/components/parameters/scroll_id'
       requestBody:
         content:
           application/json:
@@ -199,8 +187,8 @@ paths:
               properties:
                 q:
                   description: >-
-                    Accepts multiple values separated by commas. Note that currently we only take the input values 
-                    up to 1000 maximum, the rest will be omitted.
+                    Accepts multiple values separated by commas. Note that currently we only take the input values up
+                    to 1000 maximum, the rest will be omitted.
                   type: array
                   items:
                     type: string
@@ -228,9 +216,8 @@ components:
     dotfield:
       name: dotfield
       description: >-
-        Optional, can be used to control the format of the returned object. 
-        If "dotfield" is true, the returned data object is returned flattened (no nested objects) 
-        using dotfield notation for key names. Default: false.
+        Optional, can be used to control the format of the returned object. If "dotfield" is true, the returned
+        data object is returned flattened (no nested objects) using dotfield notation for key names. Default: false.
       in: query
       required: false
       schema:
@@ -239,8 +226,8 @@ components:
     email:
       name: email
       description: >-
-        Optional, if you are regular users of our services, we encourage you to provide us an email, 
-        so that we can better track the usage or follow up with you.
+        Optional, if you are regular users of our services, we encourage you to provide us an email, so that we
+        can better track the usage or follow up with you.
       in: query
       required: false
       schema:
@@ -248,8 +235,8 @@ components:
     facet_size:
       name: facet_size
       description: >-
-        Optional, an integer (1 <= facet_size <= 1000) that specifies how many buckets to return in a 
-        [faceted query](https://docs.mychem.info/en/latest/doc/chem_query_service.html?highlight=from#faceted-queries).
+        Optional, an integer (1 <= facet_size <= 1000) that specifies how many buckets to return in a [faceted
+        query](https://docs.mychem.info/en/latest/doc/chem_query_service.html?highlight=from#faceted-queries).
       in: query
       required: false
       schema:
@@ -258,8 +245,8 @@ components:
     facets:
       name: facets
       description: >-
-        Optional, a single field or comma-separated fields to return facets, can only be used on non-free text fields. 
-        E.g. “facets=chembl.molecule_properties.full_mwt”. See [examples of faceted queries for a core BioThings 
+        Optional, a single field or comma-separated fields to return facets, can only be used on non-free text
+        fields. E.g. "facets=chembl.molecule_properties.full_mwt". See [examples of faceted queries for a core BioThings
         API](https://docs.mychem.info/en/latest/doc/chem_query_service.html?highlight=from#faceted-queries).
       in: query
       required: false
@@ -270,13 +257,12 @@ components:
     fetch_all:
       name: fetch_all
       description: >-
-        Optional, a boolean, which when TRUE, allows fast retrieval of all unsorted query hits. 
-        The return object contains a _scroll_id field, which when passed as a parameter to the query endpoint 
-        (see the scroll_id parameter), returns the next 1000 query results. Setting fetch_all = TRUE causes 
-        the results to be inherently unsorted, therefore the sort parameter is ignored. For more information, 
-        see [examples using fetch_all for a core BioThings 
-        API](https://docs.mychem.info/en/latest/doc/chem_query_service.html?highlight=from#scrolling-queries). 
-        Default: FALSE.
+        Optional, a boolean, which when TRUE, allows fast retrieval of all unsorted query hits. The return object
+        contains a _scroll_id field, which when passed as a parameter to the query endpoint (see the scroll_id parameter),
+        returns the next 1000 query results. Setting fetch_all = TRUE causes the results to be inherently unsorted, therefore
+        the sort parameter is ignored. For more information, see [examples using fetch_all for a core BioThings
+        API](https://docs.mychem.info/en/latest/doc/chem_query_service.html?highlight=from#scrolling-queries). Default:
+        FALSE.
       in: query
       required: false
       schema:
@@ -285,13 +271,11 @@ components:
     fields:
       name: fields
       description: >-
-        Optional, can be a comma-separated list to limit the fields returned from the object. 
-        If "fields=all", all available fields will be returned.
+        Optional, can be a comma-separated list to limit the fields returned from the object. If "fields=all",
+        all available fields will be returned.
         
-
-        Note that it supports dot notation as well, e.g., you can pass "chebi.name". 
-        Default: "fields=all". 
-        The parameter "filter" is an alias for this parameter.
+        Note that it supports dot notation as well, e.g., you can pass "chebi.name". Default: "fields=all". The parameter
+        "filter" is an alias for this parameter.
       in: query
       required: false
       schema:
@@ -300,7 +284,7 @@ components:
     from:
       name: from
       description: >-
-        Optional, the number of matching hits to skip, starting from 0. Default: 0. 
+        Optional, the number of matching hits to skip, starting from 0. Default: 0.
       in: query
       required: false
       schema:
@@ -309,12 +293,11 @@ components:
     scroll_id:
       name: scroll_id
       description: >-
-        Optional, a string containing the _scroll_id returned from a query request with fetch_all = TRUE. 
-        Supplying a valid scroll_id will return the next 1000 unordered results. If the next results are 
-        not obtained within 1 minute of the previous set of results, the scroll_id becomes stale, and a 
-        new one must be obtained with another query request with fetch_all = TRUE. All other parameters are 
-        ignored when the scroll_id parameter is supplied. For more information see [examples using scroll_id 
-        for a core BioThings 
+        Optional, a string containing the _scroll_id returned from a query request with fetch_all = TRUE. Supplying
+        a valid scroll_id will return the next 1000 unordered results. If the next results are not obtained within 1 minute
+        of the previous set of results, the scroll_id becomes stale, and a new one must be obtained with another query request
+        with fetch_all = TRUE. All other parameters are ignored when the scroll_id parameter is supplied. For more information
+        see [examples using scroll_id for a core BioThings
         API](https://docs.mychem.info/en/latest/doc/chem_query_service.html?highlight=from#scrolling-queries).
       in: query
       required: false
@@ -333,8 +316,8 @@ components:
     sort:
       name: sort
       description: >-
-        Optional, the comma-separated fields to sort on. Prefix with "-" for descending order, otherwise in ascending order. 
-        Default: sort by matching scores in descending order.
+        Optional, the comma-separated fields to sort on. Prefix with "-" for descending order, otherwise in ascending
+        order. Default: sort by matching scores in descending order.
       in: query
       required: false
       schema:
