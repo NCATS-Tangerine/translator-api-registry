@@ -1,48 +1,49 @@
 openapi: 3.0.3
+
 info:
   contact:
     email: help@biothings.io
     name: BioThings Team
     x-id: https://github.com/biothings
     x-role: responsible organization
-  description: "Documentation of the BioThings API for [Kaviar](https://db.systemsbiology.net/kaviar/) \n(Known VARiants) data.\
-    \ Kaviar is a compilation of SNVs, indels, and complex variants \nobserved in humans, compiled from 34 projects encompassing\
-    \ 77,781 individuals \nof diverse ethnicities. It provides comprehensive variant frequency data across \ndifferent populations,\
-    \ supporting population genetics research, clinical variant \ninterpretation, and personalized medicine applications."
+  description: >-
+    Documentation of the BioThings API for [Known VARiants (KAVIAR)](http://db.systemsbiology.net/kaviar/) data.
+    KAVIAR provides a comprehensive database of genomic variants aggregated from multiple large-scale sequencing projects
+    and population studies. This API enables access to variant frequency data, population genetics information, and genomic
+    variation patterns, supporting variant interpretation, population genomics research, and clinical genetics applications.
   termsOfService: https://biothings.io/about
-  title: Kaviar
+  title: BioThings KAVIAR API
   version: '2023-06-19'
+  x-implementationLanguage: Python
   x-translator:
-    infores: infores:biothings-kaviar
     component: KP
     team:
-    - Service Provider
-    biolink-version: 4.2.6
+    - "Service Provider"
+
 servers:
-- description: Production server
-  url: https://biothings.ncats.io/kaviar
+- url: https://biothings.ncats.io/kaviar
+  description: Production server
   x-maturity: production
 - url: https://biothings.test.transltr.io/kaviar
   description: ITRB Test server
   x-maturity: testing
 - url: https://biothings.ci.transltr.io/kaviar
-  description: ITRB CI server
+  description: ITRB Staging server
   x-maturity: staging
+
 tags:
 - name: variant
-- name: population
-- name: genetics
-- name: snp
-- name: frequency
 - name: query
 - name: translator
 - name: biothings
+
 paths:
-  /variant/{id}:
+  "/variant/{id}":
     get:
-      description: By default, the full record for each ID is returned in JSON. Invalid input returns a 404 (Not Found). Use
-        the "fields" parameter to return specific attributes (comma-separated, case-sensitive). Unavailable attributes are
-        ignored. You can also use the "callback" parameter for JSONP requests.
+      description: >-
+        By default, the full record for each ID is returned in JSON. Invalid input returns a 404 (Not Found). Use
+        the 'fields' parameter to return specific attributes (comma-separated, case-sensitive). Unavailable attributes are
+        ignored. You can also use the 'callback' parameter for JSONP requests.
       parameters:
       - name: id
         in: path
@@ -56,19 +57,20 @@ paths:
       - $ref: '#/components/parameters/size'
       responses:
         '200':
-          description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
+          description: >-
+            A 200 status code indicates a successful query, and is accompanied by the query response payload.
       tags:
-      - variant
-  /variant:
+      - "variant"
+  "/variant":
     post:
       description: To fetch multiple items in one request, use a batch query with POST.
       parameters:
       - name: ids
-        description: 'Accepts multiple IDs separated by commas. Note that currently we only take ids up to 1000 maximum, the
-          rest will be omitted.
+        description: >-
+          |-
+          Accepts multiple IDs separated by commas. Note that currently we only take ids up to 1000 maximum, the rest will be omitted.
 
-
-          The request body can also be used to provide these ids.'
+          The request body can also be used to provide these ids.
         in: query
         required: false
         schema:
@@ -87,42 +89,49 @@ paths:
               type: object
               properties:
                 ids:
-                  description: Accepts multiple IDs. Note that currently we only take the input ids up to 1000 maximum, the
+                  description: >-
+                    Accepts multiple IDs. Note that currently we only take the input ids up to 1000 maximum, the
                     rest will be omitted.
                   type: array
                   items:
                     type: string
       responses:
         '200':
-          description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
+          description: >-
+            A 200 status code indicates a successful query, and is accompanied by the query response payload.
       tags:
-      - variant
-  /metadata:
+      - "variant"
+  "/metadata":
     get:
-      description: Get metadata about the KAVIAR data available from the API
+      description: Get metadata about the BioThings KAVIAR data available from the API
       responses:
         '200':
-          description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
+          description: >-
+            A 200 status code indicates a successful query, and is accompanied by the query response payload.
       tags:
-      - metadata
-  /metadata/fields:
+      - "metadata"
+  "/metadata/fields":
     get:
-      description: Get metadata about the KAVIAR data fields available from the API
+      description: Get metadata about the BioThings KAVIAR data fields available from the API
       responses:
         '200':
-          description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
+          description: >-
+            A 200 status code indicates a successful query, and is accompanied by the query response payload.
       tags:
-      - metadata
-  /query:
+      - "metadata"
+  "/query":
     get:
-      description: Query service for KAVIAR. In the output, "total" gives the total number of matching hits, while the actual
-        hits are returned under "hits" field.
+      description: >-
+        Query service for BioThings KAVIAR. In the output, "total" gives the total number of matching hits, while
+        the actual hits are returned under "hits" field.
       parameters:
       - name: q
-        description: Required, passing user query. The detailed query syntax is explained [here for a core BioThings API](https://docs.mychem.info/en/latest/doc/chem_query_service.html#query-syntax).
+        description: >-
+          'Required, passing user query. Example: ''Search all variant frequency data''. The detailed query syntax
+          is explained [here for a core BioThings API](https://docs.mychem.info/en/latest/doc/chem_query_service.html#query-syntax).'
         in: query
         required: true
-        example: '*'
+        example: "kaviar.ref:A"
         schema:
           type: string
       - $ref: '#/components/parameters/fields'
@@ -138,20 +147,22 @@ paths:
       - $ref: '#/components/parameters/email'
       responses:
         '200':
-          description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
+          description: >-
+            A 200 status code indicates a successful query, and is accompanied by the query response payload.
       tags:
-      - query
+      - "query"
     post:
-      description: To fetch multiple items in one request, use a batch query with POST. The "query" field in the returned
+      description: >-
+        To fetch multiple items in one request, use a batch query with POST. The "query" field in the returned
         object indicates the matching query term. If a query term has no match, it will return with a "notfound" field with
         the value "true".
       parameters:
       - name: q
-        description: 'Accepts multiple values separated by commas. Note that currently we only take the input values up to
-          1000 maximum, the rest will be omitted.
+        description: >-
+          |-
+          Accepts multiple values separated by commas. Note that currently we only take the input values up to 1000 maximum, the rest will be omitted.
 
-
-          The request body can also be used to provide these values.'
+          The request body can also be used to provide these values.
         in: query
         required: false
         schema:
@@ -159,10 +170,11 @@ paths:
           items:
             type: string
       - name: scopes
-        description: 'Optional, specify one or more fields (separated by commas) to search. Default: _id
+        description: >-
+          |-
+          Optional, specify one or more fields (separated by commas) to search. Default: _id
 
-
-          The request body can also be used to provide this information.'
+          The request body can also be used to provide this information.
         in: query
         required: false
         schema:
@@ -178,15 +190,16 @@ paths:
           application/json:
             example:
               q:
-              - query1
-              - query2
+              - "A"
+              - "T"
               scopes:
-              - _id
+              - "kaviar.ref"
             schema:
               type: object
               properties:
                 q:
-                  description: Accepts multiple values separated by commas. Note that currently we only take the input values
+                  description: >-
+                    Accepts multiple values separated by commas. Note that currently we only take the input values
                     up to 1000 maximum, the rest will be omitted.
                   type: array
                   items:
@@ -198,9 +211,11 @@ paths:
                     type: string
       responses:
         '200':
-          description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
+          description: >-
+            A 200 status code indicates a successful query, and is accompanied by the query response payload.
       tags:
-      - query
+      - "query"
+
 components:
   parameters:
     callback:
@@ -212,7 +227,8 @@ components:
         type: string
     dotfield:
       name: dotfield
-      description: 'Optional, can be used to control the format of the returned object. If "dotfield" is true, the returned
+      description: >-
+        'Optional, can be used to control the format of the returned object. If "dotfield" is true, the returned
         data object is returned flattened (no nested objects) using dotfield notation for key names. Default: false.'
       in: query
       required: false
@@ -221,7 +237,8 @@ components:
         default: false
     email:
       name: email
-      description: Optional, if you are regular users of our services, we encourage you to provide us an email, so that we
+      description: >-
+        Optional, if you are regular users of our services, we encourage you to provide us an email, so that we
         can better track the usage or follow up with you.
       in: query
       required: false
@@ -229,7 +246,8 @@ components:
         type: string
     facet_size:
       name: facet_size
-      description: Optional, an integer (1 <= facet_size <= 1000) that specifies how many buckets to return in a faceted query.
+      description: >-
+        Optional, an integer (1 <= facet_size <= 1000) that specifies how many buckets to return in a faceted query.
       in: query
       required: false
       schema:
@@ -237,7 +255,8 @@ components:
         default: 10
     facets:
       name: facets
-      description: Optional, a single field or comma-separated fields to return facets, can only be used on non-free text
+      description: >-
+        Optional, a single field or comma-separated fields to return facets, can only be used on non-free text
         fields. See examples of faceted queries for a core BioThings API.
       in: query
       required: false
@@ -247,7 +266,8 @@ components:
           type: string
     fetch_all:
       name: fetch_all
-      description: 'Optional, a boolean, which when TRUE, allows fast retrieval of all unsorted query hits. The return object
+      description: >-
+        'Optional, a boolean, which when TRUE, allows fast retrieval of all unsorted query hits. The return object
         contains a _scroll_id field, which when passed as a parameter to the query endpoint returns the next 1000 query results.
         Setting fetch_all = TRUE causes the results to be inherently unsorted, therefore the sort parameter is ignored. Default:
         FALSE.'
@@ -258,7 +278,8 @@ components:
         default: false
     fields:
       name: fields
-      description: 'Optional, can be a comma-separated list to limit the fields returned from the object. If "fields=all",
+      description: >-
+        'Optional, can be a comma-separated list to limit the fields returned from the object. If "fields=all",
         all available fields will be returned. Note that it supports dot notation as well. Default: "fields=all". The parameter
         "filter" is an alias for this parameter.'
       in: query
@@ -276,7 +297,8 @@ components:
         default: 0
     scroll_id:
       name: scroll_id
-      description: Optional, a string containing the _scroll_id returned from a query request with fetch_all = TRUE. Supplying
+      description: >-
+        Optional, a string containing the _scroll_id returned from a query request with fetch_all = TRUE. Supplying
         a valid scroll_id will return the next 1000 unordered results. If the next results are not obtained within 1 minute
         of the previous set of results, the scroll_id becomes stale, and a new one must be obtained with another query request
         with fetch_all = TRUE.
@@ -286,7 +308,8 @@ components:
         type: string
     size:
       name: size
-      description: 'Optional, the maximum number of matching hits to return (with a cap of 1000 at the moment). Default: 10.
+      description: >-
+        'Optional, the maximum number of matching hits to return (with a cap of 1000 at the moment). Default: 10.
         The combination of "size" and "from" parameters can be used to get paging for a large query.'
       in: query
       required: false
@@ -295,7 +318,8 @@ components:
         default: 10
     sort:
       name: sort
-      description: 'Optional, the comma-separated fields to sort on. Prefix with "-" for descending order, otherwise in ascending
+      description: >-
+        'Optional, the comma-separated fields to sort on. Prefix with "-" for descending order, otherwise in ascending
         order. Default: sort by matching scores in descending order.'
       in: query
       required: false
