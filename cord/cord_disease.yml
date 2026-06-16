@@ -1,0 +1,539 @@
+openapi: 3.0.0
+info:
+  contact:
+    email: help@biothinigs.io
+    name: JIWEN XIN
+    x-id: https://github.com/kevinxin90
+    x-role: responsible developer
+  description: Documentation of the CORD Query web services. Learn more about [CORD](http://biothings.ncats.io/cord_disease)
+  termsOfService: http://mydisease.info/terms/
+  title: CORD Disease API
+  version: '1.0'
+  x-translator:
+    component: KP
+    team:
+      - Service Provider
+servers:
+- description: Encrypted Production server
+  url: https://biothings.ncats.io/cord_disease/
+- description: Production server
+  url: http://biothings.ncats.io/cord_disease/
+tags:
+- name: disease
+- name: annotation
+- name: query
+- name: translator
+- name: biothings
+paths:
+  "/disease":
+    post:
+      parameters:
+      - "$ref": "#/components/parameters/fields"
+        name: fields
+      - "$ref": "#/components/parameters/dotfield"
+        name: dotfield
+      - "$ref": "#/components/parameters/email"
+        name: email
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              properties:
+                ids:
+                  description: multiple DISEASE ONTOLOGY diseaseids seperated by comma,
+                    e.g., "ids=387,388" Note that currently we only take the input
+                    ids up to 1000 maximum, the rest will be omitted.
+                  type: string
+              required:
+              - ids
+      responses:
+        '200':
+          description: A query response object with "hits" property
+      summary: For a list of disease ids, return the matching disease objects
+      tags:
+      - annotation
+  "/disease/{diseaseid}":
+    get:
+      parameters:
+      - description: DISEASE ONTOLOGY ID, e.g. DOID:3319
+        example: DOID:3319
+        in: path
+        name: diseaseid
+        required: true
+        schema:
+          type: string
+      - "$ref": "#/components/parameters/fields"
+        name: fields
+      - "$ref": "#/components/parameters/dotfield"
+        name: dotfield
+      - "$ref": "#/components/parameters/callback"
+        name: callback
+      - "$ref": "#/components/parameters/email"
+        name: email
+      responses:
+        '200':
+          description: A matching disease object
+      summary: Retrieve disease annotation object based on pr disease id, support
+        JSONP and CORS as well.
+      tags:
+      - annotation
+  "/metadata":
+    get:
+      parameters:
+      - "$ref": "#/components/parameters/callback"
+        name: callback
+      responses:
+        '200':
+          description: CORD API metadata object
+      summary: Get metadata about the data available from CORD API.
+  "/metadata/fields":
+    get:
+      parameters:
+      - description: Pass a search term to filter the available fields, e.g. "search=associated_with".
+        in: query
+        name: search
+        schema:
+          type: string
+      - description: Pass a prefix string to filter the available fields, e.g. "prefix=refseq".
+        in: query
+        name: prefix
+        schema:
+          type: string
+      - "$ref": "#/components/parameters/callback"
+        name: callback
+      responses:
+        '200':
+          description: MyCell.info metadata fields object
+      summary: Get metadata about the data fields available from MyCell.info.
+  "/query":
+    get:
+      parameters:
+      - description: Query string. Examples "PMC6836328", "31045", "PR:000001978".
+        example: associated_with.pmc:PMC6584579
+        in: query
+        name: q
+        required: true
+        schema:
+          type: string
+      - "$ref": "#/components/parameters/fields"
+        name: fields
+      - "$ref": "#/components/parameters/size"
+        name: size
+      - "$ref": "#/components/parameters/sort"
+        name: sort
+      - description: a single field or comma-separated fields to return facets, for
+          example, "facets=pr"
+        in: query
+        name: facets
+        schema:
+          type: string
+      - "$ref": "#/components/parameters/callback"
+        name: callback
+      - "$ref": "#/components/parameters/dotfield"
+        name: dotfield
+      - "$ref": "#/components/parameters/email"
+        name: email
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/QueryResult"
+          description: A query response object with "hits" property
+      summary: Make disease query and return matching disease list. Support JSONP
+        and CORS as well.
+      tags:
+      - query
+    post:
+      parameters:
+      - "$ref": "#/components/parameters/fields"
+        name: fields
+      - "$ref": "#/components/parameters/dotfield"
+        name: dotfield
+      - "$ref": "#/components/parameters/email"
+        name: email
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              properties:
+                q:
+                  description: multiple query terms seperated by comma (also support
+                    "+" or white space), but no wildcard, e.g., "q=1017,1018" or "q=CDK2+BTK"
+                  type: string
+                scopes:
+                  description: 'Specify one or more fields (separated by comma) as
+                    the search "scopes", e.g., "scopes=entrezdisease", "scopes=entrezdisease,ensembldisease".
+                    The available "fields" can be passed to "scopes" parameter are
+                    listed [here](http://mydisease.info/doc/query_service.html#available-fields).
+                    Default: "scopes=entrezdisease,ensembldisease,retired" (either
+                    Entrez or Ensembl disease ids).'
+                  type: string
+              required:
+              - q
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/QueryPOSTResult"
+          description: Query response objects with "hits" property
+      summary: Make disease batch query and return matching disease hits
+      tags:
+      - query
+      x-bte-kgs-operations:
+      - "$ref": "#/components/x-bte-kgs-operations/disease2gene"
+      - "$ref": "#/components/x-bte-kgs-operations/disease2protein"
+      - "$ref": "#/components/x-bte-kgs-operations/disease2cell"
+      - "$ref": "#/components/x-bte-kgs-operations/disease2cc"
+      - "$ref": "#/components/x-bte-kgs-operations/disease2ma"
+      - "$ref": "#/components/x-bte-kgs-operations/disease2bp"
+      - "$ref": "#/components/x-bte-kgs-operations/disease2genomicentity"
+      - "$ref": "#/components/x-bte-kgs-operations/disease2chemical"
+      - "$ref": "#/components/x-bte-kgs-operations/disease2disease"
+      - "$ref": "#/components/x-bte-kgs-operations/disease2anatomy"
+components:
+  parameters:
+    callback:
+      description: you can pass a "callback" parameter to make a JSONP call.
+      in: query
+      name: callback
+      schema:
+        type: string
+    dotfield:
+      description: 'control the format of the returned fields when passed "fields"
+        parameter contains dot notation, e.g. "fields=assoicated_with.pmd". If "true"
+        or "1", the returned data object contains a single "associated_with" field,
+        otherwise ("false" or "0"), a single "refseq" field with a sub-field of "rna".
+        Default: true.'
+      in: query
+      name: dotfield
+      schema:
+        type: boolean
+    email:
+      description: If you are regular users of our services, we encourage you to provide
+        us an email, so that we can better track the usage or follow up with you.
+      in: query
+      name: email
+      schema:
+        type: string
+    fields:
+      description: a comma-separated fields to limit the fields returned from the
+        matching disease hits.
+      in: query
+      name: fields
+      schema:
+        type: string
+    from:
+      description: 'the number of matching disease hits to skip, starting from 0.
+        Combining with "size" parameter, this can be useful for paging. Default: 0.'
+      in: query
+      name: from
+      schema:
+        type: integer
+    size:
+      description: 'the maximum number of matching disease hits to return (with a
+        cap of 1000 at the moment). Default: 10.'
+      in: query
+      name: size
+      schema:
+        type: integer
+    sort:
+      description: 'the comma-separated fields to sort on. Prefix with "-" for descending
+        order, otherwise in ascending order. Default: sort by matching scores in decending
+        order.'
+      in: query
+      name: sort
+      schema:
+        type: string
+  schemas:
+    QueryPOSTResult:
+      items:
+        allOf:
+        - properties:
+            _score:
+              format: float
+              type: number
+            query:
+              type: string
+          type: object
+      type: array
+    QueryResult:
+      properties:
+        max_score:
+          format: float
+          type: number
+        took:
+          type: integer
+        total:
+          type: integer
+      type: object
+    int64_or_array:
+      oneOf:
+      - items:
+          format: int64
+          type: integer
+        type: array
+      - format: int64
+        type: integer
+    string_or_array:
+      oneOf:
+      - items:
+          type: string
+        type: array
+      - type: string
+  x-bte-kgs-operations:
+    disease2ma:
+    - inputSeparator: ","
+      inputs:
+      - id: DOID
+        semantic: Disease
+      method: post
+      predicate: related_to
+      source: Translator Text Mining Provider
+      outputs:
+      - id: GO
+        semantic: MolecularActivity
+      - id: MOP
+        semantic: MolecularActivity
+      parameters:
+        fields: associated_with
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: doid
+        header: application/x-www-form-urlencoded
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/disease2ma"
+    disease2cc:
+    - inputSeparator: ","
+      inputs:
+      - id: DOID
+        semantic: Disease
+      method: post
+      predicate: related_to
+      source: Translator Text Mining Provider
+      outputs:
+      - id: GO
+        semantic: CellularComponent
+      parameters:
+        fields: associated_with
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: doid
+        header: application/x-www-form-urlencoded
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/disease2cc"
+    disease2bp:
+    - inputSeparator: ","
+      inputs:
+      - id: DOID
+        semantic: Disease
+      method: post
+      predicate: related_to
+      source: Translator Text Mining Provider
+      outputs:
+      - id: GO
+        semantic: BiologicalProcess
+      parameters:
+        fields: associated_with
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: doid
+        header: application/x-www-form-urlencoded
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/disease2bp"
+    disease2anatomy:
+    - inputSeparator: ","
+      inputs:
+      - id: DOID
+        semantic: Disease
+      method: post
+      predicate: related_to
+      source: Translator Text Mining Provider
+      outputs:
+      - id: UBERON
+        semantic: AnatomicalEntity
+      parameters:
+        fields: associated_with
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: doid
+        header: application/x-www-form-urlencoded
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/disease2anatomy"
+    disease2gene:
+    - inputSeparator: ","
+      inputs:
+      - id: DOID
+        semantic: Disease
+      method: post
+      predicate: related_to
+      source: Translator Text Mining Provider
+      outputs:
+      - id: HGNC
+        semantic: Gene
+      parameters:
+        fields: associated_with
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: doid
+        header: application/x-www-form-urlencoded
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/disease2gene"
+    disease2genomicentity:
+    - inputSeparator: ","
+      inputs:
+      - id: DOID
+        semantic: Disease
+      method: post
+      predicate: related_to
+      source: Translator Text Mining Provider
+      outputs:
+      - id: SO
+        semantic: GenomicEntity
+      parameters:
+        fields: associated_with
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: doid
+        header: application/x-www-form-urlencoded
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/disease2genomicentity"
+    disease2protein:
+    - inputSeparator: ","
+      inputs:
+      - id: DOID
+        semantic: Disease
+      method: post
+      predicate: related_to
+      source: Translator Text Mining Provider
+      outputs:
+      - id: PR
+        semantic: Protein
+      parameters:
+        fields: associated_with
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: doid
+        header: application/x-www-form-urlencoded
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/disease2protein"
+    disease2cell:
+    - inputSeparator: ","
+      inputs:
+      - id: DOID
+        semantic: Disease
+      method: post
+      predicate: related_to
+      source: Translator Text Mining Provider
+      outputs:
+      - id: CL
+        semantic: Cell
+      parameters:
+        fields: associated_with
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: doid
+        header: application/x-www-form-urlencoded
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/disease2cell"
+    disease2disease:
+    - inputSeparator: ","
+      inputs:
+      - id: DOID
+        semantic: Disease
+      method: post
+      predicate: related_to
+      source: Translator Text Mining Provider
+      outputs:
+      - id: DOID
+        semantic: Disease
+      parameters:
+        fields: associated_with
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: doid
+        header: application/x-www-form-urlencoded
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/disease2disease"
+    disease2chemical:
+    - inputSeparator: ","
+      inputs:
+      - id: DOID
+        semantic: Disease
+      method: post
+      predicate: related_to
+      source: Translator Text Mining Provider
+      outputs:
+      - id: CHEBI
+        semantic: ChemicalSubstance
+      parameters:
+        fields: associated_with
+      path: "/query"
+      requestBody:
+        body:
+          q: "{inputs[0]}"
+          scopes: doid
+        header: application/x-www-form-urlencoded
+      supportBatch: true
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/disease2chemical"
+  x-bte-response-mapping:
+    disease2ma:
+      pmc: associated_with.pmc
+      MOP: associated_with.mop
+      GO: associated_with.go
+    disease2cc:
+      pmc: associated_with.pmc
+      GO: associated_with.go
+    disease2bp:
+      pmc: associated_with.pmc
+      GO: associated_with.go
+    disease2anatomy:
+      pmc: associated_with.pmc
+      UBERON: associated_with.uberon
+    disease2gene:
+      pmc: associated_with.pmc
+      HGNC: associated_with.hgnc
+    disease2genomicentity:
+      pmc: associated_with.pmc
+      SO: associated_with.so
+    disease2protein:
+      pmc: associated_with.pmc
+      PR: associated_with.pr
+    disease2cell:
+      pmc: associated_with.pmc
+      CL: associated_with.cl
+    disease2disease:
+      pmc: associated_with.pmc
+      DOID: associated_with.doid
+    disease2chemical:
+      pmc: associated_with.pmc
+      CHEBI: associated_with.chebi

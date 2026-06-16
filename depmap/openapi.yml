@@ -1,0 +1,483 @@
+openapi: 3.0.0
+info:
+  version: 2019Q2
+  title: Cancer Dependency Map API
+  description: This site provides an API access to [Cancer Dependency Map (DepMap)
+    data](https://depmap.org/portal/download/). The goal of the Cancer
+    Dependency Map is to create a comprehensive preclinical reference map
+    connecting  tumor features with tumor dependencies to accelerate the
+    development of precision treatments.  By integrating data beyond those
+    collected at the Broad, DepMap hopes to develop a complete  understanding of
+    the vulnerabilities of cancer, identify targets for therapeutic
+    development,  and design strategies to optimize patient responses to those
+    therapies. By using this site, you agree to DepMap's [Terms and
+    Conditions](https://depmap.org/portal/terms/).
+  termsOfService: https://depmap.org/portal/terms/
+  contact:
+    name: Broad NCATS translator
+    email: translator@broadinstitute.org
+paths:
+  /genes:
+    get:
+      tags:
+        - types
+      summary: Retrieve list of genes
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/gene"
+  /cell_lines:
+    get:
+      tags:
+        - types
+      summary: Retrieve list of cell lines
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/cell_line"
+  /proteins:
+    get:
+      tags:
+        - types
+      summary: Retrieve list of protein antibodies
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/protein"
+  "/gene_expression/by_gene/{ensembl_gene}":
+    get:
+      tags:
+        - values
+      summary: Retrieve gene expression by gene
+      parameters:
+        - name: ensembl_gene
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/expression_value"
+  "/gene_expression/by_cell_line/{depmap_id}":
+    get:
+      tags:
+        - values
+      summary: Retrieve gene expression by cell line
+      parameters:
+        - name: depmap_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/expression_value"
+  "/gene_dependency/by_gene/{entrez_gene_id}":
+    get:
+      tags:
+        - values
+      summary: Retrieve gene dependency by gene
+      parameters:
+        - name: entrez_gene_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/dependency_value"
+  "/gene_dependency/by_cell_line/{depmap_id}":
+    get:
+      tags:
+        - values
+      summary: Retrieve gene dependency by cell line
+      parameters:
+        - name: depmap_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/dependency_value"
+  "/copy_number/by_gene/{entrez_gene_id}":
+    get:
+      tags:
+        - values
+      summary: Retrieve copy-number values by gene
+      parameters:
+        - name: entrez_gene_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/copy_number_value"
+  "/copy_number/by_cell_line/{depmap_id}":
+    get:
+      tags:
+        - values
+      summary: Retrieve copy-number values by cell line
+      parameters:
+        - name: depmap_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/copy_number_value"
+  "/rnai/by_gene/{entrez_gene_id}":
+    get:
+      tags:
+        - values
+      summary: Retrieve rnai values by gene
+      parameters:
+        - name: entrez_gene_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/rnai_value"
+  "/rnai/by_cell_line/{depmap_id}":
+    get:
+      tags:
+        - values
+      summary: Retrieve rnai values by cell line
+      parameters:
+        - name: depmap_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/rnai_value"
+  "/mutations/by_gene/{entrez_gene_id}":
+    get:
+      tags:
+        - values
+      summary: Retrieve mutations by gene
+      parameters:
+        - name: entrez_gene_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/mutation"
+  "/mutations/by_cell_line/{depmap_id}":
+    get:
+      tags:
+        - values
+      summary: Retrieve mutations by cell line
+      parameters:
+        - name: depmap_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/mutation"
+  "/protein_array/by_protein/{antibody_name}":
+    get:
+      tags:
+        - values
+      summary: Retrieve protein array values by gene
+      parameters:
+        - name: antibody_name
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/protein_array_value"
+  "/protein_array/by_cell_line/{depmap_id}":
+    get:
+      tags:
+        - values
+      summary: Retrieve protein array values by cell line
+      parameters:
+        - name: depmap_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/protein_array_value"
+servers:
+  - url: http://indigo.ncats.io/depmap
+components:
+  schemas:
+    gene:
+      type: object
+      properties:
+        hgnc_id:
+          type: string
+        gene_symbol:
+          type: string
+        ensembl_gene:
+          type: string
+        entrez_gene_id:
+          type: integer
+        omim:
+          type: array
+          items:
+            type: string
+    cell_line:
+      type: object
+      properties:
+        depmap_id:
+          type: string
+        stripped_cell_line_name:
+          type: string
+        ccle_name:
+          type: string
+        aliases:
+          type: array
+          items:
+            type: string
+        cosmic_id:
+          type: string
+        sanger_id:
+          type: string
+        disease:
+          type: string
+        disease_subtype:
+          type: string
+        disease_sub_subtype:
+          type: string
+        gender:
+          type: string
+        source:
+          type: string
+    protein:
+      type: object
+      properties:
+        antibody_name:
+          type: string
+        target_genes:
+          type: array
+          items:
+            type: string
+        validation_status:
+          type: string
+        company:
+          type: string
+        catalog_number:
+          type: string
+    expression_value:
+      type: object
+      properties:
+        ensembl_gene:
+          type: string
+        depmap_id:
+          type: string
+        value:
+          type: number
+    dependency_value:
+      type: object
+      properties:
+        entrez_gene_id:
+          type: integer
+        depmap_id:
+          type: string
+        value:
+          type: number
+    copy_number_value:
+      type: object
+      properties:
+        entrez_gene_id:
+          type: integer
+        depmap_id:
+          type: string
+        value:
+          type: number
+    rnai_value:
+      type: object
+      properties:
+        entrez_gene_ids:
+          type: array
+          items:
+            type: integer
+        depmap_id:
+          type: string
+        value:
+          type: number
+    protein_array_value:
+      type: object
+      properties:
+        protein:
+          type: object
+          properties:
+            antibody_name:
+              type: string
+            target_genes:
+              type: array
+              items:
+                type: string
+        depmap_id:
+          type: string
+        value:
+          type: number
+    mutation:
+      type: object
+      properties:
+        entrez_gene_id:
+          type: integer
+        gene_symbol:
+          type: string
+        depmap_id:
+          type: string
+        ncbi_build:
+          type: integer
+        chromosome:
+          type: string
+        start_position:
+          type: integer
+        end_position:
+          type: integer
+        strand:
+          type: string
+        variant_classification:
+          type: string
+        variant_type:
+          type: string
+        reference_allele:
+          type: string
+        tumor_seq_allele:
+          type: string
+        dbsnp_rs:
+          type: array
+          items:
+            type: string
+        dbsnp_val_status:
+          type: string
+        genome_change:
+          type: string
+        annotation_transcript:
+          type: string
+        cdna_change:
+          type: string
+        codon_change:
+          type: string
+        protein_change:
+          type: string
+        is_deleterious:
+          type: string
+        tcga_hotspot_count:
+          type: string
+        cosmic_hotspot_count:
+          type: string
+        exac_af:
+          type: string
+        cga_wes_ac:
+          type: string
+        sanger_wes_ac:
+          type: string
+        sanger_recalibwes_ac:
+          type: string
+        rnaseq_ac:
+          type: string
+        hc_ac:
+          type: string
+        rd_ac:
+          type: string
+        wgs_ac:
+          type: string
+        variant_annotation:
+          type: string

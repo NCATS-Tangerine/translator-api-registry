@@ -1,0 +1,1127 @@
+openapi: 3.0.3
+info:
+  contact:
+    email: help@biothings.io
+    name: BioThings Team
+    x-id: https://github.com/biothings
+    x-role: responsible organization
+  description: >-
+    Documentation of the BioThings API for [Pathway Figure OCR (pfocr)](https://pfocr.wikipathways.org/) 
+    data.
+  termsOfService: https://biothings.io/about
+  title: BioThings PFOCR API
+  version: '2024-09-01'
+  x-translator:
+    infores: "infores:biothings-pfocr"
+    component: KP
+    team:
+      - Service Provider
+    biolink-version: "4.2.2"
+servers:
+- description: Encrypted Production server
+  url: https://biothings.transltr.io/pfocr
+  x-maturity: production
+- url: https://biothings.test.transltr.io/pfocr
+  description: ITRB Test server
+  x-maturity: testing
+- url: https://biothings.ci.transltr.io/pfocr
+  description: ITRB CI server
+  x-maturity: staging
+tags:
+- name: geneset
+- name: gene
+- name: annotation
+- name: query
+- name: translator
+- name: biothings
+paths:
+  "/geneset/{id}":
+    get:
+      description: >-
+        Retrieve one geneset record from the PFOCR dataset by its identifier. Covers geneset,
+        gene data. Source: Pathway Figure OCR (pfocr) data.
+
+        By default, this will return the complete figure record in JSON format. If the input is not valid,
+        404 (NOT FOUND) will be returned.
+        
+
+        Optionally, you can pass a "fields" parameter to return only the annotation you want 
+        (by filtering returned object fields). "fields" accepts any attributes (a.k.a fields) available 
+        from the association. Multiple attributes should be separated by commas. If an attribute is not 
+        available for a specific figure, it will be ignored. Note that the attribute names are 
+        case-sensitive.
+
+
+        Just like the query service, you can also pass a "callback" parameter to make a JSONP call.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        example: "PMC9278000__gr2_lrg"
+        schema:
+          type: string
+      - "$ref": "#/components/parameters/fields"
+      - "$ref": "#/components/parameters/callback"
+      - "$ref": "#/components/parameters/email"
+      ## this is useful even when it's not noted in the docs
+      - "$ref": "#/components/parameters/size"
+      ## these are noted in the /spec endpoint; commenting out for now
+      # - "$ref": "#/components/parameters/raw"
+      # - "$ref": "#/components/parameters/rawquery"
+      # - "$ref": "#/components/parameters/dotfield"
+      # - "$ref": "#/components/parameters/_sorted"
+      # - "$ref": "#/components/parameters/always_list"
+      # - "$ref": "#/components/parameters/allow_null"
+      # - "$ref": "#/components/parameters/format"
+      responses:
+        '200':
+          description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
+      ## commenting out schemas and other status codes for now
+      #     content:
+      #       application/json:
+      #         schema:
+      #           $ref: '#/components/schemas/Association'
+      #   '404':
+      #     description: A response indicating an unknown association ID
+      tags:
+      - geneset
+  "/geneset":
+    post:
+      description: >-
+        Retrieve multiple geneset records from the PFOCR dataset in one request, by a list of
+        identifiers. Covers geneset, gene data. Source: Pathway Figure OCR (pfocr) data.
+
+        Although making simple GET requests above to our service is sufficient in most use cases, 
+        there are some times you might find it easier to batch query (e.g., retrieving multiple figures). 
+        Fortunately, you can also make batch queries via POST requests when you need to.
+      parameters:
+      - name: ids
+        description: >-
+          Accepts multiple figure ids separated by commas. Note that currently we only take ids up to 
+          1000 maximum, the rest will be omitted.
+
+
+          The request body can also be used to provide these ids.
+        in: query
+        ## setting to false since putting this info in the request body seems to work as well
+        required: false
+        schema:
+          type: string
+      - "$ref": "#/components/parameters/fields"
+      - "$ref": "#/components/parameters/email"
+      ## this is useful even when it's not noted in the docs
+      - "$ref": "#/components/parameters/size"
+      ## these are noted in the /spec endpoint; commenting out for now
+      # - "$ref": "#/components/parameters/raw"
+      # - "$ref": "#/components/parameters/rawquery"
+      # - "$ref": "#/components/parameters/dotfield"
+      # - "$ref": "#/components/parameters/_sorted"
+      # - "$ref": "#/components/parameters/always_list"
+      # - "$ref": "#/components/parameters/allow_null"
+      # - "$ref": "#/components/parameters/format"
+      requestBody:
+        content:
+          application/json:
+            example:
+              ids:
+              - "PMC9278000__gr2_lrg"
+              - "PMC7835522__fcell-08-624216-g001"
+            schema:
+              type: object
+              properties:
+                ids:
+                  description: >-
+                    Accepts multiple figure ids. Note that currently we only take the input ids 
+                    up to 1000 maximum, the rest will be omitted.
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '200':
+          description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
+      tags:
+      - geneset
+  "/metadata":
+    get:
+      description: >-
+        Dataset metadata for PFOCR: build date, source versions and record counts. Covers
+        geneset, gene data. Source: Pathway Figure OCR (pfocr) data.
+
+        Get metadata about the data available from the API
+      ## these are noted in the https://mychem.info/v1/spec endpoint; commenting out for now
+      # parameters:
+      # - "$ref": "#/components/parameters/format"
+      # - "$ref": "#/components/parameters/raw"
+      responses:
+        '200':
+          description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
+      tags:
+      - metadata
+  "/metadata/fields":
+    get:
+      description: >-
+        List the queryable fields available on PFOCR geneset records. Covers geneset, gene data.
+        Source: Pathway Figure OCR (pfocr) data.
+
+        Get metadata about the data fields available from the API
+      ## these are noted in the https://mychem.info/v1/spec endpoint; commenting out for now
+      # parameters:
+      # - "$ref": "#/components/parameters/format"
+      # - "$ref": "#/components/parameters/raw"
+      # - "$ref": "#/components/parameters/search"
+      # - "$ref": "#/components/parameters/prefix"
+      responses:
+        '200':
+          description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
+      tags:
+      - metadata
+  "/query":
+    get:
+      description: >-
+        Search geneset records in the PFOCR dataset. Covers geneset, gene data. Source: Pathway
+        Figure OCR (pfocr) data.
+
+        Query service. In the output, "total" in the output gives the total number 
+        of matching hits, while the actual hits are returned under "hits" field.
+      parameters:
+      - name: q
+        description: >-
+          Required, passing user query. The detailed query syntax for parameter is explained 
+          [here for a core BioThings 
+          API](https://docs.mychem.info/en/latest/doc/chem_query_service.html#query-syntax).
+        in: query
+        required: true
+        example: "associatedWith.mentions.diseases.mesh:D045169"
+        schema:
+          type: string
+      - "$ref": "#/components/parameters/fields"
+      - "$ref": "#/components/parameters/size"
+      - "$ref": "#/components/parameters/from"
+      - "$ref": "#/components/parameters/fetch_all"
+      - "$ref": "#/components/parameters/scroll_id"
+      - "$ref": "#/components/parameters/sort"
+      - "$ref": "#/components/parameters/facets"
+      - "$ref": "#/components/parameters/facet_size"
+      - "$ref": "#/components/parameters/callback"
+      - "$ref": "#/components/parameters/dotfield"
+      - "$ref": "#/components/parameters/email"
+      ## these are noted in the /spec endpoint; commenting out for now
+      # - "$ref": "#/components/parameters/aggs"
+      # - "$ref": "#/components/parameters/userquery"
+      # - "$ref": "#/components/parameters/explain"
+      # - "$ref": "#/components/parameters/raw"
+      # - "$ref": "#/components/parameters/rawquery"
+      # - "$ref": "#/components/parameters/_sorted"
+      # - "$ref": "#/components/parameters/always_list"
+      # - "$ref": "#/components/parameters/allow_null"
+      # - "$ref": "#/components/parameters/format"
+      responses:
+        '200':
+          description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
+      ## commenting out schemas and other status codes for now
+      #     content:
+      #       application/json:
+      #         schema:
+      #           "$ref": "#/components/schemas/QueryResult"
+      #   '400':
+      #     content:
+      #       application/json:
+      #         schema:
+      #           "$ref": "#/components/schemas/ErrorResult"
+      #     description: A response indicating an improperly formatted query
+      # summary: Make queries and return matching gene hits. Supports JSONP and CORS
+      #   as well.
+      tags:
+      - query
+    post:
+      description: >-
+        Batch search of geneset records in the PFOCR dataset: submit several queries in one
+        request. Covers geneset, gene data. Source: Pathway Figure OCR (pfocr) data.
+
+        Although making simple GET requests above to our query service is sufficient for most use cases, 
+        there are times you might find it more efficient to make batch queries (e.g., retrieving data 
+        for multiple inputs). Fortunately, you can also make batch queries via POST requests when you need to.
+
+
+        The "query” field in the returned object indicates the matching query term. If a query term has no match, 
+        it will return with a “notfound” field with the value “true”.
+      parameters:
+      - name: q
+        description: >-
+          Accepts multiple values separated by commas. Note that currently we only take the input values up to 1000 
+          maximum, the rest will be omitted.
+
+
+          The request body can also be used to provide these ids.
+        in: query
+        ## setting to false since putting this info in the request body seems to work as well
+        required: false
+        schema:
+          type: array
+          items:
+            type: string
+      - name: scopes
+        description: >-
+          Optional, specify one or more fields (separated by commas) to search. Default: _id
+
+
+          The request body can also be used to provide this information.
+        in: query
+        ## setting to false since putting this info in the request body seems to work as well
+        required: false
+        schema:
+          type: string
+      - "$ref": "#/components/parameters/fields"
+      - "$ref": "#/components/parameters/email"
+      ## this is useful even when it's not noted in the docs
+      - "$ref": "#/components/parameters/size"
+      - "$ref": "#/components/parameters/from"
+      - "$ref": "#/components/parameters/fetch_all"
+      - "$ref": "#/components/parameters/scroll_id"
+      ## these are noted in the https://mychem.info/v1/spec endpoint; commenting out for now
+      # - "$ref": "#/components/parameters/sort"
+      # - "$ref": "#/components/parameters/raw"
+      # - "$ref": "#/components/parameters/rawquery"
+      # - "$ref": "#/components/parameters/dotfield"
+      # - "$ref": "#/components/parameters/_sorted"
+      # - "$ref": "#/components/parameters/always_list"
+      # - "$ref": "#/components/parameters/allow_null"
+      # - "$ref": "#/components/parameters/format"
+      requestBody:
+        content:
+          application/json:
+            example:
+              q:
+              - "D045169"
+              - "D005355"
+              scopes:
+              - "associatedWith.mentions.diseases.mesh"
+            schema:
+              type: object
+              properties:
+                q:
+                  description: >-
+                    Accepts multiple values separated by commas. Note that currently we only take the input values 
+                    up to 1000 maximum, the rest will be omitted.
+                  type: array
+                  items:
+                    type: string
+                scopes:
+                  description: >-
+                    Specify one or more fields (separated by commas) to search. Default: _id
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '200':
+          description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
+      ## commenting out schemas and other status codes for now
+      #     content:
+      #       application/json:
+      #         schema:
+      #           "$ref": "#/components/schemas/QueryPOSTResult"
+      #   '400':
+      #     content:
+      #       application/json:
+      #         schema:
+      #           "$ref": "#/components/schemas/ErrorResult"
+      #     description: A response indicating an improperly formatted query
+      # summary: Make batch gene queries and return matching gene hits
+      tags:
+      - query
+      ## 6 operations
+      x-bte-kgs-operations:
+      - $ref: '#/components/x-bte-kgs-operations/gene-chemMesh'
+      - $ref: '#/components/x-bte-kgs-operations/chemMesh-gene'
+      - $ref: '#/components/x-bte-kgs-operations/gene-chemChebi'
+      - $ref: '#/components/x-bte-kgs-operations/chemChebi-gene'
+      - $ref: '#/components/x-bte-kgs-operations/diseaseMesh-chemMesh'
+      - $ref: '#/components/x-bte-kgs-operations/chemMesh-diseaseMesh'
+      - $ref: '#/components/x-bte-kgs-operations/diseaseMesh-chemChebi'
+      - $ref: '#/components/x-bte-kgs-operations/chemChebi-diseaseMesh'
+      - $ref: '#/components/x-bte-kgs-operations/diseaseDoid-chemMesh'
+      - $ref: '#/components/x-bte-kgs-operations/chemMesh-diseaseDoid'
+      - $ref: '#/components/x-bte-kgs-operations/diseaseDoid-chemChebi'
+      - $ref: '#/components/x-bte-kgs-operations/chemChebi-diseaseDoid'
+      - $ref: '#/components/x-bte-kgs-operations/diseaseMesh-gene'
+      - $ref: '#/components/x-bte-kgs-operations/gene-diseaseMesh'
+      - $ref: '#/components/x-bte-kgs-operations/diseaseDoid-gene'
+      - $ref: '#/components/x-bte-kgs-operations/gene-diseaseDoid'
+components:
+  parameters:
+    callback:
+      name: callback
+      description: >-
+        Optional, you can pass a "callback" parameter to make a JSONP call.
+      in: query
+      required: false
+      schema:
+        type: string
+    dotfield:
+      name: dotfield
+      description: >-
+        Optional, can be used to control the format of the returned object. 
+        If "dotfield" is true, the returned data object is returned flattened (no nested objects) 
+        using dotfield notation for key names. Default: false.
+      in: query
+      required: false
+      schema:
+        type: boolean
+        default: false
+    email:
+      name: email
+      description: >-
+        Optional, if you are regular users of our services, we encourage you to provide us an email, 
+        so that we can better track the usage or follow up with you.
+      in: query
+      required: false
+      schema:
+        type: string
+    facet_size:
+      name: facet_size
+      description: >-
+        Optional, an integer (1 <= facet_size <= 1000) that specifies how many buckets to return in a 
+        [faceted query](https://docs.mychem.info/en/latest/doc/chem_query_service.html?highlight=from#faceted-queries).
+      in: query
+      required: false
+      schema:
+        type: integer
+        default: 10
+    facets:
+      name: facets
+      description: >-
+        Optional, a single field or comma-separated fields to return facets, can only be used on non-free text fields. 
+        E.g. “facets=chembl.molecule_properties.full_mwt”. See [examples of faceted queries for a core BioThings 
+        API](https://docs.mychem.info/en/latest/doc/chem_query_service.html?highlight=from#faceted-queries).
+      in: query
+      required: false
+      schema:
+        type: array
+        items:
+          type: string
+    fetch_all:
+      name: fetch_all
+      description: >-
+        Optional, a boolean, which when TRUE, allows fast retrieval of all unsorted query hits. 
+        The return object contains a _scroll_id field, which when passed as a parameter to the query endpoint 
+        (see the scroll_id parameter), returns the next 1000 query results. Setting fetch_all = TRUE causes 
+        the results to be inherently unsorted, therefore the sort parameter is ignored. For more information, 
+        see [examples using fetch_all for a core BioThings 
+        API](https://docs.mychem.info/en/latest/doc/chem_query_service.html?highlight=from#scrolling-queries). 
+        Default: FALSE.
+      in: query
+      required: false
+      schema:
+        type: boolean
+        default: false
+    fields:
+      name: fields
+      description: >-
+        Optional, can be a comma-separated list to limit the fields returned from the object. 
+        If "fields=all", all available fields will be returned.
+        
+
+        Note that it supports dot notation as well, e.g., you can pass "chebi.name". 
+        Default: "fields=all". 
+        The parameter "filter" is an alias for this parameter.
+      in: query
+      required: false
+      schema:
+        type: string
+        default: all
+    from:
+      name: from
+      description: >-
+        Optional, the number of matching hits to skip, starting from 0. Default: 0. 
+      in: query
+      required: false
+      schema:
+        type: integer
+        default: 0
+    scroll_id:
+      name: scroll_id
+      description: >-
+        Optional, a string containing the _scroll_id returned from a query request with fetch_all = TRUE. 
+        Supplying a valid scroll_id will return the next 1000 unordered results. If the next results are 
+        not obtained within 1 minute of the previous set of results, the scroll_id becomes stale, and a 
+        new one must be obtained with another query request with fetch_all = TRUE. All other parameters are 
+        ignored when the scroll_id parameter is supplied. For more information see [examples using scroll_id 
+        for a core BioThings 
+        API](https://docs.mychem.info/en/latest/doc/chem_query_service.html?highlight=from#scrolling-queries).
+      in: query
+      required: false
+      schema:
+        type: string
+    size:
+      name: size
+      description: >-
+        Optional, the maximum number of matching hits to return (with a cap of 1000 at the moment). Default: 10.
+        The combination of "size" and "from" parameters can be used to get paging for a large query.
+      in: query
+      required: false
+      schema:
+        type: integer
+        default: 10
+    sort:
+      name: sort
+      description: >-
+        Optional, the comma-separated fields to sort on. Prefix with "-" for descending order, otherwise in ascending order. 
+        Default: sort by matching scores in descending order.
+      in: query
+      required: false
+      schema:
+        type: array
+        items:
+          type: string
+    ## these are noted in the https://mychem.info/v1/spec endpoint; commenting out for now
+    # _sorted:
+    #   name: _sorted
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: boolean
+    #     default: true
+    # aggs:
+    #   name: aggs
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: array
+    #     items:
+    #       type: string
+    # allow_null:
+    #   name: allow_null
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: array
+    #     items:
+    #       type: string
+    # always_list:
+    #   name: always_list
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: array
+    #     items:
+    #       type: string
+    # explain:
+    #   name: explain
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: boolean
+    # format:
+    #   name: format
+    #   description: 'controls output format of server response, currently supports:
+    #     "json", "jsonld", "html". Type: string. Default: json.'
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: string
+    #     default: json
+    # prefix:
+    #   name: prefix
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: string
+    # raw:
+    #   name: raw
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: boolean
+    # rawquery:
+    #   name: rawquery
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: boolean
+    # search:
+    #   name: search
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: string
+    # userquery:
+    #   name: userquery
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: string
+  ## commenting out schemas and other status codes for now
+  # schemas:
+  #   Association:
+  #     properties:
+  #       _id:
+  #         type: string
+  #     required:
+  #     - _id
+  #     type: object
+  #   ErrorResult:
+  #     properties:
+  #       message:
+  #         type: string
+  #       success:
+  #         type: boolean
+  #     type: object
+  #   QueryPOSTResult:
+  #     items:
+  #       allOf:
+  #       - $ref: '#/components/schemas/Association'
+  #       - properties:
+  #           _score:
+  #             format: float
+  #             type: number
+  #           query:
+  #             type: string
+  #         type: object
+  #     type: array
+  #   QueryResult:
+  #     properties:
+  #       hits:
+  #         items:
+  #           $ref: '#/components/schemas/Association'
+  #         type: array
+  #       max_score:
+  #         format: float
+  #         type: number
+  #       took:
+  #         type: integer
+  #       total:
+  #         type: integer
+  #     type: object
+  #   int64_or_array:
+  #     oneOf:
+  #     - items:
+  #         format: int64
+  #         type: integer
+  #       type: array
+  #     - format: int64
+  #       type: integer
+  #   string_or_array:
+  #     oneOf:
+  #     - items:
+  #         type: string
+  #       type: array
+  #     - type: string
+  x-bte-kgs-operations:
+  ## 3 potential types: Disease, Gene, SmallMolecule (chem)
+  ## - Pathways don't have formal IDs that can be used
+    gene-chemMesh:
+    ## https://biothings.ci.transltr.io/pfocr/query?q=_exists_:associatedWith.mentions.chemicals.mesh%20AND%20_exists_:associatedWith.mentions.genes
+    ## 35972 documents. not clear how many gene-chem pairs there are. 
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: NCBIGene
+            semantic: Gene
+        requestBody:
+          body:
+            ## API data has no prefix
+            ## joinSafe is only needed if the delimiter isn't a comma
+            q: "{{ queryInputs }}"
+            scopes: associatedWith.mentions.genes.ncbigene
+        outputs:
+          - id: MESH
+            semantic: SmallMolecule
+        parameters:
+          fields: >-
+            associatedWith.mentions.chemicals.mesh,
+            associatedWith.figureUrl,associatedWith.pmc,associatedWith.pfocrUrl
+          size: 1000
+        predicate: occurs_together_in_literature_with
+        source: "infores:pfocr"
+        knowledge_level: not_provided
+        agent_type: image_processing_agent
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/chemMesh"
+        testExamples:
+          - qInput: "NCBIGene:9839"      ## ZEB2
+            oneOutput: "MESH:C024755"    ## H-2K(K) antigen
+        ## examples from https://biothings.ci.transltr.io/pfocr/query?q=_exists_:associatedWith.mentions.chemicals.mesh%20AND%20_exists_:associatedWith.mentions.genes%20AND%20NOT%20_exists_:associatedWith.mentions.chemicals.chebi
+    chemMesh-gene:
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: MESH
+            semantic: SmallMolecule
+        requestBody:
+          body:
+            ## API data has no prefix
+            ## joinSafe is only needed if the delimiter isn't a comma
+            q: "{{ queryInputs }}"
+            scopes: associatedWith.mentions.chemicals.mesh
+        outputs:
+          - id: NCBIGene
+            semantic: Gene
+        parameters:
+          fields: >-
+            associatedWith.mentions.genes.ncbigene,
+            associatedWith.figureUrl,associatedWith.pmc,associatedWith.pfocrUrl
+          size: 1000
+        predicate: occurs_together_in_literature_with
+        source: "infores:pfocr"
+        knowledge_level: not_provided
+        agent_type: image_processing_agent
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/gene"
+        testExamples:
+          - qInput: "MESH:C065632"       ## PUBCHEM.COMPOUND:131149 / glucosamine 3-O-sulfate
+            oneOutput: "NCBIGene:652"    ## BMP4
+    gene-chemChebi:
+    ## https://biothings.ci.transltr.io/pfocr/query?q=_exists_:associatedWith.mentions.chemicals.chebi%20AND%20_exists_:associatedWith.mentions.genes
+    ## 33791 documents. not clear how many gene-chem pairs there are. 
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: NCBIGene
+            semantic: Gene
+        requestBody:
+          body:
+            ## API data has no prefix
+            ## joinSafe is only needed if the delimiter isn't a comma
+            q: "{{ queryInputs }}"
+            scopes: associatedWith.mentions.genes.ncbigene
+        outputs:
+          - id: CHEBI
+            semantic: SmallMolecule
+        parameters:
+          fields: >-
+            associatedWith.mentions.chemicals.chebi,
+            associatedWith.figureUrl,associatedWith.pmc,associatedWith.pfocrUrl
+          size: 1000
+        predicate: occurs_together_in_literature_with
+        source: "infores:pfocr"
+        knowledge_level: not_provided
+        agent_type: image_processing_agent
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/chemChebi"
+        testExamples:
+          - qInput: "NCBIGene:5194"     ## PEX13
+            oneOutput: "CHEBI:61293"    ## adenyl nucleotide
+        ## examples from https://biothings.ci.transltr.io/pfocr/query?q=NOT%20_exists_:associatedWith.mentions.chemicals.mesh%20AND%20_exists_:associatedWith.mentions.genes%20AND%20_exists_:associatedWith.mentions.chemicals.chebi
+    chemChebi-gene:
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: CHEBI
+            semantic: SmallMolecule
+        requestBody:
+          body:
+            ## API data has no prefix
+            ## joinSafe is only needed if the delimiter isn't a comma
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: associatedWith.mentions.chemicals.chebi
+        outputs:
+          - id: NCBIGene
+            semantic: Gene
+        parameters:
+          fields: >-
+            associatedWith.mentions.genes.ncbigene,
+            associatedWith.figureUrl,associatedWith.pmc,associatedWith.pfocrUrl
+          size: 1000
+        predicate: occurs_together_in_literature_with
+        source: "infores:pfocr"
+        knowledge_level: not_provided
+        agent_type: image_processing_agent
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/gene"
+        testExamples:
+          - qInput: "CHEBI:4305"           ## dacarbazine
+            oneOutput: "NCBIGene:10657"    ## KHDRBS1
+    diseaseMesh-chemMesh:
+    ## https://biothings.ci.transltr.io/pfocr/query?q=_exists_:associatedWith.mentions.diseases.mesh%20AND%20_exists_:associatedWith.mentions.chemicals.mesh
+    ## 10739 documents. not clear how many disease-chem pairs there are. 
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: MESH
+            semantic: Disease
+        requestBody:
+          body:
+            ## API data has no prefix
+            ## joinSafe is only needed if the delimiter isn't a comma
+            q: "{{ queryInputs }}"
+            scopes: associatedWith.mentions.diseases.mesh
+        outputs:
+          - id: MESH
+            semantic: SmallMolecule
+        parameters:
+          fields: >-
+            associatedWith.mentions.chemicals.mesh,
+            associatedWith.figureUrl,associatedWith.pmc,associatedWith.pfocrUrl
+          size: 1000
+        predicate: occurs_together_in_literature_with
+        source: "infores:pfocr"
+        knowledge_level: not_provided
+        agent_type: image_processing_agent
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/chemMesh"
+        testExamples:
+          - qInput: "MESH:D056735"       ## autoimmune lymphoproliferative syndrome
+            oneOutput: "MESH:D017260"    ## Receptor-CD3 Complex, Antigen, T-Cell
+        ## examples from https://biothings.ci.transltr.io/pfocr/query?q=_exists_:associatedWith.mentions.diseases.mesh%20AND%20_exists_:associatedWith.mentions.chemicals.mesh%20AND%20NOT%20_exists_:associatedWith.mentions.diseases.doid%20AND%20NOT%20_exists_:associatedWith.mentions.chemicals.chebi
+    chemMesh-diseaseMesh:
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: MESH
+            semantic: SmallMolecule
+        requestBody:
+          body:
+            ## API data has no prefix
+            ## joinSafe is only needed if the delimiter isn't a comma
+            q: "{{ queryInputs }}"
+            scopes: associatedWith.mentions.chemicals.mesh
+        outputs:
+          - id: MESH
+            semantic: Disease
+        parameters:
+          fields: >-
+            associatedWith.mentions.diseases.mesh,
+            associatedWith.figureUrl,associatedWith.pmc,associatedWith.pfocrUrl
+          size: 1000
+        predicate: occurs_together_in_literature_with
+        source: "infores:pfocr"
+        knowledge_level: not_provided
+        agent_type: image_processing_agent
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/diseaseMesh"
+        testExamples:
+          - qInput: "MESH:C051905"       ## Pectenotoxin 1
+            oneOutput: "MESH:C538445"    ## UMLS:C2931852 / Clear-cell metastatic renal cell carcinoma
+    diseaseMesh-chemChebi:
+    ## https://biothings.ci.transltr.io/pfocr/query?q=_exists_:associatedWith.mentions.diseases.mesh%20AND%20_exists_:associatedWith.mentions.chemicals.chebi
+    ## 9034 documents. not clear how many disease-chem pairs there are. 
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: MESH
+            semantic: Disease
+        requestBody:
+          body:
+            ## API data has no prefix
+            ## joinSafe is only needed if the delimiter isn't a comma
+            q: "{{ queryInputs }}"
+            scopes: associatedWith.mentions.diseases.mesh
+        outputs:
+          - id: CHEBI
+            semantic: SmallMolecule
+        parameters:
+          fields: >-
+            associatedWith.mentions.chemicals.chebi,
+            associatedWith.figureUrl,associatedWith.pmc,associatedWith.pfocrUrl
+          size: 1000
+        predicate: occurs_together_in_literature_with
+        source: "infores:pfocr"
+        knowledge_level: not_provided
+        agent_type: image_processing_agent
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/chemChebi"
+        testExamples:
+          - qInput: "MESH:D007239"      ## UMLS:C3714514 / Infection
+            oneOutput: "CHEBI:18186"    ## tyrosine
+        ## examples from https://biothings.ci.transltr.io/pfocr/query?q=_exists_:associatedWith.mentions.diseases.mesh%20AND%20NOT%20_exists_:associatedWith.mentions.chemicals.mesh%20AND%20NOT%20_exists_:associatedWith.mentions.diseases.doid%20AND%20_exists_:associatedWith.mentions.chemicals.chebi
+    chemChebi-diseaseMesh:
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: CHEBI
+            semantic: SmallMolecule
+        requestBody:
+          body:
+            ## API data has no prefix
+            ## joinSafe is only needed if the delimiter isn't a comma
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: associatedWith.mentions.chemicals.chebi
+        outputs:
+          - id: MESH
+            semantic: Disease
+        parameters:
+          fields: >-
+            associatedWith.mentions.diseases.mesh,
+            associatedWith.figureUrl,associatedWith.pmc,associatedWith.pfocrUrl
+          size: 1000
+        predicate: occurs_together_in_literature_with
+        source: "infores:pfocr"
+        knowledge_level: not_provided
+        agent_type: image_processing_agent
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/diseaseMesh"
+        testExamples:
+          - qInput: "CHEBI:29987"        ## glutamate(2-)
+            oneOutput: "MESH:D020388"    ## MONDO:0010679 / Duchenne muscular dystrophy
+    diseaseDoid-chemMesh:
+    ## https://biothings.ci.transltr.io/pfocr/query?q=_exists_:associatedWith.mentions.diseases.doid%20AND%20_exists_:associatedWith.mentions.chemicals.mesh
+    ## 4740 documents. not clear how many disease-chem pairs there are. 
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: DOID
+            semantic: Disease
+        requestBody:
+          body:
+            ## API data has no prefix
+            ## joinSafe is only needed if the delimiter isn't a comma
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: associatedWith.mentions.diseases.doid
+        outputs:
+          - id: MESH
+            semantic: SmallMolecule
+        parameters:
+          fields: >-
+            associatedWith.mentions.chemicals.mesh,
+            associatedWith.figureUrl,associatedWith.pmc,associatedWith.pfocrUrl
+          size: 1000
+        predicate: occurs_together_in_literature_with
+        source: "infores:pfocr"
+        knowledge_level: not_provided
+        agent_type: image_processing_agent
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/chemMesh"
+        testExamples:
+          - qInput: "DOID:3490"          ## MONDO:0018997 / Noonan syndrome
+            oneOutput: "MESH:D043169"    ## PUBCHEM.COMPOUND:187888 / Endostatin
+        ## examples from https://biothings.ci.transltr.io/pfocr/query?q=NOT%20_exists_:associatedWith.mentions.diseases.mesh%20AND%20_exists_:associatedWith.mentions.chemicals.mesh%20AND%20_exists_:associatedWith.mentions.diseases.doid%20AND%20NOT%20_exists_:associatedWith.mentions.chemicals.chebi
+    chemMesh-diseaseDoid:
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: MESH
+            semantic: SmallMolecule
+        requestBody:
+          body:
+            ## API data has no prefix
+            ## joinSafe is only needed if the delimiter isn't a comma
+            q: "{{ queryInputs }}"
+            scopes: associatedWith.mentions.chemicals.mesh
+        outputs:
+          - id: DOID
+            semantic: Disease
+        parameters:
+          fields: >-
+            associatedWith.mentions.diseases.doid,
+            associatedWith.figureUrl,associatedWith.pmc,associatedWith.pfocrUrl
+          size: 1000
+        predicate: occurs_together_in_literature_with
+        source: "infores:pfocr"
+        knowledge_level: not_provided
+        agent_type: image_processing_agent
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/diseaseDoid"
+        testExamples:
+          - qInput: "MESH:C544831"    ## CHEBI:91418 / Foretinib
+            oneOutput: "DOID:1324"    ## MONDO:0008903 / lung cancer
+    diseaseDoid-chemChebi:
+    ## https://biothings.ci.transltr.io/pfocr/query?q=_exists_:associatedWith.mentions.diseases.doid%20AND%20_exists_:associatedWith.mentions.chemicals.chebi
+    ## 4472 documents. not clear how many disease-chem pairs there are. 
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: DOID
+            semantic: Disease
+        requestBody:
+          body:
+            ## API data has no prefix
+            ## joinSafe is only needed if the delimiter isn't a comma
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: associatedWith.mentions.diseases.doid
+        outputs:
+          - id: CHEBI
+            semantic: SmallMolecule
+        parameters:
+          fields: >-
+            associatedWith.mentions.chemicals.chebi,
+            associatedWith.figureUrl,associatedWith.pmc,associatedWith.pfocrUrl
+          size: 1000
+        predicate: occurs_together_in_literature_with
+        source: "infores:pfocr"
+        knowledge_level: not_provided
+        agent_type: image_processing_agent
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/chemChebi"
+        testExamples:
+          - qInput: "DOID:576"          ## MONDO:0003634 / proteinuria
+            oneOutput: "CHEBI:26523"    ## reactive oxygen species
+        ## examples from https://biothings.ci.transltr.io/pfocr/query?q=NOT%20_exists_:associatedWith.mentions.diseases.mesh%20AND%20NOT%20_exists_:associatedWith.mentions.chemicals.mesh%20AND%20_exists_:associatedWith.mentions.diseases.doid%20AND%20_exists_:associatedWith.mentions.chemicals.chebi
+    chemChebi-diseaseDoid:
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: CHEBI
+            semantic: SmallMolecule
+        requestBody:
+          body:
+            ## API data has no prefix
+            ## joinSafe is only needed if the delimiter isn't a comma
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: associatedWith.mentions.chemicals.chebi
+        outputs:
+          - id: DOID
+            semantic: Disease
+        parameters:
+          fields: >-
+            associatedWith.mentions.diseases.doid,
+            associatedWith.figureUrl,associatedWith.pmc,associatedWith.pfocrUrl
+          size: 1000
+        predicate: occurs_together_in_literature_with
+        source: "infores:pfocr"
+        knowledge_level: not_provided
+        agent_type: image_processing_agent
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/diseaseDoid"
+        testExamples:
+          - qInput: "CHEBI:50903"      ## carcinogenic agent
+            oneOutput: "DOID:10283"    ## MONDO:0008315 / prostate cancer
+    diseaseMesh-gene:
+    ## https://biothings.ci.transltr.io/pfocr/query?q=_exists_:associatedWith.mentions.diseases.mesh%20AND%20_exists_:associatedWith.mentions.genes
+    ## 11992 documents. not clear how many disease-gene pairs there are. 
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: MESH
+            semantic: Disease
+        requestBody:
+          body:
+            ## API data has no prefix
+            ## joinSafe is only needed if the delimiter isn't a comma
+            q: "{{ queryInputs }}"
+            scopes: associatedWith.mentions.diseases.mesh
+        outputs:
+          - id: NCBIGene
+            semantic: Gene
+        parameters:
+          fields: >-
+            associatedWith.mentions.genes.ncbigene,
+            associatedWith.figureUrl,associatedWith.pmc,associatedWith.pfocrUrl
+          size: 1000
+        predicate: occurs_together_in_literature_with
+        source: "infores:pfocr"
+        knowledge_level: not_provided
+        agent_type: image_processing_agent
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/gene"
+        testExamples:
+          - qInput: "MESH:D000860"         ## MONDO:0004952 / Hodgkins lymphoma
+            oneOutput: "NCBIGene:27035"    ## NOX1
+        ## examples from https://biothings.ci.transltr.io/pfocr/query?q=_exists_:associatedWith.mentions.diseases.mesh%20AND%20_exists_:associatedWith.mentions.genes%20AND%20NOT%20_exists_:associatedWith.mentions.diseases.doid
+    gene-diseaseMesh:
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: NCBIGene
+            semantic: Gene
+        requestBody:
+          body:
+            ## API data has no prefix
+            ## joinSafe is only needed if the delimiter isn't a comma
+            q: "{{ queryInputs }}"
+            scopes: associatedWith.mentions.genes.ncbigene
+        outputs:
+          - id: MESH
+            semantic: Disease
+        parameters:
+          fields: >-
+            associatedWith.mentions.diseases.mesh,
+            associatedWith.figureUrl,associatedWith.pmc,associatedWith.pfocrUrl
+          size: 1000
+        predicate: occurs_together_in_literature_with
+        source: "infores:pfocr"
+        knowledge_level: not_provided
+        agent_type: image_processing_agent
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/diseaseMesh"
+        testExamples:
+          - qInput: "NCBIGene:940"       ## CD28
+            oneOutput: "MESH:D056735"    ## MONDO:0017979 / autoimmune lymphoproliferative syndrome
+    diseaseDoid-gene:
+    ## https://biothings.ci.transltr.io/pfocr/query?q=_exists_:associatedWith.mentions.diseases.doid%20AND%20_exists_:associatedWith.mentions.genes
+    ## 10929 documents. not clear how many disease-gene pairs there are. 
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: DOID
+            semantic: Disease
+        requestBody:
+          body:
+            ## API data has no prefix
+            ## joinSafe is only needed if the delimiter isn't a comma
+            q: "{{ queryInputs | rmPrefix() }}"
+            scopes: associatedWith.mentions.diseases.doid
+        outputs:
+          - id: NCBIGene
+            semantic: Gene
+        parameters:
+          fields: >-
+            associatedWith.mentions.genes.ncbigene,
+            associatedWith.figureUrl,associatedWith.pmc,associatedWith.pfocrUrl
+          size: 1000
+        predicate: occurs_together_in_literature_with
+        source: "infores:pfocr"
+        knowledge_level: not_provided
+        agent_type: image_processing_agent
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/gene"
+        testExamples:
+          - qInput: "DOID:8398"           ## MONDO:0005178 / osteoarthritis
+            oneOutput: "NCBIGene:3553"    ## IL1B
+        ## examples from https://biothings.ci.transltr.io/pfocr/query?q=NOT%20_exists_:associatedWith.mentions.diseases.mesh%20AND%20_exists_:associatedWith.mentions.genes%20AND%20_exists_:associatedWith.mentions.diseases.doid
+    gene-diseaseDoid:
+      - supportBatch: true
+        useTemplating: true ## flag to say templating is being used below
+        inputs:
+          - id: NCBIGene
+            semantic: Gene
+        requestBody:
+          body:
+            ## API data has no prefix
+            ## joinSafe is only needed if the delimiter isn't a comma
+            q: "{{ queryInputs }}"
+            scopes: associatedWith.mentions.genes.ncbigene
+        outputs:
+          - id: DOID
+            semantic: Disease
+        parameters:
+          fields: >-
+            associatedWith.mentions.diseases.doid,
+            associatedWith.figureUrl,associatedWith.pmc,associatedWith.pfocrUrl
+          size: 1000
+        predicate: occurs_together_in_literature_with
+        source: "infores:pfocr"
+        knowledge_level: not_provided
+        agent_type: image_processing_agent
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/diseaseDoid"
+        testExamples:
+          - qInput: "NCBIGene:2048"    ## EPHB2
+            oneOutput: "DOID:10283"    ## MONDO:0008315 / prostate cancer
+  x-bte-response-mapping:
+    ## not including because because data-processing / biolink-modeling issues
+    ## - associatedWith.title (title of figure)
+    chemMesh:
+      MESH: associatedWith.mentions.chemicals.mesh   ## no prefix
+      ref_url: associatedWith.figureUrl
+      ref_pmcid: associatedWith.pmc                  ## no prefix (but IDs start with "PMC")
+      source_url: associatedWith.pfocrUrl
+    chemChebi:
+      CHEBI: associatedWith.mentions.chemicals.chebi   ## no prefix
+      ref_url: associatedWith.figureUrl
+      ref_pmcid: associatedWith.pmc                  ## no prefix (but IDs start with "PMC")
+      source_url: associatedWith.pfocrUrl
+    gene:
+      NCBIGene: associatedWith.mentions.genes.ncbigene   ## no prefix
+      ref_url: associatedWith.figureUrl
+      ref_pmcid: associatedWith.pmc
+      source_url: associatedWith.pfocrUrl
+    diseaseMesh:
+      MESH: associatedWith.mentions.diseases.mesh   ## no prefix
+      ref_url: associatedWith.figureUrl
+      ref_pmcid: associatedWith.pmc
+      source_url: associatedWith.pfocrUrl
+    diseaseDoid:
+      DOID: associatedWith.mentions.diseases.doid   ## no prefix
+      ref_url: associatedWith.figureUrl
+      ref_pmcid: associatedWith.pmc
+      source_url: associatedWith.pfocrUrl

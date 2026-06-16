@@ -1,0 +1,2315 @@
+openapi: 3.0.3
+info:
+  contact:
+    email: help@biothings.io
+    name: Chunlei Wu
+    x-id: https://github.com/newgene
+    x-role: responsible developer
+  description: Documentation of the MyChem.info chem query web services. Learn more
+    about [MyChem.info](https://docs.mychem.info/en/latest/index.html)
+  termsOfService: http://MyChem.info/terms
+  title: MyChem.info API
+  version: '1.0'
+  x-translator:
+    infores: "infores:mychem-info"
+    component: KP
+    team:
+      - Service Provider
+    biolink-version: "4.2.2"
+servers:
+- description: Encrypted Production server
+  url: https://mychem.info/v1
+  x-maturity: production
+tags:
+- name: chemical
+- name: drug
+- name: annotation
+- name: query
+- name: translator
+- name: biothings
+paths:
+  "/chem/{id}":
+    get:
+      description: >-
+        Retrieve one chem record from the MyChem.info dataset by its identifier. Covers
+        chemical, drug data. Source: Documentation of the MyChem.info chem query web services.
+
+        By default, this will return the complete chemical annotation object in JSON format. 
+        See [here](https://docs.mychem.info/en/latest/doc/chem_annotation_service.html#returned-object) 
+        for an example and [here](https://docs.mychem.info/en/latest/doc/data.html#chemical-object)
+        for more details. If the input chemical ID is not valid, 404 (NOT FOUND) will be returned.
+        
+
+        Optionally, you can pass a "fields" parameter to return only the annotation you want 
+        (by filtering returned object fields). "fields" accepts any attributes (a.k.a fields) available 
+        from the object. Multiple attributes should be separated by commas. If an attribute is not 
+        available for a specific object, it will be ignored. Note that the attribute names are 
+        case-sensitive.
+
+
+        Just like the chemical query service, you can also pass a "callback" parameter to make a JSONP call.
+      parameters:
+      ## these are provided in the docs https://docs.mychem.info/en/latest/doc/chem_annotation_service.html
+      - name: id
+        description: >-
+          Retrieve chemical data based on ID - currently one of: 
+          [InChIKey](https://en.wikipedia.org/wiki/International_Chemical_Identifier#InChIKey),
+          [ChEMBLID](https://www.ebi.ac.uk/chembl/faq#faq40),
+          [ChEBI identifier](http://www.ebi.ac.uk/chebi/aboutChebiForward.do), 
+          [PubChem CID](https://pubchem.ncbi.nlm.nih.gov/search/help_search.html#Cid), 
+          [UNII](https://www.fda.gov/ForIndustry/DataStandards/SubstanceRegistrationSystem-UniqueIngredientIdentifierUNII/).
+        in: path
+        required: true
+        example: "USNINKBPBVKHHZ-CYUUQNCZSA-L"
+        schema:
+          type: string
+      - "$ref": "#/components/parameters/fields"
+      - "$ref": "#/components/parameters/callback"
+      - "$ref": "#/components/parameters/email"
+      ## this is useful even when it's not noted in the docs
+      - "$ref": "#/components/parameters/size"
+      ## these are noted in the https://mychem.info/v1/spec endpoint; commenting out for now
+      # - "$ref": "#/components/parameters/raw"
+      # - "$ref": "#/components/parameters/rawquery"
+      # - "$ref": "#/components/parameters/dotfield"
+      # - "$ref": "#/components/parameters/_sorted"
+      # - "$ref": "#/components/parameters/always_list"
+      # - "$ref": "#/components/parameters/allow_null"
+      # - "$ref": "#/components/parameters/format"
+      responses:
+        '200':
+          ## description from https://docs.mychem.info/en/latest/doc/response_status_codes.html
+          description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
+      ## commenting out schemas and other status codes for now
+      #     content:
+      #       application/json:
+      #         schema:
+      #           $ref: '#/components/schemas/Chem'
+      #   '404':
+      #     description: A response indicating an unknown chemical ID
+      tags:
+      - chemical
+  "/chem":
+    post:
+      description: >-
+        Retrieve multiple chem records from the MyChem.info dataset in one request, by a list of
+        identifiers. Covers chemical, drug data. Source: Documentation of the MyChem.info chem
+        query web services.
+
+        Although making simple GET requests above to our chemical query service is sufficient in most use cases, 
+        there are some times you might find it easier to batch query (e.g., retrieving chemical annotations for 
+        multiple chemicals). Fortunately, you can also make batch queries via POST requests when you need to.
+      parameters:
+      ## these are provided in the docs https://docs.mychem.info/en/latest/doc/chem_annotation_service.html
+      - name: ids
+        description: >-
+          Accepts multiple chemical ids separated by comma, e.g., 
+          "ids=SDUQYLNIPVEERB-QPPQHZFASA-N,SESFRYSPDFLNCH-UHFFFAOYSA-N,SHGAZHPCJJPHSC-ZVCIMWCZSA-N". 
+          Note that currently we only take the input ids up to 1000 maximum, the rest will be omitted.
+
+
+          The request body can also be used to provide these ids.
+        in: query
+        ## setting to false since putting this info in the request body seems to work as well
+        required: false
+        schema:
+          type: string
+      - "$ref": "#/components/parameters/fields"
+      - "$ref": "#/components/parameters/email"
+      ## this is useful even when it's not noted in the docs
+      - "$ref": "#/components/parameters/size"
+      ## these are noted in the https://mychem.info/v1/spec endpoint; commenting out for now
+      # - "$ref": "#/components/parameters/raw"
+      # - "$ref": "#/components/parameters/rawquery"
+      # - "$ref": "#/components/parameters/dotfield"
+      # - "$ref": "#/components/parameters/_sorted"
+      # - "$ref": "#/components/parameters/always_list"
+      # - "$ref": "#/components/parameters/allow_null"
+      # - "$ref": "#/components/parameters/format"
+      requestBody:
+        content:
+          application/json:
+            example:
+              ids:
+              - "USNINKBPBVKHHZ-CYUUQNCZSA-L"
+              - "CHEMBL266510"
+            schema:
+              type: object
+              properties:
+                ids:
+                  description: >-
+                    Accepts multiple chemical ids. Note that currently we only take the input ids 
+                    up to 1000 maximum, the rest will be omitted.
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '200':
+          description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
+      tags:
+      - chemical
+  "/metadata":
+    get:
+      description: >-
+        Dataset metadata for MyChem.info: build date, source versions and record counts. Covers
+        chemical, drug data. Source: Documentation of the MyChem.info chem query web services.
+
+        Get metadata about the data available from the API
+      ## these are noted in the https://mychem.info/v1/spec endpoint; commenting out for now
+      # parameters:
+      # - "$ref": "#/components/parameters/format"
+      # - "$ref": "#/components/parameters/raw"
+      responses:
+        '200':
+          description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
+      tags:
+      - metadata
+  "/metadata/fields":
+    get:
+      description: >-
+        List the queryable fields available on MyChem.info chem records. Covers chemical, drug
+        data. Source: Documentation of the MyChem.info chem query web services.
+
+        Get metadata about the data fields available from the API
+      ## these are noted in the https://mychem.info/v1/spec endpoint; commenting out for now
+      # parameters:
+      # - "$ref": "#/components/parameters/format"
+      # - "$ref": "#/components/parameters/raw"
+      # - "$ref": "#/components/parameters/search"
+      # - "$ref": "#/components/parameters/prefix"
+      responses:
+        '200':
+          description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
+      tags:
+      - metadata
+  "/query":
+    get:
+      description: >-
+        Search chem records in the MyChem.info dataset. Covers chemical, drug data. Source:
+        Documentation of the MyChem.info chem query web services.
+
+        MyChem.info chemical query web service. In the output, "total" in the output gives the total number 
+        of matching hits, while the actual hits are returned under "hits" field.
+      parameters:
+      - name: q
+        ## description partially from https://docs.mychem.info/en/latest/doc/chem_query_service.html#query-syntax
+        description: >-
+          Required, passing user query. The detailed query syntax for parameter is explained 
+          [here](https://docs.mychem.info/en/latest/doc/chem_query_service.html#query-syntax).
+        in: query
+        required: true
+        example: "CHEMBL266510"
+        schema:
+          type: string
+      - "$ref": "#/components/parameters/fields"
+      - "$ref": "#/components/parameters/size"
+      - "$ref": "#/components/parameters/from"
+      - "$ref": "#/components/parameters/fetch_all"
+      - "$ref": "#/components/parameters/scroll_id"
+      - "$ref": "#/components/parameters/sort"
+      - "$ref": "#/components/parameters/facets"
+      - "$ref": "#/components/parameters/facet_size"
+      - "$ref": "#/components/parameters/callback"
+      - "$ref": "#/components/parameters/dotfield"
+      - "$ref": "#/components/parameters/email"
+      ## these are noted in the https://mychem.info/v1/spec endpoint; commenting out for now
+      # - "$ref": "#/components/parameters/aggs"
+      # - "$ref": "#/components/parameters/userquery"
+      # - "$ref": "#/components/parameters/explain"
+      # - "$ref": "#/components/parameters/raw"
+      # - "$ref": "#/components/parameters/rawquery"
+      # - "$ref": "#/components/parameters/_sorted"
+      # - "$ref": "#/components/parameters/always_list"
+      # - "$ref": "#/components/parameters/allow_null"
+      # - "$ref": "#/components/parameters/format"
+      responses:
+        '200':
+          description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
+      ## commenting out schemas and other status codes for now
+      #     content:
+      #       application/json:
+      #         schema:
+      #           "$ref": "#/components/schemas/QueryResult"
+      #   '400':
+      #     content:
+      #       application/json:
+      #         schema:
+      #           "$ref": "#/components/schemas/ErrorResult"
+      #     description: A response indicating an improperly formatted query
+      # description: Make queries and return matching gene hits. Supports JSONP and CORS
+      #   as well.
+      tags:
+      - query
+    post:
+      description: >-
+        Batch search of chem records in the MyChem.info dataset: submit several queries in one
+        request. Covers chemical, drug data. Source: Documentation of the MyChem.info chem query
+        web services.
+
+        Although making simple GET requests above to our chemical query service is sufficient for most use cases, 
+        there are times you might find it more efficient to make batch queries (e.g., retrieving chemical annotation 
+        for multiple chemicals). Fortunately, you can also make batch queries via POST requests when you need to.
+
+
+        The "query" field in the returned object indicates the matching query term. If a query term has no match, 
+        it will return with a "notfound" field with the value "true".
+      parameters:
+      ## these are provided in the docs https://docs.mychem.info/en/latest/doc/chem_query_service.html?highlight=from#id2
+      - name: q
+        description: >-
+          Accepts multiple values separated by commas. Note that currently we only take the input values up to 1000 
+          maximum, the rest will be omitted.
+
+
+          The request body can also be used to provide these ids.
+        in: query
+        ## setting to false since putting this info in the request body seems to work as well
+        required: false
+        schema:
+          type: array
+          items:
+            type: string
+      - name: scopes
+        description: >-
+          Optional, specify one or more fields (separated by commas) to search, e.g., "scopes=chebi". 
+          The available "fields" can be passed to "scopes" parameter are listed 
+          [here](https://docs.mychem.info/en/latest/doc/data.html#available-fields). Default: _id
+
+
+          The request body can also be used to provide this information.
+        in: query
+        ## setting to false since putting this info in the request body seems to work as well
+        required: false
+        schema:
+          type: string
+      - "$ref": "#/components/parameters/fields"
+      - "$ref": "#/components/parameters/email"
+      ## this is useful even when it's not noted in the docs
+      - "$ref": "#/components/parameters/size"
+      - "$ref": "#/components/parameters/from"
+      - "$ref": "#/components/parameters/fetch_all"
+      - "$ref": "#/components/parameters/scroll_id"
+      ## these are noted in the https://mychem.info/v1/spec endpoint; commenting out for now
+      # - "$ref": "#/components/parameters/sort"
+      # - "$ref": "#/components/parameters/raw"
+      # - "$ref": "#/components/parameters/rawquery"
+      # - "$ref": "#/components/parameters/dotfield"
+      # - "$ref": "#/components/parameters/_sorted"
+      # - "$ref": "#/components/parameters/always_list"
+      # - "$ref": "#/components/parameters/allow_null"
+      # - "$ref": "#/components/parameters/format"
+      requestBody:
+        content:
+          application/json:
+            example:
+              q:
+              - "CHEMBL266510"
+              - "CHEMBL1200833"
+              scopes:
+              - "chembl.molecule_chembl_id"
+            schema:
+              type: object
+              properties:
+                q:
+                  description: >-
+                    Accepts multiple values separated by commas. Note that currently we only take the input values 
+                    up to 1000 maximum, the rest will be omitted.
+                  type: array
+                  items:
+                    type: string
+                scopes:
+                  description: >-
+                    Specify one or more fields (separated by commas) to search, e.g., "scopes=chebi". 
+                    The available "fields" can be passed to "scopes" parameter are listed 
+                    [here](https://docs.mychem.info/en/latest/doc/data.html#available-fields). Default: _id
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '200':
+          description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
+      ## commenting out schemas and other status codes for now
+      #     content:
+      #       application/json:
+      #         schema:
+      #           "$ref": "#/components/schemas/QueryPOSTResult"
+      #   '400':
+      #     content:
+      #       application/json:
+      #         schema:
+      #           "$ref": "#/components/schemas/ErrorResult"
+      #     description: A response indicating an improperly formatted query
+      # description: Make batch gene queries and return matching gene hits
+      tags:
+      - query
+      x-bte-kgs-operations:
+      - "$ref": "#/components/x-bte-kgs-operations/chebiToReactome"
+      - "$ref": "#/components/x-bte-kgs-operations/chebiToReactome-rev"
+      - "$ref": "#/components/x-bte-kgs-operations/chebiToRhea"
+      - "$ref": "#/components/x-bte-kgs-operations/chebiToRhea-rev"
+      - "$ref": "#/components/x-bte-kgs-operations/drugMechChemblEnsembl"
+      - "$ref": "#/components/x-bte-kgs-operations/drugMechChemblEnsembl-rev"
+      - "$ref": "#/components/x-bte-kgs-operations/drugMechChemblUniprot"
+      - "$ref": "#/components/x-bte-kgs-operations/drugMechChemblUniprot-rev"
+      - "$ref": "#/components/x-bte-kgs-operations/drugcentral-bioactivity-activator"
+      - "$ref": "#/components/x-bte-kgs-operations/drugcentral-bioactivity-activator-rev"
+      - "$ref": "#/components/x-bte-kgs-operations/drugcentral-bioactivity-agonist"
+      - "$ref": "#/components/x-bte-kgs-operations/drugcentral-bioactivity-agonist-rev"
+      - "$ref": "#/components/x-bte-kgs-operations/drugcentral-bioactivity-antagonist"
+      - "$ref": "#/components/x-bte-kgs-operations/drugcentral-bioactivity-antagonist-rev"
+      - "$ref": "#/components/x-bte-kgs-operations/drugcentral-bioactivity-antibody"
+      - "$ref": "#/components/x-bte-kgs-operations/drugcentral-bioactivity-antibody-rev"
+      - "$ref": "#/components/x-bte-kgs-operations/drugcentral-bioactivity-antisense-inhibitor"
+      - "$ref": "#/components/x-bte-kgs-operations/drugcentral-bioactivity-antisense-inhibitor-rev"
+      - "$ref": "#/components/x-bte-kgs-operations/drugcentral-bioactivity-binding-agent"
+      - "$ref": "#/components/x-bte-kgs-operations/drugcentral-bioactivity-binding-agent-rev"
+      - "$ref": "#/components/x-bte-kgs-operations/drugcentral-bioactivity-inhibitor"
+      - "$ref": "#/components/x-bte-kgs-operations/drugcentral-bioactivity-inhibitor-rev"
+      - "$ref": "#/components/x-bte-kgs-operations/drugcentral-bioactivity-inverse-agonist"
+      - "$ref": "#/components/x-bte-kgs-operations/drugcentral-bioactivity-inverse-agonist-rev"
+      - "$ref": "#/components/x-bte-kgs-operations/drugcentral-bioactivity-modulator"
+      - "$ref": "#/components/x-bte-kgs-operations/drugcentral-bioactivity-modulator-rev"
+      - "$ref": "#/components/x-bte-kgs-operations/drugcentral-bioactivity-negative-modulator"
+      - "$ref": "#/components/x-bte-kgs-operations/drugcentral-bioactivity-negative-modulator-rev"
+      - "$ref": "#/components/x-bte-kgs-operations/drugcentral-bioactivity-opener"
+      - "$ref": "#/components/x-bte-kgs-operations/drugcentral-bioactivity-opener-rev"
+      - "$ref": "#/components/x-bte-kgs-operations/drugcentral-bioactivity-positive-modulator"
+      - "$ref": "#/components/x-bte-kgs-operations/drugcentral-bioactivity-positive-modulator-rev"
+      - "$ref": "#/components/x-bte-kgs-operations/drugcentral-bioactivity-no-action-type"
+      - "$ref": "#/components/x-bte-kgs-operations/drugcentral-bioactivity-no-action-type-rev"
+      - "$ref": "#/components/x-bte-kgs-operations/drugcentral-contraindication"
+      - "$ref": "#/components/x-bte-kgs-operations/drugcentral-contraindication-rev"
+      - "$ref": "#/components/x-bte-kgs-operations/drugcentral-indication"
+      - "$ref": "#/components/x-bte-kgs-operations/drugcentral-indication-rev"
+      - "$ref": "#/components/x-bte-kgs-operations/drugcentral-offlabel"
+      - "$ref": "#/components/x-bte-kgs-operations/drugcentral-offlabel-rev"
+      - "$ref": "#/components/x-bte-kgs-operations/drugcentral-adverseEvent"
+      - "$ref": "#/components/x-bte-kgs-operations/drugcentral-adverseEvent-rev"
+      - "$ref": "#/components/x-bte-kgs-operations/fdaOrphanData"
+      - "$ref": "#/components/x-bte-kgs-operations/fdaOrphanData-rev"
+components:
+  parameters:
+    callback:
+      name: callback
+      description: >-
+        Optional, you can pass a "callback" parameter to make a JSONP call.
+      in: query
+      required: false
+      schema:
+        type: string
+    dotfield:
+      name: dotfield
+      description: >-
+        Optional, can be used to control the format of the returned object. 
+        If "dotfield" is true, the returned data object is returned flattened (no nested objects) 
+        using dotfield notation for key names. Default: false.
+      in: query
+      required: false
+      schema:
+        type: boolean
+        default: false
+    email:
+      name: email
+      description: >-
+        Optional, if you are regular users of our services, we encourage you to provide us an email, 
+        so that we can better track the usage or follow up with you.
+      in: query
+      required: false
+      schema:
+        type: string
+    facet_size:
+      name: facet_size
+      description: >-
+        Optional, an integer (1 <= facet_size <= 1000) that specifies how many buckets to return in a 
+        [faceted query](https://docs.mychem.info/en/latest/doc/chem_query_service.html?highlight=from#faceted-queries).
+      in: query
+      required: false
+      schema:
+        type: integer
+        default: 10
+    facets:
+      name: facets
+      description: >-
+        Optional, a single field or comma-separated fields to return facets, can only be used on non-free text fields. 
+        E.g. "facets=chembl.molecule_properties.full_mwt". See [examples of faceted queries 
+        here](https://docs.mychem.info/en/latest/doc/chem_query_service.html?highlight=from#faceted-queries).
+      in: query
+      required: false
+      schema:
+        type: array
+        items:
+          type: string
+    fetch_all:
+      name: fetch_all
+      description: >-
+        Optional, a boolean, which when TRUE, allows fast retrieval of all unsorted query hits. 
+        The return object contains a _scroll_id field, which when passed as a parameter to the query endpoint 
+        (see the scroll_id parameter), returns the next 1000 query results. Setting fetch_all = TRUE causes 
+        the results to be inherently unsorted, therefore the sort parameter is ignored. For more information, 
+        see [examples using fetch_all 
+        here](https://docs.mychem.info/en/latest/doc/chem_query_service.html?highlight=from#scrolling-queries). 
+        Default: FALSE.
+      in: query
+      required: false
+      schema:
+        type: boolean
+        default: false
+    fields:
+      name: fields
+      description: >-
+        Optional, can be a comma-separated list to limit the fields returned from the object. 
+        If "fields=all", all available fields will be returned. Look 
+        [here](https://docs.mychem.info/en/latest/doc/data.html#available-fields) for a list of available fields. 
+        
+
+        Note that it supports dot notation as well, e.g., you can pass "chebi.name". 
+        Default: "fields=all". 
+        The parameter "filter" is an alias for this parameter.
+      in: query
+      required: false
+      schema:
+        type: string
+        default: all
+    from:
+      name: from
+      description: >-
+        Optional, the number of matching hits to skip, starting from 0. Default: 0. 
+      in: query
+      required: false
+      schema:
+        type: integer
+        default: 0
+    scroll_id:
+      name: scroll_id
+      description: >-
+        Optional, a string containing the _scroll_id returned from a query request with fetch_all = TRUE. 
+        Supplying a valid scroll_id will return the next 1000 unordered results. If the next results are 
+        not obtained within 1 minute of the previous set of results, the scroll_id becomes stale, and a 
+        new one must be obtained with another query request with fetch_all = TRUE. All other parameters are 
+        ignored when the scroll_id parameter is supplied. For more information see [examples using scroll_id 
+        here](https://docs.mychem.info/en/latest/doc/chem_query_service.html?highlight=from#scrolling-queries).
+      in: query
+      required: false
+      schema:
+        type: string
+    size:
+      name: size
+      description: >-
+        Optional, the maximum number of matching hits to return (with a cap of 1000 at the moment). Default: 10.
+        The combination of "size" and "from" parameters can be used to get paging for a large query.
+      in: query
+      required: false
+      schema:
+        type: integer
+        default: 10
+    sort:
+      name: sort
+      description: >-
+        Optional, the comma-separated fields to sort on. Prefix with "-" for descending order, otherwise in ascending order. 
+        Default: sort by matching scores in descending order.
+      in: query
+      required: false
+      schema:
+        type: array
+        items:
+          type: string
+    ## these are noted in the https://mychem.info/v1/spec endpoint; commenting out for now
+    # _sorted:
+    #   name: _sorted
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: boolean
+    #     default: true
+    # aggs:
+    #   name: aggs
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: array
+    #     items:
+    #       type: string
+    # allow_null:
+    #   name: allow_null
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: array
+    #     items:
+    #       type: string
+    # always_list:
+    #   name: always_list
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: array
+    #     items:
+    #       type: string
+    # explain:
+    #   name: explain
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: boolean
+    # format:
+    #   name: format
+    #   description: 'controls output format of server response, currently supports:
+    #     "json", "jsonld", "html". Type: string. Default: json.'
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: string
+    #     default: json
+    # prefix:
+    #   name: prefix
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: string
+    # raw:
+    #   name: raw
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: boolean
+    # rawquery:
+    #   name: rawquery
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: boolean
+    # search:
+    #   name: search
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: string
+    # userquery:
+    #   name: userquery
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: string
+  ## commenting out schemas and other status codes for now
+  # schemas:
+  #   Chem:
+  #     properties:
+  #       _id:
+  #         type: string
+  #     required:
+  #     - _id
+  #     type: object
+  #   ErrorResult:
+  #     properties:
+  #       message:
+  #         type: string
+  #       success:
+  #         type: boolean
+  #     type: object
+  #   QueryPOSTResult:
+  #     items:
+  #       allOf:
+  #       - "$ref": "#/components/schemas/Chem"
+  #       - properties:
+  #           _score:
+  #             format: float
+  #             type: number
+  #           query:
+  #             type: string
+  #         type: object
+  #     type: array
+  #   QueryResult:
+  #     properties:
+  #       hits:
+  #         items:
+  #           "$ref": "#/components/schemas/Chem"
+  #         type: array
+  #       max_score:
+  #         format: float
+  #         type: number
+  #       took:
+  #         type: integer
+  #       total:
+  #         type: integer
+  #     type: object
+  #   int64_or_array:
+  #     oneOf:
+  #     - items:
+  #         format: int64
+  #         type: integer
+  #       type: array
+  #     - format: int64
+  #       type: integer
+  #   string_or_array:
+  #     oneOf:
+  #     - items:
+  #         type: string
+  #       type: array
+  #     - type: string
+  x-bte-response-mapping:
+    chebiXrefs-reactome:
+      REACT: chebi.xrefs.reactome
+    chebi:
+      CHEBI: chebi.id
+    chebiXrefs-rhea:
+      RHEA: chebi.xrefs.rhea
+    drugMechChembl_EnsemblOutput:
+      ENSEMBL: chembl.drug_mechanisms.target_components.ensembl_gene               ## no prefix
+      ref_pmid: chembl.drug_mechanisms.mechanism_refs.PubMed                       ## no prefix
+      ref_clinicaltrials: chembl.drug_mechanisms.mechanism_refs.ClinicalTrials     ## no prefix
+      ref_doi: chembl.drug_mechanisms.mechanism_refs.DOI                           ## no prefix
+      ref_pmcid: chembl.drug_mechanisms.mechanism_refs.PMC                         ## no prefix (but IDs start with "PMC")
+      ## this url field will include expanded PMID / clinicaltrials / doi / PMCID (aka duplicates!)
+      ##   but is required for other references: 
+      ##   DailyMed, Expert, FDA, ISBN,
+      ##   IUPHAR, InterPro, KEGG, Other,
+      ##   Patent, PubChem, UniProt, Wikipedia
+      ## notes on some specific fields:
+      ## - chembl.drug_mechanisms.mechanism_refs.ISBN: includes ID and page number
+      ## - chembl.drug_mechanisms.mechanism_refs.Other: seem to be urls
+      ## - chembl.drug_mechanisms.mechanism_refs.Patent: related urls seem to be from surechembl
+      ## - chembl.drug_mechanisms.mechanism_refs.PubMed: related urls seem to be from europepcm...
+      ref_url: chembl.drug_mechanisms.mechanism_refs.url
+      output_name: chembl.drug_mechanisms.target_name
+      ## commenting out because data-processing / biolink-modeling issues
+      # chembl_drug_action_type: chembl.drug_mechanisms.action_type
+      # chembl_binding_site_name: chembl.drug_mechanisms.binding_site_name
+      # in_taxon: chembl.drug_mechanisms.target_organism
+      # chembl_target_type: chembl.drug_mechanisms.target_type
+    drugMechChembl-rev:
+      "CHEMBL.COMPOUND": chembl.molecule_chembl_id  ## no prefix
+      input_name: chembl.drug_mechanisms.target_name
+    drugMechChembl_UniprotOutput:
+    ## basically the same response-mapping as drugMechChembl_EnsemblOutput
+      UniProtKB: chembl.drug_mechanisms.target_components.uniprot                  ## no prefix
+      ref_pmid: chembl.drug_mechanisms.mechanism_refs.PubMed                       ## no prefix
+      ref_clinicaltrials: chembl.drug_mechanisms.mechanism_refs.ClinicalTrials     ## no prefix
+      ref_doi: chembl.drug_mechanisms.mechanism_refs.DOI                           ## no prefix
+      ref_pmcid: chembl.drug_mechanisms.mechanism_refs.PMC                         ## no prefix (but IDs start with "PMC")
+      ref_url: chembl.drug_mechanisms.mechanism_refs.url
+      output_name: chembl.drug_mechanisms.target_name
+    drugcentral-bioactivity:
+      UniProtKB: drugcentral.bioactivity.uniprot.uniprot_id  ## no prefix
+      ## commenting out because data-processing / biolink-modeling issues
+      # ## edge attributes
+      # drugcentral_bioactivity: drugcentral.bioactivity.action_type
+      # drugcentral_bioactivity_source: drugcentral.bioactivity.act_source
+      # in_taxon: drugcentral.bioactivity.organism
+    drugcentral-umls:
+      UMLS: drugcentral.xrefs.umlscui  ## no prefix
+    drugcentral-chembl:
+      "CHEMBL.COMPOUND": drugcentral.xrefs.chembl_id  ## no prefix
+    drugcentral-contraindication:
+      UMLS: drugcentral.drug_use.contraindication.umls_cui  ## no prefix
+    drugcentral-indication:
+      UMLS: drugcentral.drug_use.indication.umls_cui  ## no prefix
+    drugcentral-unii:
+      UNII: drugcentral.xrefs.unii  ## no prefix
+    drugcentral-offlabel:
+      UMLS: "drugcentral.drug_use.off_label_use.umls_cui"  ## no prefix
+    drugcentral-adverseEvent:
+      MEDDRA: drugcentral.fda_adverse_event.meddra_code
+      ## commenting out because data-processing / biolink-modeling issues
+      ## drugcentral.fda_adverse_event.drug_ae is similar to biolink-model 'concept pair count' but
+      ##   that 'association slot'/edge-attribute seems to be for 'concept count analysis' done on clinical records
+      # fda_count_had-drug_adverse-event: drugcentral.fda_adverse_event.drug_ae    
+      # fda_count_had-drug_no-adverse-event: drugcentral.fda_adverse_event.drug_no_ae
+      # fda_count_no-drug_adverse-event: drugcentral.fda_adverse_event.no_drug_ae
+      # fda_count_no-drug_no-adverse-event: drugcentral.fda_adverse_event.no_drug_no_ar
+    fdaOrphanDrug:
+      UMLS: fda_orphan_drug.orphan_designation.umls
+      ## commenting out because data-processing / biolink-modeling issues
+      # fda_orphan_drug_approval_status: fda_orphan_drug.approval_status
+      # fda_orphan_drug_approved_indication: fda_orphan_drug.approved_labeled_indication
+      # fda_orphan_drug_designation_date: fda_orphan_drug.designated_date
+      # fda_orphan_drug_designation_status: fda_orphan_drug.designated_status
+      # fda_orphan_drug_exclusivity_end_date: fda_orphan_drug.exclusivity_end_date
+      # fda_orphan_drug_marketing_approval_date: fda_orphan_drug.marketing_approval_date
+      # fda_orphan_drug_designation_original_text: fda_orphan_drug.orphan_designation.original_text
+    fdaOrphanDrug-pubchemCompound:
+      "PUBCHEM.COMPOUND": fda_orphan_drug.pubchem_cid  ## no prefix
+  x-bte-kgs-operations:
+  ## AEOLUS:
+  ## - not annotating indications because Translator CQS/Matt Brush team asked us not to;
+  ##   asked us to use Multiomics Drug Approvals instead
+  ## - deciding not to annotate aeolus.outcomes since this list of side effects can be very long
+  ##   this says mychem truncates it to 5000...https://docs.mychem.info/en/latest/doc/data_source.html
+  ## SIDER: deciding not to annotate since it's not clear how the records are structured (is meddra ID for the side effect?)
+  ##   it is also long...https://docs.mychem.info/en/latest/doc/data_source.html
+  ## CHEBI:
+  ## - chebi xrefs actually include relationships to other bioentities...
+  ## - note that truncation was done by MyChem for rhea...
+  ##   see https://docs.mychem.info/en/latest/doc/data_source.html
+  ## - not including chebi.xrefs.uniprot because:
+  ##    * too many genes linked to a chemical
+  ##    * genes are from all species (no way to filter to human/non-human) 
+  ## - not including chebi.xrefs.brenda (EC numbers): not clear what this means,
+  ##    or how accurately it's been ingested into chebi...
+  ## - not including chebi.xrefs.intenz (EC numbers): not in curie or ID form 
+  ##   (example: "EC 1.5.1.28")
+  ## - knowledge_level / agent_type: chebi claims these xrefs are automatically-generated
+  ##   ref manual that's linked in sources: https://www.ebi.ac.uk/chebi/aboutChebiForward.do#Sources
+  ##   https://docs.google.com/document/d/13_FqP_8qkDdw5RFv5qMYo7xRyfY4xUiuVtLn845A6Io/edit#heading=h.xwdjvrea1dca
+    chebiToReactome:
+    ## there are 1941 records with chebi.xrefs.reactome
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: CHEBI
+        semantic: SmallMolecule
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"  ## HAS PREFIX!
+          scopes: chebi.id
+      outputs:
+      ## uses Reactome Reaction, not pathway...
+      - id: REACT
+        semantic: MolecularActivity
+      parameters:
+        fields: chebi.xrefs.reactome  ## no prefix
+        size: 1000  ## note size limit; added just in case
+      predicate: participates_in
+      source: "infores:chebi"
+      knowledge_level: knowledge_assertion
+      agent_type: automated_agent
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/chebiXrefs-reactome"
+      testExamples:
+        - qInput: "CHEBI:15724"            ## trimethylamine N-oxide
+          oneOutput: "REACT:R-HSA-139970"  ## FMO3:FAD N-oxidises TMA to TMAO 
+    chebiToReactome-rev:
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: REACT
+        semantic: MolecularActivity
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"  ## no prefix
+          scopes: chebi.xrefs.reactome
+      outputs:
+      - id: CHEBI
+        semantic: SmallMolecule
+      parameters:
+        fields: chebi.id
+        size: 1000  ## note size limit
+      predicate: has_participant 
+      source: "infores:chebi"
+      knowledge_level: knowledge_assertion
+      agent_type: automated_agent
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/chebi"
+      testExamples:
+        - qInput: "REACT:R-HSA-1855166"   ## PP-IP4 is dephosphorylated to I(1,3,4,5,6)P5 by NUDT4 in the cytosol 
+          oneOutput: "CHEBI:62926"        ## aka PUBCHEM.COMPOUND:53477675
+    chebiToRhea:
+    ## there are 11079 records with chebi.xrefs.rhea
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: CHEBI
+        semantic: SmallMolecule
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"  ## HAS PREFIX!
+          scopes: chebi.id
+      outputs:
+      - id: RHEA
+        semantic: MolecularActivity
+      parameters:
+        fields: chebi.xrefs.rhea  ## HAS PREFIX
+        size: 1000  ## note size limit; added just in case
+      predicate: participates_in
+      source: "infores:chebi"
+      knowledge_level: knowledge_assertion
+      agent_type: automated_agent
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/chebiXrefs-rhea"
+      testExamples:
+        - qInput: "CHEBI:4885"      ## ethionamide
+          oneOutput: "RHEA:47616"   ## ethionamide + H(+) + NADPH + O2 = ethionamide S-oxide + H2O + NADP(+)
+    chebiToRhea-rev:
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: RHEA
+        semantic: MolecularActivity
+      requestBody:
+        body:
+          q: "{{ queryInputs | replPrefix('RHEA') }}"  ## HAS PREFIX (RHEA)
+          scopes: chebi.xrefs.rhea
+      outputs:
+      - id: CHEBI
+        semantic: SmallMolecule
+      parameters:
+        fields: chebi.id  ## HAS PREFIX
+        size: 1000  ## note size limit
+      predicate: has_participant
+      source: "infores:chebi"
+      knowledge_level: knowledge_assertion
+      agent_type: automated_agent
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/chebi"
+      testExamples:
+        - qInput: "RHEA:23312"      ## 2 sucrose = 1(F)-beta-D-fructosylsucrose + D-glucose
+          oneOutput: "CHEBI:16885"  ## 1-kestose / 1(F)-beta-D-fructosylsucrose aka PUBCHEM.COMPOUND:440080
+    ## chembl
+    ## knowledge_level / agent_type: assuming manual curation. 
+    ## - not including drug_indications. Translator wants us to use Multiomics Clinical Trials KP (CTKP) instead
+    ## - drug_mechanisms: 
+    ##   - Gene field: always ensembl_id or uniprot, never both. Not sure if any entity-merging was ever done
+    ##   - can filter for human vs non-human targets and by target-type
+    ##   - other target_organism values: Bacteria, Human respiratory syncytial virus, Fungi, Human herpesvirus 1, Hepatitis C virus,
+    ##     Human immunodeficiency virus 1, Varicella-zoster virus (strain Oka vaccine) (HHV-3) (Human herpesvirus 3)
+    drugMechChemblEnsembl:
+    ## 74 chem/records have chembl.drug_mechanisms.target_components.ensembl_gene https://mychem.info/v1/query?q=_exists_:chembl.drug_mechanisms.target_components.ensembl_gene&fields=chembl
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: CHEMBL.COMPOUND
+        semantic: SmallMolecule
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"  ## no prefix
+          scopes: chembl.molecule_chembl_id
+      outputs:
+      - id: ENSEMBL
+        semantic: Gene
+      parameters:
+      ## see response-mapping for more info on fields
+      ## commenting out because data-processing / biolink-modeling issues
+        # fields: >-
+        #   chembl.drug_mechanisms.target_components.ensembl_gene,
+        #   chembl.drug_mechanisms.action_type,
+        #   chembl.drug_mechanisms.binding_site_name,
+        #   chembl.drug_mechanisms.mechanism_refs.url,
+        #   chembl.drug_mechanisms.mechanism_refs.ISBN,
+        #   chembl.drug_mechanisms.mechanism_refs.PubMed,
+        #   chembl.drug_mechanisms.target_name,
+        #   chembl.drug_mechanisms.target_organism,
+        #   chembl.drug_mechanisms.target_type
+        fields: >-
+          chembl.drug_mechanisms.target_components.ensembl_gene,
+          chembl.drug_mechanisms.mechanism_refs.PubMed,
+          chembl.drug_mechanisms.mechanism_refs.ClinicalTrials,
+          chembl.drug_mechanisms.mechanism_refs.DOI,
+          chembl.drug_mechanisms.mechanism_refs.PMC,
+          chembl.drug_mechanisms.mechanism_refs.url,
+          chembl.drug_mechanisms.target_name
+        size: 1000  ## note size limit; added just in case
+      ## using the same predicate as dgidb's no-relationship-specified. 
+      ## not using physically_interacts_with because it's not clear that all relationships involve a physical interaction between the chem and gene product
+      ## not using affects because that's trickier to use with the new qualifier-modeling (can't ask for Edges without any qualifiers)
+      predicate: interacts_with   
+      source: "infores:chembl"
+      knowledge_level: knowledge_assertion
+      agent_type: manual_agent
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/drugMechChembl_EnsemblOutput"
+      testExamples:
+        - qInput: "CHEMBL.COMPOUND:CHEMBL4298198"     ## VUPANORSEN SODIUM
+          oneOutput: "ENSEMBL:ENSG00000132855"        ## ANGPTL3 / Angiopoietin like 3 (ANGPTL3) mRNA aka NCBIGene:27329
+    drugMechChemblEnsembl-rev:
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: ENSEMBL
+        semantic: Gene
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"  ## no prefix
+          scopes: chembl.drug_mechanisms.target_components.ensembl_gene
+      outputs:
+      - id: CHEMBL.COMPOUND
+        semantic: SmallMolecule
+      parameters:
+        fields: chembl.molecule_chembl_id,chembl.drug_mechanisms.target_name  ## no prefix
+        size: 1000  ## note size limit
+      predicate: interacts_with
+      source: "infores:chembl"
+      knowledge_level: knowledge_assertion
+      agent_type: manual_agent
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/drugMechChembl-rev"
+      testExamples:
+        - qInput: "ENSEMBL:ENSG00000276536"            ## H-Ras mRNA 5'UTR
+          oneOutput: "CHEMBL.COMPOUND:CHEMBL4594562"   ## ISIS-2503
+    drugMechChemblUniprot:
+    ## 4553 chem/records have chembl.drug_mechanisms.target_components.uniprot
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: CHEMBL.COMPOUND
+        semantic: SmallMolecule
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"  ## no prefix
+          scopes: chembl.molecule_chembl_id
+      outputs:
+      - id: UniProtKB
+        semantic: Gene
+      parameters:
+      ## see response-mapping drugMechChembl_EnsemblOutput for more info on fields
+      ## commenting out because data-processing / biolink-modeling issues
+        # fields: >-
+        #   chembl.drug_mechanisms.target_components.uniprot,
+        #   chembl.drug_mechanisms.action_type,
+        #   chembl.drug_mechanisms.binding_site_name,
+        #   chembl.drug_mechanisms.mechanism_refs.url,
+        #   chembl.drug_mechanisms.mechanism_refs.ISBN,
+        #   chembl.drug_mechanisms.mechanism_refs.PubMed,
+        #   chembl.drug_mechanisms.target_name,
+        #   chembl.drug_mechanisms.target_organism,
+        #   chembl.drug_mechanisms.target_type
+        fields: >-
+          chembl.drug_mechanisms.target_components.uniprot,
+          chembl.drug_mechanisms.mechanism_refs.PubMed,
+          chembl.drug_mechanisms.mechanism_refs.ClinicalTrials,
+          chembl.drug_mechanisms.mechanism_refs.DOI,
+          chembl.drug_mechanisms.mechanism_refs.PMC,
+          chembl.drug_mechanisms.mechanism_refs.url,
+          chembl.drug_mechanisms.target_name
+        size: 1000  ## note size limit; added just in case
+      ## see drugMechChemblEnsembl operation for more info on predicate
+      predicate: interacts_with   
+      source: "infores:chembl"
+      knowledge_level: knowledge_assertion
+      agent_type: manual_agent
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/drugMechChembl_UniprotOutput"
+      testExamples:
+        - qInput: "CHEMBL.COMPOUND:CHEMBL3989919"   ## FOSNETUPITANT CHLORIDE HYDROCHLORIDE
+          oneOutput: "UniProtKB:P25103"             ## TACR1 / Neurokinin 1 receptor aka NCBIGene:6869
+    drugMechChemblUniprot-rev:
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: UniProtKB
+        semantic: Gene
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"  ## no prefix
+          scopes: chembl.drug_mechanisms.target_components.uniprot
+      outputs:
+      - id: CHEMBL.COMPOUND
+        semantic: SmallMolecule
+      parameters:
+        fields: chembl.molecule_chembl_id,chembl.drug_mechanisms.target_name  ## no prefix
+        size: 1000  ## note size limit
+      predicate: interacts_with
+      source: "infores:chembl"
+      knowledge_level: knowledge_assertion
+      agent_type: manual_agent
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/drugMechChembl-rev"
+      testExamples:
+        - qInput: "UniProtKB:Q16539"                   ## MAP kinase p38 alpha
+          oneOutput: "CHEMBL.COMPOUND:CHEMBL585902"    ## AMG-548 aka PUBCHEM.COMPOUND:11167112
+  ## DrugCentral source
+  ## Not annotating: 
+  ## - drugcentral.approval (node properties?)
+  ## - drugcentral.drug_dosage (node properties?)
+  ## - drugcentral.drug_use.diagnosis (only has 1 matching record...)
+  ## - drugcentral.drug_use.reduce_risk (only has 1 matching record...)
+  ## - drugcentral.drug_use.symptomatic_treatment (only has 2 matching records...)
+  ################################################################################################################################
+  ## DrugCentral Bioactivity: chemical - gene/protein relationships
+  ## - 3229 chemicals/records have the drugcentral.bioactivity field https://mychem.info/v1/query?q=_exists_:drugcentral.bioactivity
+  ##   - using drugcentral.xrefs.umlscui for the chem ID, since 3225 of those chem have this field (vs 3215 that have drugcentral.xrefs.chembl_id)
+  ##     https://mychem.info/v1/query?q=_exists_:drugcentral.bioactivity%20AND%20_exists_:drugcentral.xrefs.umlscui
+  ##   - using drugcentral.bioactivity.uniprot.uniprot_id for the gene ID. all of those chem have this field 
+  ##     https://mychem.info/v1/query?q=_exists_:drugcentral.bioactivity%20AND%20_exists_:drugcentral.xrefs.umlscui%20AND%20_exists_:drugcentral.bioactivity.uniprot.uniprot_id
+  ##   - for chem -> gene operations (not the "reverse" direction aka not "rev"):
+  ##     we can write more specific operations by setting the drugcentral.bioactivity.action_type value
+  ##     - MISSING operations for the following action_type values because of <10 triples made from the data
+  ##       * SUBSTRATE (7) 
+  ##       * RELEASING AGENT (5)
+  ##       * OTHER (4)
+  ##       * PHARMACOLOGICAL CHAPERONE (3)
+  ##   - for now, not including these fields in the response:
+  ##     - about the gene: bioactivity.target_name, bioactivity.target_class, bioactivity.uniprot.gene_symbol, bioactivity.uniprot.swissprot_entry
+  ##     - seem to be measurements of the activity: act_type, act_value. Seems like these would need to be combined, augmented with info like units to be fully "TRAPI-ified"
+  ##       Appears to hold the info in the drugcentral webpages of chemicals -> bioactivity table -> "activity" columns 
+  ##     - seems to be about "mechanism of action": moa, moa_source. 
+  ##       drugcentral.bioactivity.moa always seems to be 1. This seems to mean this bioactivity is part of the drug's "mechanism of action"
+  ##       Appears to be the check-mark in the drugcentral webpages of chemicals -> bioactivity table -> "mechanism of action" columns 
+  ## - note that these genes can be from non-human species
+  ##   String genus-species name stored in drugcentral.bioactivity.organism field
+  ##   Possible values: haven't found all of them
+  ##   - Most are "Homo sapiens" (2964 / 3229 chem)
+  ##   - Common ones: "Rattus norvegicus" (839), "Mus musculus" (386), "Bos taurus" (249), Escherichia coli (167)
+  ##   - Other: Sus scrofa (60), Bacillus anthracis (17), Lactobacillus casei (11), Enterococcus faecium (2)
+  ################################################################################################################################
+    drugcentral-bioactivity-activator:
+    ## 91 records: https://mychem.info/v1/query?q=%20_exists_:%22drugcentral.bioactivity.uniprot.uniprot_id%22%20AND%20_exists_:%22drugcentral.xrefs.umlscui%22%20AND%20drugcentral.bioactivity.action_type:%22ACTIVATOR%22&fields=drugcentral
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: UMLS
+        semantic: SmallMolecule
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"  ## no prefix
+          scopes: drugcentral.xrefs.umlscui
+      outputs:
+      - id: UniProtKB
+        semantic: Gene
+      parameters:
+        fields: drugcentral.bioactivity  ## need the whole thing for jmespath to work
+        size: 1000  ## note size limit; added just in case
+        ## only want records where at <=1 array element has this action type
+        filter: drugcentral.bioactivity.action_type:ACTIVATOR
+        ## only show the array elements that have this action type
+        jmespath: "drugcentral.bioactivity|[?action_type==`ACTIVATOR`]"
+        ## needed for jmespath to work, because sometimes the value of this field is an object and sometimes an array of objects
+        always_list: drugcentral.bioactivity
+      ## using same predicate/qualifiers as dgidb activator
+      predicate: affects
+      qualifiers:
+        qualified_predicate: causes
+        object_aspect_qualifier: activity
+        object_direction_qualifier: increased
+        causal_mechanism_qualifier: activation        
+      source: "infores:drugcentral"
+      knowledge_level: knowledge_assertion
+      agent_type: not_provided
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/drugcentral-bioactivity"
+      testExamples:
+        - qInput: "UMLS:C0019134"           ## heparin aka CHEBI:28304
+          oneOutput: "UniProtKB:P01008"     ## SERPINC1 aka NCBIGene:462
+    drugcentral-bioactivity-activator-rev:
+    - supportBatch: false   ## because of jmespath handling to get the specific chem-gene pair info
+      useTemplating: true
+      inputs:
+      - id: UniProtKB
+        semantic: Gene
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"  ## no prefix
+          scopes: drugcentral.bioactivity.uniprot.uniprot_id
+      outputs:
+      - id: UMLS
+        semantic: SmallMolecule
+      parameters:
+      ## need the whole thing for jmespath to work
+        fields: drugcentral.bioactivity,drugcentral.xrefs.umlscui
+        size: 1000  ## note size limit; added just in case
+        ## only want records where at <=1 array element has this action type and output ID field exists
+        filter: drugcentral.bioactivity.action_type:ACTIVATOR AND _exists_:drugcentral.xrefs.umlscui
+        ## only show the array elements that have this action type and uniprot_id value
+        jmespath: "drugcentral.bioactivity|[?action_type==`ACTIVATOR` && length(uniprot[?uniprot_id=='{{ queryInputs }}']) > `0`]"
+        ## needed for jmespath to work: only keep array elements that meet both criteria
+        jmespath_exclude_empty: true  
+        ## needed for jmespath to work, because sometimes the value of this field is an object and sometimes an array of objects
+        always_list: drugcentral.bioactivity
+      predicate: affected_by
+      qualifiers:
+        qualified_predicate: caused_by
+        subject_aspect_qualifier: activity
+        subject_direction_qualifier: increased
+        causal_mechanism_qualifier: activation        
+      source: "infores:drugcentral"
+      knowledge_level: knowledge_assertion
+      agent_type: not_provided
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/drugcentral-umls"
+      testExamples:
+        - qInput: "UniProtKB:P01008"           ## SERPINC1 aka NCBIGene:462
+          oneOutput: "UMLS:C0019134"           ## heparin aka CHEBI:28304
+        - qInput: "UniProtKB:O75343"           ## GUCY1B2 protein
+          oneOutput: "UMLS:C0028193"           ## Nitroprusside aka CHEBI:7596
+        - qInput: "UniProtKB:O43526"           ## KCNQ2 aka NCBIGene:3785
+          oneOutput: "UMLS:C0078792"           ## pyrithione zinc aka CHEBI:32076
+    drugcentral-bioactivity-agonist:
+    ## AGONIST 609 records: https://mychem.info/v1/query?q=%20_exists_:%22drugcentral.bioactivity.uniprot.uniprot_id%22%20AND%20_exists_:%22drugcentral.xrefs.umlscui%22%20AND%20drugcentral.bioactivity.action_type:%22AGONIST%22&fields=drugcentral
+    ## PARTIAL AGONIST 16 records: https://mychem.info/v1/query?q=%20_exists_:%22drugcentral.bioactivity.uniprot.uniprot_id%22%20AND%20_exists_:%22drugcentral.xrefs.umlscui%22%20AND%20drugcentral.bioactivity.action_type:%22PARTIAL%20AGONIST%22&fields=drugcentral
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: UMLS
+        semantic: SmallMolecule
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"
+          scopes: drugcentral.xrefs.umlscui
+      outputs:
+      - id: UniProtKB
+        semantic: Gene
+      parameters:
+        fields: drugcentral.bioactivity
+        size: 1000
+        filter: drugcentral.bioactivity.action_type:("AGONIST" OR "PARTIAL AGONIST")
+        jmespath: "drugcentral.bioactivity|[?action_type==`AGONIST` || action_type==`PARTIAL AGONIST`]"
+        always_list: drugcentral.bioactivity
+      ## using same predicate/qualifiers as dgidb agonist
+      predicate: affects
+      qualifiers:
+        qualified_predicate: causes
+        object_aspect_qualifier: activity
+        object_direction_qualifier: increased
+        causal_mechanism_qualifier: agonism        
+      source: "infores:drugcentral"
+      knowledge_level: knowledge_assertion
+      agent_type: not_provided
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/drugcentral-bioactivity"
+      testExamples:
+      ## for AGONIST
+        - qInput: "UMLS:C0031937"           ## pindolol aka CHEBI:8214
+          oneOutput: "UniProtKB:P28223"     ## HTR2A aka NCBIGene:3356
+      ## for PARTIAL AGONIST
+        - qInput: "UMLS:C0031937"           ## pindolol aka CHEBI:8214
+          oneOutput: "UniProtKB:P08588"     ## ADRB1 aka NCBIGene:153
+    drugcentral-bioactivity-agonist-rev:
+    - supportBatch: false   ## because of jmespath handling to get the specific chem-gene pair info
+      useTemplating: true
+      inputs:
+      - id: UniProtKB
+        semantic: Gene
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"
+          scopes: drugcentral.bioactivity.uniprot.uniprot_id
+      outputs:
+      - id: UMLS
+        semantic: SmallMolecule
+      parameters:
+        fields: drugcentral.bioactivity,drugcentral.xrefs.umlscui
+        size: 1000
+        filter: drugcentral.bioactivity.action_type:("AGONIST" OR "PARTIAL AGONIST") AND _exists_:drugcentral.xrefs.umlscui
+        ## only show the array elements that have one of this action types AND have this uniprot_id value
+        jmespath: "drugcentral.bioactivity|[?(action_type==`AGONIST` || action_type==`PARTIAL AGONIST`) && length(uniprot[?uniprot_id=='{{ queryInputs }}']) > `0`]"
+        jmespath_exclude_empty: true  
+        always_list: drugcentral.bioactivity
+      predicate: affected_by
+      qualifiers:
+        qualified_predicate: caused_by
+        subject_aspect_qualifier: activity
+        subject_direction_qualifier: increased
+        causal_mechanism_qualifier: agonism        
+      source: "infores:drugcentral"
+      knowledge_level: knowledge_assertion
+      agent_type: not_provided
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/drugcentral-umls"
+      testExamples:
+      ## for AGONIST
+        - qInput: "UniProtKB:P28223"           ## HTR2A aka NCBIGene:3356
+          oneOutput: "UMLS:C0031937"           ## pindolol aka CHEBI:8214
+      ## for PARTIAL AGONIST
+        - qInput: "UniProtKB:P08588"           ## ADRB1 aka NCBIGene:153
+          oneOutput: "UMLS:C0031937"           ## pindolol aka CHEBI:8214
+    drugcentral-bioactivity-antagonist:
+    ## ANTAGONIST 420 records: https://mychem.info/v1/query?q=%20_exists_:%22drugcentral.bioactivity.uniprot.uniprot_id%22%20AND%20_exists_:%22drugcentral.xrefs.umlscui%22%20AND%20drugcentral.bioactivity.action_type:%22ANTAGONIST%22&fields=drugcentral
+    ## ALLOSTERIC ANTAGONIST 1 record: https://mychem.info/v1/query?q=%20_exists_:%22drugcentral.bioactivity.uniprot.uniprot_id%22%20AND%20_exists_:%22drugcentral.xrefs.umlscui%22%20AND%20drugcentral.bioactivity.action_type:%22ALLOSTERIC%20ANTAGONIST%22&fields=drugcentral
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: UMLS
+        semantic: SmallMolecule
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"
+          scopes: drugcentral.xrefs.umlscui
+      outputs:
+      - id: UniProtKB
+        semantic: Gene
+      parameters:
+        fields: drugcentral.bioactivity
+        size: 1000
+        filter: drugcentral.bioactivity.action_type:("ANTAGONIST" OR "ALLOSTERIC ANTAGONIST")
+        jmespath: "drugcentral.bioactivity|[?action_type==`ANTAGONIST` || action_type==`ALLOSTERIC ANTAGONIST`]"
+        always_list: drugcentral.bioactivity
+      ## using same predicate/qualifiers as dgidb antagonist
+      predicate: affects
+      qualifiers:
+        qualified_predicate: causes
+        object_aspect_qualifier: activity
+        object_direction_qualifier: decreased
+        causal_mechanism_qualifier: antagonism
+      source: "infores:drugcentral"
+      knowledge_level: knowledge_assertion
+      agent_type: not_provided
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/drugcentral-bioactivity"
+      testExamples:
+      ## for ANTAGONIST
+        - qInput: "UMLS:C0724441"           ## yohimbine aka CHEBI:10093
+          oneOutput: "UniProtKB:P41595"     ## HTR2B aka NCBIGene:3357
+      ## for ALLOSTERIC ANTAGONIST
+        - qInput: "UMLS:C0016293"           ## flumazenil aka CHEBI:5103
+          oneOutput: "UniProtKB:Q16445"     ## GABRA6 aka NCBIGene:2559
+    drugcentral-bioactivity-antagonist-rev:
+    - supportBatch: false   ## because of jmespath handling to get the specific chem-gene pair info
+      useTemplating: true
+      inputs:
+      - id: UniProtKB
+        semantic: Gene
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"
+          scopes: drugcentral.bioactivity.uniprot.uniprot_id
+      outputs:
+      - id: UMLS
+        semantic: SmallMolecule
+      parameters:
+        fields: drugcentral.bioactivity,drugcentral.xrefs.umlscui
+        size: 1000
+        filter: drugcentral.bioactivity.action_type:("ANTAGONIST" OR "ALLOSTERIC ANTAGONIST") AND _exists_:drugcentral.xrefs.umlscui
+        jmespath: "drugcentral.bioactivity|[?(action_type==`ANTAGONIST` || action_type==`ALLOSTERIC ANTAGONIST`) && length(uniprot[?uniprot_id=='{{ queryInputs }}']) > `0`]"
+        jmespath_exclude_empty: true  
+        always_list: drugcentral.bioactivity
+      predicate: affected_by
+      qualifiers:
+        qualified_predicate: caused_by
+        subject_aspect_qualifier: activity
+        subject_direction_qualifier: decreased
+        causal_mechanism_qualifier: antagonism        
+      source: "infores:drugcentral"
+      knowledge_level: knowledge_assertion
+      agent_type: not_provided
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/drugcentral-umls"
+      testExamples:
+      ## for ANTAGONIST
+        - qInput: "UniProtKB:P41595"           ## HTR2B aka NCBIGene:3357
+          oneOutput: "UMLS:C0724441"           ## yohimbine aka CHEBI:10093
+      ## for ALLOSTERIC ANTAGONIST
+        - qInput: "UniProtKB:Q16445"           ## GABRA6 aka NCBIGene:2559
+          oneOutput: "UMLS:C0016293"           ## flumazenil aka CHEBI:5103
+    drugcentral-bioactivity-antibody:
+    ## 249 records: https://mychem.info/v1/query?q=%20_exists_:%22drugcentral.bioactivity.uniprot.uniprot_id%22%20AND%20_exists_:%22drugcentral.xrefs.umlscui%22%20AND%20drugcentral.bioactivity.action_type:%22ANTIBODY%20BINDING%22&fields=drugcentral
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: UMLS
+        semantic: SmallMolecule
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"
+          scopes: drugcentral.xrefs.umlscui
+      outputs:
+      - id: UniProtKB
+        semantic: Gene
+      parameters:
+        fields: drugcentral.bioactivity
+        size: 1000
+        filter: drugcentral.bioactivity.action_type:"ANTIBODY BINDING"
+        jmespath: "drugcentral.bioactivity|[?action_type==`ANTIBODY BINDING`]"
+        always_list: drugcentral.bioactivity
+      ## using same predicate/qualifiers as dgidb antibody, general terms
+      ## while the "affects-causes-decreased-activity_or_abundance" matches antibodies that "block binding to receptors/signal transduction",
+      ##   it doesn't seem to match other antibodies that "promote destruction by immune cells"
+      ##   https://en.wikipedia.org/wiki/Monoclonal_antibody_therapy
+      predicate: physically_interacts_with
+      qualifiers:
+        causal_mechanism_qualifier: antibody_inhibition
+      source: "infores:drugcentral"
+      knowledge_level: knowledge_assertion
+      agent_type: not_provided
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/drugcentral-bioactivity"
+      testExamples:
+        - qInput: "UMLS:C1172734"           ## natalizumab aka UNII:3JB47N2Q2P
+          oneOutput: "UniProtKB:P05556"     ## ITGA4 aka NCBIGene:3688
+    drugcentral-bioactivity-antibody-rev:
+    - supportBatch: false   ## because of jmespath handling to get the specific chem-gene pair info
+      useTemplating: true
+      inputs:
+      - id: UniProtKB
+        semantic: Gene
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"
+          scopes: drugcentral.bioactivity.uniprot.uniprot_id
+      outputs:
+      - id: UMLS
+        semantic: SmallMolecule
+      parameters:
+        fields: drugcentral.bioactivity,drugcentral.xrefs.umlscui
+        size: 1000
+        filter: drugcentral.bioactivity.action_type:("ANTIBODY BINDING") AND _exists_:drugcentral.xrefs.umlscui
+        jmespath: "drugcentral.bioactivity|[?action_type==`ANTIBODY BINDING` && length(uniprot[?uniprot_id=='{{ queryInputs }}']) > `0`]"
+        jmespath_exclude_empty: true  
+        always_list: drugcentral.bioactivity
+      predicate: physically_interacts_with
+      qualifiers:
+        causal_mechanism_qualifier: antibody_inhibition     
+      source: "infores:drugcentral"
+      knowledge_level: knowledge_assertion
+      agent_type: not_provided
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/drugcentral-umls"
+      testExamples:
+        - qInput: "UniProtKB:P05556"           ## ITGB1 aka NCBIGene:3688
+          oneOutput: "UMLS:C1172734"           ## natalizumab aka UNII:3JB47N2Q2P
+    drugcentral-bioactivity-antisense-inhibitor:
+    ## 33 records: https://mychem.info/v1/query?q=%20_exists_:%22drugcentral.bioactivity.uniprot.uniprot_id%22%20AND%20_exists_:%22drugcentral.xrefs.umlscui%22%20AND%20drugcentral.bioactivity.action_type:%22ANTISENSE%20INHIBITOR%22&fields=drugcentral
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: UMLS
+        semantic: SmallMolecule
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"
+          scopes: drugcentral.xrefs.umlscui
+      outputs:
+      - id: UniProtKB
+        semantic: Gene
+      parameters:
+        fields: drugcentral.bioactivity
+        size: 1000
+        filter: drugcentral.bioactivity.action_type:"ANTISENSE INHIBITOR"
+        jmespath: "drugcentral.bioactivity|[?action_type==`ANTISENSE INHIBITOR`]"
+        always_list: drugcentral.bioactivity
+      ## using same predicate/qualifiers as dgidb antisense oligonucleotide (commented-out operation)
+      predicate: affects
+      qualifiers:
+        qualified_predicate: causes
+        object_aspect_qualifier: synthesis
+        object_direction_qualifier: decreased
+        causal_mechanism_qualifier: inhibition
+      source: "infores:drugcentral"
+      knowledge_level: knowledge_assertion
+      agent_type: not_provided
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/drugcentral-bioactivity"
+      testExamples:
+        - qInput: "UMLS:C4726970"           ## volanesorsen aka UNII:2O4BE0K238
+          oneOutput: "UniProtKB:P02656"     ## APOC3 aka NCBIGene:345
+    drugcentral-bioactivity-antisense-inhibitor-rev:
+    - supportBatch: false   ## because of jmespath handling to get the specific chem-gene pair info
+      useTemplating: true
+      inputs:
+      - id: UniProtKB
+        semantic: Gene
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"
+          scopes: drugcentral.bioactivity.uniprot.uniprot_id
+      outputs:
+      - id: UMLS
+        semantic: SmallMolecule
+      parameters:
+        fields: drugcentral.bioactivity,drugcentral.xrefs.umlscui
+        size: 1000
+        filter: drugcentral.bioactivity.action_type:("ANTISENSE INHIBITOR") AND _exists_:drugcentral.xrefs.umlscui
+        jmespath: "drugcentral.bioactivity|[?action_type==`ANTISENSE INHIBITOR` && length(uniprot[?uniprot_id=='{{ queryInputs }}']) > `0`]"
+        jmespath_exclude_empty: true  
+        always_list: drugcentral.bioactivity
+      predicate: affected_by
+      qualifiers:
+        qualified_predicate: caused_by
+        subject_aspect_qualifier: synthesis
+        subject_direction_qualifier: decreased
+        causal_mechanism_qualifier: inhibition     
+      source: "infores:drugcentral"
+      knowledge_level: knowledge_assertion
+      agent_type: not_provided
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/drugcentral-umls"
+      testExamples:
+        - qInput: "UniProtKB:P02656"           ## APOC3 aka NCBIGene:345
+          oneOutput: "UMLS:C4726970"           ## volanesorsen aka UNII:2O4BE0K238
+    drugcentral-bioactivity-binding-agent:
+    ## 91 records: https://mychem.info/v1/query?q=%20_exists_:%22drugcentral.bioactivity.uniprot.uniprot_id%22%20AND%20_exists_:%22drugcentral.xrefs.umlscui%22%20AND%20drugcentral.bioactivity.action_type:%22BINDING%20AGENT%22&fields=drugcentral
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: UMLS
+        semantic: SmallMolecule
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"
+          scopes: drugcentral.xrefs.umlscui
+      outputs:
+      - id: UniProtKB
+        semantic: Gene
+      parameters:
+        fields: drugcentral.bioactivity
+        size: 1000
+        filter: drugcentral.bioactivity.action_type:"BINDING AGENT"
+        jmespath: "drugcentral.bioactivity|[?action_type==`BINDING AGENT`]"
+        always_list: drugcentral.bioactivity
+      predicate: physically_interacts_with
+      source: "infores:drugcentral"
+      knowledge_level: knowledge_assertion
+      agent_type: not_provided
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/drugcentral-bioactivity"
+      testExamples:
+        - qInput: "UMLS:C5139904"           ## mirikizumab aka UNII:Z7HVY03PHP
+          oneOutput: "UniProtKB:Q9NPF7"     ## IL23A aka NCBIGene:51561
+    drugcentral-bioactivity-binding-agent-rev:
+    - supportBatch: false   ## because of jmespath handling to get the specific chem-gene pair info
+      useTemplating: true
+      inputs:
+      - id: UniProtKB
+        semantic: Gene
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"
+          scopes: drugcentral.bioactivity.uniprot.uniprot_id
+      outputs:
+      - id: UMLS
+        semantic: SmallMolecule
+      parameters:
+        fields: drugcentral.bioactivity,drugcentral.xrefs.umlscui
+        size: 1000
+        filter: drugcentral.bioactivity.action_type:("BINDING AGENT") AND _exists_:drugcentral.xrefs.umlscui
+        jmespath: "drugcentral.bioactivity|[?action_type==`BINDING AGENT` && length(uniprot[?uniprot_id=='{{ queryInputs }}']) > `0`]"
+        jmespath_exclude_empty: true  
+        always_list: drugcentral.bioactivity
+      predicate: physically_interacts_with 
+      source: "infores:drugcentral"
+      knowledge_level: knowledge_assertion
+      agent_type: not_provided
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/drugcentral-umls"
+      testExamples:
+        - qInput: "UniProtKB:Q9NPF7"           ## IL23A aka NCBIGene:51561
+          oneOutput: "UMLS:C5139904"           ## mirikizumab aka UNII:Z7HVY03PHP
+    drugcentral-bioactivity-inhibitor:
+    ## INHIBITOR 853 records: https://mychem.info/v1/query?q=%20_exists_:%22drugcentral.bioactivity.uniprot.uniprot_id%22%20AND%20_exists_:%22drugcentral.xrefs.umlscui%22%20AND%20drugcentral.bioactivity.action_type:%22INHIBITOR%22&fields=drugcentral
+    ## "GATING INHIBITOR" 29 records: https://mychem.info/v1/query?q=%20_exists_:%22drugcentral.bioactivity.uniprot.uniprot_id%22%20AND%20_exists_:%22drugcentral.xrefs.umlscui%22%20AND%20drugcentral.bioactivity.action_type:%22GATING%20INHIBITOR%22&fields=drugcentral
+    ##   Searching for the definition of "gating inhibitor", I found this article https://pmc.ncbi.nlm.nih.gov/articles/PMC11303713/
+    ##   It says "Our previous functional studies suggested that Inh-172, unlike classical pore blockers, works as a gating inhibitor: 
+    ##   conformational changes following Inh-172 binding lead to an “inactivated” state of CFTR"
+    ## BLOCKER 164 records: https://mychem.info/v1/query?q=%20_exists_:%22drugcentral.bioactivity.uniprot.uniprot_id%22%20AND%20_exists_:%22drugcentral.xrefs.umlscui%22%20AND%20drugcentral.bioactivity.action_type:%22BLOCKER%22&fields=drugcentral
+    ##   I don't know what drugcentral defines "blocker" as, so I'm putting it here. 
+    ##   Searching for the definition of "blocker", I found https://en.wikipedia.org/wiki/Inverse_agonist and https://en.wikipedia.org/wiki/Receptor_antagonist
+    ##   It can mean "block agonist/inverse agonist from binding" AKA antagonist or "block ion channel". 
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: UMLS
+        semantic: SmallMolecule
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"
+          scopes: drugcentral.xrefs.umlscui
+      outputs:
+      - id: UniProtKB
+        semantic: Gene
+      parameters:
+        fields: drugcentral.bioactivity
+        size: 1000
+        filter: drugcentral.bioactivity.action_type:("INHIBITOR" OR "GATING INHIBITOR" OR "BLOCKER")
+        jmespath: "drugcentral.bioactivity|[?action_type==`INHIBITOR` || action_type==`GATING INHIBITOR` || action_type==`BLOCKER`]"
+        always_list: drugcentral.bioactivity
+      ## using same predicate/qualifiers as dgidb inhibitor
+      predicate: affects
+      qualifiers:
+        qualified_predicate: causes
+        object_aspect_qualifier: activity_or_abundance
+        object_direction_qualifier: decreased
+        causal_mechanism_qualifier: inhibition
+      source: "infores:drugcentral"
+      knowledge_level: knowledge_assertion
+      agent_type: not_provided
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/drugcentral-bioactivity"
+      testExamples:
+      # for INHIBITOR
+        - qInput: "UMLS:C4519188"           ## daprodustat aka CHEBI:229223
+          oneOutput: "UniProtKB:Q9H6Z9"     ## EGLN3 aka NCBIGene:112399
+      # for GATING INHIBITOR
+        - qInput: "UMLS:C0071304"           ## Isradipine aka CHEBI:6073
+          oneOutput: "UniProtKB:Q01668"     ## CACNA1D aka NCBIGene:776
+      # for BLOCKER
+        - qInput: "UMLS:C0023660"           ## lidocaine aka CHEBI:6456
+          oneOutput: "UniProtKB:Q99250"     ## SCN2A aka NCBIGene:6326
+    drugcentral-bioactivity-inhibitor-rev:
+    - supportBatch: false   ## because of jmespath handling to get the specific chem-gene pair info
+      useTemplating: true
+      inputs:
+      - id: UniProtKB
+        semantic: Gene
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"
+          scopes: drugcentral.bioactivity.uniprot.uniprot_id
+      outputs:
+      - id: UMLS
+        semantic: SmallMolecule
+      parameters:
+        fields: drugcentral.bioactivity,drugcentral.xrefs.umlscui
+        size: 1000
+        filter: drugcentral.bioactivity.action_type:("INHIBITOR" OR "GATING INHIBITOR" OR "BLOCKER") AND _exists_:drugcentral.xrefs.umlscui
+        jmespath: "drugcentral.bioactivity|[?(action_type==`INHIBITOR` || action_type==`GATING INHIBITOR` || action_type==`BLOCKER`) && length(uniprot[?uniprot_id=='{{ queryInputs }}']) > `0`]"
+        jmespath_exclude_empty: true  
+        always_list: drugcentral.bioactivity
+      predicate: affected_by
+      qualifiers:
+        qualified_predicate: caused_by
+        subject_aspect_qualifier: activity_or_abundance
+        subject_direction_qualifier: decreased
+        causal_mechanism_qualifier: inhibition        
+      source: "infores:drugcentral"
+      knowledge_level: knowledge_assertion
+      agent_type: not_provided
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/drugcentral-umls"
+      testExamples:
+      ## for INHIBITOR
+        - qInput: "UniProtKB:Q9H6Z9"           ## EGLN3 aka NCBIGene:112399
+          oneOutput: "UMLS:C4519188"           ## daprodustat aka CHEBI:229223
+      ## for GATING INHIBITOR
+        - qInput: "UniProtKB:Q01668"           ## CACNA1D aka NCBIGene:776
+          oneOutput: "UMLS:C0071304"           ## Isradipine aka CHEBI:6073
+      ## for BLOCKER
+        - qInput: "UniProtKB:Q99250"           ## SCN2A aka NCBIGene:6326
+          oneOutput: "UMLS:C0023660"           ## lidocaine aka CHEBI:6456
+    drugcentral-bioactivity-inverse-agonist:
+    ## 8 records: https://mychem.info/v1/query?q=%20_exists_:%22drugcentral.bioactivity.uniprot.uniprot_id%22%20AND%20_exists_:%22drugcentral.xrefs.umlscui%22%20AND%20drugcentral.bioactivity.action_type:%22INVERSE%20AGONIST%22&fields=drugcentral
+    ## Definition: https://en.wikipedia.org/wiki/Inverse_agonist
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: UMLS
+        semantic: SmallMolecule
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"
+          scopes: drugcentral.xrefs.umlscui
+      outputs:
+      - id: UniProtKB
+        semantic: Gene
+      parameters:
+        fields: drugcentral.bioactivity
+        size: 1000
+        filter: drugcentral.bioactivity.action_type:"INVERSE AGONIST"
+        jmespath: "drugcentral.bioactivity|[?action_type==`INVERSE AGONIST`]"
+        always_list: drugcentral.bioactivity
+      predicate: affects
+      qualifiers:
+        qualified_predicate: causes
+        object_aspect_qualifier: activity
+        object_direction_qualifier: decreased
+        causal_mechanism_qualifier: inverse_agonism
+      source: "infores:drugcentral"
+      knowledge_level: knowledge_assertion
+      agent_type: not_provided
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/drugcentral-bioactivity"
+      testExamples:
+        - qInput: "UMLS:C1722267"           ## pimavanserin tartrate aka CHEBI:133014
+          oneOutput: "UniProtKB:P28335"     ## HTR2C aka NCBIGene:3358
+    drugcentral-bioactivity-inverse-agonist-rev:
+    - supportBatch: false   ## because of jmespath handling to get the specific chem-gene pair info
+      useTemplating: true
+      inputs:
+      - id: UniProtKB
+        semantic: Gene
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"
+          scopes: drugcentral.bioactivity.uniprot.uniprot_id
+      outputs:
+      - id: UMLS
+        semantic: SmallMolecule
+      parameters:
+        fields: drugcentral.bioactivity,drugcentral.xrefs.umlscui
+        size: 1000
+        filter: drugcentral.bioactivity.action_type:("INVERSE AGONIST") AND _exists_:drugcentral.xrefs.umlscui
+        jmespath: "drugcentral.bioactivity|[?action_type==`INVERSE AGONIST` && length(uniprot[?uniprot_id=='{{ queryInputs }}']) > `0`]"
+        jmespath_exclude_empty: true  
+        always_list: drugcentral.bioactivity
+      predicate: affected_by
+      qualifiers:
+        qualified_predicate: caused_by
+        subject_aspect_qualifier: activity
+        subject_direction_qualifier: decreased
+        causal_mechanism_qualifier: inverse_agonism   
+      source: "infores:drugcentral"
+      knowledge_level: knowledge_assertion
+      agent_type: not_provided
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/drugcentral-umls"
+      testExamples:
+        - qInput: "UniProtKB:P28335"           ## HTR2C aka NCBIGene:3358
+          oneOutput: "UMLS:C1722267"           ## pimavanserin tartrate aka CHEBI:133014
+    drugcentral-bioactivity-modulator:
+    ## ALLOSTERIC MODULATOR 20 records: https://mychem.info/v1/query?q=%20_exists_:%22drugcentral.bioactivity.uniprot.uniprot_id%22%20AND%20_exists_:%22drugcentral.xrefs.umlscui%22%20AND%20drugcentral.bioactivity.action_type:%22ALLOSTERIC%20MODULATOR%22&fields=drugcentral.bioactivity,drugcentral.xrefs
+    ## MODULATOR 27 records: https://mychem.info/v1/query?q=%20_exists_:%22drugcentral.bioactivity.uniprot.uniprot_id%22%20AND%20_exists_:%22drugcentral.xrefs.umlscui%22%20AND%20drugcentral.bioactivity.action_type:%22MODULATOR%22&fields=drugcentral.bioactivity,drugcentral.xrefs
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: UMLS
+        semantic: SmallMolecule
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"
+          scopes: drugcentral.xrefs.umlscui
+      outputs:
+      - id: UniProtKB
+        semantic: Gene
+      parameters:
+        fields: drugcentral.bioactivity
+        size: 1000
+        filter: drugcentral.bioactivity.action_type:("ALLOSTERIC MODULATOR" OR "MODULATOR")
+        jmespath: "drugcentral.bioactivity|[?action_type==`ALLOSTERIC MODULATOR` || action_type==`MODULATOR`]"
+        always_list: drugcentral.bioactivity
+      predicate: affects
+      qualifiers:
+        object_aspect_qualifier: activity_or_abundance
+      source: "infores:drugcentral"
+      knowledge_level: knowledge_assertion
+      agent_type: not_provided
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/drugcentral-bioactivity"
+      testExamples:
+      # for ALLOSTERIC MODULATOR
+        - qInput: "UMLS:C0202474"           ## Strychnine aka CHEBI:28973
+          oneOutput: "UniProtKB:P08173"     ## CHRM4 aka NCBIGene:1132
+      # for MODULATOR
+        - qInput: "UMLS:C3657824"           ## siponimod aka UNII:RR6P8L282I
+          oneOutput: "UniProtKB:P21453"     ## S1PR1 aka NCBIGene:1901
+    drugcentral-bioactivity-modulator-rev:
+    - supportBatch: false   ## because of jmespath handling to get the specific chem-gene pair info
+      useTemplating: true
+      inputs:
+      - id: UniProtKB
+        semantic: Gene
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"
+          scopes: drugcentral.bioactivity.uniprot.uniprot_id
+      outputs:
+      - id: UMLS
+        semantic: SmallMolecule
+      parameters:
+        fields: drugcentral.bioactivity,drugcentral.xrefs.umlscui
+        size: 1000
+        filter: drugcentral.bioactivity.action_type:("ALLOSTERIC MODULATOR" OR "MODULATOR") AND _exists_:drugcentral.xrefs.umlscui
+        jmespath: "drugcentral.bioactivity|[?(action_type==`ALLOSTERIC MODULATOR` || action_type==`MODULATOR`) && length(uniprot[?uniprot_id=='{{ queryInputs }}']) > `0`]"
+        jmespath_exclude_empty: true  
+        always_list: drugcentral.bioactivity
+      predicate: affected_by
+      qualifiers:
+        subject_aspect_qualifier: activity_or_abundance       
+      source: "infores:drugcentral"
+      knowledge_level: knowledge_assertion
+      agent_type: not_provided
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/drugcentral-umls"
+      testExamples:
+      ## for ALLOSTERIC MODULATOR
+        - qInput: "UniProtKB:P08173"           ## CHRM4 aka NCBIGene:1132
+          oneOutput: "UMLS:C0202474"           ## Strychnine aka CHEBI:28973
+      ## for MODULATOR
+        - qInput: "UniProtKB:P21453"           ## S1PR1 aka NCBIGene:1901
+          oneOutput: "UMLS:C3657824"           ## siponimod aka UNII:RR6P8L282I
+    drugcentral-bioactivity-negative-modulator:
+    ## put together because they individually have <10 triples each 
+    ## NEGATIVE ALLOSTERIC MODULATOR 5 records: https://mychem.info/v1/query?q=%20_exists_:%22drugcentral.bioactivity.uniprot.uniprot_id%22%20AND%20_exists_:%22drugcentral.xrefs.umlscui%22%20AND%20drugcentral.bioactivity.action_type:%22NEGATIVE%20ALLOSTERIC%20MODULATOR%22&fields=drugcentral
+    ## NEGATIVE MODULATOR 1 record: https://mychem.info/v1/query?q=%20_exists_:%22drugcentral.bioactivity.uniprot.uniprot_id%22%20AND%20_exists_:%22drugcentral.xrefs.umlscui%22%20AND%20drugcentral.bioactivity.action_type:%22NEGATIVE%20MODULATOR%22&fields=drugcentral
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: UMLS
+        semantic: SmallMolecule
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"  ## no prefix
+          scopes: drugcentral.xrefs.umlscui
+      outputs:
+      - id: UniProtKB
+        semantic: Gene
+      parameters:
+        fields: drugcentral.bioactivity
+        size: 1000
+        filter: drugcentral.bioactivity.action_type:("NEGATIVE ALLOSTERIC MODULATOR" OR "NEGATIVE MODULATOR")
+        jmespath: "drugcentral.bioactivity|[?action_type==`NEGATIVE ALLOSTERIC MODULATOR` || action_type==`NEGATIVE MODULATOR`]"
+        always_list: drugcentral.bioactivity
+      ## doing the same modeling I did for "positive modulator"
+      predicate: affects
+      qualifiers:
+        qualified_predicate: causes
+        object_aspect_qualifier: activity_or_abundance
+        object_direction_qualifier: decreased
+      source: "infores:drugcentral"
+      knowledge_level: knowledge_assertion
+      agent_type: not_provided
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/drugcentral-bioactivity"
+      testExamples:
+      # for NEGATIVE ALLOSTERIC MODULATOR
+        - qInput: "UMLS:C0025242"           ## memantine aka CHEBI:64312
+          oneOutput: "UniProtKB:Q12879"     ## GRIN2A aka NCBIGene:2903
+      # for NEGATIVE MODULATOR
+        - qInput: "UMLS:C0076456"           ## Thiocolchicoside aka CHEBI:94557
+          oneOutput: "UniProtKB:P18505"     ## GABRB1 aka NCBIGene:2560 
+    drugcentral-bioactivity-negative-modulator-rev:
+    - supportBatch: false   ## because of jmespath handling to get the specific chem-gene pair info
+      useTemplating: true
+      inputs:
+      - id: UniProtKB
+        semantic: Gene
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"
+          scopes: drugcentral.bioactivity.uniprot.uniprot_id
+      outputs:
+      - id: UMLS
+        semantic: SmallMolecule
+      parameters:
+        fields: drugcentral.bioactivity,drugcentral.xrefs.umlscui
+        size: 1000
+        filter: drugcentral.bioactivity.action_type:("NEGATIVE ALLOSTERIC MODULATOR" OR "NEGATIVE MODULATOR") AND _exists_:drugcentral.xrefs.umlscui
+        jmespath: "drugcentral.bioactivity|[?(action_type==`NEGATIVE ALLOSTERIC MODULATOR` || action_type==`NEGATIVE MODULATOR`) && length(uniprot[?uniprot_id=='{{ queryInputs }}']) > `0`]"
+        jmespath_exclude_empty: true  
+        always_list: drugcentral.bioactivity
+      predicate: affected_by
+      qualifiers:
+        qualified_predicate: caused_by
+        subject_aspect_qualifier: activity_or_abundance
+        subject_direction_qualifier: decreased
+      source: "infores:drugcentral"
+      knowledge_level: knowledge_assertion
+      agent_type: not_provided
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/drugcentral-umls"
+      testExamples:
+      ## for NEGATIVE ALLOSTERIC MODULATOR
+        - qInput: "UniProtKB:Q12879"           ## GRIN2A aka NCBIGene:2903
+          oneOutput: "UMLS:C0025242"           ## memantine aka CHEBI:64312
+      ## for NEGATIVE MODULATOR
+        - qInput: "UniProtKB:P18505"           ## GABRB1 aka NCBIGene:2560 
+          oneOutput: "UMLS:C0076456"           ## Thiocolchicoside aka CHEBI:94557
+    drugcentral-bioactivity-opener:
+    ## 15 records: https://mychem.info/v1/query?q=%20_exists_:%22drugcentral.bioactivity.uniprot.uniprot_id%22%20AND%20_exists_:%22drugcentral.xrefs.umlscui%22%20AND%20drugcentral.bioactivity.action_type:%22OPENER%22&fields=drugcentral
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: UMLS
+        semantic: SmallMolecule
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"
+          scopes: drugcentral.xrefs.umlscui
+      outputs:
+      - id: UniProtKB
+        semantic: Gene
+      parameters:
+        fields: drugcentral.bioactivity
+        size: 1000
+        filter: drugcentral.bioactivity.action_type:OPENER
+        jmespath: "drugcentral.bioactivity|[?action_type==`OPENER`]"
+        always_list: drugcentral.bioactivity
+      predicate: affects
+      qualifiers:
+        qualified_predicate: causes
+        object_aspect_qualifier: activity
+        object_direction_qualifier: increased
+        causal_mechanism_qualifier: molecular_channel_opening
+      source: "infores:drugcentral"
+      knowledge_level: knowledge_assertion
+      agent_type: not_provided
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/drugcentral-bioactivity"
+      testExamples:
+        - qInput: "UMLS:C3265565"           ## sevoflurane aka CHEBI:9130
+          oneOutput: "UniProtKB:O95069"     ## KCNK2 aka NCBIGene:3776
+    drugcentral-bioactivity-opener-rev:
+    - supportBatch: false   ## because of jmespath handling to get the specific chem-gene pair info
+      useTemplating: true
+      inputs:
+      - id: UniProtKB
+        semantic: Gene
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"
+          scopes: drugcentral.bioactivity.uniprot.uniprot_id
+      outputs:
+      - id: UMLS
+        semantic: SmallMolecule
+      parameters:
+        fields: drugcentral.bioactivity,drugcentral.xrefs.umlscui
+        size: 1000
+        filter: drugcentral.bioactivity.action_type:("OPENER") AND _exists_:drugcentral.xrefs.umlscui
+        jmespath: "drugcentral.bioactivity|[?action_type==`OPENER` && length(uniprot[?uniprot_id=='{{ queryInputs }}']) > `0`]"
+        jmespath_exclude_empty: true  
+        always_list: drugcentral.bioactivity
+      predicate: affected_by
+      qualifiers:
+        qualified_predicate: caused_by
+        subject_aspect_qualifier: activity
+        subject_direction_qualifier: increased
+        causal_mechanism_qualifier: molecular_channel_opening   
+      source: "infores:drugcentral"
+      knowledge_level: knowledge_assertion
+      agent_type: not_provided
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/drugcentral-umls"
+      testExamples:
+        - qInput: "UniProtKB:O95069"           ## KCNK2 aka NCBIGene:3776
+          oneOutput: "UMLS:C3265565"           ## sevoflurane aka CHEBI:9130
+        - qInput: "UniProtKB:Q8NER1"           ## TRPV1 aka NCBIGene:7442
+          oneOutput: "UMLS:C0006931"           ## capsaicin aka CHEBI:3374
+    drugcentral-bioactivity-positive-modulator:
+    ## put together to match negative modulator operation
+    ## POSITIVE ALLOSTERIC MODULATOR 44 records: https://mychem.info/v1/query?q=%20_exists_:%22drugcentral.bioactivity.uniprot.uniprot_id%22%20AND%20_exists_:%22drugcentral.xrefs.umlscui%22%20AND%20drugcentral.bioactivity.action_type:%22POSITIVE%20ALLOSTERIC%20MODULATOR%22&fields=drugcentral
+    ## POSITIVE MODULATOR 14 records: https://mychem.info/v1/query?q=%20_exists_:%22drugcentral.bioactivity.uniprot.uniprot_id%22%20AND%20_exists_:%22drugcentral.xrefs.umlscui%22%20AND%20drugcentral.bioactivity.action_type:%22POSITIVE%20MODULATOR%22&fields=drugcentral
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: UMLS
+        semantic: SmallMolecule
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"  ## no prefix
+          scopes: drugcentral.xrefs.umlscui
+      outputs:
+      - id: UniProtKB
+        semantic: Gene
+      parameters:
+        fields: drugcentral.bioactivity
+        size: 1000
+        filter: drugcentral.bioactivity.action_type:("POSITIVE ALLOSTERIC MODULATOR" OR "POSITIVE MODULATOR")
+        jmespath: "drugcentral.bioactivity|[?action_type==`POSITIVE ALLOSTERIC MODULATOR` || action_type==`POSITIVE MODULATOR`]"
+        always_list: drugcentral.bioactivity
+      ## differs from dgidb's "positive modulator": no definition here means we use activity_or_abundance
+      ## not using causal mech qualifier "positive_allosteric_modulation" because I'm including POSITIVE MODULATOR (not allosteric)
+      predicate: affects
+      qualifiers:
+        qualified_predicate: causes
+        object_aspect_qualifier: activity_or_abundance
+        object_direction_qualifier: increased
+      source: "infores:drugcentral"
+      knowledge_level: knowledge_assertion
+      agent_type: not_provided
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/drugcentral-bioactivity"
+      testExamples:
+      # for POSITIVE ALLOSTERIC MODULATOR
+        - qInput: "UMLS:C0072828"           ## quazepam aka CHEBI:8694
+          oneOutput: "UniProtKB:P47869"     ## GABRA2 aka NCBIGene:2555
+      # for POSITIVE MODULATOR
+        - qInput: "UMLS:C0014277"           ## enflurane aka CHEBI:4792
+          oneOutput: "UniProtKB:P23415"     ## GLRA1 aka NCBIGene:2741
+    drugcentral-bioactivity-positive-modulator-rev:
+    - supportBatch: false   ## because of jmespath handling to get the specific chem-gene pair info
+      useTemplating: true
+      inputs:
+      - id: UniProtKB
+        semantic: Gene
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"
+          scopes: drugcentral.bioactivity.uniprot.uniprot_id
+      outputs:
+      - id: UMLS
+        semantic: SmallMolecule
+      parameters:
+        fields: drugcentral.bioactivity,drugcentral.xrefs.umlscui
+        size: 1000
+        filter: drugcentral.bioactivity.action_type:("POSITIVE ALLOSTERIC MODULATOR" OR "POSITIVE MODULATOR") AND _exists_:drugcentral.xrefs.umlscui
+        jmespath: "drugcentral.bioactivity|[?(action_type==`POSITIVE ALLOSTERIC MODULATOR` || action_type==`POSITIVE MODULATOR`) && length(uniprot[?uniprot_id=='{{ queryInputs }}']) > `0`]"
+        jmespath_exclude_empty: true  
+        always_list: drugcentral.bioactivity
+      predicate: affected_by
+      qualifiers:
+        qualified_predicate: caused_by
+        subject_aspect_qualifier: activity_or_abundance
+        subject_direction_qualifier: increased
+      source: "infores:drugcentral"
+      knowledge_level: knowledge_assertion
+      agent_type: not_provided
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/drugcentral-umls"
+      testExamples:
+      ## for POSITIVE ALLOSTERIC MODULATOR
+        - qInput: "UniProtKB:P47869"           ## GABRA2 aka NCBIGene:2555
+          oneOutput: "UMLS:C0072828"           ## quazepam aka CHEBI:8694
+      ## for POSITIVE MODULATOR
+        - qInput: "UniProtKB:P23415"           ## GLRA1 aka NCBIGene:2741
+          oneOutput: "UMLS:C0014277"           ## enflurane aka CHEBI:4792
+    drugcentral-bioactivity-no-action-type:
+    ## 763 chem/records have no action_type in any bioactivity object: https://mychem.info/v1/query?q=NOT%20_exists_:drugcentral.bioactivity.action_type%20AND%20_exists_:drugcentral.xrefs.umlscui%20AND%20_exists_:drugcentral.bioactivity.uniprot.uniprot_id&fields=drugcentral
+    ## but there are more chem/records where >= 1 bioactivity object has no action_type
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: UMLS
+        semantic: SmallMolecule
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"
+          scopes: drugcentral.xrefs.umlscui
+      outputs:
+      - id: UniProtKB
+        semantic: Gene
+      parameters:
+        fields: drugcentral.bioactivity
+        size: 1000
+        filter: _exists_:drugcentral.bioactivity   ## need the field to exist for jmespath to work
+        ## only keep bioactivity objects that lack the action_type field
+        jmespath: "drugcentral.bioactivity|[?!action_type]"
+        ## remove hits if they don't have any bioactivity objects that pass jmespath critieria 
+        jmespath_exclude_empty: true
+        always_list: drugcentral.bioactivity
+      ## pharmacodynamics: chem has to interact with target-gene's protein to create an effect/response that's measured/recorded
+      ##   I don't want to use "affects" because the data given is sometimes Kd (binding constant)
+      ##   aka the chem specifically binds the protein - so it's not clear if there's an effect 
+      predicate: interacts_with
+      source: "infores:drugcentral"
+      knowledge_level: knowledge_assertion
+      agent_type: not_provided
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/drugcentral-bioactivity"
+      testExamples:
+      ## all bioactivity objects lack action_type
+        - qInput: "UMLS:C0007839"           ## Cerulenin aka CHEBI:171741
+          oneOutput: "UniProtKB:Q72874"     ## Q72874_9HIV1 Pol polyprotein (Fragment) (trembl)
+      ## retrieve only the bioactivity objects that lack action_type 
+        - qInput: "UMLS:C0028193"           ## Nitroprusside aka CHEBI:7596
+          oneOutput: "UniProtKB:P16066"     ## NPR1 aka NCBIGene:4881
+    drugcentral-bioactivity-no-action-type-rev:
+    - supportBatch: false   ## because of jmespath handling to get the specific chem-gene pair info
+      useTemplating: true
+      inputs:
+      - id: UniProtKB
+        semantic: Gene
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"
+          scopes: drugcentral.bioactivity.uniprot.uniprot_id
+      outputs:
+      - id: UMLS
+        semantic: SmallMolecule
+      parameters:
+        ## want output ID field in response. It sometimes isn't: https://mychem.info/v1/query?q=%20_exists_:%22drugcentral.bioactivity.uniprot.uniprot_id%22%20AND%20NOT%20_exists_:%22drugcentral.xrefs.umlscui%22&fields=drugcentral
+        filter: _exists_:drugcentral.xrefs.umlscui   
+        fields: drugcentral.bioactivity,drugcentral.xrefs.umlscui
+        size: 1000
+        jmespath: "drugcentral.bioactivity|[?!action_type && length(uniprot[?uniprot_id=='{{ queryInputs }}']) > `0`]"
+        jmespath_exclude_empty: true  
+        always_list: drugcentral.bioactivity
+      predicate: interacts_with
+      source: "infores:drugcentral"
+      knowledge_level: knowledge_assertion
+      agent_type: not_provided
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/drugcentral-umls"
+      testExamples:
+        - qInput: "UniProtKB:P0DTD1"           ## ORF1ab / SARS-CoV-2 Replicase Polyprotein 1ab aka NCBIGene:43740578
+          oneOutput: "UMLS:C1876229"           ## Telaprevir aka CHEBI:68595
+        - qInput: "UniProtKB:P05164"           ## MPO aka NCBIGene:4353
+          oneOutput: "UMLS:C0020223"           ## hydralazine aka CHEBI:5775
+    drugcentral-contraindication:
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: CHEMBL.COMPOUND
+        semantic: SmallMolecule
+      ## there are 1375 records with drugcentral.drug_use.contraindication fields
+      ##   most of them (1365) also have the drugcentral.xrefs.chembl_id field
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"  ## no prefix
+          scopes: drugcentral.xrefs.chembl_id
+      outputs:
+      - id: UMLS
+        semantic: Disease
+      ## FYI: output could also be SNOMED (specifically SNOMED-CT US Edition). 
+      ##     Looks like the native ID for DrugCentral, see https://drugcentral.org/drugcard/1768#druguse. 
+      ##     The original data source also may have some DOID mappings (see the linked example), but the API doesn't have this right now
+      parameters:
+        fields: drugcentral.drug_use.contraindication.umls_cui  ## no prefix
+        size: 1000  ## note size limit; added just in case
+      predicate: contraindicated_in  ## current biolink predicate
+      source: "infores:drugcentral"
+      knowledge_level: knowledge_assertion
+      agent_type: manual_agent
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/drugcentral-contraindication"
+      testExamples:
+        - qInput: "CHEMBL.COMPOUND:CHEMBL1441"    ## ethioniamide
+          oneOutput: "UMLS:C0001973"              ## Alcoholism / alcohol dependence aka MONDO:0007079
+    drugcentral-contraindication-rev:
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: UMLS
+        semantic: Disease
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"  ## no prefix
+          scopes: drugcentral.drug_use.contraindication.umls_cui
+      outputs:
+      - id: CHEMBL.COMPOUND
+        semantic: SmallMolecule
+      parameters:
+        fields: drugcentral.xrefs.chembl_id  ## no prefix
+        size: 1000  ## note size limit
+      predicate: has_contraindication
+      source: "infores:drugcentral"
+      knowledge_level: knowledge_assertion
+      agent_type: manual_agent
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/drugcentral-chembl"
+      testExamples:
+        - qInput: "UMLS:C0020621"                   ## Hypokalemia / potassium deficiency disease aka MONDO:0003019
+          oneOutput: "CHEMBL.COMPOUND:CHEMBL471"    ## sotalol aka PUBCHEM.COMPOUND:5253
+    drugcentral-indication:
+    ## note: some records don't have the needed output IDs...only a concept name...
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: UNII
+        semantic: SmallMolecule
+      ## there are 2366 records with drugcentral.drug_use.indication fields
+      ##   most of them (2324) also have the drugcentral.xrefs.unii field 
+      ## note: there were slightly less records (2320) with the drugcentral.xrefs.chembl_id field
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"  ## no prefix
+          scopes: drugcentral.xrefs.unii
+      outputs:
+      - id: UMLS
+        semantic: Disease
+      parameters:
+        fields: drugcentral.drug_use.indication.umls_cui  ## no prefix
+        size: 1000  ## note size limit; added just in case
+      ## FYI: output could also be SNOMED (specifically SNOMED-CT US Edition). 
+      ##     Looks like the native ID for DrugCentral, see https://drugcentral.org/drugcard/1768#druguse. 
+      ##     The original data source also may have some DOID mappings (see the linked example), but the API doesn't have this right now.
+      ## using the most-general "treats" predicate, because drugcentral seems to include text-mined assertions - with errors/imprecise 
+      ##   see https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7881657/ for details
+      predicate: treats_or_applied_or_studied_to_treat
+      source: "infores:drugcentral"
+      knowledge_level: knowledge_assertion
+      agent_type: manual_agent
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/drugcentral-indication"
+      testExamples:
+        - qInput: "UNII:17VGG92R23"    ## pemafibrate aka PUBCHEM.COMPOUND:11526038
+          oneOutput: "UMLS:C0242339"   ## Dyslipidemia aka HP:0003119
+    drugcentral-indication-rev:
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: UMLS
+        semantic: Disease
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"  ## no prefix
+          ## example: put C0038013 here (Ankylosing spondylitis)
+          ##   should get CHEMBL650 (METHYLPREDNISOLONE) in response
+          scopes: drugcentral.drug_use.indication.umls_cui
+      outputs:
+      - id: UNII
+        semantic: SmallMolecule
+      parameters:
+        fields: drugcentral.xrefs.unii
+        size: 1000  ## note size limit
+      predicate: subject_of_treatment_application_or_study_for_treatment_by
+      source: "infores:drugcentral"
+      knowledge_level: knowledge_assertion
+      agent_type: manual_agent
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/drugcentral-unii"
+      testExamples:
+        - qInput: "UMLS:C0234974"        ## Simple partial seizure aka HP:0002349
+          oneOutput: "UNII:44YRR34555"   ## keppra / Levetiracetam aka PUBCHEM.COMPOUND:5284583
+    drugcentral-offlabel:
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: "CHEMBL.COMPOUND"
+        semantic: SmallMolecule
+      ## there are 782 records with "drugcentral.drug_use.off_label_use" fields
+      ##   most of them (780) also have the drugcentral.xrefs.chembl_id field 
+      ## note: there were slightly less records (775) with the drugcentral.xrefs.unii field
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"  ## no prefix
+          scopes: drugcentral.xrefs.chembl_id
+      outputs:
+      - id: UMLS
+        semantic: Disease
+      parameters:
+        fields: drugcentral.drug_use.off_label_use.umls_cui
+        size: 1000     ## note size limit; added just in case
+      ## FYI: output could also be SNOMED (specifically SNOMED-CT US Edition). 
+      ##     Looks like the native ID for DrugCentral, see https://drugcentral.org/drugcard/1768#druguse. 
+      ##     The original data source also may have some DOID mappings (see the linked example), but the API doesn't have this right now.
+      ## using predicate for off-label use. Also, on drugcentral website, users can submit off-label suggestions (so self-report)
+      predicate: applied_to_treat
+      source: "infores:drugcentral"
+      knowledge_level: observation
+      agent_type: manual_agent
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/drugcentral-offlabel"
+      testExamples:
+        - qInput: "CHEMBL.COMPOUND:CHEMBL11"    ## imipramine aka PUBCHEM.COMPOUND:3696
+          oneOutput: "UMLS:C0027796"            ## Neuropathic pain / neuralgia aka MONDO:0021667
+    drugcentral-offlabel-rev:
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: UMLS
+        semantic: Disease
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"  ## no prefix
+          scopes: drugcentral.drug_use.off_label_use.umls_cui
+      outputs:
+      - id: "CHEMBL.COMPOUND"
+        semantic: SmallMolecule
+      parameters:
+        fields: drugcentral.xrefs.chembl_id
+        size: 1000  ## note size limit
+      predicate: treatment_applications_from
+      source: "infores:drugcentral"
+      knowledge_level: observation
+      agent_type: manual_agent
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/drugcentral-chembl"
+      testExamples:
+        - qInput: "UMLS:C0149931"                      ## Migraine aka MONDO:0005277
+          oneOutput: "CHEMBL.COMPOUND:CHEMBL2105833"   ## octodrine aka PUBCHEM.COMPOUND:10982
+    drugcentral-adverseEvent:
+    ## - chose to map to Disease semantic type since I saw SRI map some MEDDRA IDs to Disease...
+    ##   https://nodenormalization-sri.renci.org/1.2/get_normalized_nodes?curie=MEDDRA%3A10035528&conflate=true
+    ##   But some are definitely PhenotypicFeatures...
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: CHEMBL.COMPOUND
+        semantic: SmallMolecule
+      ## there are 2016 records with drugcentral.fda_adverse_event fields
+      ##   most of them (1994) also have the drugcentral.xrefs.chembl_id field
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"  ## no prefix
+          scopes: drugcentral.xrefs.chembl_id
+      outputs:
+      - id: MEDDRA
+        semantic: Disease
+      parameters:
+      ## - there are also edge attributes that are hard to explain/understand
+      ##    - not sure what the llr, llr_threshold, level means. 
+      ##      Likely related to log-likelihood ratio (LLR) and its test...
+      ## commenting out because data-processing / biolink-modeling issues
+        # fields: >-
+        #   drugcentral.fda_adverse_event.meddra_code,
+        #   drugcentral.fda_adverse_event.drug_ae,
+        #   drugcentral.fda_adverse_event.drug_no_ae,
+        #   drugcentral.fda_adverse_event.no_drug_ae,
+        #   drugcentral.fda_adverse_event.no_drug_no_ar
+        fields: drugcentral.fda_adverse_event.meddra_code
+        size: 1000  ## note size limit; added just in case
+      ## biolink 2.4.8: used causes_adverse_event
+      predicate: has_adverse_event
+      ## through drugcentral, FDA Adverse Event Reporting System (FAERS) information
+      source: "infores:drugcentral"
+      knowledge_level: observation
+      agent_type: manual_agent
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/drugcentral-adverseEvent"
+      testExamples:
+        - qInput: "CHEMBL.COMPOUND:CHEMBL3545262"    ## sacituzumab aka PUBCHEM.COMPOUND:91668186
+          oneOutput: "MEDDRA:10062959"               ## Neutropenic colitis aka UMLS:C0400823
+    drugcentral-adverseEvent-rev:
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: MEDDRA
+        semantic: Disease
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"  ## no prefix
+          scopes: drugcentral.fda_adverse_event.meddra_code
+      outputs:
+      - id: CHEMBL.COMPOUND
+        semantic: SmallMolecule
+      parameters:
+        fields: drugcentral.xrefs.chembl_id
+        size: 1000  ## note size limit
+      predicate: adverse_event_of
+      ## through drugcentral, FDA Adverse Event Reporting System (FAERS) information
+      source: "infores:drugcentral"
+      knowledge_level: observation
+      agent_type: not_provided
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/drugcentral-chembl"
+      testExamples:
+        - qInput: "MEDDRA:10062959"                      ## Neutropenic colitis aka UMLS:C0400823
+          oneOutput: "CHEMBL.COMPOUND:CHEMBL395091"      ## colistin aka PUBCHEM.COMPOUND:76322320
+    fdaOrphanData:
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: PUBCHEM.COMPOUND
+        semantic: SmallMolecule
+      ## there are 3661 records with fda_orphan_drug fields
+      ##   some of them (1826) also have the fda_orphan_drug.pubchem_cid field
+      ##   same amount have inchikey field...
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"  ## no prefix
+          scopes: fda_orphan_drug.pubchem_cid
+      outputs:
+      - id: UMLS
+        semantic: Disease
+      parameters:
+      ## categorical variables:
+      ##   - approval_status (also similar to a relation?)
+      ##   - designated_status
+      ## free text:
+      ##   - approved_labeled_indication
+      ## not including:
+      ##   - exclusivity_protected_indication: same as approved_labeled_indication?
+      ## commenting out because data-processing / biolink-modeling issues
+        # fields: >-
+        #   fda_orphan_drug.orphan_designation.umls,
+        #   fda_orphan_drug.approval_status,
+        #   fda_orphan_drug.approved_labeled_indication,
+        #   fda_orphan_drug.designated_date,
+        #   fda_orphan_drug.designated_status,
+        #   fda_orphan_drug.exclusivity_end_date,
+        #   fda_orphan_drug.marketing_approval_date,
+        #   fda_orphan_drug.orphan_designation.original_text
+        fields: fda_orphan_drug.orphan_designation.umls
+      ## includes applications that were accepted, denied, revoked/withdrawn. I'm assuming that studies were done
+      ##   for the application in the first place. However, our data doesn't include this info
+      predicate: studied_to_treat
+      ## FDA Orphan Drug Designations and Approvals database
+      source: "infores:fda-orphan-drug-db"
+      knowledge_level: not_provided
+      agent_type: not_provided
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/fdaOrphanDrug"
+      testExamples:
+        - qInput: "PUBCHEM.COMPOUND:24889392"    ## quizartinib
+          oneOutput: "UMLS:C0023467"             ## Acute myeloid leukemia aka MONDO:0018874
+    fdaOrphanData-rev:
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: UMLS
+        semantic: Disease
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"  ## no prefix
+          scopes: fda_orphan_drug.orphan_designation.umls
+      outputs:
+      - id: PUBCHEM.COMPOUND
+        semantic: SmallMolecule
+      parameters:
+        fields: fda_orphan_drug.pubchem_cid
+        size: 1000  ## note size limit
+      predicate: treated_in_studies_by
+      ## FDA Orphan Drug Designations and Approvals database
+      source: "infores:fda-orphan-drug-db"
+      knowledge_level: not_provided
+      agent_type: not_provided
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/fdaOrphanDrug-pubchemCompound"
+      testExamples:
+        - qInput: "UMLS:C0013264"                     ## DUCHENNE MUSCULAR DYSTROPHY aka MONDO:0010679
+          oneOutput: "PUBCHEM.COMPOUND:9884642"       ## naproxcinod

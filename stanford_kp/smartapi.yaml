@@ -1,0 +1,146 @@
+openapi: '3.0.0'
+info:
+  version: '1.0'
+  title: Stanford BioSample API
+  description: >-
+    The Stanford biosample API
+  termsOfService: http://www.stanford.edu
+  contact:
+    name: stanford help desk
+    x-role: responsible developer
+    email: help@stanford.edu
+servers:
+  - url: 'http://api.kp.metadatacenter.org'
+    description: 'Production server'
+tags:
+  - name: translator
+  - name: stanford
+
+paths:
+  '/biosample/search':
+    get:
+      summary: 'retrieve biosample information'
+      parameters:
+        - name: q
+          in: query
+          description: >-
+            query
+          required: true
+          example: "biolink:Disease=MONDO:0007256"
+          schema:
+            type: string
+        - name: limit
+          in: query
+          description: size of the output
+          example: 200
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 'A biosample object'
+          x-bte-response-mapping:
+            - $ref: '#/components/x-bte-response-mapping/disease-biosample'
+            - $ref: '#/components/x-bte-response-mapping/cellline-biosample'
+      x-bte-kgs-operations:
+        diseaseAssociatedWithBiosample:
+          $ref: '#/components/x-bte-kgs-operations/diseaseAssociatedWithBiosample'
+        clAssociatedWithBiosample:
+          $ref: '#/components/x-bte-kgs-operations/clAssociatedWithBiosample'
+  '/biosample/{sampleid}':
+    get:
+      summary: 'retrieve biosample information'
+      parameters:
+        - name: sampleid
+          in: path
+          description: >-
+            the SAMD biosample ID
+          required: true
+          example: "SAMD00005006"
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 'A biosample object'
+          x-bte-response-mapping:
+            $ref: '#/components/x-bte-response-mapping/biosample'
+      x-bte-kgs-operations:
+        biosampleAssociatedWithDisease:
+          $ref: '#/components/x-bte-kgs-operations/biosampleAssociatedWithDisease'
+components:
+  x-bte-kgs-operations:
+    diseaseAssociatedWithBiosample:
+      inputs:
+      - id: mondo
+        semantic: DiseaseOrPhenotypicFeature
+      outputs:
+      - id: samd
+        semantic: Biosample
+      parameters:
+        q: "biolink:Disease={input1}"
+      supportBatch: false
+      response-mapping:
+        $ref: '#/components/x-bte-response-mapping/disease-biosample'
+    clAssociatedWithBiosample:
+      inputs:
+      - id: clo
+        semantic: CellLine
+      outputs:
+      - id: samd
+        semantic: Biosample
+      parameters:
+        q: "biolink:CellLine={input1}"
+      supportBatch: false
+      response-mapping:
+        $ref: '#/components/x-bte-response-mapping/cellline-biosample'
+    biosampleAssociatedWithDisease:
+      inputs:
+      - id: samd
+        semantic: Biosample
+      outputs:
+      - id: mondo
+        semantic: DiseaseOrPhenotypicFeature
+      parameters:
+        sampleid: "{input1}"
+      supportBatch: false
+      response-mapping:
+        $ref: '#/components/x-bte-response-mapping/biosample'
+  x-bte-response-mapping:
+    disease-biosample:
+      "@context": http://schema.org
+      "@type": DiseaseOrPhenotypicFeature
+      bts:mondo: mondo
+      bts:diseaseAssociatedWithBiosample:
+      - "@type": Biosample
+        bts:samd: data.biosampleAccession
+        bts:organism: data.oorganism
+        bts:age: data.attributes.age
+        bts:sex: data.attributes.sex.name
+        bts:cellline: data.attributes.cell_line.name
+        "$input": bts:mondo
+        "$source": NCBI Biosample Database
+    cellline-biosample:
+      "@context": http://schema.org
+      "@type": CellLine
+      bts:clo: clo
+      bts:clAssociatedWithBiosample:
+      - "@type": Biosample
+        bts:samd: data.biosampleAccession
+        bts:organism: data.oorganism
+        bts:age: data.attributes.age
+        bts:sex: data.attributes.sex.name
+        bts:cellline: data.attributes.cell_line.name
+        "$input": bts:clo
+        "$source": NCBI Biosample Database
+    biosample:
+      "@context": http://schema.org
+      "@type": Biosample
+      bts:samd: samd
+      bts:biosampleAssociatedWithDisease:
+      - "@type": DiseaseOrPhenotypicFeature
+        bts:mondo: data.attributes.Disease.mondo
+        bts:organism: data.attributes.organism
+        bts:age: data.attributes.age
+        bts:sex: data.attributes.sex.name
+        bts:cellline: data.attributes.cell_line.name
+        "$input": bts:samd
+        "$source": NCBI Biosample Database

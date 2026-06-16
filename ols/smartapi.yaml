@@ -1,0 +1,72 @@
+openapi: 3.0.3
+info:
+  version: '1.0'
+  title: Ontology Lookup Service API
+  description: >-
+    The OLS REST API provides access to key biological data from OLS.
+    The services provide a unified interface to query information about ontology terms
+    from GO (the Gene Ontology) and ECO (the Evidence & Conclusion Ontology), Gene
+    Ontology annotations from the EBI's GOA database, and gene products (proteins
+    from UniProt, RNA from RNAcentral and complexes from ComplexPortal).
+    See https://www.ebi.ac.uk/ols/docs/api for more details.
+  termsOfService: https://www.ebi.ac.uk/OLS/services
+  contact:
+    name: pharmgkb help desk
+    x-role: responsible developer
+    email: help@pharmgkb.org
+  x-translator:
+    infores: "infores:ols"
+    component: KP
+    team:
+      - Service Provider
+    biolink-version: "4.2.2"
+servers:
+- url: https://www.ebi.ac.uk/ols/api
+  description: Production server
+  x-maturity: production
+tags:
+- name: ontology
+- name: translator
+paths:
+  "/ontologies/doid/children":
+    get:
+      summary: retrieve the children of specified ontology terms
+      parameters:
+      - name: id
+        in: query
+        description: Put Disease Ontology ID here, e.g. "DOID:0050686"
+        required: true
+        example: "DOID:0050686"
+        schema:
+          type: string
+      responses:
+        '200':
+          description: A DISEASE Ontology annotation object
+      x-bte-kgs-operations:
+      - "$ref": "#/components/x-bte-kgs-operations/disease_has_subclass_disease"
+components:
+  x-bte-kgs-operations:
+    ## BIG NOTE: there is likely more data in this API, but want to add stuff that would be helpful for use cases, that we regularly update
+    disease_has_subclass_disease:
+    - supportBatch: false  ## no batch support (get operation)
+      useTemplating: true
+      inputs:
+      - id: DOID
+        semantic: Disease
+      parameters:
+        id: "{{ queryInputs }}"  ## HAS PREFIX (DOID)
+      outputs:
+      - id: DOID
+        semantic: Disease
+      predicate: superclass_of  ## this is current biolink, same meaning as "has_subclass"
+      source: "infores:disease-ontology"
+      knowledge_level: knowledge_assertion
+      agent_type: manual_agent
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/disease_has_subclass_disease"
+      testExamples:
+        - qInput: "DOID:10123"          ## skin pigmentation disorder
+          oneOutput: "MONDO:0007483"    ##  dyschromatosis symmetrica hereditaria
+  x-bte-response-mapping:
+    disease_has_subclass_disease:
+      DOID: _embedded.terms.obo_id  ## HAS PREFIX (DOID)

@@ -1,0 +1,276 @@
+# Schema for proposed extensions to the API_LIST.yaml API metadata format
+
+
+properties:
+
+  metadata:
+    description: Relative path to the smartAPI yaml description of the API in the translator-api-registry repo.
+    type: string
+    example: biolink/openapi.yaml
+    example: mygene.info/openapi_full.yml
+
+  translator:
+    
+    apiName:
+      description: A name for the API.
+      type: string
+      example: "Monarch-Biolink API"
+      insmartAPI: true
+ 
+    accessURL:
+      description: The URL where the API service/endpoint can be programmatically accessed/queried.
+      type: string
+      format: url
+      example: "https://api.monarchinitiative.org/api/"
+      insmartAPI: true
+    
+    serviceType:
+      description: Whether the API provides data or computational services (i.e. does it serve pre-indexed data in response to a user query, or does it perform computation on input data to generate novel output)
+      type:  array
+      items:  [data, computation] ($ENUM1)
+      example: '[data]'
+      insmartAPI: false
+
+    description:
+      description: Brief free-text description of content/scope of data served by the API, and the source/provenance of the data. Can include a link to existing documentation.
+      type: string
+      example: "The Biolink API serves data from a neo4j graph database holding semantically integrated data from a variety of biological/biomedical community databases, with a focus on genotype-phenotype related resources. Most data represents manually-curated knowledge derived from the published literature or research studies. For more see https://monarchinitiative.org/page/about."
+      insmartAPI: true
+
+    dataLevel:
+      description: The general category/level of data provided or operated on by the API.  For definitions of allowable values, see description in VALUE SET ENUMERATIONS section below.
+      type:  array 
+      items: [experimental data, computed data, curated data, EHR/patient data, ontologies] ($ENUM2)
+      example: '[curated data]'
+      insmartAPI: false
+
+     primarySources:  	
+      description: This field is relevant only for APIs that serve data aggregated from external sources (e.g. Biothings, Biolink, Wikidata), or that compute over data from external sources to generate outputs served by the API (e.g. BigGIM). In this field, provide the names of all such external knowledge sources, or a link to documentation listing such sources. 
+      type: string
+      format: comma separated list of source names, or link to external list
+      example: "MGI, ZFIN, ClinVar"
+      example: "See list at https://monarchinitiative.org/about/sources"
+      insmartAPI: false
+ 
+    entityTypes:
+      description: The types of entities described by data provided or operated on by the API.
+      type: array 
+      items: For allowable values here, see ENUM3 in the VALUE SET ENUMERATIONS section below ($ENUM3)
+      example: '[Gene, Disease, Phenotype]'
+      insmartAPI: false
+ 
+    entityAssociations:
+  	  description: If the API returns 'associations' between domain entities, list pairs of entity types that are directly connected in the data it serves. These associations can be curated relationships with defined semantics (e.g. Biolink, Wikidata), or computed statistical associations with weighted edges (e.g. BigGIM). If desired, a specific type of relationship between the associated entities can be described parenthetically after the entity pair, as can a specific role played by one of the entities in the association. See examples below. 
+      type: array 
+      items: hyphen-separated pairs of terms, each of which is an entity type from $ENUM3. And optionally, a parenthetical description of the relationship described between the entities, or a role played by one of the entities). Note that the entity associations here are defiend without regard to a direction to the relationship, so [Gene - Phenotype] is equivalent to [Phenotype - Gene]. 
+      example: [Gene - Phenotype, Gene - Disease, Disease - Phenotype, Drug - Protein]
+      # Examples where type of relationship, or a role played by the target entity, is indicated parenthetically.
+      example: '[Gene - Gene (homology)]'
+      example: '[Gene - Gene (interaction)]'
+      example: '[Gene - Gene (co-expressed with)]'
+      example: '[Drug - Protein (drug target)]'
+      example: '[Drug - Phenotype (side effect)]'
+      insmartAPI: false
+
+    entityAttributes:
+      description:  The types of attributes or data that an API returns about the entities it describes. Captured as 'entity - attribute' pairs that describe a link between an entity type and some data item about them (e.g. 'Allele - frequency', or 'Patient - exposure score'), as opposed associations between two entity types as captured by the entityAssociationTypes field.
+      type: array
+      items: hyphen-separated pairs of terms. The first is an entity type from $ENUM3, and the second is a user-defined attribute or data type.
+      example: '[Variant/Allele - frequency]'
+      example: '[SequenceFeature - sequence, SequenceFeature - genomic position, Gene - conservation score]' 
+      example: '[Patient - exposure score]'
+      insmartAPI: false
+
+    translatorTeam:
+      description: Translator team(s) that generated or manage the API/Service.
+      type: array 
+      items: [Purple, Orange, Green, Blue, Grey, Red, External]  ($ENUM4)
+      example: '[Orange]'
+      insmartAPI: false
+
+    termsOfService:
+      description:  URL linking to to a description of the terms of service for the API, including intended use and disclaimers. 
+      type: string
+      format: url 
+      example: "http://mygene.info/terms/"
+      insmartAPI: true
+
+    accessRestriction:
+      description: whether there are restrictions to using the API.
+      type: array
+      items: [none, limited, fee] ($ENUM5)
+      example: [none]
+      insmartAPI: true
+
+    license:
+      description: The name of a specific license for data served by the API, or link to web page describing licensing information.
+      type: string
+      example: "CC-BY-3.0"
+      insmartAPI: true (but captured as a License Object with name and url properties)
+
+    returrnsjson:
+      description: Whether the  API returns  data in JSON format.
+      type: boolean
+      example: 'true'
+      insmartAPI: false
+
+    notes:
+      description: Any other important information or nuance not adequately captured in the fields above.
+      type: string
+      example: "Biolink does not yet serve entity-attribute data that is captured in its underlying Monarch database, but will do so in the near future. This includes Variant/Allele - frequency data, and SequenceFeature - genomic position data"
+      insmartAPI: false
+
+###############################################################################
+
+# VALUE SET ENUMERATIONS
+  # Further description of the five value sets defined above are provided below.
+  # Note that the boolean 'extensible' field indicates if/how users are able to extend value sets with new terms.  
+  # A 'true' value indicates that any user can extend as needed without review/vetting by others (i.e. directly edit and commit the value set in this document). A 'false' indicates a closed value set where the addition of new terms must be vetted by the wider community (i.e. post a issue in the Github tracker requesting the new value, or submit proposed changes via a pull request).
+
+valueSetEnumerations: 
+
+  - id: ENUM1 
+    name: API Service Types
+    description: Terms to describe if an API returns data or performs computation on input data
+    extensible: false 
+    values:
+      - data
+      - computation
+ 
+  - id: ENUM2
+    name: Data Levels
+    description: terms describe high-level category/level of data provided or operated on by the resource
+    extensible: false
+    values:
+      - experimental data
+          definition: experimental or measurement data submitted by researchers/data collection efforts. May be raw, processed data, or summarized to standardize or annotate with metadata - e.g.omics data, air quality/exposure data.
+      - computed data
+          definition: data generated through computation/inference using more fundamental input data, as performed by the providers of the API (e.g. Blue team gene-associations derived from expression and interaction data)
+      - curated data
+          definition: higher-order assertions generated through literature curation, inference, or computation over more primitive data (e.g. GO annotations, protein interactions, G2P associations)
+      - EHR/patient data
+          definition: patient/case level assertions or clinical data
+      - ontologies
+          definition: knowledge structured as ontologies - manually asserted or data derived
+ 
+  - id: ENUM3
+    name: Entity Types
+    description: The types of entities described by data that is provided by or operated on by the API. Hierarchical organization is simply means to facilitate finding terms by provide useful groupings/categories. It is not meant to represent an ontological hierarchy.
+    extensible: true
+    values:
+      - SequenceEntity
+        - Genome
+        - Genotype
+        - Gene
+        - Allele/Variant
+        - Protein
+        - Transcript
+        - microRNA
+        - ProteinDomain
+        - ProteinModification
+        - EpigeneticModification
+        - Operon
+        - GeneFamily
+      - ChemicalEntity
+        - Substance
+        - SmallMolecule
+        - Metabolite
+        - Drug
+        - MacromolecularComplex 
+      - BiologicalProcess
+        - MolecularInteraction
+        - Reaction
+        - Pathway
+        - LifeStage
+      - GOTerm
+        - MolecularFunction
+        - CellComponent
+        - BiologicalProcess	
+      - AnatomicalEntity
+        - Tissue/Organ (gross anatomical entity)
+        - Cell
+        - CellComponent	
+      - PhysicalCondition
+        - Trait
+        - Phenotype
+        - Disease
+      - Organism
+        - Person
+        - Patient/Case
+      - Population
+        - Taxon
+        - Strain
+        - Cohort
+      - SocioEnvironmentalExposure
+        - ChemicalExposure
+        - DrugExposure
+        - Treatment/Therapy
+        - Behavior
+        - SocioEconomicFactor
+        - GeographicalLocation
+      - ModelSystem
+        - Taxon
+        - Strain
+        - CellLine
+        - Xenograft	
+      - Study
+        - ExperimentalStudy
+        - Bioassay
+        - ClinicalStudy
+        - LabTest
+      - ResearchResource
+        - Antibody
+        - GeneKnockdownReagent
+        - Construct
+        - Sample/Specimen
+        - ModelSystem
+        - ChemicalEntity
+        - Device/Instrument
+      - InformationResource
+        - Identifier
+        - DataModel
+        - Ontology
+        - Database
+        - Protocol
+        - Publication
+        - ClinicalReport
+      - ClinicalEntity
+        - Patient/Case
+        - Cohort
+        - PharmaceuticalProduct
+        - ClinicalReport
+        - Diagnosis
+        - Outcome
+        - Stratification/Endotype
+      - ClinicalEvent
+        - ClinicalEncounter
+        - LabTest
+        - Treatment/Therapy
+        - DrugResponse
+        - AdverseEvent
+   
+
+  - id: ENUM4
+    name: Translator Teams
+    description: the team or teams developed or manage the API
+    extensible: false
+    values:
+      - Purple
+      - Orange
+      - Green
+      - Blue
+      - Grey
+      - Red
+      - External
+  
+  - id: ENUM5
+    name: Access Restrictions
+    description: terms describing any restrictions on use on an API
+    extensible: false
+    values:
+      - none
+      - limited
+      - fee
+ 
+
+

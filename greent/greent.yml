@@ -1,0 +1,48 @@
+graphql: '0.0.0'
+info:
+  version: '0.0.1'
+  title: GreenT API
+  description: >-
+    Experimental description of a GraphQL endpoint using and extending the smartAPI format where feasible.
+    API integration layer for environmental exposure and chemical biological data.
+  contact:
+    name: Steve Cox
+    x-role: responsible developer
+    email: scox@renci.org
+    x-id: 'https://github.com/stevencox'
+servers:
+  - url: 'http://stars-app.renci.org/greent/graphql'
+    description: 'Production server'
+tags:
+  - name: chemical
+paths:
+  exposureConditions:
+    parameters:
+      chemicals:
+        type:
+          list: String
+        x-requestTemplate:
+          template: |+
+            query getExposureConditions($chemicals : [String] ) {
+              exposureConditions(chemicals: $chemicals) {
+                chemical
+                gene
+                pathway
+                pathName
+                pathID
+                human
+              }
+            }
+          valueType: http://identifiers.org/mesh/
+          variables:
+            chemicals: []
+        x-valueType: http://identifiers.org/mesh/
+    responses:
+      '200':
+        x-JSONLDContext: https://raw.githubusercontent.com/NCATS-Tangerine/translator-api-registry/master/greent/jsonld_context/exposureConditions.jsonld
+        x-responseValueType:
+          path: '...'
+          valueType: '...'
+
+          
+

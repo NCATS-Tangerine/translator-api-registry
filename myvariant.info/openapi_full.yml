@@ -1,0 +1,1609 @@
+openapi: 3.0.3
+info:
+  contact:
+    email: help@myvariant.info
+    name: Chunlei Wu
+    x-id: https://github.com/newgene
+    x-role: responsible developer
+  description: Documentation of the MyVariant.info genetic variant query web services. Learn
+    more about [MyVariant.info](https://docs.myvariant.info/en/latest/index.html)
+  termsOfService: https://myvariant.info/terms/
+  title: MyVariant.info API
+  version: '1.0'
+  x-translator:
+    infores: "infores:myvariant-info"
+    component: KP
+    team:
+      - Service Provider
+    biolink-version: "4.2.2"
+servers:
+- description: Encrypted Production server
+  url: https://myvariant.info/v1
+  x-maturity: production
+tags:
+- name: variant
+- name: query
+- name: metadata
+- name: translator
+- name: biothings
+paths:
+  "/variant/{id}":
+    get:
+      description: >-
+        Retrieve one variant record from the MyVariant.info dataset by its identifier. Covers
+        variant data. Source: Documentation of the MyVariant.info genetic variant query web
+        services.
+
+        By default, this will return the complete variant annotation object in JSON format. 
+        See [here](https://docs.myvariant.info/en/latest/doc/variant_annotation_service.html#returned-object) 
+        for an example and [here](https://docs.myvariant.info/en/latest/doc/data.html#variant-object)
+        for more details. If the input variant ID is not valid, 404 (NOT FOUND) will be returned.
+        
+
+        Optionally, you can pass a "fields" parameter to return only the annotation you want 
+        (by filtering returned object fields). "fields" accepts any attributes (a.k.a fields) available 
+        from the object. Multiple attributes should be separated by commas. If an attribute is not 
+        available for a specific variant object, it will be ignored. Note that the attribute names are 
+        case-sensitive.
+
+
+        Just like the variant query service, you can also pass a "callback" parameter to make a JSONP call.
+      parameters:
+      ## these are provided in the docs https://docs.myvariant.info/en/latest/doc/variant_annotation_service.html
+      - name: id
+        description: >-
+          Retrieve chemical data based on ID - currently the 
+          HGVS-based id using genomic location based on hg19 human genome assembly
+        in: path
+        required: true
+        example: "chr6:g.152708291G>A"
+        schema:
+          type: string
+      - "$ref": "#/components/parameters/fields"
+      - "$ref": "#/components/parameters/callback"
+      - "$ref": "#/components/parameters/email"
+      ## this is useful even when it's not noted in the docs
+      - "$ref": "#/components/parameters/size"
+      ## these are noted in the https://myvariant.info/v1/spec endpoint; commenting out for now
+      ##   assembly is unique to MyVariant
+      # - "$ref": "#/components/parameters/assembly"
+      # - "$ref": "#/components/parameters/raw"
+      # - "$ref": "#/components/parameters/rawquery"
+      # - "$ref": "#/components/parameters/dotfield"
+      # - "$ref": "#/components/parameters/_sorted"
+      # - "$ref": "#/components/parameters/always_list"
+      # - "$ref": "#/components/parameters/allow_null"
+      # - "$ref": "#/components/parameters/format"
+      responses:
+        '200':
+          ## description from https://docs.myvariant.info/en/latest/doc/response_status_codes.html
+          description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
+      ## commenting out schemas and other status codes for now
+      #     content:
+      #       application/json:
+      #         schema:
+      #           $ref: '#/components/schemas/Chem'
+      #   '404':
+      #     description: A response indicating an unknown chemical ID
+      tags:
+      - variant
+  "/variant":
+    post:
+      description: >-
+        Retrieve multiple variant records from the MyVariant.info dataset in one request, by a
+        list of identifiers. Covers variant data. Source: Documentation of the MyVariant.info
+        genetic variant query web services.
+
+        Although making simple GET requests above to our variant query service is sufficient in most use cases, 
+        there are some times you might find it easier to batch query (e.g., retrieving variant annotations for 
+        multiple variants). Fortunately, you can also make batch queries via POST requests when you need to.
+      parameters:
+      ## these are provided in the docs https://docs.myvariant.info/en/latest/doc/variant_annotation_service.html
+      - name: ids
+        description: >-
+          Required. Accepts multiple HGVS variant ids separated by comma, 
+          e.g., "ids=chr6:g.152708291G>A,chr7:g.55241707G>T,chr16:g.28883241A>G". 
+          Note that currently we only take the input ids up to 1000 maximum, the rest will be omitted.
+
+
+          The request body can also be used to provide these ids.
+        in: query
+        ## setting to false since putting this info in the request body seems to work as well
+        required: false
+        schema:
+          type: string
+      - "$ref": "#/components/parameters/fields"
+      - "$ref": "#/components/parameters/email"
+      ## this is useful even when it's not noted in the docs
+      - "$ref": "#/components/parameters/size"
+      ## these are noted in the https://myvariant.info/v1/spec endpoint; commenting out for now
+      ##   assembly is unique to MyVariant
+      # - "$ref": "#/components/parameters/assembly"
+      # - "$ref": "#/components/parameters/raw"
+      # - "$ref": "#/components/parameters/rawquery"
+      # - "$ref": "#/components/parameters/dotfield"
+      # - "$ref": "#/components/parameters/_sorted"
+      # - "$ref": "#/components/parameters/always_list"
+      # - "$ref": "#/components/parameters/allow_null"
+      # - "$ref": "#/components/parameters/format"
+      requestBody:
+        content:
+          application/json:
+            example:
+              ids:
+              - "chr6:g.152708291G>A"
+              - "chr7:g.55241707G>T"
+            schema:
+              type: object
+              properties:
+                ids:
+                  description: >-
+                    Accepts multiple variant ids. Note that currently we only take the input ids 
+                    up to 1000 maximum, the rest will be omitted.
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '200':
+          description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
+      tags:
+      - variant
+  "/metadata":
+    get:
+      description: >-
+        Dataset metadata for MyVariant.info: build date, source versions and record counts.
+        Covers variant data. Source: Documentation of the MyVariant.info genetic variant query
+        web services.
+
+        Get metadata about the data available from the API
+      ## these are noted in the hhttps://myvariant.info/v1/spec endpoint; commenting out for now
+      # parameters:
+      # - "$ref": "#/components/parameters/format"
+      # - "$ref": "#/components/parameters/raw"
+      responses:
+        '200':
+          description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
+      tags:
+      - metadata
+  "/metadata/fields":
+    get:
+      description: >-
+        List the queryable fields available on MyVariant.info variant records. Covers variant
+        data. Source: Documentation of the MyVariant.info genetic variant query web services.
+
+        Get metadata about the data fields available from the API
+      ## these are noted in the hhttps://myvariant.info/v1/spec endpoint; commenting out for now
+      # parameters:
+      # - "$ref": "#/components/parameters/format"
+      # - "$ref": "#/components/parameters/raw"
+      # - "$ref": "#/components/parameters/search"
+      # - "$ref": "#/components/parameters/prefix"
+      responses:
+        '200':
+          description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
+      tags:
+      - metadata
+  "/query":
+    get:
+      description: >-
+        Search variant records in the MyVariant.info dataset. Covers variant data. Source:
+        Documentation of the MyVariant.info genetic variant query web services.
+
+        MyChem.info chemical query web service. In the output, "total" in the output gives the total number 
+        of matching hits, while the actual hits are returned under "hits" field.
+      parameters:
+      - name: q
+        ## description partially from https://docs.myvariant.info/en/latest/doc/variant_query_service.html#query-syntax
+        description: >-
+          Required, passing user query. The detailed query syntax for parameter is explained 
+          [here](https://docs.myvariant.info/en/latest/doc/variant_query_service.html#query-syntax).
+        in: query
+        required: true
+        example: "rs58991260"
+        schema:
+          type: string
+      - "$ref": "#/components/parameters/fields"
+      - "$ref": "#/components/parameters/size"
+      - "$ref": "#/components/parameters/from"
+      - "$ref": "#/components/parameters/fetch_all"
+      - "$ref": "#/components/parameters/scroll_id"
+      - "$ref": "#/components/parameters/sort"
+      - "$ref": "#/components/parameters/facets"
+      - "$ref": "#/components/parameters/facet_size"
+      - "$ref": "#/components/parameters/callback"
+      - "$ref": "#/components/parameters/dotfield"
+      - "$ref": "#/components/parameters/email"
+      ## these are noted in the https://myvariant.info/v1/spec endpoint; commenting out for now
+      ##   assembly is unique to MyVariant
+      # - "$ref": "#/components/parameters/assembly"
+      # - "$ref": "#/components/parameters/aggs"
+      # - "$ref": "#/components/parameters/userquery"
+      # - "$ref": "#/components/parameters/explain"
+      # - "$ref": "#/components/parameters/raw"
+      # - "$ref": "#/components/parameters/rawquery"
+      # - "$ref": "#/components/parameters/_sorted"
+      # - "$ref": "#/components/parameters/always_list"
+      # - "$ref": "#/components/parameters/allow_null"
+      # - "$ref": "#/components/parameters/format"
+      responses:
+        '200':
+          description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
+      ## commenting out schemas and other status codes for now
+      #     content:
+      #       application/json:
+      #         schema:
+      #           "$ref": "#/components/schemas/QueryResult"
+      #   '400':
+      #     content:
+      #       application/json:
+      #         schema:
+      #           "$ref": "#/components/schemas/ErrorResult"
+      #     description: A response indicating an improperly formatted query
+      # description: Make queries and return matching gene hits. Supports JSONP and CORS
+      #   as well.
+      tags:
+      - query
+    post:
+      description: >-
+        Batch search of variant records in the MyVariant.info dataset: submit several queries in
+        one request. Covers variant data. Source: Documentation of the MyVariant.info genetic
+        variant query web services.
+
+        Although making simple GET requests above to our variant query service is sufficient for most use cases, 
+        there are times you might find it more efficient to make batch queries (e.g., retrieving variant annotation 
+        for multiple variants). Fortunately, you can also make batch queries via POST requests when you need to.
+
+
+        The "query" field in the returned object indicates the matching query term. If a query term has no match, 
+        it will return with a "notfound" field with the value "true".
+      parameters:
+      ## these are provided in the docs https://docs.myvariant.info/en/latest/doc/variant_query_service.html#id2
+      - name: q
+        description: >-
+          Accepts multiple values separated by commas. Note that currently we only take the input values up to 1000 
+          maximum, the rest will be omitted.
+
+
+          The request body can also be used to provide these ids.
+        in: query
+        ## setting to false since putting this info in the request body seems to work as well
+        required: false
+        schema:
+          type: array
+          items:
+            type: string
+      - name: scopes
+        description: >-
+          Optional, specify one or more fields (separated by commas) to search, e.g., "scopes=dbsnp.rsid". 
+          The available "fields" can be passed to "scopes" parameter are listed 
+          [here](https://docs.myvariant.info/en/latest/doc/data.html#available-fields). Default: _id
+
+
+          The request body can also be used to provide this information.
+        in: query
+        ## setting to false since putting this info in the request body seems to work as well
+        required: false
+        schema:
+          type: string
+      - "$ref": "#/components/parameters/fields"
+      - "$ref": "#/components/parameters/email"
+      ## this is useful even when it's not noted in the docs
+      - "$ref": "#/components/parameters/size"
+      - "$ref": "#/components/parameters/from"
+      - "$ref": "#/components/parameters/fetch_all"
+      - "$ref": "#/components/parameters/scroll_id"
+      ## these are noted in the https://myvariant.info/v1/spec endpoint; commenting out for now
+      ##   assembly is unique to MyVariant
+      ##   others haven't been written down here: with_total, analyzer
+      # - "$ref": "#/components/parameters/assembly"
+      # - "$ref": "#/components/parameters/sort"
+      # - "$ref": "#/components/parameters/raw"
+      # - "$ref": "#/components/parameters/rawquery"
+      # - "$ref": "#/components/parameters/dotfield"
+      # - "$ref": "#/components/parameters/_sorted"
+      # - "$ref": "#/components/parameters/always_list"
+      # - "$ref": "#/components/parameters/allow_null"
+      # - "$ref": "#/components/parameters/format"
+      requestBody:
+        content:
+          application/json:
+            example:
+              q:
+              - "rs58991260"
+              - "rs928128624"
+              scopes:
+              - "dbsnp.rsid"
+            schema:
+              type: object
+              properties:
+                q:
+                  description: >-
+                    Accepts multiple values separated by commas. Note that currently we only take the input values 
+                    up to 1000 maximum, the rest will be omitted.
+                  type: array
+                  items:
+                    type: string
+                scopes:
+                  description: >-
+                    Specify one or more fields (separated by commas) to search, e.g., "scopes=dbsnp.rsid". 
+                    The available "fields" can be passed to "scopes" parameter are listed 
+                    [here](https://docs.myvariant.info/en/latest/doc/data.html#available-fields). Default: _id
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '200':
+          description: A 200 status code indicates a successful query, and is accompanied by the query response payload.
+      ## commenting out schemas and other status codes for now
+      #     content:
+      #       application/json:
+      #         schema:
+      #           "$ref": "#/components/schemas/QueryPOSTResult"
+      #   '400':
+      #     content:
+      #       application/json:
+      #         schema:
+      #           "$ref": "#/components/schemas/ErrorResult"
+      #     description: A response indicating an improperly formatted query
+      # description: Make batch gene queries and return matching gene hits
+      tags:
+      - query
+      ## 32 operations (16 sets)
+      x-bte-kgs-operations:
+      - "$ref": "#/components/x-bte-kgs-operations/civic-geneDisease"
+      - "$ref": "#/components/x-bte-kgs-operations/civic-geneDisease-rev"
+      - "$ref": "#/components/x-bte-kgs-operations/civic-variantDisease"
+      - "$ref": "#/components/x-bte-kgs-operations/civic-variantDisease-rev"
+      - "$ref": "#/components/x-bte-kgs-operations/dbsnp-variantGene"
+      - "$ref": "#/components/x-bte-kgs-operations/dbsnp-variantGene-rev"
+      - "$ref": "#/components/x-bte-kgs-operations/clinvar-variantGene"
+      - "$ref": "#/components/x-bte-kgs-operations/clinvar-variantGene-rev"
+      - "$ref": "#/components/x-bte-kgs-operations/clinvar-gene-diseaseOMIM"
+      - "$ref": "#/components/x-bte-kgs-operations/clinvar-gene-diseaseORPHANET"
+      - "$ref": "#/components/x-bte-kgs-operations/clinvar-gene-diseaseMONDO"
+      - "$ref": "#/components/x-bte-kgs-operations/clinvar-gene-diseaseMESH"
+      - "$ref": "#/components/x-bte-kgs-operations/clinvar-gene-phenoHP"
+      - "$ref": "#/components/x-bte-kgs-operations/clinvar-gene-diseaseOMIM-rev"
+      - "$ref": "#/components/x-bte-kgs-operations/clinvar-gene-diseaseORPHANET-rev"
+      - "$ref": "#/components/x-bte-kgs-operations/clinvar-gene-diseaseMONDO-rev"
+      - "$ref": "#/components/x-bte-kgs-operations/clinvar-gene-diseaseMESH-rev"
+      - "$ref": "#/components/x-bte-kgs-operations/clinvar-gene-phenoHP-rev"
+      - "$ref": "#/components/x-bte-kgs-operations/clinvar-variant-diseaseOMIM"
+      - "$ref": "#/components/x-bte-kgs-operations/clinvar-variant-diseaseORPHANET"
+      - "$ref": "#/components/x-bte-kgs-operations/clinvar-variant-diseaseMONDO"
+      - "$ref": "#/components/x-bte-kgs-operations/clinvar-variant-diseaseMESH"
+      - "$ref": "#/components/x-bte-kgs-operations/clinvar-variant-phenoHP"
+      - "$ref": "#/components/x-bte-kgs-operations/clinvar-variant-diseaseOMIM-rev"
+      - "$ref": "#/components/x-bte-kgs-operations/clinvar-variant-diseaseORPHANET-rev"
+      - "$ref": "#/components/x-bte-kgs-operations/clinvar-variant-diseaseMONDO-rev"
+      - "$ref": "#/components/x-bte-kgs-operations/clinvar-variant-diseaseMESH-rev"
+      - "$ref": "#/components/x-bte-kgs-operations/clinvar-variant-phenoHP-rev"
+components:
+  parameters:
+    ## assembly is specific to MyVariant
+    assembly:
+      name: assembly
+      in: query
+      required: false
+      schema:
+        type: string
+        default: hg19
+    callback:
+      name: callback
+      description: >-
+        Optional, you can pass a "callback" parameter to make a JSONP call.
+      in: query
+      required: false
+      schema:
+        type: string
+    dotfield:
+      name: dotfield
+      description: >-
+        Optional, can be used to control the format of the returned object. 
+        If "dotfield" is true, the returned data object is returned flattened (no nested objects) 
+        using dotfield notation for key names. Default: false.
+      in: query
+      required: false
+      schema:
+        type: boolean
+        default: false
+    email:
+      name: email
+      description: >-
+        Optional, if you are regular users of our services, we encourage you to provide us an email, 
+        so that we can better track the usage or follow up with you.
+      in: query
+      required: false
+      schema:
+        type: string
+    facet_size:
+      name: facet_size
+      description: >-
+        Optional, an integer (1 <= facet_size <= 1000) that specifies how many buckets to return in a 
+        [faceted query](https://docs.mychem.info/en/latest/doc/chem_query_service.html?highlight=from#faceted-queries).
+      in: query
+      required: false
+      schema:
+        type: integer
+        default: 10
+    facets:
+      name: facets
+      description: >-
+        Optional, a single field or comma-separated fields to return facets, can only be used on non-free text fields. 
+        E.g. "facets=chembl.molecule_properties.full_mwt". See [examples of faceted queries 
+        here](https://docs.mychem.info/en/latest/doc/chem_query_service.html?highlight=from#faceted-queries).
+      in: query
+      required: false
+      schema:
+        type: array
+        items:
+          type: string
+    fetch_all:
+      name: fetch_all
+      description: >-
+        Optional, a boolean, which when TRUE, allows fast retrieval of all unsorted query hits. 
+        The return object contains a _scroll_id field, which when passed as a parameter to the query endpoint 
+        (see the scroll_id parameter), returns the next 1000 query results. Setting fetch_all = TRUE causes 
+        the results to be inherently unsorted, therefore the sort parameter is ignored. For more information, 
+        see [examples using fetch_all 
+        here](https://docs.mychem.info/en/latest/doc/chem_query_service.html?highlight=from#scrolling-queries). 
+        Default: FALSE.
+      in: query
+      required: false
+      schema:
+        type: boolean
+        default: false
+    fields:
+      name: fields
+      description: >-
+        Optional, can be a comma-separated list to limit the fields returned from the object. 
+        If "fields=all", all available fields will be returned. Look 
+        [here](https://docs.mychem.info/en/latest/doc/data.html#available-fields) for a list of available fields. 
+        
+
+        Note that it supports dot notation as well, e.g., you can pass "chebi.name". 
+        Default: "fields=all". 
+        The parameter "filter" is an alias for this parameter.
+      in: query
+      required: false
+      schema:
+        type: string
+        default: all
+    from:
+      name: from
+      description: >-
+        Optional, the number of matching hits to skip, starting from 0. Default: 0. 
+      in: query
+      required: false
+      schema:
+        type: integer
+        default: 0
+    scroll_id:
+      name: scroll_id
+      description: >-
+        Optional, a string containing the _scroll_id returned from a query request with fetch_all = TRUE. 
+        Supplying a valid scroll_id will return the next 1000 unordered results. If the next results are 
+        not obtained within 1 minute of the previous set of results, the scroll_id becomes stale, and a 
+        new one must be obtained with another query request with fetch_all = TRUE. All other parameters are 
+        ignored when the scroll_id parameter is supplied. For more information see [examples using scroll_id 
+        here](https://docs.mychem.info/en/latest/doc/chem_query_service.html?highlight=from#scrolling-queries).
+      in: query
+      required: false
+      schema:
+        type: string
+    size:
+      name: size
+      description: >-
+        Optional, the maximum number of matching hits to return (with a cap of 1000 at the moment). Default: 10.
+        The combination of "size" and "from" parameters can be used to get paging for a large query.
+      in: query
+      required: false
+      schema:
+        type: integer
+        default: 10
+    sort:
+      name: sort
+      description: >-
+        Optional, the comma-separated fields to sort on. Prefix with "-" for descending order, otherwise in ascending order. 
+        Default: sort by matching scores in descending order.
+      in: query
+      required: false
+      schema:
+        type: array
+        items:
+          type: string
+    ## these are noted in the https://mychem.info/v1/spec endpoint; commenting out for now
+    # _sorted:
+    #   name: _sorted
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: boolean
+    #     default: true
+    # aggs:
+    #   name: aggs
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: array
+    #     items:
+    #       type: string
+    # allow_null:
+    #   name: allow_null
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: array
+    #     items:
+    #       type: string
+    # always_list:
+    #   name: always_list
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: array
+    #     items:
+    #       type: string
+    # explain:
+    #   name: explain
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: boolean
+    # format:
+    #   name: format
+    #   description: 'controls output format of server response, currently supports:
+    #     "json", "jsonld", "html". Type: string. Default: json.'
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: string
+    #     default: json
+    # prefix:
+    #   name: prefix
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: string
+    # raw:
+    #   name: raw
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: boolean
+    # rawquery:
+    #   name: rawquery
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: boolean
+    # search:
+    #   name: search
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: string
+    # userquery:
+    #   name: userquery
+    #   in: query
+    #   required: false
+    #   schema:
+    #     type: string
+  ## commenting out schemas and other status codes for now
+  # schemas:
+  #   Chem:
+  #     properties:
+  #       _id:
+  #         type: string
+  #     required:
+  #     - _id
+  #     type: object
+  #   ErrorResult:
+  #     properties:
+  #       message:
+  #         type: string
+  #       success:
+  #         type: boolean
+  #     type: object
+  #   QueryPOSTResult:
+  #     items:
+  #       allOf:
+  #       - "$ref": "#/components/schemas/Chem"
+  #       - properties:
+  #           _score:
+  #             format: float
+  #             type: number
+  #           query:
+  #             type: string
+  #         type: object
+  #     type: array
+  #   QueryResult:
+  #     properties:
+  #       hits:
+  #         items:
+  #           "$ref": "#/components/schemas/Chem"
+  #         type: array
+  #       max_score:
+  #         format: float
+  #         type: number
+  #       took:
+  #         type: integer
+  #       total:
+  #         type: integer
+  #     type: object
+  #   int64_or_array:
+  #     oneOf:
+  #     - items:
+  #         format: int64
+  #         type: integer
+  #       type: array
+  #     - format: int64
+  #       type: integer
+  #   string_or_array:
+  #     oneOf:
+  #     - items:
+  #         type: string
+  #       type: array
+  #     - type: string
+  x-bte-response-mapping:
+    civic-geneDisease:
+      DOID: civic.evidence_items.disease.doid
+      ref_pmid: civic.evidence_items.source.pubmed                              ## no prefix
+      ref_clinicaltrials: civic.evidence_items.source.clinical_trials.nct_id    ## no prefix (ID starts with "NCT")
+      ## commenting out because data-processing / biolink-modeling issues
+      # ## categorical var / relation
+      # civic_clinical_significance: civic.evidence_items.clinical_significance
+      # ## free text
+      # civic_description: civic.evidence_items.description
+      # ## context: drugs involved
+      # civic_drug_interaction: civic.evidence_items.drug_interaction_type
+      # civic_drugs_involved: civic.evidence_items.drugs.name
+      # ## categorical vars
+      # civic_evidence_direction: civic.evidence_items.evidence_direction
+      # civic_evidence_level: civic.evidence_items.evidence_level
+      # civic_evidence_type: civic.evidence_items.evidence_type
+      # ## context: variant involved, could use "biolink:sequence_variant_qualifier"
+      # ##   but then ID-namespace would be unclear (this ID doesn't have a prefix) 
+      # civic_variant_id: civic.evidence_items.variant_id
+      # ## context: variant involved was Somatic, unknown...
+      # civic_variant_origin: civic.evidence_items.variant_origin
+    civic-geneOnly:
+      NCBIGene: civic.entrez_id
+    civic-variantDisease:
+      DOID: civic.evidence_items.disease.doid
+      ## variant name
+      input_name: _id
+      ref_pmid: civic.evidence_items.source.pubmed                              ## no prefix
+      ref_clinicaltrials: civic.evidence_items.source.clinical_trials.nct_id    ## no prefix (ID starts with "NCT")
+      ## commenting out because data-processing / biolink-modeling issues
+      # ## categorical var / relation
+      # civic_clinical_significance: civic.evidence_items.clinical_significance
+      # ## free text
+      # civic_description: civic.evidence_items.description
+      # ## context: gene involved
+      # civic_variant_in_gene: civic.entrez_name
+      # ## context: drugs involved
+      # civic_drug_interaction: civic.evidence_items.drug_interaction_type
+      # civic_drugs_involved: civic.evidence_items.drugs.name
+      # ## categorical vars
+      # civic_evidence_direction: civic.evidence_items.evidence_direction
+      # civic_evidence_level: civic.evidence_items.evidence_level
+      # civic_evidence_type: civic.evidence_items.evidence_type
+      # ## context: variant involved was Somatic, unknown...
+      # civic_variant_origin: civic.evidence_items.variant_origin
+    dbsnp-rsid:
+      DBSNP: dbsnp.rsid  ## no prefix
+      output_name: _id   ## variant name
+    dbsnp-gene:
+      NCBIGene: dbsnp.gene.geneid  ## no prefix
+      input_name: _id              ## variant name
+    clinvar-rsid:
+      DBSNP: clinvar.rsid  ## no prefix
+      output_name: _id     ## variant name
+    clinvar-diseaseOMIM:
+      OMIM: clinvar.rcv.conditions.identifiers.omim  ## no prefix
+      input_name: clinvar.gene.symbol    ## Node Norm doesn't recognize all NCBIGene IDs
+      ## commenting out because data-processing / biolink-modeling issues
+      # ## edge attributes
+      # clinvar_clinical_significance: clinvar.rcv.clinical_significance  ## similar to relation
+      # variant_rsid: dbsnp.rsid    ## no prefix 
+      # clinvar_submission_last_evaluated: clinvar.rcv.last_evaluated  ## gives a date yyyy-mm-dd
+      # clinvar_num_submitters: clinvar.rcv.number_submitters
+      # clinvar_variant_origin: clinvar.rcv.origin
+      # clinvar_review_status: clinvar.rcv.review_status
+    clinvar-diseaseORPHANET:
+      orphanet: clinvar.rcv.conditions.identifiers.orphanet  ## no prefix
+      input_name: clinvar.gene.symbol
+    clinvar-diseaseMONDO:
+      MONDO: clinvar.rcv.conditions.identifiers.mondo    ## HAS PREFIX (MONDO)
+      input_name: clinvar.gene.symbol
+    clinvar-diseaseMESH:
+      MESH: clinvar.rcv.conditions.identifiers.mesh    ## no prefix
+      input_name: clinvar.gene.symbol
+    clinvar-phenoHP:
+      HP: clinvar.rcv.conditions.identifiers.human_phenotype_ontology     ## HAS PREFIX
+      input_name: clinvar.gene.symbol
+    clinvar-gene-variant-start:
+      NCBIGene: clinvar.gene.id  ## no prefix
+      input_name: _id            ## variant name
+    clinvar-variantDiseaseOMIM:
+      OMIM: clinvar.rcv.conditions.identifiers.omim  ## no prefix
+      input_name: _id                                ## variant name
+      ## commenting out because data-processing / biolink-modeling issues
+      # ## edge attributes
+      # clinvar_clinical_significance: clinvar.rcv.clinical_significance  ## similar to relation
+      # clinvar_variant_in_gene: clinvar.gene.symbol    ## context: gene
+      # clinvar_submission_last_evaluated: clinvar.rcv.last_evaluated  ## gives a date yyyy-mm-dd
+      # clinvar_num_submitters: clinvar.rcv.number_submitters
+      # clinvar_variant_origin: clinvar.rcv.origin
+      # clinvar_review_status: clinvar.rcv.review_status
+    clinvar-variantDiseaseORPHANET:
+      orphanet: clinvar.rcv.conditions.identifiers.orphanet  ## no prefix
+      input_name: _id                                        ## variant name
+    clinvar-variantDiseaseMONDO:
+      MONDO: clinvar.rcv.conditions.identifiers.mondo        ## HAS PREFIX
+      input_name: _id                                        ## variant name
+    clinvar-variantDiseaseMESH:
+      MESH: clinvar.rcv.conditions.identifiers.mesh          ## no prefix
+      input_name: _id                                        ## variant name
+    clinvar-variantPhenoHP:
+      HP: clinvar.rcv.conditions.identifiers.human_phenotype_ontology    ## HAS PREFIX
+      input_name: _id                                                    ## variant name
+    clinvar-gene:
+      NCBIGene: clinvar.gene.id  ## no prefix
+      output_name: clinvar.gene.symbol    ## Node Norm doesn't recognize all NCBIGene IDs
+  ## not included:
+  ## - cgi: only 323 records, doesn't have IDs for disease, gene, or drug ID...
+  ## - cosmic: only seems to connect variants to tissue they were found in, but no IDs for the tissue...
+  ## - dbnsfp.clinvar: overlap with clinvar section? 
+  ##   missing indexing for omim, orphanet IDs have ORPHA000 format...
+  ## - dbnsfp.ensembl.geneid: very repetitive for some reason...
+  ## - dbnsfp.gtex.tissue: string, no IDs...
+  ## - docm: Chunlei said not to annotate this data. It's a very old tool doing variant impact prediction
+  ## - grasp.publication.phenotype: looks like curation of publications for variants / phenotypes. string, no IDs...
+  ## - gwassnps.trait: looks like curation of publications for variants / phenotypes. string, no IDs...
+  x-bte-kgs-operations:
+    ## CIVIC: 
+    ## knowledge_level / agent_type: appears to be heavily manually-curated
+    ##   see https://www.nature.com/articles/ng.3774 (and website https://civicdb.org/)
+    ## data seems to be connecting variant-disease, sometimes with a drug (although that drug may not have an ID)
+    ##   having a drug means looking at drug response (given the disease...)
+    ## However, the civic variant IDs don't seem to be easily mapped...
+    ## The variants are mapped to their genes: 2648 records total, all have entrez_id field...
+    ## - not including 
+    ##     - civic assertions (only 30 variant records https://myvariant.info/v1/query?q=_exists_:%22civic.assertions%22)
+    ##     - civic evidence_items.phenotypes: 598 records, some seem to repeat the disease info
+    ##     - civic variant_groups: 129 records, not clear how to structure / what the relationship is
+    ## civic data currently not in hg38: 
+    ##    https://myvariant.info/v1/metadata/fields?assembly=hg38
+    ##    https://docs.myvariant.info/en/latest/doc/data.html?highlight=hg19#data-sources
+    civic-geneDisease:
+      - supportBatch: true
+        useTemplating: true
+        inputs:
+        - id: NCBIGene
+          semantic: Gene
+        requestBody:
+          body:
+            q: "{{ queryInputs }}"  ## no prefix
+            scopes: civic.entrez_id
+        outputs:
+        - id: DOID
+          semantic: Disease
+        ## out of 2648 civic records, most (2610) have the doid disease field...only some have dbsnp.rsid...
+        parameters:
+        ## most fields below are categorical variables
+        ## description is free text, Disease ID has prefix (DOID), variant ID is CIVIC (no prefix)
+        ## only some records have drug information, and only some drugs have NCIT IDs
+        ## commenting out because data-processing / biolink-modeling issues
+          # fields: civic.evidence_items
+          fields: >-
+            civic.evidence_items.disease.doid,
+            civic.evidence_items.source.pubmed,
+            civic.evidence_items.source.clinical_trials.nct_id
+          size: 1000        ## note size limit; added just in case
+          assembly: hg19     
+        predicate: affects
+        source: "infores:civic"
+        knowledge_level: knowledge_assertion
+        agent_type: manual_agent
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/civic-geneDisease"
+      ## this record has drug interaction: https://myvariant.info/v1/query?q=_exists_:%22civic.evidence_items.drug_interaction_type%22
+        testExamples:
+          - qInput: "NCBIGene:1956"   ## EGFR
+            oneOutput: "DOID:3910"    ##  Lung Adenocarcinoma aka MONDO:0005061
+    civic-geneDisease-rev:
+      - supportBatch: true
+        useTemplating: true
+        inputs:
+        - id: DOID
+          semantic: Disease
+        requestBody:
+          body:
+            q: "{{ queryInputs }}"  ## HAS PREFIX
+            scopes: civic.evidence_items.disease.doid
+        outputs:
+        - id: NCBIGene
+          semantic: Gene
+        parameters:
+          fields: civic.entrez_id  ## no prefix
+          size: 1000
+          assembly: hg19
+        predicate: affected_by
+        source: "infores:civic"
+        knowledge_level: knowledge_assertion
+        agent_type: manual_agent
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/civic-geneOnly"
+      ## this record has drug interaction: https://myvariant.info/v1/query?q=_exists_:%22civic.evidence_items.drug_interaction_type%22
+        testExamples:
+          - qInput: "DOID:9256"            ## Colorectal Cancer aka MONDO:0005575
+            oneOutput: "NCBIGene:5290"     ##  PIK3CA
+    civic-variantDisease:
+    ## out of 2648 civic records, only some (653) have the doid disease field...
+      - supportBatch: true
+        useTemplating: true
+        inputs:
+        - id: DBSNP
+          semantic: SequenceVariant
+        requestBody:
+          body:
+            q: "{{ queryInputs }}"  ## no prefix
+            scopes: dbsnp.rsid
+        outputs:
+        - id: DOID
+          semantic: Disease
+        parameters:
+        ## most fields below are categorical variables
+        ## description is free text, Disease ID has prefix (DOID), variant ID is CIVIC (no prefix)
+        ## only some records have drug information, and only some drugs have NCIT IDs
+        ## using entrez gene name for now (human-readable) rather than id
+        ## commenting out because data-processing / biolink-modeling issues
+          # fields: >-
+          #   civic.evidence_items,
+          #   civic.entrez_name,
+          #   _id
+          fields: >-
+            civic.evidence_items.disease.doid,
+            _id,
+            civic.evidence_items.source.pubmed,
+            civic.evidence_items.source.clinical_trials.nct_id
+          size: 1000        ## note size limit; added just in case
+          assembly: hg19
+        predicate: affects
+        source: "infores:civic"
+        knowledge_level: knowledge_assertion
+        agent_type: manual_agent
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/civic-variantDisease"
+      ## this record has drug interaction: https://myvariant.info/v1/query?q=_exists_:%22civic.evidence_items.drug_interaction_type%22%20AND%20_exists_:%22dbsnp.rsid%22
+        testExamples:
+          - qInput: "DBSNP:rs121913521"   ## chr4:g.55593613T>G in KIT
+            oneOutput: "DOID:9253"        ##  Gastrointestinal Stromal Tumor aka MONDO:0011719
+    civic-variantDisease-rev:
+      - supportBatch: true
+        useTemplating: true
+        inputs:
+        - id: DOID
+          semantic: Disease
+        requestBody:
+          body:
+            q: "{{ queryInputs }}"  ## HAS PREFIX
+            scopes: civic.evidence_items.disease.doid
+        outputs:
+        - id: DBSNP
+          semantic: SequenceVariant
+        parameters:
+          fields: dbsnp.rsid,_id
+          size: 1000        ## note size limit; added just in case
+          assembly: hg19
+        predicate: affected_by
+        source: "infores:civic"
+        knowledge_level: knowledge_assertion
+        agent_type: manual_agent
+        response_mapping:
+          "$ref": "#/components/x-bte-response-mapping/dbsnp-rsid"
+      ## this record has drug interaction: https://myvariant.info/v1/query?q=_exists_:%22civic.evidence_items.drug_interaction_type%22%20AND%20_exists_:%22dbsnp.rsid%22
+        testExamples:
+          - qInput: "DOID:2671"                ## Transitional Cell Carcinoma aka MONDO:0006474
+            oneOutput: "DBSNP:rs1057519803"     ## chr12:g.56481922G>A in ERBB3
+    dbsnp-variantGene:
+    ## knowledge_level / agent_type: gene assignments seem to happen in automated build process 
+    ##   https://www.ncbi.nlm.nih.gov/books/NBK21088/#_ch5_ch5_s4_
+    ## note: there may be redundant results in the response
+    ## there are 741 million records for hg38
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: DBSNP
+        semantic: SequenceVariant
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"  ## no prefix
+          scopes: dbsnp.rsid
+      outputs:
+      - id: NCBIGene
+        semantic: Gene
+      parameters:
+        fields: dbsnp.gene.geneid,_id  ## no prefix
+        size: 1000
+        assembly: hg38
+      predicate: is_sequence_variant_of
+      source: "infores:dbsnp"
+      knowledge_level: knowledge_assertion
+      agent_type: automated_agent
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/dbsnp-gene"
+      ## https://myvariant.info/v1/query?q=_exists_:%22dbsnp.rsid%22%20AND%20_exists_:%22dbsnp.gene.geneid%22&fields=dbsnp&assembly=hg38
+      testExamples:
+        - qInput: "DBSNP:rs770112667"    ## chr10:g.14218676G>A (diff for hg19)
+          oneOutput: "NCBIGene:55691"    ## FRMD4A
+    dbsnp-variantGene-rev:
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: NCBIGene
+        semantic: Gene
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"  ## no prefix
+          scopes: dbsnp.gene.geneid
+      outputs:
+      - id: DBSNP
+        semantic: SequenceVariant
+      parameters:
+        fields: dbsnp.rsid,_id
+        size: 1000
+        assembly: hg38
+      predicate: has_sequence_variant
+      source: "infores:dbsnp"
+      knowledge_level: knowledge_assertion
+      agent_type: automated_agent
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/dbsnp-rsid"
+      ## https://myvariant.info/v1/query?q=_exists_:%22dbsnp.rsid%22%20AND%20_exists_:%22dbsnp.gene.geneid%22
+      testExamples:
+        - qInput: "NCBIGene:102724392"      ## LINC02197
+          oneOutput: "DBSNP:rs188861200"    ## chr5:g.71414410C>T (diff for hg19)
+    ## CLINVAR
+    ## knowledge_level / agent_type: data going in seems to be manually-curated
+    ##   https://www.ncbi.nlm.nih.gov/clinvar/docs/datasources/
+    clinvar-variantGene:
+    ## possibly redundant, with all hg38 clinvar data already covered by hg38 dbsnp.rsid <-> gene...
+    ## > 822k records for hg38
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: DBSNP
+        semantic: SequenceVariant
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"  ## no prefix
+          scopes: clinvar.rsid
+      outputs:
+      - id: NCBIGene
+        semantic: Gene
+      parameters:
+        fields: clinvar.gene.id,_id  ## no prefix
+        size: 1000
+        assembly: hg38
+      predicate: is_sequence_variant_of
+      source: "infores:clinvar"
+      knowledge_level: knowledge_assertion
+      agent_type: manual_agent
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/clinvar-gene-variant-start"
+      testExamples:
+        - qInput: "DBSNP:rs794727661"   ## chrX:g.32343175_32343176dup (diff for hg19)
+          oneOutput: "NCBIGene:1756"    ## DMD
+    clinvar-variantGene-rev:
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: NCBIGene
+        semantic: Gene
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"  ## no prefix
+          scopes: clinvar.gene.id
+      outputs:
+      - id: DBSNP
+        semantic: SequenceVariant
+      parameters:
+        fields: clinvar.rsid,_id  ## no prefix
+        size: 1000
+        assembly: hg38
+      predicate: has_sequence_variant
+      source: "infores:clinvar"
+      knowledge_level: knowledge_assertion
+      agent_type: manual_agent
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/clinvar-rsid"
+      testExamples:
+        - qInput: "NCBIGene:9231"            ## DLG5
+          oneOutput: "DBSNP:rs200237878"     ## chr10:g.77811216G>A
+    ## clinvar disease ID info:
+    ## - some conditions have no IDs, some have multiple IDs (not all have OMIM). 
+    ## - omim: 987390 (no prefix)
+    ## - orphanet: 826717 (no prefix)
+    ## - human_phenotype_ontology: 141752
+    ## - efo: 5236, has EFO_000 format (not ID or CURIE)
+    ## - medgen: 2162595, but I don't think SRI ID resolver supports this...
+    ## - not indexed yet: mesh, mondo
+    clinvar-gene-diseaseOMIM:
+    ## 986988 records for hg38
+    ## (987068 - 986988 = 80 records have the omim field but lack the gene field) 
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: NCBIGene
+        semantic: Gene
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"  ## no prefix
+          scopes: clinvar.gene.id
+      outputs:
+      - id: OMIM
+        semantic: Disease
+      parameters:
+      ## most should have dbsnp.rsid ID (see above)
+      ## commenting out because data-processing / biolink-modeling issues
+        # fields: >-
+        #   clinvar.rcv.conditions.identifiers.omim,
+        #   clinvar.rcv.clinical_significance,
+        #   dbsnp.rsid,
+        #   clinvar.rcv.last_evaluated,
+        #   clinvar.rcv.number_submitters,
+        #   clinvar.rcv.origin,
+        #   clinvar.rcv.review_status
+        fields: clinvar.rcv.conditions.identifiers.omim,clinvar.gene.symbol
+        size: 1000  ## note size limit; added just in case
+        assembly: hg38
+      predicate: related_to
+      ## clinical significance is like a relation: 
+      ##   Uncertain significance, Pathogenic, Likely pathogenic, other
+      source: "infores:clinvar"
+      knowledge_level: knowledge_assertion
+      agent_type: manual_agent
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/clinvar-diseaseOMIM"
+      testExamples:
+        - qInput: "NCBIGene:55806"   ## HR
+          oneOutput: "OMIM:209500"   ## Atrichia with papular lesions (APL) aka MONDO:0008847
+    clinvar-gene-diseaseORPHANET:
+    ## see original operation clinvar-gene-diseaseOMIM notes
+    ## 826439 records for hg38
+    ## (826456 - 826439 = 17 records have the orphanet field but lack the gene field) 
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: NCBIGene
+        semantic: Gene
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"  ## no prefix
+          scopes: clinvar.gene.id
+      outputs:
+      - id: orphanet
+        semantic: Disease
+      parameters:
+        fields: clinvar.rcv.conditions.identifiers.orphanet,clinvar.gene.symbol
+        size: 1000  ## note size limit; added just in case
+        assembly: hg38
+      predicate: related_to
+      source: "infores:clinvar"
+      knowledge_level: knowledge_assertion
+      agent_type: manual_agent
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/clinvar-diseaseORPHANET"
+      testExamples:
+        - qInput: "NCBIGene:106099062"   ## LOC106099062
+          oneOutput: "orphanet:848"      ## beta Thalassemia (BTHAL) aka MONDO:0019402
+    clinvar-gene-diseaseMONDO:
+    ## see original operation clinvar-gene-diseaseOMIM notes
+    ## 1133095 records
+    ## (1133285 - 1133095 = 190 records have the MONDO field but lack the gene field) 
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: NCBIGene
+        semantic: Gene
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"  ## no prefix
+          scopes: clinvar.gene.id
+      outputs:
+      - id: MONDO
+        semantic: Disease
+      parameters:
+        fields: clinvar.rcv.conditions.identifiers.mondo,clinvar.gene.symbol
+        size: 1000  ## note size limit; added just in case
+        assembly: hg38
+      predicate: related_to
+      source: "infores:clinvar"
+      knowledge_level: knowledge_assertion
+      agent_type: manual_agent
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/clinvar-diseaseMONDO"
+      ## https://myvariant.info/v1/query?q=_exists_:clinvar.rcv.conditions.identifiers.mondo%20AND%20NOT%20(_exists_:clinvar.rcv.conditions.identifiers.mesh%20OR%20_exists_:clinvar.rcv.conditions.identifiers.omim%20%20OR%20_exists_:clinvar.rcv.conditions.identifiers.orphanet)%20AND%20_exists_:clinvar.gene%20AND%20clinvar.rcv.clinical_significance:Pathogenic&fields=clinvar,dbsnp.rsid
+      testExamples:
+        - qInput: "NCBIGene:3897"         ## L1CAM
+          oneOutput: "MONDO:0017140"      ## L1 syndrome
+    clinvar-gene-diseaseMESH:
+    ## see original operation clinvar-gene-diseaseOMIM notes
+    ## 558108 records for hg38
+    ## (558199 - 558108 = 91 records have the MESH field but lack the gene field) 
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: NCBIGene
+        semantic: Gene
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"  ## no prefix
+          scopes: clinvar.gene.id
+      outputs:
+      - id: MESH
+        semantic: Disease
+      parameters:
+        fields: clinvar.rcv.conditions.identifiers.mesh,clinvar.gene.symbol
+        size: 1000  ## note size limit; added just in case
+        assembly: hg38
+      predicate: related_to
+      source: "infores:clinvar"
+      knowledge_level: knowledge_assertion
+      agent_type: manual_agent
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/clinvar-diseaseMESH"
+      testExamples:
+        - qInput: "NCBIGene:4359"         ## MPZ
+          oneOutput: "MESH:D030342"       ## Inborn genetic diseases, aka MONDO:0003847 hereditary disease 
+    clinvar-gene-phenoHP:
+    ## see original operation clinvar-gene-diseaseOMIM notes
+    ## 141412 records
+    ## (141595 - 141412 = 183 records have the hp field but lack the gene field) 
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: NCBIGene
+        semantic: Gene
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"  ## no prefix
+          scopes: clinvar.gene.id
+      outputs:
+      - id: HP
+        semantic: PhenotypicFeature
+      parameters:
+        fields: clinvar.rcv.conditions.identifiers.human_phenotype_ontology,clinvar.gene.symbol
+        size: 1000  ## note size limit; added just in case
+        assembly: hg38
+      predicate: related_to
+      source: "infores:clinvar"
+      knowledge_level: knowledge_assertion
+      agent_type: manual_agent
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/clinvar-phenoHP"
+      testExamples:
+        - qInput: "NCBIGene:5314"   ## PKHD1
+          oneOutput: "HP:0004719"   ## Hyperechogenic kidneys
+    clinvar-gene-diseaseOMIM-rev:
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: OMIM
+        semantic: Disease
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"  ## no prefix
+          scopes: clinvar.rcv.conditions.identifiers.omim
+      outputs:
+      - id: NCBIGene
+        semantic: Gene
+      parameters:
+        fields: clinvar.gene.id,clinvar.gene.symbol
+        size: 1000  ## note size limit
+        assembly: hg38
+      predicate: related_to
+      source: "infores:clinvar"
+      knowledge_level: knowledge_assertion
+      agent_type: manual_agent
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/clinvar-gene"
+      testExamples:
+        - qInput: "OMIM:615592"        ## Immunodeficiency 15 (IMD15B)
+          oneOutput: "NCBIGene:3551"   ## IKBKB
+    clinvar-gene-diseaseORPHANET-rev:
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: orphanet
+        semantic: Disease
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"  ## no prefix
+          scopes: clinvar.rcv.conditions.identifiers.orphanet
+      outputs:
+      - id: NCBIGene
+        semantic: Gene
+      parameters:
+        fields: clinvar.gene.id,clinvar.gene.symbol
+        size: 1000  ## note size limit
+        assembly: hg38
+      predicate: related_to
+      source: "infores:clinvar"
+      knowledge_level: knowledge_assertion
+      agent_type: manual_agent
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/clinvar-gene"
+      testExamples:
+        - qInput: "orphanet:827"        ## Stargardt disease (FFM)
+          oneOutput: "NCBIGene:5961"    ## PRPH2
+    clinvar-gene-diseaseMONDO-rev:
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: MONDO
+        semantic: Disease
+      requestBody:
+        body:
+          q: "{{ queryInputs | replPrefix('MONDO') }}"  ## HAS PREFIX
+          scopes: clinvar.rcv.conditions.identifiers.mondo
+      outputs:
+      - id: NCBIGene
+        semantic: Gene
+      parameters:
+        fields: clinvar.gene.id,clinvar.gene.symbol
+        size: 1000  ## note size limit
+        assembly: hg38
+      predicate: related_to
+      source: "infores:clinvar"
+      knowledge_level: knowledge_assertion
+      agent_type: manual_agent
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/clinvar-gene"
+      testExamples:
+        - qInput: "MONDO:0001464"        ## Sigmoid colon cancer
+          oneOutput: "NCBIGene:4436"     ## MSH2
+    clinvar-gene-diseaseMESH-rev:
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: MESH
+        semantic: Disease
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"  ## no prefix
+          scopes: clinvar.rcv.conditions.identifiers.mesh
+      outputs:
+      - id: NCBIGene
+        semantic: Gene
+      parameters:
+        fields: clinvar.gene.id,clinvar.gene.symbol
+        size: 1000  ## note size limit
+        assembly: hg38
+      predicate: related_to
+      source: "infores:clinvar"
+      knowledge_level: knowledge_assertion
+      agent_type: manual_agent
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/clinvar-gene"
+      testExamples:
+        - qInput: "MESH:D003123"         ## Hereditary nonpolyposis colorectal neoplasms / Lynch syndrome
+          oneOutput: "NCBIGene:4292"     ## MLH1
+    clinvar-gene-phenoHP-rev:
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: HP
+        semantic: PhenotypicFeature
+      requestBody:
+        body:
+          q: "{{ queryInputs | replPrefix('HP') }}"  ## HAS PREFIX
+          scopes: clinvar.rcv.conditions.identifiers.human_phenotype_ontology
+      outputs:
+      - id: NCBIGene
+        semantic: Gene
+      parameters:
+        fields: clinvar.gene.id,clinvar.gene.symbol
+        size: 1000  ## note size limit
+        assembly: hg38
+      predicate: related_to
+      source: "infores:clinvar"
+      knowledge_level: knowledge_assertion
+      agent_type: manual_agent
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/clinvar-gene"
+      testExamples:
+        - qInput: "HP:0000105"          ## Enlarged kidney
+          oneOutput: "NCBIGene:5314"    ## PKHD1
+    clinvar-variant-diseaseOMIM:
+    ## using dbsnp.rsid rather than clinvar.rsid field, because more records have dbsnp.rsid...
+    ## 858244 records
+    ## (987068 total, so >86% of records have dbsnp.rsid field) 
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: DBSNP
+        semantic: SequenceVariant
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"  ## no prefix
+          scopes: dbsnp.rsid
+      outputs:
+      - id: OMIM
+        semantic: Disease
+      parameters:
+      ## using gene symbol rather than gene.id so it's human-readable
+      ## commenting out because data-processing / biolink-modeling issues
+        # fields: >-
+        #   clinvar.rcv.conditions.identifiers.omim,
+        #   _id,
+        #   clinvar.rcv.clinical_significance,
+        #   clinvar.gene.symbol,
+        #   clinvar.rcv.last_evaluated,
+        #   clinvar.rcv.number_submitters,
+        #   clinvar.rcv.origin,
+        #   clinvar.rcv.review_status
+        fields: clinvar.rcv.conditions.identifiers.omim,_id
+        size: 1000  ## note size limit; added just in case
+        assembly: hg38
+      predicate: related_to
+      ## clinical significance is like a relation: 
+      ##   Uncertain significance, Pathogenic, Likely pathogenic, other
+      source: "infores:clinvar"
+      knowledge_level: knowledge_assertion
+      agent_type: manual_agent
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/clinvar-variantDiseaseOMIM"
+      ## https://myvariant.info/v1/query?q=_exists_:%22clinvar.rcv.conditions.identifiers.omim%22%20AND%20_exists_:%22dbsnp.rsid%22
+      testExamples:
+        - qInput: "DBSNP:rs1193171808"    ## chr8:g.42314329A>G
+          oneOutput: "OMIM:615592"        ## MONDO:0014267 / severe combined immunodeficiency due to IKK2 deficiency
+    clinvar-variant-diseaseORPHANET:
+    ## see original operation clinvar-variant-diseaseOMIM notes
+    ## 719970 records
+    ## (826456 total, so >87% of records have dbsnp.rsid field) 
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: DBSNP
+        semantic: SequenceVariant
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"  ## no prefix
+          scopes: dbsnp.rsid
+      outputs:
+      - id: orphanet
+        semantic: Disease
+      parameters:
+        fields: clinvar.rcv.conditions.identifiers.orphanet,_id
+        size: 1000  ## note size limit; added just in case
+        assembly: hg38
+      predicate: related_to
+      source: "infores:clinvar"
+      knowledge_level: knowledge_assertion
+      agent_type: manual_agent
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/clinvar-variantDiseaseORPHANET"
+      testExamples:
+        - qInput: "DBSNP:rs1554270834"    ## chr6:g.42722069_42722076del
+          oneOutput: "orphanet:827"       ## Stargardt disease (FFM) / MONDO:0019353
+    clinvar-variant-diseaseMONDO:
+    ## see original operation clinvar-variant-diseaseOMIM notes
+    ## 973693 records
+    ## (1133285 total, so >85% of records have dbsnp.rsid field) 
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: DBSNP
+        semantic: SequenceVariant
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"  ## no prefix
+          scopes: dbsnp.rsid
+      outputs:
+      - id: MONDO
+        semantic: Disease
+      parameters:
+        fields: clinvar.rcv.conditions.identifiers.mondo,_id
+        size: 1000  ## note size limit; added just in case
+        assembly: hg38
+      predicate: related_to
+      source: "infores:clinvar"
+      knowledge_level: knowledge_assertion
+      agent_type: manual_agent
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/clinvar-variantDiseaseMONDO"
+      testExamples:
+        - qInput: "DBSNP:rs1860418734"     ## chr10:g.87952157T>G
+          oneOutput: "MONDO:0017623"       ## PTEN hamartoma tumor syndrome (PHTS)
+    clinvar-variant-diseaseMESH:
+    ## see original operation clinvar-variant-diseaseOMIM notes
+    ## 472287 records
+    ## (558199 total, so >84% of records have dbsnp.rsid field) 
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: DBSNP
+        semantic: SequenceVariant
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"  ## no prefix
+          scopes: dbsnp.rsid
+      outputs:
+      - id: MESH
+        semantic: Disease
+      parameters:
+        fields: clinvar.rcv.conditions.identifiers.mesh,_id
+        size: 1000  ## note size limit; added just in case
+        assembly: hg38
+      predicate: related_to
+      source: "infores:clinvar"
+      knowledge_level: knowledge_assertion
+      agent_type: manual_agent
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/clinvar-variantDiseaseMESH"
+      testExamples:
+        - qInput: "DBSNP:rs1554897280"    ## chr10:g.87925558G>A
+          oneOutput: "MESH:D009386"       ## MONDO:0015356 / Hereditary cancer-predisposing syndrome / hereditary neoplastic syndrome
+    clinvar-variant-phenoHP:
+    ## see original operation clinvar-variant-diseaseOMIM notes
+    ## 125085 records
+    ## (141595 total, so >88% of records have dbsnp.rsid field) 
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: DBSNP
+        semantic: SequenceVariant
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"  ## no prefix
+          scopes: dbsnp.rsid
+      outputs:
+      - id: HP
+        semantic: PhenotypicFeature
+      parameters:
+        fields: clinvar.rcv.conditions.identifiers.human_phenotype_ontology,_id
+        size: 1000  ## note size limit; added just in case
+        assembly: hg38
+      predicate: related_to
+      source: "infores:clinvar"
+      knowledge_level: knowledge_assertion
+      agent_type: manual_agent
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/clinvar-variantPhenoHP"
+      testExamples:
+        - qInput: "DBSNP:rs367947846"    ## chr11:g.47346298G>T
+          oneOutput: "HP:0001638"        ## Cardiomyopathy (CMYO) / MONDO:0004994
+    clinvar-variant-diseaseOMIM-rev:
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: OMIM
+        semantic: Disease
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"  ## no prefix
+          scopes: clinvar.rcv.conditions.identifiers.omim
+      outputs:
+      - id: DBSNP
+        semantic: SequenceVariant
+      parameters:
+        fields: dbsnp.rsid,_id
+        size: 1000  ## note size limit
+        assembly: hg38
+      predicate: related_to
+      source: "infores:clinvar"
+      knowledge_level: knowledge_assertion
+      agent_type: manual_agent
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/dbsnp-rsid"
+      testExamples:
+        - qInput: "OMIM:602629"             ## Torsion dystonia 6 (DYT6)
+          oneOutput: "DBSNP:rs1480200060"   ## chr8:g.42837127T>C
+    clinvar-variant-diseaseORPHANET-rev:
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: orphanet
+        semantic: Disease
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"  ## no prefix
+          scopes: clinvar.rcv.conditions.identifiers.orphanet
+      outputs:
+      - id: DBSNP
+        semantic: SequenceVariant
+      parameters:
+        fields: dbsnp.rsid,_id
+        size: 1000  ## note size limit
+        assembly: hg38
+      predicate: related_to
+      source: "infores:clinvar"
+      knowledge_level: knowledge_assertion
+      agent_type: manual_agent
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/dbsnp-rsid"
+      testExamples:
+        - qInput: "orphanet:848"            ## beta Thalassemia (BTHAL)
+          oneOutput: "DBSNP:rs33956879"     ## chr11:g.5226928A>C
+    clinvar-variant-diseaseMONDO-rev:
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: MONDO
+        semantic: Disease
+      requestBody:
+        body:
+          q: "{{ queryInputs | replPrefix('MONDO') }}"  ## HAS PREFIX
+          scopes: clinvar.rcv.conditions.identifiers.mondo
+      outputs:
+      - id: DBSNP
+        semantic: SequenceVariant
+      parameters:
+        fields: dbsnp.rsid,_id
+        size: 1000  ## note size limit
+        assembly: hg38
+      predicate: related_to
+      source: "infores:clinvar"
+      knowledge_level: knowledge_assertion
+      agent_type: manual_agent
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/dbsnp-rsid"
+      testExamples:
+        - qInput: "MONDO:0016268"            ## Papillary carcinoma of the corpus uteri
+          oneOutput: "DBSNP:rs398123231"     ## chr2:g.47804948C>G
+    clinvar-variant-diseaseMESH-rev:
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: MESH
+        semantic: Disease
+      requestBody:
+        body:
+          q: "{{ queryInputs }}"  ## no prefix
+          scopes: clinvar.rcv.conditions.identifiers.mesh
+      outputs:
+      - id: DBSNP
+        semantic: SequenceVariant
+      parameters:
+        fields: dbsnp.rsid,_id
+        size: 1000  ## note size limit
+        assembly: hg38
+      predicate: related_to
+      source: "infores:clinvar"
+      knowledge_level: knowledge_assertion
+      agent_type: manual_agent
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/dbsnp-rsid"
+      testExamples:
+        - qInput: "MESH:D003123"             ## Hereditary nonpolyposis colorectal neoplasms / Lynch syndrome
+          oneOutput: "DBSNP:rs398123231"     ## chr2:g.47804948C>A
+    clinvar-variant-phenoHP-rev:
+    - supportBatch: true
+      useTemplating: true
+      inputs:
+      - id: HP
+        semantic: PhenotypicFeature
+      requestBody:
+        body:
+          q: "{{ queryInputs | replPrefix('HP') }}"  ## HAS PREFIX
+          scopes: clinvar.rcv.conditions.identifiers.human_phenotype_ontology
+      outputs:
+      - id: DBSNP
+        semantic: SequenceVariant
+      parameters:
+        fields: dbsnp.rsid,_id
+        size: 1000  ## note size limit
+        assembly: hg38
+      predicate: related_to
+      source: "infores:clinvar"
+      knowledge_level: knowledge_assertion
+      agent_type: manual_agent
+      response_mapping:
+        "$ref": "#/components/x-bte-response-mapping/dbsnp-rsid"
+      testExamples:
+        - qInput: "HP:0011040"               ## Abnormal intrahepatic bile duct morphology
+          oneOutput: "DBSNP:rs727504096"     ## chr6:g.52079920G>A

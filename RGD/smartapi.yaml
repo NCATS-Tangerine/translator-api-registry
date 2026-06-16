@@ -1,0 +1,63 @@
+openapi: '3.0.0'
+info:
+  version: '1.0'
+  title: RGD API
+  description: >-
+    The RGD API
+  termsOfService: http://www.rgd.org
+  contact:
+    name: rgd help desk
+    x-role: responsible developer
+    email: help@rgd.org
+servers:
+  - url: 'https://rest.rgd.mcw.edu/rgdws'
+    description: 'Production server'
+tags:
+  - name: translator
+  - name: gene
+
+paths:
+  '/genes/{geneid}':
+    get:
+      summary: 'retrieve rgd data'
+      parameters:
+        - name: geneid
+          in: path
+          description: >-
+            RGD id
+          required: true
+          example: "620465"
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 'A RGD object'
+          x-bte-response-mapping:
+            $ref: '#/components/x-bte-response-mapping/gene-homolog'
+      x-bte-kgs-operations:
+        associatedWith:
+          $ref: '#/components/x-bte-kgs-operations/hasHomolog'
+components:
+  x-bte-kgs-operations:
+    hasHomolog:
+      inputs:
+      - id: rgd
+        semantic: Gene
+      outputs:
+      - id: symbol
+        semantic: Gene
+      parameters:
+        geneid: "{input1}"
+      supportBatch: false
+      response-mapping:
+        $ref: '#/components/x-bte-response-mapping/gene-homolog'
+  x-bte-response-mapping:
+    gene-homolog:
+      "@context": http://schema.org
+      "@type": Gene
+      bts:rgd: rgd
+      bts:hasHomolog:
+        "@type": Gene
+        bts:symbol: ensemblGeneSymbol
+        "$input": bts:rgd
+        "$source": RGD

@@ -1,0 +1,170 @@
+openapi: '3.0.0'
+info:
+  version: "1.0"
+  contact:
+    email: patrick@covar.com
+    name: Patrick Wang
+    url: robokop.renci.org
+  description: An API for answering biomedical questions
+  termsOfService: https://robokop.renci.org/termsofservice/
+  title: ROBOKOP
+servers:
+  - url: 'https://robokop.renci.org/api'
+    description: 'Production server'
+tags:
+  - name: translator
+  - name: reasoner
+
+paths:
+  '/simple/expand/chemical_substance/{chemical_id}/disease_or_phenotypic_feature/':
+    get:
+      summary: 'retrieve diseases related to chemical'
+      parameters:
+        - name: chemical_id
+          in: path
+          description: >-
+            chembl id
+          required: true
+          example: "CHEMBL:CHEMBL744"
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 'A association object'
+          x-bte-response-mapping:
+            $ref: '#/components/x-bte-response-mapping/chemical-disease'
+      x-bte-kgs-operations:
+        treats:
+          $ref: '#/components/x-bte-kgs-operations/treats'
+        contraindication:
+          $ref: '#/components/x-bte-kgs-operations/contraindication'
+  '/simple/expand/gene/{gene_id}/gene_family/':
+    get:
+      summary: 'retrieve gene family related to gene'
+      parameters:
+        - name: gene_id
+          in: path
+          description: >-
+            hgnc id
+          required: true
+          example: "HGNC:1771"
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 'A association object'
+          x-bte-response-mapping:
+            $ref: '#/components/x-bte-response-mapping/gene-genefamily'
+      x-bte-kgs-operations:
+        partOf:
+          $ref: '#/components/x-bte-kgs-operations/partOf' 
+  '/simple/expand/gene/{gene_id}/chemical_substance/':
+    get:
+      summary: 'retrieve chemicals related to gene'
+      parameters:
+        - name: gene_id
+          in: path
+          description: >-
+            hgnc id
+          required: true
+          example: "HGNC:1771"
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 'A association object'
+          x-bte-response-mapping:
+            $ref: '#/components/x-bte-response-mapping/gene-chemical'
+      x-bte-kgs-operations:
+        associatedWith:
+          $ref: '#/components/x-bte-kgs-operations/associatedWith'       
+components:
+  x-bte-kgs-operations:
+    treats:
+      inputs:
+      - id: chembl
+        semantic: ChemicalSubstance
+      outputs:
+      - id: mondo
+        semantic: DiseaseOrPhenotypicFeature
+      parameters:
+        chemical_id: "CHEMBL:{input1}"
+      supportBatch: false
+      response-mapping:
+        $ref: '#/components/x-bte-response-mapping/chemical-disease'
+    contraindication:
+      inputs:
+      - id: chembl
+        semantic: ChemicalSubstance
+      outputs:
+      - id: mondo
+        semantic: DiseaseOrPhenotypicFeature
+      parameters:
+        chemical_id: "CHEMBL:{input1}"
+      supportBatch: false
+      response-mapping:
+        $ref: '#/components/x-bte-response-mapping/chemical-disease'
+    partOf:
+      inputs:
+      - id: hgnc
+        semantic: Gene
+      outputs:
+      - id: panther
+        semantic: GeneFamily
+      parameters:
+        chemical_id: "HGNC:{input1}"
+      supportBatch: false
+      response-mapping:
+        $ref: '#/components/x-bte-response-mapping/gene-genefamily'
+    associatedWith:
+      inputs:
+      - id: hgnc
+        semantic: Gene
+      outputs:
+      - id: chembl
+        semantic: ChemicalSubstance
+      parameters:
+        chemical_id: "HGNC:{input1}"
+      supportBatch: false
+      response-mapping:
+        $ref: '#/components/x-bte-response-mapping/gene-chemical'
+  x-bte-response-mapping:
+    chemical-disease:
+      "@context": http://schema.org
+      "@type": ChemicalSubstance
+      bts:chembl: treats.source_id
+      bts:treats:
+        "@type": DiseaseOrPhenotypicFeature
+        bts:mondo: treats.mondo
+        bts:source: treats.source_database
+        bts:pubmed: treats.publications
+        "$input": bts:chembl
+        "$source": robokop
+      bts:contraindication:
+        "@type": DiseaseOrPhenotypicFeature
+        bts:mondo: contraindicated_for.mondo
+        bts:source: contraindicated_for.source_database
+        bts:pubmed: contraindicated_for.publications
+        "$input": bts:chembl
+        "$source": robokop
+    gene-genefamily:
+      "@context": http://schema.org
+      "@type": Gene
+      bts:hgnc: part_of.source_id
+      bts:partOf:
+        "@type": GeneFamily
+        bts:panther: part_of.panther
+        bts:source: part_of.source_database
+        bts:pubmed: part_of.publications
+        "$input": bts:hgnc
+        "$source": panther
+    gene-chemical:
+      "@context": http://schema.org
+      "@type": Gene
+      bts:hgnc: literature_co-occurrence.source_id
+      bts:associatedWith:
+        "@type": ChemicalSubstance
+        bts:chembl: literature_co-occurrence.chembl
+        bts:source: literature_co-occurrence.source_database
+        "$input": bts:hgnc
+        "$source": robokop

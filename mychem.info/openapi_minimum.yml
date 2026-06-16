@@ -1,0 +1,102 @@
+openapi: '3.0.0'
+info:
+  version: '1.0'
+  title: MyChem.info API
+  description: >-
+    Documentation of the MyChem.info Chemical Query web services. Learn more about
+    [MyChem.info](http://mychem.info/)
+  termsOfService: http://mychem.info/terms/
+  contact:
+    name: Chunlei Wu
+    x-role: responsible developer
+    email: help@mychem.info
+    x-id: 'https://github.com/newgene'
+  x-translator:
+    component: KP
+    team:
+    - Service Provider
+servers:
+  - url: 'http://mychem.info/v1'
+    description: 'Production server'
+tags:
+  - name: chemical
+  - name: drug
+  - name: annotation
+  - name: query
+  - name: translator
+paths:
+  /query:
+    get:
+      summary: 'Make chemical query and return matching chemical hits'
+      parameters:
+        - name: q
+          in: query
+          description: >-
+            Query string. Examples "Fludara", "CHEMBI:63599", "DB01073".
+          required: true
+          x-valueType:
+            - 'http://identifiers.org/rxcui/'
+            - 'http://identifiers.org/chebi/'
+            - 'http://identifiers.org/chembl/'
+            - 'http://identifiers.org/drugbank/'
+            - 'http://identifiers.org/iuphar.ligand/'
+            - 'http://identifiers.org/kegg.drug/'
+            - 'http://identifiers.org/kegg.compound/'
+            - 'http://identifiers.org/pubchem.compound/'
+            - 'http://identifiers.org/unii/'
+            - 'http://identifiers.org/inchikey/'
+            - 'http://identifiers.org/inchi/'
+            - 'http://identifiers.org/uniprot/'
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 'A query response object with "hits" property'
+          x-responseValueType:
+            - path: _id
+              valueType: 'http://identifiers.org/inchikey/'
+            - path: cadd.gene.genename
+              valueType: 'http://identifiers.org/uniprot/'
+            - path: clinvar.rsid
+              valueType: 'http://identifiers.org/drugbank/'
+            - path: cadd.gene.gene_id
+              valueType: 'http://identifiers.org/dbsnp/'
+            - path: cadd.gene.feature_id
+              valueType: 'http://identifiers.org/pubmed/'
+            - path: cadd.gene.ccds_id
+              valueType: 'http://identifiers.org/clinicaltrials/'
+            - path: clinvar.uniprot
+              valueType: 'http://identifiers.org/rxcui/'
+          x-JSONLDContext:
+            'https://github.com/NCATS-Tangerine/translator-api-registry/blob/master/mychem.info/jsonld_context/mychem_context.json'
+  '/drug/{drugid}':
+    get:
+      summary: 'For a given chemical id, return the matching chemical object'
+      parameters:
+        - name: drugid
+          in: path
+          description: >-
+            DrugBank ID, InCHIKey, CHEBI ID, CHEMBL ID
+          required: true
+          x-valueType:
+            - 'http://identifiers.org/inchikey/'
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 'A chemical object'
+          x-responseValueType:
+            - path: cadd.gene.genename
+              valueType: 'http://identifiers.org/uniprot/'
+            - path: clinvar.rsid
+              valueType: 'http://identifiers.org/drugbank/'
+            - path: cadd.gene.gene_id
+              valueType: 'http://identifiers.org/dbsnp/'
+            - path: cadd.gene.feature_id
+              valueType: 'http://identifiers.org/pubmed/'
+            - path: cadd.gene.ccds_id
+              valueType: 'http://identifiers.org/clinicaltrials/'
+            - path: clinvar.uniprot
+              valueType: 'http://identifiers.org/rxcui/'
+          x-JSONLDContext:
+            'https://github.com/NCATS-Tangerine/translator-api-registry/blob/master/mychem.info/jsonld_context/mychem_context.json'
