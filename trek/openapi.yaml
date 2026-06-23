@@ -1,0 +1,547 @@
+openapi: 3.0.1
+info:
+  contact:
+    email: vincent.emonet@maastrichtuniversity.nl
+    name: Institute of Data Science at Maastricht University
+    url: https://d2s.semanticscience.org
+  description: "Reasoner API for the **T**ranslator **Re**d **K**nowledge graph, a\
+    \ BioLink-compliant RDF knowledge graph about Clinical Data.\n\nThis endpoint\
+    \ implements the [Reasoner API specifications](https://github.com/NCATS-Tangerine/NCATS-ReasonerStdAPI/tree/master/API)\
+    \ to query clinical data from the Columbia Open Health Data (COHD) integrated\
+    \ in a [BioLink-complying RDF](https://biolink.github.io/biolink-model/) triplestore,\
+    \ through a SPARQL endpoint. \n \n COHD was developed at the [Columbia University\
+    \ Department of Biomedical Informatics](https://www.dbmi.columbia.edu/) as a collaboration\
+    \ between the [Weng Lab](http://people.dbmi.columbia.edu/~chw7007/), [Tatonetti\
+    \ Lab](http://tatonettilab.org/), and the [NCATS Biomedical Data Translator program](https://ncats.nih.gov/translator)\
+    \ (Red Team).\n\nThis work was supported in part by grants: NCATS OT3TR002027,\
+    \ NLM R01LM009886-08A1, and NIGMS R01GM107145.\n\nThis API is registered as a\
+    \ Smart API at [trek.smart-api.info](http://trek.smart-api.info)\n\nThe following\
+    \ external resources may be useful:\n* [Reasoner API Specifications](https://github.com/NCATS-Tangerine/NCATS-ReasonerStdAPI/tree/master/API)\n\
+    * [BioLink model documentation](https://biolink.github.io/biolink-model/)\n* [Resolve\
+    \ COHD OMOP identifiers](http://api.ohdsi.org/WebAPI/vocabulary/concept/922802)\n\
+    * [OHDSI](https://www.ohdsi.org/)\n* [OMOP Common Data Model](https://github.com/OHDSI/CommonDataModel/wiki)\n\
+    * [Athena](http://athena.ohdsi.org/) (OMOP vocabularies, search, concept relationships,\
+    \ concept hierarchy)\n* [Atlas](http://www.ohdsi.org/web/atlas/) (OMOP vocabularies,\
+    \ search, concept relationships, concept hierarchy, concept sets)"
+  license:
+    name: MIT License
+    url: https://opensource.org/licenses/MIT
+  termsOfService: https://opensource.org/licenses/MIT
+  title: TReK Clinical Reasoner API
+  version: '1.0'
+servers:
+- description: Generated server url
+  url: http://api.trek.semanticscience.org
+tags:
+- description: Query BioLink-compliant datasets using the Reasoner API
+  name: translator
+- description: Services to query and explore the TReK BioLink datasets classes and
+    concepts.
+  name: query
+paths:
+  /biolink/v1/datasets:
+    get:
+      description: This call returns **all datasets**, which can be used as input
+        for other services. Note that the first line in csv is the header.
+      operationId: datasets
+      responses:
+        '200':
+          content:
+            application/json: {}
+            application/xml: {}
+            text/csv: {}
+            text/tab-separated-values: {}
+          description: Successful Operation
+      summary: Returns all datasets, which can be used as input for other services.
+      tags:
+      - query
+  /biolink/v1/get/{dataset}:
+    get:
+      description: This call returns **all classes** for this particular dataset with
+        instances having an id.
+      operationId: classes
+      parameters:
+      - in: path
+        name: dataset
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          content:
+            application/json: {}
+            application/xml: {}
+            text/csv: {}
+            text/tab-separated-values: {}
+          description: Successful Operation
+      summary: Returns all classes for this particular dataset with instances having
+        an id.
+      tags:
+      - query
+  /biolink/v1/get/{dataset}/{class}:
+    get:
+      description: This call returns **all instances** of a class in a dataset. Default
+        and maximum limit is 1000 instances per page. Use page parameter to load more.
+      operationId: datasetClass
+      parameters:
+      - in: path
+        name: dataset
+        required: true
+        schema:
+          type: string
+      - in: path
+        name: class
+        required: true
+        schema:
+          type: string
+      - in: query
+        name: page
+        required: false
+        schema:
+          format: int64
+          type: integer
+      - in: query
+        name: limit
+        required: false
+        schema:
+          format: int64
+          type: integer
+      responses:
+        '200':
+          content:
+            application/json: {}
+            application/xml: {}
+            text/csv: {}
+            text/tab-separated-values: {}
+          description: Successful Operation
+      summary: Returns all instances of a class in a dataset.
+      tags:
+      - query
+  /biolink/v1/get/{dataset}/{class}/{id}:
+    get:
+      description: This call returns **all properties** of a specific instance.
+      operationId: datasetClassId
+      parameters:
+      - in: path
+        name: dataset
+        required: true
+        schema:
+          type: string
+      - in: path
+        name: class
+        required: true
+        schema:
+          type: string
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          content:
+            application/json: {}
+            application/xml: {}
+            text/csv: {}
+            text/tab-separated-values: {}
+          description: Successful Operation
+      summary: Loads all properties of a specific instance.
+      tags:
+      - query
+  /biolink/v1/prefixes:
+    get:
+      description: Returns [all prefixes and their namespace URI used by the API](https://github.com/MaastrichtU-IDS/d2s-api/blob/master/src/main/java/org/semanticscience/d2s/api/service/AbstractQueryBuilder.java#L7)
+        in the format used to define prefixes and namespaces in SPARQL queries.
+      operationId: prefixes
+      responses:
+        '200':
+          content:
+            text/plain: {}
+          description: Successful Operation
+      summary: Returns all prefixes and their namespace URI used by the API.
+      tags:
+      - query
+  /reasoner/v1/query:
+    post:
+      description: "Query the BioLink-compliant knowledge graph using the [Reasoner\
+        \ API query specifications](https://github.com/NCATS-Tangerine/NCATS-ReasonerStdAPI/tree/master/API#top-level-message-class).\n\
+        \nUse this example query for COHD:\n```json \n{\n  \"max_results\": 50,\n\
+        \  \"message\": {\n    \"query_graph\": {\n      \"nodes\": [\n        { \"\
+        id\": \"n00\", \"type\": \"Procedure\" },\n        { \"id\": \"n01\", \"type\"\
+        : \"Drug\" }\n      ],\n      \"edges\": [\n        { \"id\": \"e00\", \"\
+        type\": \"Association\",\n          \"source_id\": \"n00\", \"target_id\"\
+        : \"n01\" }\n      ]\n    },\n    \"query_options\": {\n\t   \"https://w3id.org/trek/cohd/attribute/ttest_results\"\
+        : \"1.5e+02\",\n\t   \"https://w3id.org/trek/cohd/attribute/ttest_pvalue\"\
+        : \"1.338936e-87\"\n    }\n  }\n}\n```"
+      operationId: reasonerQueryCall
+      requestBody:
+        content:
+          application/json:
+            schema: {}
+        description: Reasoner API query to execute
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/Message'
+                type: array
+          description: successful operation
+      summary: Execute a Reasoner API query on the BioLink-compliant triplestore.
+      tags:
+      - translator
+components:
+  schemas:
+    Credentials:
+      description: Credentials needed for programmatic access to the remote knowledge
+        graph
+      properties:
+        password:
+          description: Password needed for programmatic access to the remote knowledge
+            graph
+          example: mypassword
+          type: string
+        username:
+          description: Username needed for programmatic access to the remote knowledge
+            graph
+          example: myusername
+          type: string
+      required:
+      - password
+      - username
+      type: object
+    Edge:
+      description: An edge in the query_graph linking two nodes
+      properties:
+        id:
+          description: Local URI or identifier for this edge, which is unique within
+            this KnowledgeGraph, and perhaps within the source reasoner's knowledge
+            graph, e.g. https://w3id.org/biolink/cohd/association/1_8516_941473
+          type: string
+        source_id:
+          description: Corresponds to the id of the source node of this edge
+          example: http://api.ohdsi.org/WebAPI/vocabulary/concept/8507
+          type: string
+        target_id:
+          description: Corresponds to the id of the target node of this edge
+          example: http://api.ohdsi.org/WebAPI/vocabulary/concept/950641
+          type: string
+        type:
+          description: BioLink type of the edge
+          example: Association
+          type: string
+      required:
+      - id
+      type: object
+    EdgeBinding:
+      description: An Edge Binding in the Results
+      properties:
+        kg_id:
+          description: One or more knowledge-graph node ids, i.e. the `id` of a KNode
+          items:
+            description: One or more knowledge-graph node ids, i.e. the `id` of a
+              KNode
+            type: string
+          type: array
+        qg_id:
+          description: Query-graph edge id, i.e. the `edge_id` of a QEdge
+          type: string
+      required:
+      - kg_id
+      - qg_id
+      type: object
+    KnowledgeGraph:
+      description: A thought graph associated with this result. This will commonly
+        be a linear path subgraph from one concept to another, but related items aside
+        of the path may be included.
+      properties:
+        edges:
+          description: List of edges in the KnowledgeGraph
+          items:
+            $ref: '#/components/schemas/Edge'
+          type: array
+        nodes:
+          description: List of nodes in the KnowledgeGraph
+          items:
+            $ref: '#/components/schemas/Node'
+          type: array
+      type: object
+    Message:
+      description: A message containing the query to the Reasoner API.
+      properties:
+        code_description:
+          description: 'Extended description denoting the success or mode of failure
+            in the generation of the message (e.g.: 9 results found)'
+          type: string
+        context:
+          description: 'JSON-LD context URI (e.g.: https://rtx.ncats.io/ns/translator.jsonld)'
+          type: string
+        datetime:
+          description: 'Datetime string for the time that this message was generated
+            (e.g.: 2018-01-09 12:34:45)'
+          type: string
+        id:
+          description: 'URI for this message (e.g.: https://rtx.ncats.io/api/rtx/v1/message/123)'
+          type: string
+        knowledge_graph:
+          $ref: '#/components/schemas/KnowledgeGraph'
+        message_code:
+          description: 'Set to OK for success, or some other short string to indicate
+            and error (e.g., KGUnavailable, TermNotFound, etc.) (e.g.: OK)'
+          type: string
+        n_results:
+          description: 'Total number of results from the query (which may be less
+            than what is returned if limits were placed on the number of results to
+            return) (e.g.: 42)'
+          type: string
+        original_question:
+          description: 'The original question text typed in by the user (e.g.: what
+            proteins are affected by sickle cell anemia)'
+          type: string
+        query_graph:
+          $ref: '#/components/schemas/QueryGraph'
+        query_options:
+          additionalProperties:
+            description: ' Dict of options that can be sent with the query. Options
+              are tool specific and not stipulated here (e.g.: {coalesce=True,threshold=0.9})'
+            type: string
+          description: ' Dict of options that can be sent with the query. Options
+            are tool specific and not stipulated here (e.g.: {coalesce=True,threshold=0.9})'
+          type: object
+        query_type_id:
+          description: 'The query type id if one is known for the query/message (as
+            defined in [Google docs](https://docs.google.com/spreadsheets/d/18zW81wteUfOn3rFRVG0z8mW-ecNhdsfD_6s73ETJnUw/edit#gid=1742835901)
+            ) (e.g.: Q2)'
+          type: string
+        reasoner_id:
+          description: Identifier string of the reasoner that provided this message
+            (one of trek, RTX, Robokop, Indigo, Integrator, etc.)
+          type: string
+        remote_knowledge_graph:
+          $ref: '#/components/schemas/RemoteKnowledgeGraph'
+        restated_question:
+          description: 'A precise restatement of the question, as understood by the
+            Translator, for which the answer applies. The user should verify that
+            the restated question matches the intent of their original question (it
+            might not). (e.g.: Which proteins are affected by sickle cell anemia?)'
+          type: string
+        results:
+          description: List of all returned potential answers for the query posed
+          items:
+            $ref: '#/components/schemas/Result'
+          type: array
+        schema_version:
+          description: 'Version label of this JSON-LD schema (e.g.: 0.9.1)'
+          example: 0.9.1
+          type: string
+        table_column_names:
+          description: 'List of column names that corresponds to the row_data for
+            each result (e.g.: [chemical_substance.name, chemical_substance.id])'
+          items:
+            description: 'List of column names that corresponds to the row_data for
+              each result (e.g.: [chemical_substance.name, chemical_substance.id])'
+            type: string
+          type: array
+        tool_version:
+          description: 'Version label of the tool that generated this message (e.g.:
+            RTX 0.5.0)'
+          type: string
+        type:
+          description: 'Entity type of this message (e.g.: translator_reasoner_message)'
+          type: string
+      required:
+      - query_graph
+      type: object
+    Node:
+      description: A node in the query_graph
+      properties:
+        id:
+          description: URI or CURIE identifier for this node, e.g. http://api.ohdsi.org/WebAPI/vocabulary/concept/941473
+          example: http://api.ohdsi.org/WebAPI/vocabulary/concept/950641
+          type: string
+        name:
+          description: Formal name of the entity
+          example: Betamethasone
+          type: string
+        type:
+          description: BioLink type of the entity
+          example: Drug
+          type: string
+      required:
+      - id
+      type: object
+    NodeBinding:
+      description: A Node Binding in the Results
+      properties:
+        kg_id:
+          description: One or more knowledge-graph node ids, i.e. the `id` of a KNode
+          items:
+            description: One or more knowledge-graph node ids, i.e. the `id` of a
+              KNode
+            type: string
+          type: array
+        qg_id:
+          description: Query-graph node id, i.e. the `node_id` of a QNode
+          type: string
+      required:
+      - kg_id
+      - qg_id
+      type: object
+    QEdge:
+      description: An edge in the query_graph linking two nodes
+      properties:
+        id:
+          description: 'QueryGraph internal identifier for this QEdge. Recommended
+            form: e00, e01, e02, etc.'
+          example: e00
+          type: string
+        negated:
+          description: Boolean that if set to true, indicates the edge statement is
+            negated i.e. is not true
+          type: boolean
+        relation:
+          description: 'Lower-level relationship type of this edge (e.g.: upregulates)'
+          example: related_to
+          type: string
+        source_id:
+          description: Corresponds to the id of the source node of this edge
+          example: n00
+          type: string
+        target_id:
+          description: Corresponds to the id of the target node of this edge
+          example: n01
+          type: string
+        type:
+          description: BioLink type of the edge
+          example: Association
+          type: string
+      required:
+      - id
+      type: object
+    QNode:
+      description: A node in the query_graph
+      properties:
+        curie:
+          description: URI or CURIE identifier for this node
+          type: string
+        id:
+          description: 'QueryGraph internal identifier for this QNode. Recommended
+            form: n00, n01, n02, etc.'
+          example: n00
+          type: string
+        type:
+          description: BioLink type of the entity
+          example: Drug
+          type: string
+      required:
+      - id
+      type: object
+    QueryGraph:
+      description: A graph intended to be the thought path to be followed by a reasoner
+        to answer the question. This graph is a representation of a question.
+      properties:
+        edges:
+          description: List of edges in the QueryGraph
+          items:
+            $ref: '#/components/schemas/QEdge'
+          type: array
+        nodes:
+          description: List of nodes in the QueryGraph
+          items:
+            $ref: '#/components/schemas/QNode'
+          type: array
+      type: object
+    RemoteKnowledgeGraph:
+      description: A thought graph associated with this result that is not repeated
+        here, but stored elsewhere in a way that can be remotely accessed by the reader
+        of this Message
+      properties:
+        credentials:
+          $ref: '#/components/schemas/Credentials'
+        protocol:
+          description: Knowledge Graph protocol, e.g. rdf, neo4j
+          example: rdf
+          type: string
+        url:
+          description: URL that provides programmatic access to the remote knowledge
+            graph
+          type: string
+      required:
+      - url
+      type: object
+    Result:
+      description: One of potentially several results or answers for a query
+      properties:
+        confidence:
+          description: 'Any type of score associated with this result (e.g.: 163.233)'
+          format: float
+          type: number
+        description:
+          description: 'A free text description of this result answer from the reasoner
+            (e.g.: The genetic condition sickle cell anemia may provide protection)'
+          type: string
+        edge_bindings:
+          description: List of QEdge-KEdge bindings.
+          items:
+            $ref: '#/components/schemas/EdgeBinding'
+          type: array
+        essence:
+          description: 'A single string that is the terse essence of the result (useful
+            for simple answers) (e.g.: ibuprofen)'
+          type: string
+        essence_type:
+          description: 'A Translator bioentity type of the essence (e.g.: drug)'
+          type: string
+        id:
+          description: 'URI for this message (e.g.: https://rtx.ncats.io/api/rtx/v1/result/234)'
+          type: string
+        node_bindings:
+          description: List of QNode-KNode bindings.
+          items:
+            $ref: '#/components/schemas/NodeBinding'
+          type: array
+        reasoner_id:
+          description: Identifier string of the reasoner that provided this message
+            (one of trek, RTX, Robokop, Indigo, Integrator, etc.)
+          type: string
+        result_group:
+          description: 'An integer group number for results for use in cases where
+            several results should be grouped together. Also useful to control sorting
+            ascending. (e.g.: 1)'
+          format: int32
+          type: integer
+        result_group_similarity_score:
+          description: 'A score that denotes the similarity of this result to other
+            members of the result_group (e.g.: 0.95)'
+          format: float
+          type: number
+        result_type:
+          description: 'One of several possible result types: ''individual query answer'',
+            ''neighborhood graph'', ''type summary graph'''
+          type: string
+        row_data:
+          description: 'An arbitrary list of values that captures the essence of the
+            result that can be turned into a tabular result across all answers (each
+            result is a row) for a user that wants tabular output (e.g.: [ ibuprofen,
+            CHEMBL:CHEMBL521 ])'
+          items:
+            description: 'An arbitrary list of values that captures the essence of
+              the result that can be turned into a tabular result across all answers
+              (each result is a row) for a user that wants tabular output (e.g.: [
+              ibuprofen, CHEMBL:CHEMBL521 ])'
+            type: string
+          type: array
+        score:
+          description: 'Any type of score associated with this result (e.g.: 163.233)'
+          format: float
+          type: number
+        score_direction:
+          description: 'Sorting indicator for the score: one of higher_is_better or
+            lower_is_better (e.g.: lower_is_better)'
+          type: string
+        score_name:
+          description: 'Name for the score (e.g.: Jaccard distance)'
+          type: string
+      type: object
